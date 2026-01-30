@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, library, method, r2Keys, parameters } = body;
+    const { name, library, method, r2Keys, parameters, sampleLabels } = body;
 
     if (!name || !library || !method) {
       return NextResponse.json(
@@ -49,32 +49,41 @@ export async function POST(request: Request) {
       );
     }
 
-    const analysisId = `analysis_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-    const now = new Date().toISOString();
+    // Insert analysis. If table is missing file_names/sample_labels, store in parameters.
+    const params = parameters || {
+      fdr_threshold: 0.05,
+      normalization: 'median',
+      min_reads: 30,
+    };
+    const payload: Record<string, unknown> = {
+      user_id: user.id,
+      name: String(name).trim(),
+      library: String(library),
+      method: String(method),
+      parameters: { ...params, r2Keys, sampleLabels },
+      status: 'pending',
+      progress: 0,
+    };
 
-    const { data: analysis, error: insertError } = await (supabase.from('analyses') as any)
+    // Add columns that may not exist on older schemas (run migrations to add them)
+    let { data: analysis, error: insertError } = await (supabase.from('analyses') as any)
       .insert({
-        id: analysisId,
-        user_id: user.id,
-        name: String(name).trim(),
-        library_type: String(library),
-        method: String(method),
+        ...payload,
         file_names: r2Keys,
-        parameters: parameters || {},
-        status: 'pending',
-        progress: 0,
-        current_step: null,
-        results: null,
-        logs: null,
-        error_message: null,
-        sample_labels: null,
-        created_at: now,
-        updated_at: now,
-        started_at: null,
-        completed_at: null,
+        sample_labels: sampleLabels || [],
       })
       .select()
       .single();
+
+    if (insertError?.code === 'PGRST204') {
+      // Column not found: table may lack file_names/sample_labels; store only in parameters
+      const fallback = await (supabase.from('analyses') as any)
+        .insert(payload)
+        .select()
+        .single();
+      insertError = fallback.error;
+      analysis = fallback.data;
+    }
 
     if (insertError) {
       console.error('Database insert error:', insertError);
@@ -87,11 +96,14 @@ export async function POST(request: Request) {
       );
     }
 
+    // Start analysis processing asynchronously
+    startAnalysisProcessing(analysis.id, supabase).catch(console.error);
+
     return NextResponse.json(
       {
         success: true,
         analysis,
-        message: 'Analysis created successfully',
+        message: 'Analysis created and processing started',
       },
       { status: 201 }
     );
@@ -106,5 +118,42 @@ export async function POST(request: Request) {
       },
       { status: 500 }
     );
+  }
+}
+
+/**
+ * Start analysis processing in background
+ */
+async function startAnalysisProcessing(analysisId: string, supabase: any) {
+  try {
+    // Update status to running
+    await supabase
+      .from('analyses')
+      .update({
+        status: 'running',
+        progress: 5,
+        started_at: new Date().toISOString(),
+      })
+      .eq('id', analysisId);
+
+    // Trigger the actual analysis (this would call your backend service)
+    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/analysis/${analysisId}/run`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to start analysis processing');
+    }
+  } catch (error) {
+    console.error('Failed to start analysis processing:', error);
+    // Update status to failed
+    await supabase
+      .from('analyses')
+      .update({
+        status: 'failed',
+        error_message: error instanceof Error ? error.message : 'Processing failed to start',
+      })
+      .eq('id', analysisId);
   }
 }

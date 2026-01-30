@@ -497,16 +497,16 @@ export class AnalysisDB {
 
     if (isSupabaseConfigured) {
       const supabase = createClient()
+      // Match live schema: library (not library_type), method (not algorithms), omit current_step if column missing
       const { data: insertedData, error } = await (supabase.from('analyses') as any)
         .insert([{
           id: record.id,
           user_id: record.user_id,
           name: record.name,
-          library_type: record.library_type,
-          algorithms: record.algorithms,
+          library: record.library_type,
+          method: (record.algorithms && record.algorithms[0]) || 'mageck',
           status: record.status,
           progress: record.progress,
-          current_step: record.current_step,
           parameters: record.parameters,
           results: record.results,
           logs: record.logs,
