@@ -1,0 +1,36 @@
+# Optional: Run Redis + Celery worker for Tier 5/6 advanced analysis.
+# The Next.js API runs BAGEL2/DrugZ in-process (JS) by default; use this when
+# you want async Python tasks (e.g. official BAGEL2/DrugZ in Docker).
+#
+# Usage: docker compose -f docker-compose.yml -f docker-compose.analysis.yml up -d redis worker
+# Or:    docker compose -f docker-compose.analysis.yml up -d
+# (standalone: Redis + Celery worker only; no DB if you use Supabase.)
+
+version: "3.8"
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+
+  celery-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A app.tasks.celery_tasks:celery_app worker --loglevel=info --concurrency=4
+    volumes:
+      - .:/app
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - DATABASE_URL=${DATABASE_URL:-}
+    depends_on:
+      - redis
+
+volumes:
+  redis-data:

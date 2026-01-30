@@ -1,0 +1,35 @@
+# Optional: Docker image for running BAGEL2/DrugZ (Python) in Celery tasks.
+# The Next.js app runs BAGEL2/DrugZ in-process via JS analyzers by default.
+# Use this image when you want to run the official Python implementations instead.
+#
+# Build: docker build -f Dockerfile.analysis-tools -t splicr-analysis-tools .
+# Run:   docker run --rm -v $(pwd)/analysis-data:/data splicr-analysis-tools bash -c "python /opt/analysis-tools/bagel/BAGEL.py ..."
+
+FROM python:3.10-slim
+
+WORKDIR /opt/analysis-tools
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Clone BAGEL2 (hart-lab/bagel)
+RUN git clone --depth 1 https://github.com/hart-lab/bagel.git || true
+RUN if [ -f bagel/requirements.txt ]; then pip install --no-cache-dir -r bagel/requirements.txt; fi
+
+# Clone DrugZ (hart-lab/drugz)
+RUN git clone --depth 1 https://github.com/hart-lab/drugz.git || true
+RUN pip install --no-cache-dir numpy scipy pandas
+
+RUN pip install --no-cache-dir \
+    numpy \
+    scipy \
+    pandas \
+    matplotlib \
+    seaborn
+
+ENV PYTHONPATH=/opt/analysis-tools/bagel:/opt/analysis-tools/drugz:$PYTHONPATH
+
+WORKDIR /data
+CMD ["bash"]

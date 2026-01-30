@@ -1,0 +1,666 @@
+import { createBrowserClient } from '@supabase/ssr'
+import { createClient as createSupabaseJsClient } from '@supabase/supabase-js'
+
+// Type-safe database schema
+export type Database = {
+  public: {
+    Tables: {
+      users: {
+        Row: {
+          id: string
+          email: string
+          display_name: string | null
+          avatar_url: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          email: string
+          display_name?: string | null
+          avatar_url?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          display_name?: string | null
+          avatar_url?: string | null
+          created_at?: string
+        }
+      }
+      profiles: {
+        Row: {
+          id: string
+          email: string
+          full_name: string | null
+          avatar_url: string | null
+          institution: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          email: string
+          full_name?: string | null
+          avatar_url?: string | null
+          institution?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          full_name?: string | null
+          avatar_url?: string | null
+          institution?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      analyses: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          library_id?: string
+          library_type?: string
+          method?: string
+          algorithms?: string[]
+          status: string
+          progress?: number
+          current_step?: string | null
+          parameters?: Record<string, unknown>
+          results: unknown
+          logs?: unknown[] | null
+          error_message?: string | null
+          file_names?: string[]
+          sample_labels?: unknown[]
+          created_at: string
+          updated_at?: string
+          started_at?: string | null
+          completed_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          library_id?: string
+          library_type?: string
+          method?: string
+          algorithms?: string[]
+          status?: string
+          progress?: number
+          current_step?: string | null
+          parameters?: Record<string, unknown>
+          results?: unknown
+          logs?: unknown[] | null
+          error_message?: string | null
+          file_names?: string[]
+          sample_labels?: unknown[]
+          created_at?: string
+          updated_at?: string
+          started_at?: string | null
+          completed_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          library_id?: string
+          library_type?: string
+          method?: string
+          algorithms?: string[]
+          status?: string
+          progress?: number
+          current_step?: string | null
+          parameters?: Record<string, unknown>
+          results?: unknown
+          logs?: unknown[] | null
+          error_message?: string | null
+          file_names?: string[]
+          sample_labels?: unknown[]
+          created_at?: string
+          updated_at?: string
+          started_at?: string | null
+          completed_at?: string | null
+        }
+      }
+      analysis_results: {
+        Row: {
+          id: string
+          analysis_id: string
+          gene: string
+          log2fc: number
+          fdr: number
+          pvalue: number
+        }
+      }
+      gene_info_cache: {
+        Row: {
+          id: string
+          gene_symbol: string
+          data: unknown
+          cached_at: string
+        }
+        Insert: {
+          gene_symbol: string
+          data: unknown
+          cached_at?: string
+        }
+      }
+      drug_gene_cache: {
+        Row: {
+          id: string
+          gene_symbol: string
+          drugs: unknown
+          cached_at: string
+        }
+        Insert: {
+          gene_symbol: string
+          drugs: unknown
+          cached_at?: string
+        }
+      }
+      clinical_trials_cache: {
+        Row: {
+          id: string
+          query_key: string
+          data: unknown
+          cached_at: string
+        }
+        Insert: {
+          query_key: string
+          data: unknown
+          cached_at?: string
+        }
+      }
+      analysis_comments: {
+        Row: {
+          id: string
+          analysis_id: string
+          user_id: string
+          parent_comment_id: string | null
+          target_type: string
+          target_id: string | null
+          content: string
+          mentions: unknown[]
+          is_resolved: boolean
+          resolved_by: string | null
+          resolved_at: string | null
+          edited: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          analysis_id: string
+          user_id: string
+          parent_comment_id?: string | null
+          target_type?: string
+          target_id?: string | null
+          content: string
+          mentions?: unknown[]
+          is_resolved?: boolean
+          resolved_by?: string | null
+          resolved_at?: string | null
+          edited?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          analysis_id?: string
+          user_id?: string
+          parent_comment_id?: string | null
+          target_type?: string
+          target_id?: string | null
+          content?: string
+          mentions?: unknown[]
+          is_resolved?: boolean
+          resolved_by?: string | null
+          resolved_at?: string | null
+          edited?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      analysis_activity: {
+        Row: {
+          id: string
+          analysis_id: string
+          user_id: string
+          action: string
+          activity_type: string
+          description: string
+          details: unknown
+          metadata: unknown
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          analysis_id: string
+          user_id: string
+          action?: string
+          activity_type?: string
+          description?: string
+          details?: unknown
+          metadata?: unknown
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          analysis_id?: string
+          user_id?: string
+          action?: string
+          activity_type?: string
+          description?: string
+          details?: unknown
+          metadata?: unknown
+          created_at?: string
+        }
+      }
+      analysis_presence: {
+        Row: {
+          id: string
+          analysis_id: string
+          user_id: string
+          status: string
+          last_seen: string
+        }
+        Insert: {
+          id?: string
+          analysis_id: string
+          user_id: string
+          status?: string
+          last_seen?: string
+        }
+        Update: {
+          id?: string
+          analysis_id?: string
+          user_id?: string
+          status?: string
+          last_seen?: string
+        }
+      }
+      comment_reactions: {
+        Row: {
+          id: string
+          comment_id: string
+          user_id: string
+          reaction: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          comment_id: string
+          user_id: string
+          reaction: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          comment_id?: string
+          user_id?: string
+          reaction?: string
+          created_at?: string
+        }
+      }
+      user_notifications: {
+        Row: {
+          id: string
+          user_id: string
+          type: string
+          message: string
+          read: boolean
+          data: unknown
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          type: string
+          message: string
+          read?: boolean
+          data?: unknown
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          type?: string
+          message?: string
+          read?: boolean
+          data?: unknown
+          created_at?: string
+        }
+      }
+      activity_logs: {
+        Row: {
+          id: string
+          analysis_id: string
+          user_id: string
+          action: string
+          details: unknown
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          analysis_id: string
+          user_id: string
+          action: string
+          details?: unknown
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          analysis_id?: string
+          user_id?: string
+          action?: string
+          details?: unknown
+          created_at?: string
+        }
+      }
+    }
+  }
+}
+
+// Create browser-side Supabase client (for Client Components)
+export function createClient() {
+  return createBrowserClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}
+
+// Singleton client for backward compatibility with existing code
+// Note: For new code, prefer using createClient() function
+// Uses @supabase/supabase-js directly for proper type inference
+export const supabase = createSupabaseJsClient<Database>(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+    },
+  }
+)
+
+// Check if Supabase is configured
+export const isSupabaseConfigured = Boolean(
+  process.env.NEXT_PUBLIC_SUPABASE_URL &&
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+)
+
+// Database types
+export interface AnalysisRecord {
+  id: string
+  user_id: string
+  name: string
+  library_type: string
+  algorithms: string[]
+  status: 'created' | 'queued' | 'running' | 'complete' | 'failed' | 'cancelled'
+  progress: number
+  current_step: string | null
+  parameters: Record<string, unknown>
+  results: Record<string, unknown> | null
+  logs: LogEntry[] | null
+  error_message: string | null
+  file_names: string[]
+  sample_labels: SampleLabel[]
+  created_at: string
+  updated_at: string
+  started_at: string | null
+  completed_at: string | null
+}
+
+export interface LogEntry {
+  timestamp: string
+  step: string
+  message: string
+  progress: number
+  level: 'info' | 'warning' | 'error' | 'success'
+}
+
+export interface SampleLabel {
+  fileName: string
+  fileId: string
+  sampleName: string
+  condition: 'control' | 'treatment'
+  replicate: number
+}
+
+// Database operations using the new client
+export class AnalysisDB {
+  private static async getUserId(): Promise<string> {
+    // Try to get user from Supabase session
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (user) {
+      return user.id
+    }
+
+    // Fallback to localStorage for anonymous users
+    if (typeof window !== 'undefined') {
+      let userId = localStorage.getItem('splicr_user_id')
+      if (!userId) {
+        userId = `anon_${Date.now()}_${Math.random().toString(36).substring(7)}`
+        localStorage.setItem('splicr_user_id', userId)
+      }
+      return userId
+    }
+    return 'default_user'
+  }
+
+  static async createAnalysis(data: {
+    name: string
+    libraryType: string
+    algorithms: string[]
+    parameters: Record<string, unknown>
+    fileNames: string[]
+    sampleLabels: SampleLabel[]
+  }): Promise<AnalysisRecord> {
+    const userId = await this.getUserId()
+    const id = `analysis_${Date.now()}_${Math.random().toString(36).substring(7)}`
+
+    const record: AnalysisRecord = {
+      id,
+      user_id: userId,
+      name: data.name,
+      library_type: data.libraryType,
+      algorithms: data.algorithms,
+      status: 'created',
+      progress: 0,
+      current_step: 'Initializing...',
+      parameters: data.parameters,
+      results: null,
+      logs: [],
+      error_message: null,
+      file_names: data.fileNames,
+      sample_labels: data.sampleLabels,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      started_at: null,
+      completed_at: null
+    }
+
+    if (isSupabaseConfigured) {
+      const supabase = createClient()
+      const { data: insertedData, error } = await (supabase.from('analyses') as any)
+        .insert([{
+          id: record.id,
+          user_id: record.user_id,
+          name: record.name,
+          library_type: record.library_type,
+          algorithms: record.algorithms,
+          status: record.status,
+          progress: record.progress,
+          current_step: record.current_step,
+          parameters: record.parameters,
+          results: record.results,
+          logs: record.logs,
+          error_message: record.error_message,
+          file_names: record.file_names,
+          sample_labels: record.sample_labels,
+          created_at: record.created_at,
+          updated_at: record.updated_at,
+          started_at: record.started_at,
+          completed_at: record.completed_at
+        }])
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Supabase insert error:', error)
+        this.saveToLocalStorage(record)
+      }
+
+      return insertedData || record
+    } else {
+      this.saveToLocalStorage(record)
+      return record
+    }
+  }
+
+  static async updateAnalysis(
+    id: string,
+    updates: Partial<AnalysisRecord>
+  ): Promise<void> {
+    const updateData = {
+      ...updates,
+      updated_at: new Date().toISOString()
+    }
+
+    if (isSupabaseConfigured) {
+      const supabase = createClient()
+      const { error } = await (supabase.from('analyses') as any)
+        .update(updateData)
+        .eq('id', id)
+
+      if (error) {
+        console.error('Supabase update error:', error)
+        this.updateLocalStorage(id, updateData)
+      }
+    } else {
+      this.updateLocalStorage(id, updateData)
+    }
+  }
+
+  static async getAnalysis(id: string): Promise<AnalysisRecord | null> {
+    if (isSupabaseConfigured) {
+      const supabase = createClient()
+      const { data, error } = await (supabase.from('analyses') as any)
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (error || !data) {
+        return this.getFromLocalStorage(id)
+      }
+
+      return data as AnalysisRecord
+    } else {
+      return this.getFromLocalStorage(id)
+    }
+  }
+
+  static async listAnalyses(): Promise<AnalysisRecord[]> {
+    const userId = await this.getUserId()
+
+    if (isSupabaseConfigured) {
+      const supabase = createClient()
+      const { data, error } = await (supabase.from('analyses') as any)
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+
+      if (error || !data) {
+        return this.getAllFromLocalStorage()
+      }
+
+      return data as AnalysisRecord[]
+    } else {
+      return this.getAllFromLocalStorage()
+    }
+  }
+
+  static async deleteAnalysis(id: string): Promise<void> {
+    if (isSupabaseConfigured) {
+      const supabase = createClient()
+      const { error } = await (supabase.from('analyses') as any)
+        .delete()
+        .eq('id', id)
+
+      if (error) {
+        console.error('Supabase delete error:', error)
+      }
+    }
+
+    this.deleteFromLocalStorage(id)
+  }
+
+  // Local storage fallback methods
+  private static getStorageKey(): string {
+    return 'splicr_analyses'
+  }
+
+  private static saveToLocalStorage(record: AnalysisRecord): void {
+    if (typeof window === 'undefined') return
+
+    const stored = localStorage.getItem(this.getStorageKey())
+    const analyses: AnalysisRecord[] = stored ? JSON.parse(stored) : []
+    analyses.push(record)
+    localStorage.setItem(this.getStorageKey(), JSON.stringify(analyses))
+  }
+
+  private static updateLocalStorage(id: string, updates: Partial<AnalysisRecord>): void {
+    if (typeof window === 'undefined') return
+
+    const stored = localStorage.getItem(this.getStorageKey())
+    if (!stored) return
+
+    const analyses: AnalysisRecord[] = JSON.parse(stored)
+    const index = analyses.findIndex(a => a.id === id)
+
+    if (index !== -1) {
+      analyses[index] = { ...analyses[index], ...updates }
+      localStorage.setItem(this.getStorageKey(), JSON.stringify(analyses))
+    }
+  }
+
+  private static getFromLocalStorage(id: string): AnalysisRecord | null {
+    if (typeof window === 'undefined') return null
+
+    const stored = localStorage.getItem(this.getStorageKey())
+    if (!stored) return null
+
+    const analyses: AnalysisRecord[] = JSON.parse(stored)
+    return analyses.find(a => a.id === id) || null
+  }
+
+  private static getAllFromLocalStorage(): AnalysisRecord[] {
+    if (typeof window === 'undefined') return []
+
+    const stored = localStorage.getItem(this.getStorageKey())
+    if (!stored) return []
+
+    const analyses: AnalysisRecord[] = JSON.parse(stored)
+    return analyses.sort((a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    )
+  }
+
+  private static deleteFromLocalStorage(id: string): void {
+    if (typeof window === 'undefined') return
+
+    const stored = localStorage.getItem(this.getStorageKey())
+    if (!stored) return
+
+    const analyses: AnalysisRecord[] = JSON.parse(stored)
+    const filtered = analyses.filter(a => a.id !== id)
+    localStorage.setItem(this.getStorageKey(), JSON.stringify(filtered))
+  }
+}
+
+export default AnalysisDB

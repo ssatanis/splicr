@@ -1,0 +1,38 @@
+# Nextflow
+.nextflow/
+.nextflow.log*
+work/
+results/
+timeline.html
+report.html
+trace.txt
+dag.svg
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+venv/
+env/
+
+# Test data
+test-data/
+output/
+
+# Docker
+*.tar
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# OS
+.DS_Store

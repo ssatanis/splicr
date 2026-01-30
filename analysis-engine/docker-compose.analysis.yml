@@ -1,0 +1,64 @@
+version: '3.8'
+
+# Docker Compose for local testing of analysis containers
+
+services:
+  mageck:
+    build:
+      context: ./docker/mageck
+      dockerfile: Dockerfile
+    image: splicr/mageck:latest
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - API_URL=http://api:8000
+    volumes:
+      - ./test-data:/data
+    command: >
+      --analysis-id test-analysis
+      --file-keys test/sample.fastq.gz
+      --library test/library.txt
+      --s3-bucket splicr-data-dev
+      --treatment treatment1
+      --control control1
+
+  bagel2:
+    build:
+      context: ./docker/bagel2
+      dockerfile: Dockerfile
+    image: splicr/bagel2:latest
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - API_URL=http://api:8000
+    volumes:
+      - ./test-data:/data
+
+  drugz:
+    build:
+      context: ./docker/drugz
+      dockerfile: Dockerfile
+    image: splicr/drugz:latest
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - API_URL=http://api:8000
+    volumes:
+      - ./test-data:/data
+
+  visualization:
+    build:
+      context: ./docker/visualization
+      dockerfile: Dockerfile
+    image: splicr/visualization:latest
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - API_URL=http://api:8000
+    volumes:
+      - ./test-data:/data
+      - ./output:/analysis/figures

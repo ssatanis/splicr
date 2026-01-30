@@ -1,0 +1,115 @@
+# ============================================================================
+# SPLICR .gitignore - PRODUCTION READY
+# ============================================================================
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+ENV/
+.venv
+
+# Testing
+coverage/
+.nyc_output/
+*.test.ts.snap
+.pytest_cache/
+
+# Next.js
+frontend/.next/
+.next/
+out/
+build/
+dist/
+.vercel/
+
+# Production
+build/
+dist/
+
+# Environment variables (NEVER COMMIT!)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+backend/.env
+frontend/.env.local
+
+# Debug logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# Python (analysis tools)
+.Python
+*.so
+
+# ============================================================================
+# SPLICR-SPECIFIC: LARGE FILES & DATA
+# ============================================================================
+
+# FASTQ files (genomic data - too large for git, stored in R2)
+*.fastq
+*.fastq.gz
+*.fastq.qz
+*.fq
+*.fq.gz
+
+# BAM/SAM alignment files
+*.bam
+*.sam
+*.bai
+*.cram
+
+# Count matrices (regenerated from analysis)
+*.count
+*.counts.txt
+*.counts.tsv
+
+# Analysis outputs (stored in database/R2)
+analysis-outputs/
+results-cache/
+temp-uploads/
+uploads/
+
+# User uploads directory (files go to R2, not git)
+public/uploads/
+frontend/public/uploads/
+
+# Misc
+.cache/
+.temp/
+.tmp/
+*.bak
