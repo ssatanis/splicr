@@ -364,32 +364,42 @@ export type Database = {
   }
 }
 
+// Resolve client key: Supabase now recommends the short publishable key (sb_publishable_...) for client auth.
+// Prefer it when present, otherwise fall back to the legacy JWT anon key.
+function getAnonKey(): string | undefined {
+  const publishable = process.env.NEXT_PUBLIC_PUBLISHABLE_KEY?.trim()
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()
+  if (publishable && publishable.startsWith('sb_publishable_')) return publishable
+  return anon || undefined
+}
+
 // Create browser-side Supabase client (for Client Components)
 export function createClient() {
-  return createBrowserClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+  const anonKey = getAnonKey()
+  if (!url || !anonKey) {
+    throw new Error(
+      'Missing Supabase config. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in frontend/.env.local, then stop the dev server (Ctrl+C) and run "npm run dev" again from the frontend folder. If env was just added, clear the .next folder and restart.'
+    )
+  }
+  return createBrowserClient<Database>(url, anonKey)
 }
 
 // Singleton client for backward compatibility with existing code
 // Note: For new code, prefer using createClient() function
 // Uses @supabase/supabase-js directly for proper type inference
-export const supabase = createSupabaseJsClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-    },
-  }
-)
+const _url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || ''
+const _key = getAnonKey() || ''
+export const supabase = createSupabaseJsClient<Database>(_url, _key, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+  },
+})
 
 // Check if Supabase is configured
 export const isSupabaseConfigured = Boolean(
-  process.env.NEXT_PUBLIC_SUPABASE_URL &&
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() && getAnonKey()
 )
 
 // Database types

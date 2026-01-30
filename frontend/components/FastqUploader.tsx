@@ -1,14 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import {
   uploadMultipleFilesToR2,
   formatFileSize,
-  isFastqFile,
+  isAllowedSequencingFile,
   type UploadedFile,
   type UploadProgress,
 } from '@/lib/storage/r2-upload';
+import { SUPPORTED_FORMATS_UI } from '@/lib/upload/constants';
 import {
   Upload,
   File as FileIcon,
@@ -34,6 +35,9 @@ export default function FastqUploader({
   const [progress, setProgress] = useState<Record<string, UploadProgress>>({});
   const [error, setError] = useState<string | null>(null);
   const [completedFiles, setCompletedFiles] = useState<Set<string>>(new Set());
+  const [reusedFiles, setReusedFiles] = useState<Set<string>>(new Set());
+  const [uploadSpeed, setUploadSpeed] = useState<Record<string, number>>({});
+  const startTimesRef = useRef<Record<string, number>>({});
 
   const supabase = createClient();
 
@@ -54,11 +58,10 @@ export default function FastqUploader({
       return;
     }
 
-    // Validate all files are FASTQ
-    const invalidFiles = files.filter((f) => !isFastqFile(f.name));
+    const invalidFiles = files.filter((f) => !isAllowedSequencingFile(f.name));
     if (invalidFiles.length > 0) {
       setError(
-        `Invalid file types: ${invalidFiles.map((f) => f.name).join(', ')}. Only FASTQ files (.fastq, .fastq.gz, .fq, .fq.gz) are allowed.`
+        `Unsupported file type: ${invalidFiles.map((f) => f.name).join(', ')}. Allowed: ${SUPPORTED_FORMATS_UI}.`
       );
       return;
     }
@@ -69,6 +72,19 @@ export default function FastqUploader({
   const uploadFiles = async (files: File[]) => {
     setError(null);
     setUploading(true);
+    startTimesRef.current = {};
+    setUploadSpeed({});
+    setReusedFiles(new Set());
+    // Show progress bar instantly with 0% for each file
+    setProgress(
+      files.reduce<Record<string, UploadProgress>>(
+        (acc, f) => ({
+          ...acc,
+          [f.name]: { loaded: 0, total: f.size, percent: 0 },
+        }),
+        {}
+      )
+    );
 
     try {
       const {
@@ -83,6 +99,16 @@ export default function FastqUploader({
         files,
         user.id,
         (fileName, fileProgress) => {
+          if (!startTimesRef.current[fileName]) {
+            startTimesRef.current[fileName] = Date.now();
+          }
+          const elapsedSec = (Date.now() - startTimesRef.current[fileName]) / 1000;
+          if (elapsedSec > 0) {
+            setUploadSpeed((prev) => ({
+              ...prev,
+              [fileName]: fileProgress.loaded / elapsedSec,
+            }));
+          }
           setProgress((prev) => ({
             ...prev,
             [fileName]: fileProgress,
@@ -90,6 +116,9 @@ export default function FastqUploader({
         },
         (uploadedFile) => {
           setCompletedFiles((prev) => new Set(prev).add(uploadedFile.name));
+          if (uploadedFile.reused) {
+            setReusedFiles((prev) => new Set(prev).add(uploadedFile.name));
+          }
         }
       );
 
@@ -101,10 +130,22 @@ export default function FastqUploader({
       setTimeout(() => {
         setProgress({});
         setCompletedFiles(new Set());
+        setReusedFiles(new Set());
+        setUploadSpeed({});
       }, 2000);
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'Upload failed. Please try again.';
+      let message = 'Upload failed. Please try again.';
+      if (err instanceof Error) {
+        message = err.message;
+        // Provide more helpful messages for common errors
+        if (message.includes('Authentication required')) {
+          message = 'Please sign in to upload files.';
+        } else if (message.includes('R2 credentials not configured')) {
+          message = 'Storage is not configured. Please contact support.';
+        } else if (message.includes('Network error')) {
+          message = 'Network error. Please check your connection and try again.';
+        }
+      }
       console.error('Upload error:', err);
       setError(message);
     } finally {
@@ -131,7 +172,7 @@ export default function FastqUploader({
         <input
           type="file"
           id="fastq-upload"
-          accept=".fastq,.fastq.gz,.fq,.fq.gz"
+          accept=".fastq,.fastq.gz,.fq,.fq.gz,.bam,.cram,.sam,.txt"
           multiple
           onChange={handleFileSelect}
           className="hidden"
@@ -150,14 +191,13 @@ export default function FastqUploader({
           )}
           <div>
             <p className="text-xl font-serif text-text-primary">
-              {uploading ? 'Uploading FASTQ files...' : 'Upload FASTQ Files'}
+              {uploading ? 'Uploading sequencing data…' : 'Upload sequencing data'}
             </p>
             <p className="text-sm text-text-secondary mt-1">
-              Click or drag files here • Up to 5GB per file • {maxFiles} files
-              max
+              Max 5 GB. {maxFiles} files max.
             </p>
             <p className="text-xs text-text-tertiary mt-1">
-              Supports: .fastq, .fastq.gz, .fq, .fq.gz
+              Supports: {SUPPORTED_FORMATS_UI}
             </p>
           </div>
         </label>
@@ -182,11 +222,11 @@ export default function FastqUploader({
         </div>
       )}
 
-      {/* Upload Progress */}
+      {/* Upload Progress - shown instantly when upload starts */}
       {Object.keys(progress).length > 0 && (
         <div className="space-y-3">
           <h3 className="text-sm font-semibold text-text-primary">
-            Uploading {Object.keys(progress).length} file(s)...
+            Uploading sequencing data… ({Object.keys(progress).length} file(s))
           </h3>
           {Object.entries(progress).map(([fileName, fileProgress]) => (
             <div key={fileName} className="space-y-2">
@@ -214,8 +254,14 @@ export default function FastqUploader({
                 />
               </div>
               <div className="flex justify-between text-xs text-text-tertiary">
-                <span>{formatFileSize(fileProgress.loaded)}</span>
-                <span>{formatFileSize(fileProgress.total)}</span>
+                <span>
+                  {formatFileSize(fileProgress.loaded)} / {formatFileSize(fileProgress.total)}
+                </span>
+                {reusedFiles.has(fileName) ? (
+                  <span className="text-success">100% – reused from cloud storage</span>
+                ) : uploadSpeed[fileName] != null && uploadSpeed[fileName] > 0 ? (
+                  <span>{formatFileSize(uploadSpeed[fileName])}/s</span>
+                ) : null}
               </div>
             </div>
           ))}
@@ -245,6 +291,9 @@ export default function FastqUploader({
                     </p>
                     <p className="text-sm text-text-secondary">
                       {formatFileSize(file.size)}
+                      {file.reused && (
+                        <span className="ml-2 text-success">· Reused from cloud</span>
+                      )}
                     </p>
                   </div>
                 </div>

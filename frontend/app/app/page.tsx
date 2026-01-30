@@ -24,7 +24,7 @@ export default function UploadPage() {
   const [fastqFiles, setFastqFiles] = useState<R2UploadedFile[]>([]);
   const [libraryType, setLibraryType] = useState<LibraryType | "">("");
   const [selectedAlgorithms, setSelectedAlgorithms] = useState<Algorithm[]>(["mageck"]);
-  const [showSampleLabeling, setShowSampleLabeling] = useState(false);
+  const [showSampleLabelModal, setShowSampleLabelModal] = useState(false);
   const [sampleLabels, setSampleLabels] = useState<SampleLabel[]>([]);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [advancedOptions, setAdvancedOptions] = useState({
@@ -209,7 +209,7 @@ export default function UploadPage() {
             />
           </motion.div>
 
-          {/* Sample Labeling (for uploaded R2 files) */}
+          {/* Sample Labeling (for uploaded R2 files) - labels always visible */}
           {fastqFiles.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -223,15 +223,18 @@ export default function UploadPage() {
                 <Button
                   variant="secondary"
                   size="sm"
-                  onClick={() => setShowSampleLabeling(!showSampleLabeling)}
+                  onClick={() => setShowSampleLabelModal(true)}
                 >
-                  {showSampleLabeling ? "Hide" : "Show"} Sample Labels
+                  Edit sample labels
                 </Button>
               </div>
 
-              {showSampleLabeling && (
-                <div className="space-y-4">
-                  {fastqFiles.map((file, index) => (
+              {/* Always show sample labels (read-only summary) */}
+              <div className="space-y-4">
+                {fastqFiles.map((file, index) => {
+                  const label = sampleLabels[index];
+                  if (!label) return null;
+                  return (
                     <div
                       key={file.r2Key}
                       className="grid grid-cols-3 gap-4 p-4 bg-surface rounded-xl border border-border"
@@ -240,63 +243,21 @@ export default function UploadPage() {
                         {file.name}
                       </p>
                       <div>
-                        <label className="block text-sm font-serif text-text-secondary mb-2">
-                          Sample Name
-                        </label>
-                        <input
-                          type="text"
-                          value={sampleLabels[index]?.sampleName ?? ""}
-                          onChange={(e) => {
-                            const newLabels = [...sampleLabels];
-                            if (newLabels[index]) {
-                              newLabels[index] = { ...newLabels[index], sampleName: e.target.value };
-                              setSampleLabels(newLabels);
-                            }
-                          }}
-                          className="w-full px-4 py-2 bg-background border border-border rounded-lg text-sm font-serif focus:outline-none focus:border-text-primary"
-                        />
+                        <span className="block text-xs font-serif text-text-tertiary mb-1">Sample Name</span>
+                        <p className="text-sm font-serif text-text-primary">{label.sampleName}</p>
                       </div>
                       <div>
-                        <label className="block text-sm font-serif text-text-secondary mb-2">
-                          Condition
-                        </label>
-                        <select
-                          value={sampleLabels[index]?.condition ?? "control"}
-                          onChange={(e) => {
-                            const newLabels = [...sampleLabels];
-                            if (newLabels[index]) {
-                              newLabels[index] = { ...newLabels[index], condition: e.target.value as "treatment" | "control" };
-                              setSampleLabels(newLabels);
-                            }
-                          }}
-                          className="w-full px-4 py-2 bg-background border border-border rounded-lg text-sm font-serif focus:outline-none focus:border-text-primary"
-                        >
-                          <option value="control">Control</option>
-                          <option value="treatment">Treatment</option>
-                        </select>
+                        <span className="block text-xs font-serif text-text-tertiary mb-1">Condition</span>
+                        <p className="text-sm font-serif text-text-primary capitalize">{label.condition}</p>
                       </div>
                       <div>
-                        <label className="block text-sm font-serif text-text-secondary mb-2">
-                          Replicate
-                        </label>
-                        <input
-                          type="number"
-                          min={1}
-                          value={sampleLabels[index]?.replicate ?? 1}
-                          onChange={(e) => {
-                            const newLabels = [...sampleLabels];
-                            if (newLabels[index]) {
-                              newLabels[index] = { ...newLabels[index], replicate: parseInt(e.target.value, 10) || 1 };
-                              setSampleLabels(newLabels);
-                            }
-                          }}
-                          className="w-full px-4 py-2 bg-background border border-border rounded-lg text-sm font-serif focus:outline-none focus:border-text-primary"
-                        />
+                        <span className="block text-xs font-serif text-text-tertiary mb-1">Replicate</span>
+                        <p className="text-sm font-serif text-text-primary">{label.replicate}</p>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                  );
+                })}
+              </div>
             </motion.div>
           )}
 
@@ -679,15 +640,15 @@ export default function UploadPage() {
         </div>
       </main>
 
-      {/* Sample Labeling Modal */}
+      {/* Sample Labeling Modal - edit only; labels stay visible on page when closed */}
       <AnimatePresence>
-        {showSampleLabeling && (
+        {showSampleLabelModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-text-primary/50 backdrop-blur-sm flex items-center justify-center z-50 p-6"
-            onClick={() => setShowSampleLabeling(false)}
+            onClick={() => setShowSampleLabelModal(false)}
           >
             <motion.div
               initial={{ scale: 0.95 }}
@@ -697,9 +658,9 @@ export default function UploadPage() {
               className="bg-surface rounded-2xl p-8 max-w-3xl w-full max-h-[80vh] overflow-auto shadow-elevated"
             >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-serif text-text-primary">Label Your Samples</h3>
+                <h3 className="text-2xl font-serif text-text-primary">Edit sample labels</h3>
                 <button
-                  onClick={() => setShowSampleLabeling(false)}
+                  onClick={() => setShowSampleLabelModal(false)}
                   className="p-2 hover:bg-background rounded-lg transition-colors"
                 >
                   <X className="w-5 h-5 text-text-secondary" strokeWidth={1.5} />
@@ -771,13 +732,13 @@ export default function UploadPage() {
               </div>
 
               <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-border-light">
-                <Button variant="secondary" onClick={() => setShowSampleLabeling(false)}>
+                <Button variant="secondary" onClick={() => setShowSampleLabelModal(false)}>
                   Close
                 </Button>
                 <Button
                   variant="primary"
                   onClick={() => {
-                    setShowSampleLabeling(false);
+                    setShowSampleLabelModal(false);
                     // Auto-save
                     localStorage.setItem("splicr_sample_labels", JSON.stringify(sampleLabels));
                   }}

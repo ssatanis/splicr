@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import InstitutionAutocomplete from '@/components/InstitutionAutocomplete'
+import { isEmailDomainAllowedForInstitution, getAllowedDomainsForInstitution } from '@/lib/institutionDomains'
 
 const taglines = [
   'Join researchers worldwide',
@@ -16,8 +17,11 @@ const taglines = [
 
 function normalizeAuthError(message: string): string {
   const lower = message.toLowerCase()
-  if (lower.includes('invalid') && lower.includes('api key')) {
-    return 'Authentication service is misconfigured. Please check that NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set correctly in .env.local and that your Supabase project is active.'
+  if (lower.includes('invalid') && (lower.includes('api key') || lower.includes('key'))) {
+    return [
+      'Supabase rejected your API key.',
+      'In frontend/.env.local set NEXT_PUBLIC_PUBLISHABLE_KEY to your Client Key (sb_publishable_...) from Supabase Dashboard → Project Settings → API, or set NEXT_PUBLIC_SUPABASE_ANON_KEY to the anon JWT. Then run: rm -rf .next && npm run dev',
+    ].join(' ')
   }
   if (lower.includes('already registered') || lower.includes('already exists')) {
     return 'An account with this email already exists.'
@@ -93,6 +97,12 @@ export default function SignUpPage() {
 
     if (!institution?.trim()) {
       setError('Please select your college or university')
+      return
+    }
+
+    const emailCheck = isEmailDomainAllowedForInstitution(email.trim(), institution.trim())
+    if (!emailCheck.allowed) {
+      setError(emailCheck.message ?? 'Please use your institution email address.')
       return
     }
 
@@ -260,8 +270,19 @@ export default function SignUpPage() {
                 required
                 autoComplete="email"
                 className="w-full px-4 py-3 bg-white border border-border rounded-xl font-serif text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
-                placeholder="you@institution.edu"
+                placeholder={
+                  institution.trim()
+                    ? getAllowedDomainsForInstitution(institution.trim())?.[0]
+                      ? `e.g. you@${getAllowedDomainsForInstitution(institution.trim())![0]}`
+                      : 'you@institution.edu'
+                    : 'you@institution.edu'
+                }
               />
+              {institution.trim() && getAllowedDomainsForInstitution(institution.trim()) && (
+                <p className="mt-1.5 text-xs text-text-tertiary font-serif">
+                  Use your institution email (e.g. @{getAllowedDomainsForInstitution(institution.trim())!.join(' or @')})
+                </p>
+              )}
             </div>
 
             <div>

@@ -12,6 +12,7 @@ import {
   Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 
 const navigation = [
   { name: "Dashboard", href: "/app/dashboard", icon: LayoutDashboard },
@@ -29,25 +30,51 @@ export default function Sidebar() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    setHasAuth(!!localStorage.getItem("splicr_auth_token"));
-    const authUser = localStorage.getItem("splicr_auth_user");
-    if (authUser) {
+
+    async function loadUserData() {
+      // First, try Supabase session
       try {
-        const u = JSON.parse(authUser);
-        setEmail(u.email || "user@example.com");
-        setDisplayName(u.display_name || u.email?.split("@")[0] || "Researcher");
-        return;
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (user) {
+          setHasAuth(true);
+          setEmail(user.email || "user@example.com");
+          // Try to get display name from user metadata
+          const fullName = user.user_metadata?.full_name;
+          const displayNameMeta = user.user_metadata?.display_name;
+          setDisplayName(
+            fullName || displayNameMeta || user.email?.split("@")[0] || "Researcher"
+          );
+          return;
+        }
+      } catch (_) {
+        // Supabase not configured or error, fall through to localStorage
+      }
+
+      // Fallback to legacy localStorage auth
+      setHasAuth(!!localStorage.getItem("splicr_auth_token"));
+      const authUser = localStorage.getItem("splicr_auth_user");
+      if (authUser) {
+        try {
+          const u = JSON.parse(authUser);
+          setEmail(u.email || "user@example.com");
+          setDisplayName(u.display_name || u.email?.split("@")[0] || "Researcher");
+          return;
+        } catch (_) {}
+      }
+      const name = localStorage.getItem("splicr_display_name");
+      if (name) setDisplayName(name);
+      try {
+        const stored = localStorage.getItem("splicr_user_data");
+        if (stored) {
+          const data = JSON.parse(stored);
+          if (data.email) setEmail(data.email);
+        }
       } catch (_) {}
     }
-    const name = localStorage.getItem("splicr_display_name");
-    if (name) setDisplayName(name);
-    try {
-      const stored = localStorage.getItem("splicr_user_data");
-      if (stored) {
-        const data = JSON.parse(stored);
-        if (data.email) setEmail(data.email);
-      }
-    } catch (_) {}
+
+    loadUserData();
   }, [pathname]);
 
   return (
@@ -84,7 +111,7 @@ export default function Sidebar() {
 
         <div className="px-4 py-6 border-t border-border">
           <Link
-            href={hasAuth ? "/app/settings" : "/login"}
+            href={hasAuth ? "/app/settings" : "/auth/sign-in"}
             className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-background transition-colors"
           >
             <div className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center shrink-0">

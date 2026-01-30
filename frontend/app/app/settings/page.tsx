@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Sidebar from "@/components/Sidebar";
 import Button from "@/components/Button";
 import APIKeyManager from "@/components/APIKeyManager";
 import TemplateLibrary from "@/components/TemplateLibrary";
 import { useUser } from "@/lib/context/UserContext";
+import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import {
   User,
@@ -20,15 +22,40 @@ import {
 } from "lucide-react";
 
 export default function SettingsPage() {
+  const router = useRouter();
   const { userData } = useUser();
   const [displayName, setDisplayName] = useState("Researcher");
   const [email, setEmail] = useState(userData?.email || "user@example.com");
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [hasAuth, setHasAuth] = useState(false);
+  const [isSupabaseAuth, setIsSupabaseAuth] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window === "undefined") return;
+
+    async function loadUserData() {
+      // First, try Supabase session
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (user) {
+          setHasAuth(true);
+          setIsSupabaseAuth(true);
+          setEmail(user.email || "user@example.com");
+          const fullName = user.user_metadata?.full_name;
+          const displayNameMeta = user.user_metadata?.display_name;
+          setDisplayName(
+            fullName || displayNameMeta || user.email?.split("@")[0] || "Researcher"
+          );
+          return;
+        }
+      } catch (_) {
+        // Supabase not configured or error, fall through to localStorage
+      }
+
+      // Fallback to legacy localStorage auth
       setHasAuth(!!localStorage.getItem("splicr_auth_token"));
       const stored = localStorage.getItem("splicr_user_data");
       if (stored) {
@@ -42,6 +69,8 @@ export default function SettingsPage() {
       const notif = localStorage.getItem("splicr_email_notifications");
       if (notif !== null) setEmailNotifications(notif === "true");
     }
+
+    loadUserData();
   }, [userData?.email]);
 
   const handleSaveProfile = () => {
@@ -195,17 +224,26 @@ export default function SettingsPage() {
             </h2>
             <p className="text-text-secondary font-serif mb-4">
               {hasAuth
-                ? "You are signed in. Your data is stored on the backend."
-                : "Create an account to save your analyses to the backend and access them from any device."}
+                ? "You are signed in."
+                : "Create an account to save your analyses and access them from any device."}
             </p>
             {hasAuth ? (
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
                   if (typeof window === "undefined") return;
+                  // Sign out from Supabase if using Supabase auth
+                  if (isSupabaseAuth) {
+                    try {
+                      const supabase = createClient();
+                      await supabase.auth.signOut();
+                    } catch (_) {}
+                  }
+                  // Clear legacy localStorage auth
                   localStorage.removeItem("splicr_auth_token");
                   localStorage.removeItem("splicr_auth_user");
-                  window.location.href = "/app/dashboard";
+                  router.push("/auth/sign-in");
+                  router.refresh();
                 }}
                 className="flex items-center gap-2 px-4 py-2 border border-border rounded-xl font-serif text-text-secondary hover:bg-background hover:text-text-primary transition-colors"
               >
@@ -214,12 +252,12 @@ export default function SettingsPage() {
               </button>
             ) : (
               <div className="flex items-center gap-4">
-                <Link href="/register">
+                <Link href="/auth/sign-up">
                   <button className="px-4 py-2 bg-accent text-text-primary font-serif rounded-xl hover:opacity-90">
                     Create account
                   </button>
                 </Link>
-                <Link href="/login">
+                <Link href="/auth/sign-in">
                   <button className="px-4 py-2 border border-border font-serif text-text-primary rounded-xl hover:bg-background">
                     Sign in
                   </button>

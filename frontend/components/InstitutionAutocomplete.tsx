@@ -20,8 +20,8 @@ interface InstitutionAutocompleteProps {
   error?: boolean;
 }
 
-const DEBOUNCE_MS = 300;
-const MIN_QUERY_LENGTH = 2;
+const DEBOUNCE_MS = 280;
+const MIN_QUERY_LENGTH = 1;
 
 export default function InstitutionAutocomplete({
   value,
@@ -47,12 +47,16 @@ export default function InstitutionAutocomplete({
       return;
     }
     setLoading(true);
+    setOpen(true);
     try {
+      const base = typeof window !== 'undefined' ? window.location.origin : '';
       const res = await fetch(
-        `/api/institutions/autocomplete?q=${encodeURIComponent(q)}`
+        `${base}/api/institutions/autocomplete?q=${encodeURIComponent(q)}`
       );
       const data = await res.json();
-      setOptions(data.results ?? []);
+      const list = Array.isArray(data.results) ? data.results : [];
+      setOptions(list);
+      if (list.length > 0) setOpen(true);
     } catch {
       setOptions([]);
     } finally {
@@ -106,8 +110,12 @@ export default function InstitutionAutocomplete({
   };
 
   const handleFocus = () => {
-    if (query.trim().length >= MIN_QUERY_LENGTH && options.length > 0) {
-      setOpen(true);
+    if (query.trim().length >= MIN_QUERY_LENGTH) {
+      if (options.length > 0) {
+        setOpen(true);
+      } else {
+        fetchOptions(query.trim());
+      }
     }
   };
 
