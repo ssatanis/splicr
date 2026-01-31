@@ -26,9 +26,16 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load user data on mount
+  // Load user data on mount and refetch when tab becomes visible (reload, return to tab)
   useEffect(() => {
     loadUserData();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onFocus = () => refreshAnalyses();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
   }, []);
 
   const loadUserData = async () => {

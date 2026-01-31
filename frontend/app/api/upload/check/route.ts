@@ -50,7 +50,11 @@ export async function POST(request: NextRequest) {
       .limit(1)
       .maybeSingle();
 
+    // PGRST205 = table not in schema cache (sequencing_files not created yet)
     if (error) {
+      if (error.code === 'PGRST205') {
+        return NextResponse.json({ exists: false });
+      }
       console.error('Dedup check error:', error);
       return NextResponse.json(
         { error: 'Failed to check existing file' },

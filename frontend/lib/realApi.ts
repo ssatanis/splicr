@@ -83,10 +83,15 @@ export const realApi = {
     return response.json();
   },
 
-  async getResults(id: string): Promise<AnalysisResults> {
+  /** Returns results, or { results: null, analysis } when analysis exists but results aren't ready yet. */
+  async getResults(id: string): Promise<AnalysisResults | { results: null; analysis: Analysis }> {
     const response = await fetch(`${API_BASE}/analysis/${id}/results`);
-    if (!response.ok) throw new Error('Failed to fetch results');
-    return response.json();
+    const data = await response.json();
+    if (!response.ok) throw new Error(typeof data?.message === 'string' ? data.message : 'Failed to fetch results');
+    if (data && typeof data === 'object' && data.results === null && data.analysis) {
+      return { results: null, analysis: data.analysis };
+    }
+    return data as AnalysisResults;
   },
 
   // Notes

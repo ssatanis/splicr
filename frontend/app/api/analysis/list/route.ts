@@ -40,8 +40,8 @@ export async function GET() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (!error && rows?.length) {
-        const list = rows.map((r: any) => rowToAnalysis(r));
+      if (!error) {
+        const list = (rows || []).map((r: any) => rowToAnalysis(r));
         return NextResponse.json(list);
       }
     }

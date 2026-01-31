@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Sidebar from "@/components/Sidebar";
@@ -19,76 +19,153 @@ import {
   Save,
   Shield,
   LogOut,
+  Building2,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
+import InstitutionAutocomplete from "@/components/InstitutionAutocomplete";
+
+type ProfileSaveStatus = "idle" | "saving" | "success" | "error";
 
 export default function SettingsPage() {
   const router = useRouter();
   const { userData } = useUser();
   const [displayName, setDisplayName] = useState("Researcher");
   const [email, setEmail] = useState(userData?.email || "user@example.com");
+  const [institution, setInstitution] = useState("");
   const [emailNotifications, setEmailNotifications] = useState(true);
-  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [profileSaveStatus, setProfileSaveStatus] = useState<ProfileSaveStatus>("idle");
+  const [profileSaveError, setProfileSaveError] = useState<string | null>(null);
+  const [notificationSaveSuccess, setNotificationSaveSuccess] = useState(false);
   const [hasAuth, setHasAuth] = useState(false);
   const [isSupabaseAuth, setIsSupabaseAuth] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  const loadUserData = useCallback(async () => {
+    if (typeof window === "undefined") return;
+    setProfileLoading(true);
+    setProfileSaveError(null);
+
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        setHasAuth(true);
+        setIsSupabaseAuth(true);
+        setEmail(user.email || "user@example.com");
+
+        const { data: profileRow } = await (supabase
+          .from("profiles") as any)
+          .select("full_name, institution")
+          .eq("id", user.id)
+          .single();
+
+        const profile = profileRow as { full_name?: string | null; institution?: string | null } | null;
+        if (profile && (profile.full_name != null || profile.institution != null)) {
+          setDisplayName(profile.full_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "Researcher");
+          setInstitution(profile.institution ?? "");
+        } else {
+          const fullName = user.user_metadata?.full_name;
+          const displayNameMeta = user.user_metadata?.display_name;
+          setDisplayName(fullName || displayNameMeta || user.email?.split("@")[0] || "Researcher");
+          setInstitution((user.user_metadata?.institution as string) ?? "");
+        }
+        return;
+      }
+    } catch (_) {
+      // Supabase not configured or error, fall through to localStorage
+    }
+
+    setHasAuth(!!localStorage.getItem("splicr_auth_token"));
+    const stored = localStorage.getItem("splicr_user_data");
+    if (stored) {
+      try {
+        const data = JSON.parse(stored);
+        if (data.email) setEmail(data.email);
+        if (data.institution) setInstitution(data.institution);
+      } catch (_) {}
+    }
+    const name = localStorage.getItem("splicr_display_name");
+    if (name) setDisplayName(name);
+    const inst = localStorage.getItem("splicr_institution");
+    if (inst !== null) setInstitution(inst);
+    const notif = localStorage.getItem("splicr_email_notifications");
+    if (notif !== null) setEmailNotifications(notif === "true");
+  }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    loadUserData().finally(() => setProfileLoading(false));
+  }, [loadUserData, userData?.email]);
 
-    async function loadUserData() {
-      // First, try Supabase session
+  const handleSaveProfile = async () => {
+    if (typeof window === "undefined") return;
+    setProfileSaveError(null);
+
+    if (isSupabaseAuth) {
+      setProfileSaveStatus("saving");
       try {
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
-
-        if (user) {
-          setHasAuth(true);
-          setIsSupabaseAuth(true);
-          setEmail(user.email || "user@example.com");
-          const fullName = user.user_metadata?.full_name;
-          const displayNameMeta = user.user_metadata?.display_name;
-          setDisplayName(
-            fullName || displayNameMeta || user.email?.split("@")[0] || "Researcher"
-          );
+        if (!user) {
+          setProfileSaveError("Session expired. Please sign in again.");
+          setProfileSaveStatus("error");
           return;
         }
-      } catch (_) {
-        // Supabase not configured or error, fall through to localStorage
-      }
 
-      // Fallback to legacy localStorage auth
-      setHasAuth(!!localStorage.getItem("splicr_auth_token"));
-      const stored = localStorage.getItem("splicr_user_data");
-      if (stored) {
-        try {
-          const data = JSON.parse(stored);
-          if (data.email) setEmail(data.email);
-        } catch (_) {}
+        const fullName = displayName.trim() || null;
+        const institutionValue = institution.trim() || null;
+
+        const { error: profileError } = await (supabase.from("profiles") as any).upsert(
+          {
+            id: user.id,
+            email: user.email ?? "",
+            full_name: fullName,
+            institution: institutionValue,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "id" }
+        );
+
+        if (profileError) throw profileError;
+
+        const { error: authError } = await supabase.auth.updateUser({
+          data: {
+            full_name: fullName ?? undefined,
+            institution: institutionValue ?? undefined,
+          },
+        });
+
+        if (authError) throw authError;
+
+        setProfileSaveStatus("success");
+        setTimeout(() => setProfileSaveStatus("idle"), 3000);
+      } catch (e) {
+        const message = e instanceof Error ? e.message : "Failed to save profile. Please try again.";
+        setProfileSaveError(message);
+        setProfileSaveStatus("error");
+        console.error("Profile save error:", e);
       }
-      const name = localStorage.getItem("splicr_display_name");
-      if (name) setDisplayName(name);
-      const notif = localStorage.getItem("splicr_email_notifications");
-      if (notif !== null) setEmailNotifications(notif === "true");
+      return;
     }
 
-    loadUserData();
-  }, [userData?.email]);
-
-  const handleSaveProfile = () => {
-    if (typeof window === "undefined") return;
     localStorage.setItem("splicr_display_name", displayName);
+    localStorage.setItem("splicr_institution", institution);
     const stored = localStorage.getItem("splicr_user_data");
     const data = stored ? JSON.parse(stored) : { userId: "", analyses: [], favorites: [], notes: {} };
     data.email = email;
+    data.institution = institution;
     localStorage.setItem("splicr_user_data", JSON.stringify(data));
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2000);
+    setProfileSaveStatus("success");
+    setTimeout(() => setProfileSaveStatus("idle"), 3000);
   };
 
   const handleSaveNotifications = () => {
     if (typeof window === "undefined") return;
     localStorage.setItem("splicr_email_notifications", String(emailNotifications));
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2000);
+    setNotificationSaveSuccess(true);
+    setTimeout(() => setNotificationSaveSuccess(false), 3000);
   };
 
   return (
@@ -117,6 +194,9 @@ export default function SettingsPage() {
             <h2 className="text-2xl font-serif text-text-primary mb-6 flex items-center gap-3">
               <User className="w-6 h-6" strokeWidth={1.5} />
               Profile
+              {profileLoading && (
+                <Loader2 className="w-5 h-5 animate-spin text-text-tertiary" strokeWidth={1.5} />
+              )}
             </h2>
             <div className="space-y-6">
               <div>
@@ -137,15 +217,59 @@ export default function SettingsPage() {
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 bg-background border border-border rounded-xl font-serif text-text-primary focus:outline-none focus:ring-2 focus:ring-text-primary"
+                  onChange={(e) => !isSupabaseAuth && setEmail(e.target.value)}
+                  readOnly={isSupabaseAuth}
+                  className={`w-full px-4 py-3 bg-background border border-border rounded-xl font-serif text-text-primary focus:outline-none focus:ring-2 focus:ring-text-primary ${isSupabaseAuth ? "opacity-90 cursor-not-allowed" : ""}`}
                   placeholder="researcher@institution.edu"
                 />
+                {isSupabaseAuth && (
+                  <p className="text-xs text-text-tertiary mt-1.5">Email is managed by your account and saved in the database.</p>
+                )}
               </div>
-              <Button variant="primary" size="md" onClick={handleSaveProfile}>
-                <Save className="w-4 h-4 mr-2" strokeWidth={1.5} />
-                Save profile
+              <div>
+                <label className="block text-sm font-serif text-text-secondary mb-2 flex items-center gap-2">
+                  <Building2 className="w-4 h-4" strokeWidth={1.5} />
+                  Institution
+                </label>
+                <InstitutionAutocomplete
+                  value={institution}
+                  onChange={setInstitution}
+                  placeholder="Search for your college or university…"
+                  required={false}
+                />
+              </div>
+              {profileSaveError && (
+                <div className="flex items-center gap-2 text-error text-sm font-serif">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {profileSaveError}
+                </div>
+              )}
+              <Button
+                variant="primary"
+                size="md"
+                onClick={handleSaveProfile}
+                disabled={profileSaveStatus === "saving" || profileLoading}
+              >
+                {profileSaveStatus === "saving" ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" strokeWidth={1.5} />
+                    Saving…
+                  </>
+                ) : profileSaveStatus === "success" ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 mr-2" strokeWidth={1.5} />
+                    Saved
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" strokeWidth={1.5} />
+                    Save profile
+                  </>
+                )}
               </Button>
+              {isSupabaseAuth && (
+                <p className="text-xs text-text-tertiary">Profile is stored in the database and synced with your account.</p>
+              )}
             </div>
           </motion.section>
 
@@ -172,9 +296,16 @@ export default function SettingsPage() {
                 className="w-5 h-5 rounded border-border accent-accent"
               />
             </div>
-            <Button variant="secondary" size="md" onClick={handleSaveNotifications} className="mt-6">
-              Save preferences
-            </Button>
+            <div className="flex items-center gap-3 mt-6">
+              <Button variant="secondary" size="md" onClick={handleSaveNotifications}>
+                Save preferences
+              </Button>
+              {notificationSaveSuccess && (
+                <span className="flex items-center gap-1.5 text-success text-sm font-serif">
+                  <CheckCircle2 className="w-4 h-4" /> Saved
+                </span>
+              )}
+            </div>
           </motion.section>
 
           {/* Data & privacy */}
@@ -189,7 +320,7 @@ export default function SettingsPage() {
               Data & storage
             </h2>
             <p className="text-text-secondary font-serif mb-4">
-              Analyses and notes are stored locally in this browser. For persistent, cross-device data, sign in when backend auth is enabled.
+              When signed in, analyses, notes, and profile are stored in the database and persist across devices and sessions.
             </p>
             <p className="text-sm text-text-tertiary font-serif">
               Export and backup of analysis metadata can be added in a future release.
@@ -266,13 +397,14 @@ export default function SettingsPage() {
             )}
           </motion.section>
 
-          {saveSuccess && (
+          {profileSaveStatus === "success" && profileSaveError === null && (
             <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="mt-6 text-success font-serif text-sm"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-6 flex items-center gap-2 text-success font-serif text-sm"
             >
-              Settings saved.
+              <CheckCircle2 className="w-4 h-4" />
+              Profile saved to database.
             </motion.p>
           )}
         </div>

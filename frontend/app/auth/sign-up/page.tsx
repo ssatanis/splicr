@@ -135,6 +135,20 @@ export default function SignUpPage() {
           return
         }
 
+        // Save institution (and profile) to database so it persists per user
+        await supabase
+          .from('profiles')
+          .upsert(
+            {
+              id: data.user.id,
+              email: data.user.email ?? email,
+              full_name: fullName.trim() || null,
+              institution: institution.trim() || null,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'id' }
+          )
+
         setSuccess(true)
       }
     } catch (err) {

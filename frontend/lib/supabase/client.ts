@@ -402,6 +402,9 @@ export const isSupabaseConfigured = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() && getAnonKey()
 )
 
+import { normalizeAnalysisMethod } from '@/lib/analysis-method'
+export { normalizeAnalysisMethod }
+
 // Database types
 export interface AnalysisRecord {
   id: string
@@ -498,13 +501,16 @@ export class AnalysisDB {
     if (isSupabaseConfigured) {
       const supabase = createClient()
       // Match live schema: library (not library_type), method (not algorithms), omit current_step if column missing
+      // Normalize method to allowed DB values (analyses_method_check: mageck, bagel2, drugz)
+      const rawMethod = (record.algorithms && record.algorithms[0]) || 'mageck';
+      const method = normalizeAnalysisMethod(rawMethod);
       const { data: insertedData, error } = await (supabase.from('analyses') as any)
         .insert([{
           id: record.id,
           user_id: record.user_id,
           name: record.name,
           library: record.library_type,
-          method: (record.algorithms && record.algorithms[0]) || 'mageck',
+          method,
           status: record.status,
           progress: record.progress,
           parameters: record.parameters,

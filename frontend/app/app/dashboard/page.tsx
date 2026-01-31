@@ -248,7 +248,7 @@ function EmptyState() {
       <FileText className="w-16 h-16 text-text-tertiary mx-auto mb-6" strokeWidth={1} />
       <h3 className="text-2xl font-serif text-text-primary mb-3">No analyses yet</h3>
       <p className="text-text-secondary font-serif mb-8 max-w-md mx-auto">
-        Run your first CRISPR screen analysis by uploading FASTQ reads and selecting an sgRNA library.
+        Run your first CRISPR screen analysis by uploading sequencing data and selecting an sgRNA library.
       </p>
       <Link href="/app">
         <Button variant="primary" size="lg">Upload dataset</Button>

@@ -38,8 +38,37 @@ export default function FastqUploader({
   const [reusedFiles, setReusedFiles] = useState<Set<string>>(new Set());
   const [uploadSpeed, setUploadSpeed] = useState<Record<string, number>>({});
   const startTimesRef = useRef<Record<string, number>>({});
+  const abortControllersRef = useRef<Record<string, AbortController>>({});
 
   const supabase = createClient();
+
+  const cancelUpload = (fileName: string) => {
+    const controller = abortControllersRef.current[fileName];
+    if (controller) {
+      controller.abort();
+      delete abortControllersRef.current[fileName];
+    }
+    setProgress((prev) => {
+      const next = { ...prev };
+      delete next[fileName];
+      return next;
+    });
+    setUploadSpeed((prev) => {
+      const next = { ...prev };
+      delete next[fileName];
+      return next;
+    });
+    setCompletedFiles((prev) => {
+      const next = new Set(prev);
+      next.delete(fileName);
+      return next;
+    });
+    setReusedFiles((prev) => {
+      const next = new Set(prev);
+      next.delete(fileName);
+      return next;
+    });
+  };
 
   const handleFileSelect = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -75,6 +104,10 @@ export default function FastqUploader({
     startTimesRef.current = {};
     setUploadSpeed({});
     setReusedFiles(new Set());
+    abortControllersRef.current = {};
+    files.forEach((f) => {
+      abortControllersRef.current[f.name] = new AbortController();
+    });
     // Show progress bar instantly with 0% for each file
     setProgress(
       files.reduce<Record<string, UploadProgress>>(
@@ -94,6 +127,8 @@ export default function FastqUploader({
       if (!user) {
         throw new Error('You must be logged in to upload files.');
       }
+
+      const getSignal = (fileName: string) => abortControllersRef.current[fileName]?.signal;
 
       const uploaded = await uploadMultipleFilesToR2(
         files,
@@ -119,7 +154,8 @@ export default function FastqUploader({
           if (uploadedFile.reused) {
             setReusedFiles((prev) => new Set(prev).add(uploadedFile.name));
           }
-        }
+        },
+        getSignal
       );
 
       const nextFiles = [...uploadedFiles, ...uploaded];
@@ -149,6 +185,7 @@ export default function FastqUploader({
       console.error('Upload error:', err);
       setError(message);
     } finally {
+      abortControllersRef.current = {};
       setUploading(false);
     }
   };
@@ -243,9 +280,22 @@ export default function FastqUploader({
                     {fileName}
                   </span>
                 </div>
-                <span className="text-text-secondary ml-2">
-                  {fileProgress.percent}%
-                </span>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className="text-text-secondary">
+                    {fileProgress.percent}%
+                  </span>
+                  {!completedFiles.has(fileName) && (
+                    <button
+                      type="button"
+                      onClick={() => cancelUpload(fileName)}
+                      className="text-error hover:opacity-80 p-0.5 rounded"
+                      title="Cancel upload"
+                      aria-label={`Cancel upload of ${fileName}`}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="w-full bg-border rounded-full h-2 overflow-hidden">
                 <div

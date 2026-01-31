@@ -8,10 +8,20 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
-    if (!error) {
-      // Redirect to the intended destination after successful auth
+    if (!error && data.user) {
+      const meta = data.user.user_metadata || {}
+      await (supabase.from('profiles') as any).upsert(
+        {
+          id: data.user.id,
+          email: data.user.email ?? '',
+          full_name: (meta.full_name as string) || null,
+          institution: (meta.institution as string)?.trim() || null,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'id' }
+      )
       return NextResponse.redirect(new URL(next, request.url))
     }
   }

@@ -70,25 +70,29 @@ export async function POST(request: NextRequest) {
 
     let canonicalKey = key;
     if (hash && hash.length >= 32) {
-      const table = (supabaseAdmin as any).from('sequencing_files');
-      await table.upsert(
-        {
-          file_hash: hash,
-          r2_key: key,
-          file_name: file.name,
-          size_bytes: file.size,
-          content_type: file.type || null,
-          user_id: user.id,
-        },
-        { onConflict: 'file_hash', ignoreDuplicates: true }
-      );
-      const { data: existing } = await table
-        .select('r2_key')
-        .eq('file_hash', hash)
-        .limit(1)
-        .maybeSingle();
-      if (existing?.r2_key) {
-        canonicalKey = existing.r2_key as string;
+      try {
+        const table = (supabaseAdmin as any).from('sequencing_files');
+        await table.upsert(
+          {
+            file_hash: hash,
+            r2_key: key,
+            file_name: file.name,
+            size_bytes: file.size,
+            content_type: file.type || null,
+            user_id: user.id,
+          },
+          { onConflict: 'file_hash', ignoreDuplicates: true }
+        );
+        const { data: existing } = await table
+          .select('r2_key')
+          .eq('file_hash', hash)
+          .limit(1)
+          .maybeSingle();
+        if (existing?.r2_key) {
+          canonicalKey = existing.r2_key as string;
+        }
+      } catch (dedupErr) {
+        // Table may not exist yet (PGRST205); upload succeeded, skip dedup registration
       }
     }
 

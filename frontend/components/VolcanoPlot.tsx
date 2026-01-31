@@ -39,13 +39,21 @@ function getGeneSetColor(entry: VolcanoDataPoint, colorBy: ColorByOption): strin
   return '#9B9B9B';
 }
 
+const EmptyVolcano = () => (
+  <div className="flex flex-col items-center justify-center py-24 text-center">
+    <p className="text-text-secondary font-serif">No volcano data available.</p>
+    <p className="text-text-tertiary text-sm mt-2">Data will appear when the analysis pipeline produces real results.</p>
+  </div>
+);
+
 export default function VolcanoPlot({
   data,
   fdrThreshold = 0.05,
   lfcThreshold = 1.0,
   onGeneHighlight,
 }: VolcanoPlotProps) {
-  const volcanoData = data?.length ? data : generateMockVolcanoData();
+  const volcanoData = data?.length ? data : [];
+  const hasData = volcanoData.length > 0;
   const negLog10Threshold = -Math.log10(fdrThreshold);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -57,7 +65,7 @@ export default function VolcanoPlot({
 
   const searchLower = searchQuery.trim().toUpperCase();
   const highlightedSet = highlightedGene ? new Set([highlightedGene]) : new Set<string>();
-  const searchMatchSet = searchLower
+  const searchMatchSet = searchLower && hasData
     ? new Set(volcanoData.filter((d) => d.gene.toUpperCase().includes(searchLower)).map((d) => d.gene))
     : new Set<string>();
 
@@ -74,12 +82,13 @@ export default function VolcanoPlot({
   }, []);
 
   const handleExportHTML = useCallback(() => {
+    if (!hasData) return;
     setExportOpen(false);
     exportVolcanoAsInteractiveHTML(volcanoData, `splicr-volcano-${Date.now()}.html`, {
       fdrThreshold,
       lfcThreshold,
     });
-  }, [volcanoData, fdrThreshold, lfcThreshold]);
+  }, [volcanoData, hasData, fdrThreshold, lfcThreshold]);
 
   const handleGeneClick = useCallback(
     (entry: VolcanoDataPoint) => {
@@ -164,64 +173,68 @@ export default function VolcanoPlot({
       </div>
 
       <div className="h-[520px]" onContextMenu={(e) => e.preventDefault()}>
-        <ResponsiveContainer width="100%" height="100%">
-          <ScatterChart margin={{ top: 20, right: 20, bottom: 60, left: 60 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#E8E6E3" />
-            <XAxis
-              type="number"
-              dataKey="log2FC"
-              name="Log₂ Fold Change"
-              domain={['auto', 'auto']}
-              label={{
-                value: 'Log₂ Fold Change',
-                position: 'insideBottom',
-                offset: -10,
-                style: { fontFamily: 'Instrument Serif' },
-              }}
-            />
-            <YAxis
-              type="number"
-              dataKey="negLog10P"
-              name="-Log₁₀(P-value)"
-              label={{
-                value: '-Log₁₀(P-value)',
-                angle: -90,
-                position: 'insideLeft',
-                style: { fontFamily: 'Instrument Serif' },
-              }}
-            />
-            <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
-            <ReferenceLine y={negLog10Threshold} stroke="#6ABF36" strokeWidth={2} strokeDasharray="5 5" />
-            <ReferenceLine x={-lfcThreshold} stroke="#6ABF36" strokeWidth={2} strokeDasharray="5 5" />
-            <ReferenceLine x={lfcThreshold} stroke="#6ABF36" strokeWidth={2} strokeDasharray="5 5" />
-            <Scatter
-              name="Genes"
-              data={volcanoData}
-              fill="#8884d8"
-              onClick={(e: { payload?: VolcanoDataPoint }) => e?.payload && handleGeneClick(e.payload)}
-              isAnimationActive={true}
-            >
-              {volcanoData.map((entry, index) => {
-                const isHighlight = highlightedSet.has(entry.gene) || searchMatchSet.has(entry.gene);
-                const color = getGeneSetColor(entry, colorBy);
-                return (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={color}
-                    opacity={isHighlight ? 1 : entry.isSignificant ? 1 : 0.5}
-                    stroke={isHighlight ? '#1A1A1A' : 'none'}
-                    strokeWidth={isHighlight ? 2 : 0}
-                    style={{ cursor: 'pointer' }}
-                    onContextMenu={(e) => {
-                      e.preventDefault();
-                      setContextMenu({ x: e.clientX, y: e.clientY, gene: entry.gene });
-                    }}
-                  />
-                );
-              })}
-            </Scatter>
-          </ScatterChart>
-        </ResponsiveContainer>
+        {hasData ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <ScatterChart margin={{ top: 20, right: 20, bottom: 60, left: 60 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E8E6E3" />
+              <XAxis
+                type="number"
+                dataKey="log2FC"
+                name="Log₂ Fold Change"
+                domain={['auto', 'auto']}
+                label={{
+                  value: 'Log₂ Fold Change',
+                  position: 'insideBottom',
+                  offset: -10,
+                  style: { fontFamily: 'Instrument Serif' },
+                }}
+              />
+              <YAxis
+                type="number"
+                dataKey="negLog10P"
+                name="-Log₁₀(P-value)"
+                label={{
+                  value: '-Log₁₀(P-value)',
+                  angle: -90,
+                  position: 'insideLeft',
+                  style: { fontFamily: 'Instrument Serif' },
+                }}
+              />
+              <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
+              <ReferenceLine y={negLog10Threshold} stroke="#6ABF36" strokeWidth={2} strokeDasharray="5 5" />
+              <ReferenceLine x={-lfcThreshold} stroke="#6ABF36" strokeWidth={2} strokeDasharray="5 5" />
+              <ReferenceLine x={lfcThreshold} stroke="#6ABF36" strokeWidth={2} strokeDasharray="5 5" />
+              <Scatter
+                name="Genes"
+                data={volcanoData}
+                fill="#8884d8"
+                onClick={(e: { payload?: VolcanoDataPoint }) => e?.payload && handleGeneClick(e.payload)}
+                isAnimationActive={true}
+              >
+                {volcanoData.map((entry, index) => {
+                  const isHighlight = highlightedSet.has(entry.gene) || searchMatchSet.has(entry.gene);
+                  const color = getGeneSetColor(entry, colorBy);
+                  return (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={color}
+                      opacity={isHighlight ? 1 : entry.isSignificant ? 1 : 0.5}
+                      stroke={isHighlight ? '#1A1A1A' : 'none'}
+                      strokeWidth={isHighlight ? 2 : 0}
+                      style={{ cursor: 'pointer' }}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        setContextMenu({ x: e.clientX, y: e.clientY, gene: entry.gene });
+                      }}
+                    />
+                  );
+                })}
+              </Scatter>
+            </ScatterChart>
+          </ResponsiveContainer>
+        ) : (
+          <EmptyVolcano />
+        )}
       </div>
 
       {contextMenu && (
@@ -313,36 +326,3 @@ const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<
     </div>
   );
 };
-
-function generateMockVolcanoData(): VolcanoDataPoint[] {
-  const genes = [
-    'TP53', 'KRAS', 'EGFR', 'MYC', 'BRCA1', 'BRCA2', 'APC', 'PTEN', 'RB1', 'VHL',
-    'BRAF', 'PIK3CA', 'AKT1', 'ERBB2', 'MET', 'NRAS', 'CDKN2A', 'NF1', 'ATM',
-  ];
-  const data: VolcanoDataPoint[] = [];
-  genes.forEach((gene) => {
-    const log2FC = (Math.random() - 0.5) * 4;
-    const negLog10P = 2 + Math.random() * 4;
-    const fdr = Math.pow(10, -negLog10P + 0.5);
-    data.push({
-      gene,
-      log2FC,
-      negLog10P,
-      fdr,
-      isSignificant: fdr < 0.05 && Math.abs(log2FC) > 1,
-    });
-  });
-  for (let i = 0; i < 400; i++) {
-    const log2FC = (Math.random() - 0.5) * 6;
-    const negLog10P = Math.random() * 3;
-    const fdr = Math.pow(10, -negLog10P + 0.5);
-    data.push({
-      gene: `GENE${i}`,
-      log2FC,
-      negLog10P,
-      fdr,
-      isSignificant: false,
-    });
-  }
-  return data;
-}

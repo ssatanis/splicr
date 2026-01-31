@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useEditor, EditorContent, type Content } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -45,10 +45,13 @@ export default function ReportBuilder({
   const [wordCount, setWordCount] = useState(0);
   const [exporting, setExporting] = useState(false);
 
-  const context: AnalysisContextForReport = {
-    ...getDefaultAnalysisContext(),
-    ...analysisContext,
-  };
+  const context = useMemo<AnalysisContextForReport>(
+    () => ({
+      ...getDefaultAnalysisContext(),
+      ...analysisContext,
+    }),
+    [analysisContext]
+  );
 
   const loadTemplateContent = useCallback(
     (templateIndex: number): Content => {
@@ -57,17 +60,7 @@ export default function ReportBuilder({
       const filled = fillPlaceholders(template.structure, context);
       return filled as Content;
     },
-    [
-      context.analysisName,
-      context.libraryName,
-      context.method,
-      context.totalGenes,
-      context.significantHits,
-      context.enriched,
-      context.depleted,
-      context.fdrThreshold,
-      context.lfcThreshold,
-    ]
+    [context]
   );
 
   const editor = useEditor({

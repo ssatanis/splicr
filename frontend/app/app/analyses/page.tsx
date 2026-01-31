@@ -18,8 +18,10 @@ import BatchAnalysisUploader from "@/components/BatchAnalysisUploader";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
 
+const IN_PROGRESS_STATUSES = ["running", "queued", "pending"];
+
 export default function MyAnalysesPage() {
-  const { analyses, isLoading } = useUser();
+  const { analyses, isLoading, refreshAnalyses } = useUser();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [filteredAnalyses, setFilteredAnalyses] = useState<Analysis[]>([]);
@@ -33,6 +35,14 @@ export default function MyAnalysesPage() {
       );
     setFilteredAnalyses(filtered);
   }, [analyses, statusFilter, searchQuery]);
+
+  // Auto-refresh list while any analysis is in progress so progress bars update
+  useEffect(() => {
+    const hasInProgress = analyses.some((a) => IN_PROGRESS_STATUSES.includes(a.status));
+    if (!hasInProgress) return;
+    const interval = setInterval(refreshAnalyses, 4000);
+    return () => clearInterval(interval);
+  }, [analyses, refreshAnalyses]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -86,6 +96,7 @@ export default function MyAnalysesPage() {
               <option value="complete">Complete</option>
               <option value="running">Running</option>
               <option value="queued">Queued</option>
+              <option value="pending">Pending</option>
               <option value="failed">Failed</option>
               <option value="created">Created</option>
             </select>
@@ -138,7 +149,22 @@ export default function MyAnalysesPage() {
                         {formatDate(analysis.createdAt)}
                       </td>
                       <td className="px-8 py-5">
-                        <StatusBadge status={analysis.status} />
+                        <div className="flex flex-col gap-2 min-w-[140px]">
+                          <StatusBadge status={analysis.status} />
+                          {(analysis.status === "running" || analysis.status === "queued" || analysis.status === "pending") && (
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1 h-2 bg-background rounded-full overflow-hidden border border-border-light">
+                                <div
+                                  className="h-full bg-accent rounded-full transition-all duration-500 ease-out"
+                                  style={{ width: `${Math.min(100, Math.max(0, analysis.progress ?? 0))}%` }}
+                                />
+                              </div>
+                              <span className="text-xs font-serif text-text-tertiary tabular-nums w-8">
+                                {Math.round(analysis.progress ?? 0)}%
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td className="px-8 py-5">
                         <div className="flex gap-2">
@@ -185,6 +211,7 @@ function StatusBadge({ status }: { status: string }) {
     complete: { icon: CheckCircle2, color: "text-success", bg: "bg-success/10", label: "Complete" },
     running: { icon: Clock, color: "text-info", bg: "bg-info/10", label: "Running" },
     queued: { icon: Clock, color: "text-warning", bg: "bg-warning/10", label: "Queued" },
+    pending: { icon: Clock, color: "text-info", bg: "bg-info/10", label: "In progress" },
     failed: { icon: AlertCircle, color: "text-error", bg: "bg-error/10", label: "Failed" },
     created: { icon: Clock, color: "text-text-tertiary", bg: "bg-background", label: "Created" },
   };

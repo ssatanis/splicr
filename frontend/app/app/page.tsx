@@ -60,14 +60,14 @@ export default function UploadPage() {
     });
   }, [fastqFiles]);
 
-  // Load draft from localStorage
+  // Load draft from localStorage (run once on mount)
   useEffect(() => {
     const draft = localStorage.getItem("splicr_upload_draft");
     if (draft) {
       const parsed = JSON.parse(draft);
       setLibraryType(parsed.libraryType || "");
       setSelectedAlgorithms(parsed.algorithms || ["mageck"]);
-      setAdvancedOptions(parsed.advanced || advancedOptions);
+      setAdvancedOptions((prev) => parsed.advanced ?? prev);
     }
   }, []);
 
@@ -164,7 +164,7 @@ export default function UploadPage() {
           >
             <h1 className="text-6xl font-serif text-text-primary mb-3">Upload Dataset</h1>
             <p className="text-lg text-text-secondary">
-              Start your CRISPR screen analysis by uploading FASTQ files
+              Start your CRISPR screen analysis by uploading sequencing data
             </p>
           </motion.div>
 

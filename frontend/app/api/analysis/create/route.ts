@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, supabaseAdmin } from '@/lib/supabase/server';
+import { normalizeAnalysisMethod } from '@/lib/analysis-method';
+
+export const dynamic = 'force-dynamic';
 
 /**
  * Create analysis record with R2 FASTQ paths.
  * FASTQ files are uploaded directly from browser to Cloudflare R2;
  * this route only stores metadata and R2 keys in the database.
+ * Uses supabaseAdmin for inserts/updates to avoid RLS recursion (e.g. team_members policies).
  */
 export async function POST(request: Request) {
   try {
@@ -22,8 +26,11 @@ export async function POST(request: Request) {
       );
     }
 
+    const admin = supabaseAdmin as any;
+
     const body = await request.json();
-    const { name, library, method, r2Keys, parameters, sampleLabels } = body;
+    const { name, library, method, r2Keys, parameters } = body;
+    const sampleLabels = body.sampleLabels ?? body.parameters?.sampleLabels ?? [];
 
     if (!name || !library || !method) {
       return NextResponse.json(
@@ -59,14 +66,16 @@ export async function POST(request: Request) {
       user_id: user.id,
       name: String(name).trim(),
       library: String(library),
-      method: String(method),
+      method: normalizeAnalysisMethod(String(method)),
       parameters: { ...params, r2Keys, sampleLabels },
       status: 'pending',
       progress: 0,
     };
 
     // Add columns that may not exist on older schemas (run migrations to add them)
-    let { data: analysis, error: insertError } = await (supabase.from('analyses') as any)
+    // Use admin client to bypass RLS and avoid infinite recursion in team_members policies
+    let { data: analysis, error: insertError } = await admin
+      .from('analyses')
       .insert({
         ...payload,
         file_names: r2Keys,
@@ -77,10 +86,7 @@ export async function POST(request: Request) {
 
     if (insertError?.code === 'PGRST204') {
       // Column not found: table may lack file_names/sample_labels; store only in parameters
-      const fallback = await (supabase.from('analyses') as any)
-        .insert(payload)
-        .select()
-        .single();
+      const fallback = await admin.from('analyses').insert(payload).select().single();
       insertError = fallback.error;
       analysis = fallback.data;
     }
@@ -96,8 +102,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Start analysis processing asynchronously
-    startAnalysisProcessing(analysis.id, supabase).catch(console.error);
+    // Start analysis processing asynchronously (admin for updates to bypass RLS)
+    startAnalysisProcessing(analysis.id, admin).catch(console.error);
 
     return NextResponse.json(
       {
@@ -122,12 +128,13 @@ export async function POST(request: Request) {
 }
 
 /**
- * Start analysis processing in background
+ * Start analysis processing in background.
+ * Uses admin client so RLS recursion on team_members does not block updates.
  */
-async function startAnalysisProcessing(analysisId: string, supabase: any) {
+async function startAnalysisProcessing(analysisId: string, admin: any) {
   try {
     // Update status to running
-    await supabase
+    await admin
       .from('analyses')
       .update({
         status: 'running',
@@ -148,7 +155,7 @@ async function startAnalysisProcessing(analysisId: string, supabase: any) {
   } catch (error) {
     console.error('Failed to start analysis processing:', error);
     // Update status to failed
-    await supabase
+    await admin
       .from('analyses')
       .update({
         status: 'failed',

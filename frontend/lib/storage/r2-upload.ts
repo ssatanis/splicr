@@ -6,6 +6,14 @@ import { computeFileHash } from '@/lib/storage/file-hash';
 
 export type { UploadedFile, UploadProgress };
 
+/** Thrown when user cancels an upload (e.g. via X button). */
+export class UploadCancelledError extends Error {
+  constructor() {
+    super('Upload cancelled');
+    this.name = 'UploadCancelledError';
+  }
+}
+
 /**
  * Optimized R2 upload with:
  * - Dedup: check by content hash first; reuse existing key if found
@@ -47,7 +55,8 @@ async function uploadViaProxy(
   file: File,
   userId: string,
   fileHash: string,
-  onProgress?: (progress: UploadProgress) => void
+  onProgress?: (progress: UploadProgress) => void,
+  signal?: AbortSignal
 ): Promise<string> {
   const formData = new FormData();
   formData.append('file', file);
@@ -57,6 +66,16 @@ async function uploadViaProxy(
   const xhr = new XMLHttpRequest();
 
   return new Promise((resolve, reject) => {
+    const onAbort = () => {
+      xhr.abort();
+      reject(new UploadCancelledError());
+    };
+    if (signal?.aborted) {
+      onAbort();
+      return;
+    }
+    signal?.addEventListener('abort', onAbort, { once: true });
+
     xhr.upload.addEventListener('progress', (e) => {
       if (e.lengthComputable && onProgress) {
         onProgress({
@@ -68,6 +87,7 @@ async function uploadViaProxy(
     });
 
     xhr.addEventListener('load', () => {
+      signal?.removeEventListener('abort', onAbort);
       if (xhr.status === 200) {
         const response = JSON.parse(xhr.responseText);
         resolve(response.key);
@@ -77,7 +97,17 @@ async function uploadViaProxy(
     });
 
     xhr.addEventListener('error', () => {
-      reject(new Error('Network error during upload'));
+      signal?.removeEventListener('abort', onAbort);
+      if (xhr.status === 0 && signal?.aborted) {
+        reject(new UploadCancelledError());
+      } else {
+        reject(new Error('Network error during upload'));
+      }
+    });
+
+    xhr.addEventListener('abort', () => {
+      signal?.removeEventListener('abort', onAbort);
+      reject(new UploadCancelledError());
     });
 
     xhr.open('POST', '/api/upload/proxy');
@@ -85,11 +115,20 @@ async function uploadViaProxy(
   });
 }
 
+async function abortMultipartOnCloudflare(key: string, uploadId: string): Promise<void> {
+  await fetch('/api/upload/multipart/abort', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key, uploadId }),
+  });
+}
+
 async function uploadViaMultipart(
   file: File,
   userId: string,
   fileHash: string,
-  onProgress?: (progress: UploadProgress) => void
+  onProgress?: (progress: UploadProgress) => void,
+  signal?: AbortSignal
 ): Promise<string> {
   const createRes = await fetch('/api/upload/multipart/create', {
     method: 'POST',
@@ -108,16 +147,25 @@ async function uploadViaMultipart(
   const { uploadId, key } = await createRes.json();
 
   try {
+    if (signal?.aborted) {
+      await abortMultipartOnCloudflare(key, uploadId);
+      throw new UploadCancelledError();
+    }
+
     const partSize = LARGE_PART_SIZE;
     const numParts = Math.ceil(file.size / partSize);
     const parts: { PartNumber: number; ETag: string }[] = [];
     let uploadedBytes = 0;
 
     for (let i = 0; i < numParts; i += PARALLEL_UPLOADS) {
+      if (signal?.aborted) {
+        await abortMultipartOnCloudflare(key, uploadId);
+        throw new UploadCancelledError();
+      }
       const batch: Promise<{ PartNumber: number; ETag: string; partSize: number }>[] = [];
       for (let j = 0; j < PARALLEL_UPLOADS && i + j < numParts; j++) {
         const partNumber = i + j + 1;
-        batch.push(uploadPartWithRetry(file, key, uploadId, partNumber, partSize));
+        batch.push(uploadPartWithRetry(file, key, uploadId, partNumber, partSize, 0, signal));
       }
       const batchResults = await Promise.all(batch);
       batchResults.forEach((result) => {
@@ -154,11 +202,12 @@ async function uploadViaMultipart(
     const data = await completeRes.json();
     return data.key ?? key;
   } catch (error) {
-    await fetch('/api/upload/multipart/abort', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key, uploadId }),
-    });
+    // Always abort multipart on Cloudflare when we bail (cancel or any error)
+    try {
+      await abortMultipartOnCloudflare(key, uploadId);
+    } catch {
+      // Best-effort: don't override original error
+    }
     throw error;
   }
 }
@@ -169,13 +218,15 @@ async function uploadPartWithRetry(
   uploadId: string,
   partNumber: number,
   partSize: number,
-  retries = 0
+  retries = 0,
+  signal?: AbortSignal
 ): Promise<{ PartNumber: number; ETag: string; partSize: number }> {
   try {
     const presignRes = await fetch('/api/upload/multipart/presign-part', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ key, uploadId, partNumber }),
+      signal,
     });
     if (!presignRes.ok) throw new Error('Failed to get presigned URL');
     const { presignedUrl } = await presignRes.json();
@@ -188,6 +239,7 @@ async function uploadPartWithRetry(
       method: 'PUT',
       body: blob,
       headers: { 'Content-Length': blob.size.toString() },
+      signal,
     });
     if (!uploadRes.ok) {
       throw new Error(`Part ${partNumber} upload failed: ${uploadRes.statusText}`);
@@ -201,10 +253,12 @@ async function uploadPartWithRetry(
       partSize: blob.size,
     };
   } catch (error) {
+    const isAbort = error instanceof UploadCancelledError || (error instanceof Error && error.name === 'AbortError') || signal?.aborted;
+    if (isAbort) throw new UploadCancelledError();
     if (retries < MAX_RETRIES) {
       const delay = RETRY_DELAY_MS * Math.pow(2, retries);
       await new Promise((r) => setTimeout(r, delay));
-      return uploadPartWithRetry(file, key, uploadId, partNumber, partSize, retries + 1);
+      return uploadPartWithRetry(file, key, uploadId, partNumber, partSize, retries + 1, signal);
     }
     throw error;
   }
@@ -213,11 +267,13 @@ async function uploadPartWithRetry(
 /**
  * Upload a single file: check dedup first, then proxy or multipart.
  * Returns { r2Key, reused } so UI can show "reused from cloud storage".
+ * Pass signal to allow cancelling (and abort multipart on Cloudflare when cancelled).
  */
 export async function uploadFileToR2(
   file: File,
   userId: string,
-  onProgress?: (progress: UploadProgress) => void
+  onProgress?: (progress: UploadProgress) => void,
+  signal?: AbortSignal
 ): Promise<{ r2Key: string; reused: boolean }> {
   if (!hasAllowedExtension(file.name)) {
     throw new Error(
@@ -251,26 +307,31 @@ export async function uploadFileToR2(
 
   const key =
     file.size < SMALL_FILE_THRESHOLD
-      ? await uploadViaProxy(file, userId, hash, onProgress)
-      : await uploadViaMultipart(file, userId, hash, onProgress);
+      ? await uploadViaProxy(file, userId, hash, onProgress, signal)
+      : await uploadViaMultipart(file, userId, hash, onProgress, signal);
 
   return { r2Key: key, reused: false };
 }
 
 /**
  * Upload multiple files in parallel; each file checks dedup then uploads if needed.
+ * Pass getSignal(fileName) to allow cancelling individual files (aborts in-flight upload and Cloudflare multipart when applicable).
  */
 export async function uploadMultipleFilesToR2(
   files: File[],
   userId: string,
   onFileProgress?: (fileName: string, progress: UploadProgress) => void,
-  onFileComplete?: (file: UploadedFile) => void
+  onFileComplete?: (file: UploadedFile) => void,
+  getSignal?: (fileName: string) => AbortSignal | undefined
 ): Promise<UploadedFile[]> {
-  const results = await Promise.all(
+  const results = await Promise.allSettled(
     files.map((file) =>
-      uploadFileToR2(file, userId, (progress) => {
-        onFileProgress?.(file.name, progress);
-      }).then(({ r2Key, reused }) => {
+      uploadFileToR2(
+        file,
+        userId,
+        (progress) => onFileProgress?.(file.name, progress),
+        getSignal?.(file.name)
+      ).then(({ r2Key, reused }) => {
         const uploadedFile: UploadedFile = {
           name: file.name,
           size: file.size,
@@ -283,7 +344,25 @@ export async function uploadMultipleFilesToR2(
       })
     )
   );
-  return results;
+
+  const uploaded: UploadedFile[] = [];
+  let firstError: unknown = null;
+
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i];
+    if (r.status === 'fulfilled') {
+      uploaded.push(r.value);
+    } else {
+      if (!(r.reason instanceof UploadCancelledError)) {
+        firstError = r.reason;
+      }
+    }
+  }
+
+  if (firstError != null) {
+    throw firstError;
+  }
+  return uploaded;
 }
 
 export function formatFileSize(bytes: number): string {

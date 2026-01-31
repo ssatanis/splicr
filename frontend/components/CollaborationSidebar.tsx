@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users,
@@ -134,12 +135,14 @@ export default function CollaborationSidebar({
                       className="flex items-center gap-3 p-3 bg-background dark:bg-gray-800 rounded-xl border border-border dark:border-gray-700"
                     >
                       <div className="relative shrink-0">
-                        <img
+                        <Image
                           src={
                             user.avatarUrl ||
                             `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName)}&background=6ABF36&color=fff`
                           }
                           alt=""
+                          width={40}
+                          height={40}
                           className="w-10 h-10 rounded-full object-cover"
                         />
                         <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#6ABF36] border-2 border-surface dark:border-gray-900 rounded-full" />
@@ -349,12 +352,14 @@ function CommentCard({
       }`}
     >
       <div className="flex items-start gap-3">
-        <img
+        <Image
           src={
             comment.user.avatarUrl ||
             `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.user.displayName)}&background=6ABF36&color=fff`
           }
           alt=""
+          width={32}
+          height={32}
           className="w-8 h-8 rounded-full object-cover shrink-0"
         />
         <div className="flex-1 min-w-0">
@@ -426,12 +431,14 @@ function CommentCard({
             <div className="mt-3 pl-4 border-l-2 border-border dark:border-gray-700 space-y-3">
               {comment.replies.map((reply: Comment) => (
                 <div key={reply.id} className="flex items-start gap-2">
-                  <img
+                  <Image
                     src={
                       reply.user.avatarUrl ||
                       `https://ui-avatars.com/api/?name=${encodeURIComponent(reply.user.displayName)}&background=6ABF36&color=fff`
                     }
                     alt=""
+                    width={24}
+                    height={24}
                     className="w-6 h-6 rounded-full object-cover shrink-0"
                   />
                   <div className="flex-1 min-w-0">

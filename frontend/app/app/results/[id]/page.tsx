@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -24,7 +24,7 @@ import FigureCustomizationModal from "@/components/FigureCustomizationModal";
 import AdvancedAnalysisPanel from "@/components/AdvancedAnalysisPanel";
 import { useUser } from "@/lib/context/UserContext";
 import { realApi } from "@/lib/realApi";
-import { AnalysisResults } from "@/lib/types";
+import { Analysis, AnalysisResults } from "@/lib/types";
 import { exportAsPDF, exportAsDOCX, exportAsLatex, exportComputationalLog, exportAsZIP } from "@/lib/exportUtils";
 import { generatePDF } from "@/lib/export/pdfGenerator";
 import {
@@ -66,9 +66,10 @@ interface LogEntry {
 export default function ResultsPage() {
   const params = useParams();
   const id = params?.id as string;
-  const { analyses } = useUser();
+  const { analyses, refreshAnalyses } = useUser();
   const [activeTab, setActiveTab] = useState<TabType>("overview");
   const [results, setResults] = useState<AnalysisResults | null>(null);
+  const [analysisFromApi, setAnalysisFromApi] = useState<Analysis | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditingName, setIsEditingName] = useState(false);
   const [analysisName, setAnalysisName] = useState("");
@@ -79,7 +80,8 @@ export default function ResultsPage() {
   const [reportBuilderOpen, setReportBuilderOpen] = useState(false);
   const [figureCustomizationOpen, setFigureCustomizationOpen] = useState(false);
 
-  const analysis = analyses.find((a) => a.id === id);
+  const analysisFromList = analyses.find((a) => a.id === id);
+  const analysis = analysisFromApi ?? analysisFromList;
 
   const significantGenes = (() => {
     if (!results) return [] as string[];
@@ -90,10 +92,52 @@ export default function ResultsPage() {
     return [...new Set([...depleted, ...enriched])];
   })();
 
+  const loadResults = useCallback(async () => {
+    setIsLoading(true);
+    setAnalysisFromApi(null);
+    try {
+      const data = await realApi.getResults(id);
+      if (data && typeof data === 'object' && 'analysis' in data && data.results === null) {
+        setAnalysisFromApi(data.analysis);
+        setResults(null);
+      } else {
+        setAnalysisFromApi(null);
+        setResults(data as AnalysisResults | null);
+      }
+    } catch (error) {
+      console.error("Error loading results:", error);
+      setResults(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [id]);
+
+  const loadNotes = useCallback(async () => {
+    const note = await realApi.getNote(id);
+    setNotes(note);
+  }, [id]);
+
   useEffect(() => {
     loadResults();
     loadNotes();
-  }, [id]);
+  }, [id, loadResults, loadNotes]);
+
+  // Keep analyses list fresh so we have current status (e.g. running → complete)
+  useEffect(() => {
+    if (!id) return;
+    refreshAnalyses();
+  }, [id, refreshAnalyses]);
+
+  // Poll for progress when analysis is in progress so the progress bar updates
+  useEffect(() => {
+    const inProgress = analysis && (analysis.status === "running" || analysis.status === "queued" || analysis.status === "pending");
+    if (!inProgress || results) return;
+    const interval = setInterval(() => {
+      refreshAnalyses();
+      loadResults();
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [analysis?.id, analysis?.status, results, refreshAnalyses, loadResults]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -105,23 +149,6 @@ export default function ResultsPage() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showExportMenu]);
-
-  const loadResults = async () => {
-    setIsLoading(true);
-    try {
-      const data = await realApi.getResults(id);
-      setResults(data);
-    } catch (error) {
-      console.error("Error loading results:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loadNotes = async () => {
-    const note = await realApi.getNote(id);
-    setNotes(note);
-  };
 
   const saveNotes = async () => {
     await realApi.saveNote(id, notes);
@@ -471,8 +498,50 @@ export default function ResultsPage() {
               </motion.div>
             ) : (
               <div key="error" className="bg-surface rounded-2xl p-12 border border-border text-center">
-                <p className="text-text-secondary font-serif">Could not load results.</p>
-                <Link href="/app/analyses" className="text-accent font-serif mt-4 inline-block">Back to My analyses</Link>
+                {analysis ? (
+                  <>
+                    <p className="text-text-primary font-serif text-lg">{analysis.name ?? "Analysis"}</p>
+                    <p className="text-text-tertiary text-sm mt-1">
+                      Status: <span className="capitalize">{analysis.status}</span>
+                      {typeof analysis.progress === "number" && ` · ${Math.round(analysis.progress)}%`}
+                    </p>
+                    {(analysis.status === "running" || analysis.status === "queued" || analysis.status === "pending") ? (
+                      <>
+                        <p className="text-text-secondary font-serif mt-4">Analysis in progress — results will appear when the run finishes.</p>
+                        <div className="max-w-md mx-auto mt-6">
+                          <div className="h-3 bg-background rounded-full overflow-hidden border border-border-light">
+                            <motion.div
+                              className="h-full bg-accent rounded-full"
+                              initial={{ width: 0 }}
+                              animate={{ width: `${Math.min(100, Math.max(0, analysis.progress ?? 0))}%` }}
+                              transition={{ duration: 0.5, ease: "easeOut" }}
+                            />
+                          </div>
+                          <p className="text-text-tertiary text-xs mt-2">Still being analyzed</p>
+                        </div>
+                        <div className="flex items-center justify-center gap-4 mt-6">
+                          <Button variant="outline" onClick={() => { refreshAnalyses(); loadResults(); }}>Refresh</Button>
+                          <Link href="/app/analyses">
+                            <Button variant="ghost">Back to My analyses</Button>
+                          </Link>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex items-center justify-center gap-4 mt-6">
+                        <Button variant="outline" onClick={() => { refreshAnalyses(); loadResults(); }}>Retry</Button>
+                        <Link href="/app/analyses" className="text-accent font-serif inline-block">Back to My analyses</Link>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <p className="text-text-secondary font-serif">Could not load results.</p>
+                    <div className="flex items-center justify-center gap-4 mt-6">
+                      <Button variant="outline" onClick={() => { refreshAnalyses(); loadResults(); }}>Retry</Button>
+                      <Link href="/app/analyses" className="text-accent font-serif inline-block">Back to My analyses</Link>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </AnimatePresence>
