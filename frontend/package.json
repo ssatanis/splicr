@@ -19,6 +19,7 @@
     "@aws-sdk/client-s3": "^3.980.0",
     "@aws-sdk/lib-storage": "^3.980.0",
     "@aws-sdk/s3-request-presigner": "^3.980.0",
+    "@floating-ui/dom": "^1.7.5",
     "@stdlib/stats": "^0.3.3",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.93.3",
@@ -28,6 +29,7 @@
     "@tiptap/react": "^3.18.0",
     "@tiptap/starter-kit": "^3.18.0",
     "@types/pako": "^2.0.4",
+    "autoprefixer": "^10",
     "clsx": "^2.1.0",
     "date-fns": "^4.1.0",
     "docx": "^9.5.1",
@@ -48,6 +50,7 @@
     "pako": "^2.1.0",
     "papaparse": "^5.5.3",
     "plotly.js-dist-min": "^3.3.1",
+    "postcss": "^8",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "react-force-graph": "^1.48.1",
@@ -55,8 +58,6 @@
     "react-plotly.js": "^2.6.0",
     "recharts": "^3.7.0",
     "tailwind-merge": "^2.2.0",
-    "autoprefixer": "^10",
-    "postcss": "^8",
     "tailwindcss": "^3.4.0"
   },
   "devDependencies": {
