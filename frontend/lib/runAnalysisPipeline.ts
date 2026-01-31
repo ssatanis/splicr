@@ -163,46 +163,46 @@ export async function runAnalysisPipeline(analysisId: string, analysis: any): Pr
   try {
     addLog('Initialization', 'Starting CRISPR screen analysis pipeline', 5, 'info');
     await updateProgress(admin, analysisId, 5, 'Initializing pipeline', logs);
-    await delay(800);
+    await delay(250);
 
     addLog('Validation', `Validating ${fileNames?.length ?? 0} FASTQ files`, 10, 'info');
     await updateProgress(admin, analysisId, 10, 'Validating files', logs);
-    await delay(600);
+    await delay(200);
 
     const libraryType = analysis.library || 'brunello';
     addLog('Library', `Loading ${String(libraryType).toUpperCase()} sgRNA library`, 15, 'info');
     await updateProgress(admin, analysisId, 15, 'Loading sgRNA library', logs);
-    await delay(700);
+    await delay(250);
 
     addLog('Alignment', 'Aligning reads to sgRNA library', 20, 'info');
     await updateProgress(admin, analysisId, 20, 'Aligning reads', logs);
-    await delay(1000);
+    await delay(300);
 
     addLog('Counting', 'Generating sgRNA count matrix', 30, 'info');
     await updateProgress(admin, analysisId, 30, 'Counting sgRNAs', logs);
-    await delay(800);
+    await delay(250);
 
     addLog('QC', 'Running quality control checks', 40, 'info');
     await updateProgress(admin, analysisId, 40, 'Quality control', logs);
-    await delay(600);
+    await delay(200);
 
     const normMethod = analysis.parameters?.normalizationMethod || 'median';
     addLog('Normalization', `Applying ${normMethod} normalization`, 50, 'info');
     await updateProgress(admin, analysisId, 50, 'Normalizing counts', logs);
-    await delay(700);
+    await delay(250);
 
     let progress = 55;
     const progressPerAlg = Math.max(1, 30 / (algorithms.length || 1));
     for (const alg of algorithms) {
       addLog(String(alg).toUpperCase(), `Running ${String(alg).toUpperCase()} analysis`, progress, 'info');
       await updateProgress(admin, analysisId, progress, `Running ${String(alg).toUpperCase()}`, logs);
-      await delay(1200);
+      await delay(400);
       progress += progressPerAlg;
     }
 
     addLog('Results', 'Computing gene-level statistics', 90, 'info');
     await updateProgress(admin, analysisId, 90, 'Computing statistics', logs);
-    await delay(600);
+    await delay(250);
 
     const results = generateAnalysisResults(analysis, sampleLabels, algorithms);
     addLog('Complete', 'Analysis completed successfully', 100, 'success');

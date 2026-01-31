@@ -12,7 +12,6 @@ export default async function ProtectedLayout({
       <header className="border-b">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
           <h1 className="text-xl font-bold">SplicR Dashboard</h1>
-          <p className="text-sm text-gray-600">{user.email}</p>
         </div>
       </header>
       <main>{children}</main>

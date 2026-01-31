@@ -46,6 +46,7 @@ export interface Analysis {
   progress: number;
   currentStep?: string;
   errorMessage?: string;
+  logs?: { timestamp: string; step: string; message: string; progress: number; level: string }[];
   resultsPath?: string;
   thumbnailPath?: string;
   userId?: string;

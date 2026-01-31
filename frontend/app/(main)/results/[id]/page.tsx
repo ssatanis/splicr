@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -82,6 +82,7 @@ export default function ResultsPage() {
   const [figureCustomizationOpen, setFigureCustomizationOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
+  const runTriggeredRef = useRef<string | null>(null);
 
   const analysisFromList = analyses.find((a) => a.id === id);
   const analysis = analysisFromApi ?? analysisFromList;
@@ -123,6 +124,7 @@ export default function ResultsPage() {
   useEffect(() => {
     loadResults();
     loadNotes();
+    runTriggeredRef.current = null;
   }, [id, loadResults, loadNotes]);
 
   // Keep analyses list fresh so we have current status (e.g. running → complete)
@@ -131,14 +133,25 @@ export default function ResultsPage() {
     refreshAnalyses();
   }, [id, refreshAnalyses]);
 
-  // Poll for progress when analysis is in progress so the progress bar updates
+  // When status is "pending", start the pipeline once (run route runs it to completion)
+  useEffect(() => {
+    if (!id || !analysis || analysis.status !== "pending" || results) return;
+    if (runTriggeredRef.current === id) return;
+    runTriggeredRef.current = id;
+    realApi.runAnalysis(id).then(() => {
+      refreshAnalyses();
+      loadResults();
+    }).catch(console.error);
+  }, [id, analysis?.status, results, refreshAnalyses, loadResults]);
+
+  // Poll for progress when analysis is in progress so the progress bar and logs update
   useEffect(() => {
     const inProgress = analysis && (analysis.status === "running" || analysis.status === "queued" || analysis.status === "pending");
     if (!inProgress || results) return;
     const interval = setInterval(() => {
       refreshAnalyses();
       loadResults();
-    }, 3000);
+    }, 2000);
     return () => clearInterval(interval);
   }, [analysis?.id, analysis?.status, results, refreshAnalyses, loadResults]);
 
@@ -534,6 +547,11 @@ export default function ResultsPage() {
                     {(analysis.status === "running" || analysis.status === "queued" || analysis.status === "pending") ? (
                       <>
                         <p className="text-text-secondary font-serif mt-4">Analysis in progress — results will appear when the run finishes.</p>
+                        {(analysis.currentStep ?? analysis.status === "pending") && (
+                          <p className="text-text-tertiary text-sm mt-2 font-medium">
+                            {analysis.status === "pending" ? "Starting pipeline…" : analysis.currentStep ?? "Running…"}
+                          </p>
+                        )}
                         <div className="max-w-md mx-auto mt-6">
                           <div className="h-3 bg-background rounded-full overflow-hidden border border-border-light">
                             <motion.div
@@ -543,8 +561,23 @@ export default function ResultsPage() {
                               transition={{ duration: 0.5, ease: "easeOut" }}
                             />
                           </div>
-                          <p className="text-text-tertiary text-xs mt-2">Still being analyzed</p>
+                          <p className="text-text-tertiary text-xs mt-2">
+                            {analysis.status === "pending" ? "Starting…" : "Still being analyzed"}
+                          </p>
                         </div>
+                        {analysis.logs && analysis.logs.length > 0 && (
+                          <div className="max-w-lg mx-auto mt-6 text-left bg-background/50 rounded-lg border border-border p-4 max-h-32 overflow-y-auto">
+                            <p className="text-text-tertiary text-xs font-medium mb-2">Recent steps</p>
+                            <ul className="space-y-1 text-xs text-text-secondary">
+                              {analysis.logs.slice(-5).map((log: { progress: number; message: string }, i: number) => (
+                                <li key={i} className="flex items-center gap-2">
+                                  <span className="text-text-tertiary shrink-0">{Math.round(log.progress)}%</span>
+                                  <span>{log.message}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                         <div className="flex items-center justify-center gap-4 mt-6">
                           <Button variant="outline" onClick={() => { refreshAnalyses(); loadResults(); }} disabled={isRetrying}>Refresh</Button>
                           <Link href="/analyses">
@@ -595,7 +628,7 @@ export default function ResultsPage() {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 onBlur={saveNotes}
-                placeholder="Add notes about this analysis (saved automatically)..."
+                placeholder="Add notes about this analysis"
                 className="w-full h-32 bg-transparent border-none resize-none font-serif text-text-primary focus:outline-none placeholder:text-text-tertiary"
               />
             </div>

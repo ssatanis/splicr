@@ -34,8 +34,8 @@ export async function POST(
       })
       .eq('id', analysisId);
 
-    // Run pipeline in background (same logic as create; no HTTP self-call)
-    runAnalysisPipeline(analysisId, analysis).catch(console.error);
+    // Run pipeline in this request so it completes (avoids serverless killing background work)
+    await runAnalysisPipeline(analysisId, analysis);
 
     return NextResponse.json({
       success: true,

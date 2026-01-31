@@ -27,6 +27,7 @@ function rowToAnalysis(row: any): Analysis {
     progress: row.progress ?? 0,
     currentStep: row.current_step,
     errorMessage: row.error_message,
+    logs: Array.isArray(row.logs) ? row.logs : undefined,
     userId: row.user_id,
   } as Analysis;
 }

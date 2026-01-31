@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient, supabaseAdmin } from '@/lib/supabase/server';
 import { normalizeAnalysisMethod } from '@/lib/analysis-method';
-import { runAnalysisPipeline } from '@/lib/runAnalysisPipeline';
 
 export const dynamic = 'force-dynamic';
 
@@ -105,14 +104,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // Start analysis processing in background (direct call — no HTTP self-call)
-    startAnalysisProcessing(analysis, admin).catch(console.error);
+    // Do not run pipeline here — serverless can kill the process after response.
+    // Results page will trigger POST /api/analysis/[id]/run when status is pending,
+    // and that request will run the pipeline to completion.
 
     return NextResponse.json(
       {
         success: true,
         analysis,
-        message: 'Analysis created and processing started',
+        message: 'Analysis created. Open the results page to start the run.',
       },
       { status: 201 }
     );
@@ -130,31 +130,3 @@ export async function POST(request: Request) {
   }
 }
 
-/**
- * Start analysis processing in background.
- * Calls the pipeline directly so creation always runs without depending on HTTP self-call.
- */
-async function startAnalysisProcessing(analysis: any, admin: any) {
-  const analysisId = analysis.id;
-  try {
-    await admin
-      .from('analyses')
-      .update({
-        status: 'running',
-        progress: 5,
-        started_at: new Date().toISOString(),
-      })
-      .eq('id', analysisId);
-
-    runAnalysisPipeline(analysisId, analysis).catch(console.error);
-  } catch (error) {
-    console.error('Failed to start analysis processing:', error);
-    await admin
-      .from('analyses')
-      .update({
-        status: 'failed',
-        error_message: error instanceof Error ? error.message : 'Processing failed to start',
-      })
-      .eq('id', analysisId);
-  }
-}

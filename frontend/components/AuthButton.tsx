@@ -155,9 +155,6 @@ export default function AuthButton() {
             <p className="font-serif text-text-primary font-medium truncate">
               {displayName}
             </p>
-            <p className="text-sm text-text-tertiary font-serif truncate">
-              {user.email}
-            </p>
             {profile?.institution && (
               <p className="text-xs text-text-tertiary font-serif truncate mt-1">
                 {profile.institution}
