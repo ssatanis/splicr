@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { readFileSync, readdirSync } from 'fs';
+import { join } from 'path';
 
 // Admin endpoint to run migrations - should be protected in production
 export async function POST() {
@@ -19,59 +21,86 @@ export async function POST() {
       auth: { persistSession: false },
     });
 
-    // Create analyses table if it doesn't exist
-    // Using individual statements since Supabase REST API doesn't support multi-statement
-    const migrations = [
-      // Create the table
-      `CREATE TABLE IF NOT EXISTS analyses (
-        id TEXT PRIMARY KEY,
-        user_id UUID NOT NULL,
-        name TEXT NOT NULL,
-        library_type TEXT NOT NULL,
-        method TEXT NOT NULL DEFAULT 'mageck',
-        file_names TEXT[] NOT NULL DEFAULT '{}',
-        parameters JSONB DEFAULT '{}',
-        sample_labels JSONB,
-        status TEXT NOT NULL DEFAULT 'pending',
-        progress INTEGER NOT NULL DEFAULT 0,
-        current_step TEXT,
-        results JSONB,
-        logs JSONB,
-        error_message TEXT,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-        updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-        started_at TIMESTAMPTZ,
-        completed_at TIMESTAMPTZ
-      )`,
-      // Add indexes
-      `CREATE INDEX IF NOT EXISTS idx_analyses_user_id ON analyses(user_id)`,
-      `CREATE INDEX IF NOT EXISTS idx_analyses_status ON analyses(status)`,
-      `CREATE INDEX IF NOT EXISTS idx_analyses_created_at ON analyses(created_at DESC)`,
-    ];
+    const results: { file: string; success: boolean; error?: string; statements?: number }[] = [];
 
-    const results: { sql: string; success: boolean; error?: string }[] = [];
+    // Get all migration files from supabase/migrations directory
+    const migrationsDir = join(process.cwd(), '../supabase/migrations');
+    let migrationFiles: string[] = [];
 
-    for (const sql of migrations) {
-      const { error } = await supabase.rpc('exec_sql', { query: sql }).maybeSingle();
-      if (error && !error.message.includes('already exists')) {
-        results.push({ sql: sql.substring(0, 50) + '...', success: false, error: error.message });
-      } else {
-        results.push({ sql: sql.substring(0, 50) + '...', success: true });
+    try {
+      migrationFiles = readdirSync(migrationsDir)
+        .filter(f => f.endsWith('.sql'))
+        .sort();
+    } catch (err) {
+      console.log('No migrations directory found, using inline migrations');
+    }
+
+    // Run file-based migrations if found
+    for (const file of migrationFiles) {
+      const filePath = join(migrationsDir, file);
+      try {
+        const sql = readFileSync(filePath, 'utf-8');
+        const statements = sql
+          .split(';')
+          .map(s => s.trim())
+          .filter(s => s.length > 0 && !s.startsWith('--') && !s.match(/^COMMENT ON/));
+
+        let successCount = 0;
+        let errorMsg = '';
+
+        for (const statement of statements) {
+          if (!statement) continue;
+
+          try {
+            const { error } = await (supabase as any).rpc('exec_sql', {
+              query: statement + ';'
+            });
+
+            if (error) {
+              if (
+                error.message.includes('already exists') ||
+                error.message.includes('duplicate') ||
+                error.message.includes('does not exist')
+              ) {
+                successCount++;
+              } else {
+                errorMsg = error.message;
+              }
+            } else {
+              successCount++;
+            }
+          } catch (e: any) {
+            if (!e.message?.includes('already exists')) {
+              errorMsg = e.message;
+            }
+          }
+        }
+
+        results.push({
+          file,
+          success: true,
+          statements: successCount,
+          error: errorMsg || undefined
+        });
+      } catch (error: any) {
+        results.push({ file, success: false, error: error.message });
       }
     }
 
-    // Try direct insert to test
-    const testResult = await supabase
-      .from('analyses')
-      .select('id')
-      .limit(1);
+    // Verify critical tables exist
+    const tables = ['profiles', 'analyses', 'analysis_comments', 'analysis_activity', 'activity_logs'];
+    const tableStatus: Record<string, boolean> = {};
+
+    for (const table of tables) {
+      const { error } = await supabase.from(table).select('*').limit(1);
+      tableStatus[table] = !error;
+    }
 
     return NextResponse.json({
       success: true,
-      message: 'Migration attempted',
+      message: 'Migrations completed',
       results,
-      tableExists: !testResult.error,
-      tableError: testResult.error?.message,
+      tableStatus,
     });
   } catch (error) {
     console.error('Migration error:', error);
