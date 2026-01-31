@@ -119,7 +119,7 @@ export default function SignUpPage() {
             full_name: fullName,
             institution: institution.trim(),
           },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth/callback`,
         },
       })
 
