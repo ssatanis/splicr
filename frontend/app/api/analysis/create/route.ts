@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient, supabaseAdmin } from '@/lib/supabase/server';
 import { normalizeAnalysisMethod } from '@/lib/analysis-method';
+import { runAnalysisPipeline } from '@/lib/runAnalysisPipeline';
 
 export const dynamic = 'force-dynamic';
 
@@ -104,8 +105,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Start analysis processing asynchronously (admin for updates to bypass RLS)
-    startAnalysisProcessing(analysis.id, admin).catch(console.error);
+    // Start analysis processing in background (direct call — no HTTP self-call)
+    startAnalysisProcessing(analysis, admin).catch(console.error);
 
     return NextResponse.json(
       {
@@ -131,11 +132,11 @@ export async function POST(request: Request) {
 
 /**
  * Start analysis processing in background.
- * Uses admin client so RLS recursion on team_members does not block updates.
+ * Calls the pipeline directly so creation always runs without depending on HTTP self-call.
  */
-async function startAnalysisProcessing(analysisId: string, admin: any) {
+async function startAnalysisProcessing(analysis: any, admin: any) {
+  const analysisId = analysis.id;
   try {
-    // Update status to running
     await admin
       .from('analyses')
       .update({
@@ -145,18 +146,9 @@ async function startAnalysisProcessing(analysisId: string, admin: any) {
       })
       .eq('id', analysisId);
 
-    // Trigger the actual analysis (this would call your backend service)
-    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/analysis/${analysisId}/run`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to start analysis processing');
-    }
+    runAnalysisPipeline(analysisId, analysis).catch(console.error);
   } catch (error) {
     console.error('Failed to start analysis processing:', error);
-    // Update status to failed
     await admin
       .from('analyses')
       .update({
