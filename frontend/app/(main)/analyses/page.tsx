@@ -13,6 +13,8 @@ import {
   AlertCircle,
   FileText,
   Upload,
+  Users,
+  RefreshCw,
 } from "lucide-react";
 import BatchAnalysisUploader from "@/components/BatchAnalysisUploader";
 import { formatDate } from "@/lib/utils";
@@ -114,7 +116,7 @@ export default function MyAnalysesPage() {
               <h3 className="text-2xl font-serif text-text-primary mb-3">No analyses found</h3>
               <p className="text-text-secondary font-serif mb-8 max-w-md mx-auto">
                 {analyses.length === 0
-                  ? "Upload FASTQ files and start your first screen analysis."
+                  ? "Upload sequencing data and start your first screen analysis."
                   : "No analyses match your filters."}
               </p>
               <Link href="/upload">
@@ -134,14 +136,22 @@ export default function MyAnalysesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredAnalyses.map((analysis) => (
+                  {filteredAnalyses.map((analysis: any) => (
                     <tr
                       key={analysis.id}
                       className="border-b border-border-light hover:bg-background transition-colors duration-200"
                     >
                       <td className="px-8 py-5">
                         <Link href={`/results/${analysis.id}`} className="block">
-                          <div className="font-serif text-text-primary hover:text-accent transition-colors">{analysis.name}</div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-serif text-text-primary hover:text-accent transition-colors">{analysis.name}</span>
+                            {analysis.isShared && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-accent/10 text-accent text-xs rounded-full">
+                                <Users className="w-3 h-3" />
+                                Shared
+                              </span>
+                            )}
+                          </div>
                           <div className="text-sm text-text-tertiary mt-1">{analysis.fileKeys.length} files</div>
                         </Link>
                       </td>
@@ -168,7 +178,7 @@ export default function MyAnalysesPage() {
                       </td>
                       <td className="px-8 py-5">
                         <div className="flex gap-2">
-                          {analysis.algorithm.map((alg) => (
+                          {analysis.algorithm.map((alg: string) => (
                             <span
                               key={alg}
                               className="px-2 py-1 bg-background border border-border-light rounded-lg text-xs font-serif text-text-secondary"
@@ -179,9 +189,29 @@ export default function MyAnalysesPage() {
                         </div>
                       </td>
                       <td className="px-8 py-5">
-                        <Link href={`/results/${analysis.id}`}>
-                          <Button variant="outline" size="sm">View results</Button>
-                        </Link>
+                        <div className="flex items-center gap-2">
+                          <Link href={`/results/${analysis.id}`}>
+                            <Button variant="outline" size="sm">View results</Button>
+                          </Link>
+                          {analysis.status === "failed" && (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={async (e) => {
+                                e.preventDefault();
+                                try {
+                                  await fetch(`/api/analysis/${analysis.id}/run`, { method: "POST" });
+                                  refreshAnalyses();
+                                } catch (err) {
+                                  console.error("Retry failed:", err);
+                                }
+                              }}
+                            >
+                              <RefreshCw className="w-3.5 h-3.5 mr-1.5" strokeWidth={1.5} />
+                              Retry
+                            </Button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

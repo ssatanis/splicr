@@ -22,6 +22,7 @@ import CollaborationSidebar from "@/components/CollaborationSidebar";
 import ReportBuilderModal from "@/components/ReportBuilderModal";
 import FigureCustomizationModal from "@/components/FigureCustomizationModal";
 import AdvancedAnalysisPanel from "@/components/AdvancedAnalysisPanel";
+import ShareAnalysisModal from "@/components/ShareAnalysisModal";
 import { useUser } from "@/lib/context/UserContext";
 import { realApi } from "@/lib/realApi";
 import { Analysis, AnalysisResults } from "@/lib/types";
@@ -79,6 +80,7 @@ export default function ResultsPage() {
   const [collabSidebarOpen, setCollabSidebarOpen] = useState(false);
   const [reportBuilderOpen, setReportBuilderOpen] = useState(false);
   const [figureCustomizationOpen, setFigureCustomizationOpen] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
 
   const analysisFromList = analyses.find((a) => a.id === id);
   const analysis = analysisFromApi ?? analysisFromList;
@@ -348,6 +350,15 @@ export default function ResultsPage() {
                 >
                   <MessageSquare className="w-4 h-4" strokeWidth={1.5} />
                   Collaboration
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onClick={() => setShareModalOpen(true)}
+                  className="inline-flex items-center gap-2"
+                >
+                  <Share2 className="w-4 h-4" strokeWidth={1.5} />
+                  Share
                 </Button>
                 <Link href="/analyses">
                   <Button variant="secondary" size="md">
@@ -635,6 +646,13 @@ export default function ResultsPage() {
             isSignificant: p.isSignificant ?? false,
           })) ?? []
         }
+      />
+
+      <ShareAnalysisModal
+        analysisId={id}
+        analysisName={analysisName || analysis?.name || "Analysis"}
+        open={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
       />
     </div>
   );

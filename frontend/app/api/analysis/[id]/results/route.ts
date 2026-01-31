@@ -9,11 +9,14 @@ const analysisResultsMemory = globalStore.resultsStore;
 function rowToAnalysis(row: any): Analysis {
   const fileKeys = row.file_names?.length ? row.file_names : (row.parameters?.r2Keys || []);
   const sampleLabels = row.sample_labels?.length ? row.sample_labels : (row.parameters?.sampleLabels || []);
+  // Get algorithms from parameters.algorithms first, then fall back to method
+  const algorithms = row.parameters?.algorithms ||
+    (Array.isArray(row.method) ? row.method : [row.method || 'mageck']);
   return {
     id: row.id,
     name: row.name,
     status: (row.status || 'pending') as Analysis['status'],
-    algorithm: Array.isArray(row.method) ? row.method : [row.method || 'mageck'],
+    algorithm: algorithms,
     libraryType: (row.library || row.library_type || 'brunello') as Analysis['libraryType'],
     fileKeys,
     sampleLabels,

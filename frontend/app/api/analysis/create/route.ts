@@ -31,10 +31,12 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { name, library, method, r2Keys, parameters } = body;
     const sampleLabels = body.sampleLabels ?? body.parameters?.sampleLabels ?? [];
+    // Support both single method and algorithms array
+    const algorithms = parameters?.algorithms || (Array.isArray(method) ? method : [method]);
 
-    if (!name || !library || !method) {
+    if (!name || !library || (!method && (!algorithms || algorithms.length === 0))) {
       return NextResponse.json(
-        { error: 'Missing required fields: name, library, method' },
+        { error: 'Missing required fields: name, library, method/algorithms' },
         { status: 400 }
       );
     }
@@ -66,8 +68,8 @@ export async function POST(request: Request) {
       user_id: user.id,
       name: String(name).trim(),
       library: String(library),
-      method: normalizeAnalysisMethod(String(method)),
-      parameters: { ...params, r2Keys, sampleLabels },
+      method: normalizeAnalysisMethod(String(algorithms[0] || method)),
+      parameters: { ...params, r2Keys, sampleLabels, algorithms },
       status: 'pending',
       progress: 0,
     };
