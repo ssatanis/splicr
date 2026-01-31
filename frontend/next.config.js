@@ -25,6 +25,11 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        source: '/favicon.ico',
+        destination: '/faviconslicr.png',
+        permanent: false,
+      },
+      {
         source: '/',
         destination: '/dashboard',
         permanent: false,
