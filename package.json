@@ -6,7 +6,7 @@
     "node": "24.x"
   },
   "scripts": {
-    "build": "cd frontend && npm ci && npm run build",
+    "build": "cd frontend && npm ci --include=dev && npm run build",
     "dev": "cd frontend && npm run dev",
     "start": "cd frontend && npm run start"
   },
