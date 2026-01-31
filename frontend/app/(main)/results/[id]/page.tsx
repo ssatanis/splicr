@@ -81,6 +81,7 @@ export default function ResultsPage() {
   const [reportBuilderOpen, setReportBuilderOpen] = useState(false);
   const [figureCustomizationOpen, setFigureCustomizationOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   const analysisFromList = analyses.find((a) => a.id === id);
   const analysis = analysisFromApi ?? analysisFromList;
@@ -154,6 +155,20 @@ export default function ResultsPage() {
 
   const saveNotes = async () => {
     await realApi.saveNote(id, notes);
+  };
+
+  const handleRetry = async () => {
+    if (!id || isRetrying) return;
+    setIsRetrying(true);
+    try {
+      await realApi.runAnalysis(id);
+      await refreshAnalyses();
+      await loadResults();
+    } catch (e) {
+      console.error("Retry failed:", e);
+    } finally {
+      setIsRetrying(false);
+    }
   };
 
   const handleExportCompletePDF = async () => {
@@ -514,7 +529,7 @@ export default function ResultsPage() {
                     <p className="text-text-primary font-serif text-lg">{analysis.name ?? "Analysis"}</p>
                     <p className="text-text-tertiary text-sm mt-1">
                       Status: <span className="capitalize">{analysis.status}</span>
-                      {typeof analysis.progress === "number" && ` · ${Math.round(analysis.progress)}%`}
+                      {(analysis.status === "running" || analysis.status === "queued" || analysis.status === "pending") && typeof analysis.progress === "number" && ` · ${Math.round(analysis.progress)}%`}
                     </p>
                     {(analysis.status === "running" || analysis.status === "queued" || analysis.status === "pending") ? (
                       <>
@@ -531,7 +546,7 @@ export default function ResultsPage() {
                           <p className="text-text-tertiary text-xs mt-2">Still being analyzed</p>
                         </div>
                         <div className="flex items-center justify-center gap-4 mt-6">
-                          <Button variant="outline" onClick={() => { refreshAnalyses(); loadResults(); }}>Refresh</Button>
+                          <Button variant="outline" onClick={() => { refreshAnalyses(); loadResults(); }} disabled={isRetrying}>Refresh</Button>
                           <Link href="/analyses">
                             <Button variant="outline">Back to My analyses</Button>
                           </Link>
@@ -539,7 +554,7 @@ export default function ResultsPage() {
                       </>
                     ) : (
                       <div className="flex items-center justify-center gap-4 mt-6">
-                        <Button variant="outline" onClick={() => { refreshAnalyses(); loadResults(); }}>Retry</Button>
+                        <Button variant="outline" onClick={handleRetry} disabled={isRetrying}>{isRetrying ? "Starting…" : "Retry"}</Button>
                         <Link href="/analyses" className="text-accent font-serif inline-block">Back to My analyses</Link>
                       </div>
                     )}
@@ -548,7 +563,7 @@ export default function ResultsPage() {
                   <>
                     <p className="text-text-secondary font-serif">Could not load results.</p>
                     <div className="flex items-center justify-center gap-4 mt-6">
-                      <Button variant="outline" onClick={() => { refreshAnalyses(); loadResults(); }}>Retry</Button>
+                      <Button variant="outline" onClick={handleRetry} disabled={isRetrying}>{isRetrying ? "Starting…" : "Retry"}</Button>
                       <Link href="/analyses" className="text-accent font-serif inline-block">Back to My analyses</Link>
                     </div>
                   </>

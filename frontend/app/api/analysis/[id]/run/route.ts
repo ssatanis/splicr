@@ -23,6 +23,16 @@ export async function POST(
       return NextResponse.json({ error: 'Analysis not found' }, { status: 404 });
     }
 
+    // Reset status so UI shows "Running" immediately (e.g. after retry)
+    await (supabaseAdmin as any)
+      .from('analyses')
+      .update({
+        status: 'running',
+        progress: 0,
+        error_message: null,
+      })
+      .eq('id', analysisId);
+
     // Start the analysis pipeline in background
     runAnalysisPipeline(analysisId, analysis).catch(console.error);
 

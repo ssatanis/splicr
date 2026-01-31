@@ -83,6 +83,14 @@ export const realApi = {
     return response.json();
   },
 
+  /** Re-run a failed or existing analysis. Resets status to running and starts the pipeline. */
+  async runAnalysis(id: string): Promise<{ success: boolean; analysisId: string }> {
+    const response = await fetch(`${API_BASE}/analysis/${id}/run`, { method: 'POST' });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Failed to start analysis');
+    return data;
+  },
+
   /** Returns results, or { results: null, analysis } when analysis exists but results aren't ready yet. */
   async getResults(id: string): Promise<AnalysisResults | { results: null; analysis: Analysis }> {
     const response = await fetch(`${API_BASE}/analysis/${id}/results`);
