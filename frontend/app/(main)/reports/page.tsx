@@ -114,12 +114,12 @@ export default function ReportsPage() {
               Quick actions
             </h2>
             <div className="flex flex-wrap gap-4">
-              <Link href="/app">
+              <Link href="/upload">
                 <button className="px-6 py-3 bg-accent text-text-primary font-serif rounded-xl hover:opacity-90 transition-opacity">
                   New analysis
                 </button>
               </Link>
-              <Link href="/app/analyses">
+              <Link href="/analyses">
                 <button className="px-6 py-3 bg-surface border border-border text-text-primary font-serif rounded-xl hover:bg-background transition-colors">
                   View all analyses
                 </button>

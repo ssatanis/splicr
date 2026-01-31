@@ -15,11 +15,11 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 
 const navigation = [
-  { name: "Dashboard", href: "/app/dashboard", icon: LayoutDashboard },
-  { name: "My Analyses", href: "/app/analyses", icon: FileText },
-  { name: "Upload New", href: "/app", icon: Upload },
-  { name: "Reports", href: "/app/reports", icon: BarChart3 },
-  { name: "Settings", href: "/app/settings", icon: Settings },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "My Analyses", href: "/analyses", icon: FileText },
+  { name: "Upload New", href: "/upload", icon: Upload },
+  { name: "Reports", href: "/reports", icon: BarChart3 },
+  { name: "Settings", href: "/settings", icon: Settings },
 ];
 
 export default function Sidebar() {
@@ -81,14 +81,14 @@ export default function Sidebar() {
     <aside className="fixed left-0 top-0 bottom-0 w-[260px] bg-surface border-r border-border z-40">
       <div className="flex flex-col h-full">
         <div className="h-20 flex items-center px-6 border-b border-border">
-          <Link href="/app/dashboard" className="flex items-center hover:opacity-90 transition-opacity">
+          <Link href="/dashboard" className="flex items-center hover:opacity-90 transition-opacity">
             <Image src="/logo.jpeg" alt="SplicR" width={120} height={40} className="h-10 w-auto object-contain" priority />
           </Link>
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-1">
           {navigation.map((item) => {
-            const isActive = pathname === item.href || (item.href === "/app" && pathname === "/app");
+            const isActive = pathname === item.href || (item.href === "/upload" && pathname === "/upload");
             const Icon = item.icon;
 
             return (
@@ -111,7 +111,7 @@ export default function Sidebar() {
 
         <div className="px-4 py-6 border-t border-border">
           <Link
-            href={hasAuth ? "/app/settings" : "/auth/sign-in"}
+            href={hasAuth ? "/settings" : "/auth/sign-in"}
             className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-background transition-colors"
           >
             <div className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center shrink-0">

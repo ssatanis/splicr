@@ -17,7 +17,7 @@ const taglines = [
 function SignInForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirect = searchParams.get('redirect') || '/app/dashboard'
+  const redirect = searchParams.get('redirect') || '/dashboard'
   const errorParam = searchParams.get('error')
 
   const [email, setEmail] = useState('')

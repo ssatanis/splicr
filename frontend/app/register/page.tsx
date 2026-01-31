@@ -38,7 +38,7 @@ export default function RegisterPage() {
         if (data.user.display_name)
           localStorage.setItem("splicr_display_name", data.user.display_name);
       }
-      router.push("/app/dashboard");
+      router.push("/dashboard");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
@@ -50,7 +50,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        <Link href="/app/dashboard" className="block mb-12 w-fit hover:opacity-90 transition-opacity">
+        <Link href="/dashboard" className="block mb-12 w-fit hover:opacity-90 transition-opacity">
           <Image src="/logo.jpeg" alt="SplicR" width={140} height={48} className="h-12 w-auto object-contain" priority />
         </Link>
         <h1 className="text-4xl font-serif text-text-primary mb-2">Create account</h1>

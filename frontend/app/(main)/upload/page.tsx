@@ -142,7 +142,7 @@ export default function UploadPage() {
       }
 
       await refreshAnalyses();
-      router.push(`/app/results/${data.analysis.id}`);
+      router.push(`/results/${data.analysis.id}`);
     } catch (error) {
       console.error("Error submitting analysis:", error);
       setSubmitError(error instanceof Error ? error.message : "Failed to submit analysis");
@@ -271,7 +271,7 @@ export default function UploadPage() {
               <h2 className="text-2xl font-serif text-text-primary mb-6">
                 Select Analysis Algorithm
               </h2>
-              
+
               <div className="space-y-4">
                 <AlgorithmOption
                   algorithm="mageck"
@@ -280,7 +280,7 @@ export default function UploadPage() {
                   checked={selectedAlgorithms.includes("mageck")}
                   onChange={() => handleToggleAlgorithm("mageck")}
                 />
-                
+
                 <AlgorithmOption
                   algorithm="bagel2"
                   label="BAGEL2"
@@ -288,7 +288,7 @@ export default function UploadPage() {
                   checked={selectedAlgorithms.includes("bagel2")}
                   onChange={() => handleToggleAlgorithm("bagel2")}
                 />
-                
+
                 <AlgorithmOption
                   algorithm="drugz"
                   label="DrugZ"
@@ -296,7 +296,7 @@ export default function UploadPage() {
                   checked={selectedAlgorithms.includes("drugz")}
                   onChange={() => handleToggleAlgorithm("drugz")}
                 />
-                
+
                 <button
                   onClick={() => setSelectedAlgorithms(["mageck", "bagel2", "drugz"])}
                   className="text-sm text-text-secondary hover:text-text-primary font-serif underline"
@@ -674,7 +674,7 @@ export default function UploadPage() {
                     className="p-6 bg-background rounded-xl border border-border-light space-y-4"
                   >
                     <p className="font-serif text-text-primary font-medium">{label.fileName}</p>
-                    
+
                     <div className="grid grid-cols-3 gap-4">
                       <div>
                         <label className="block text-sm font-serif text-text-secondary mb-2">
@@ -691,7 +691,7 @@ export default function UploadPage() {
                           className="w-full px-4 py-2 bg-surface border border-border rounded-lg text-sm font-serif focus:outline-none focus:border-text-primary"
                         />
                       </div>
-                      
+
                       <div>
                         <label className="block text-sm font-serif text-text-secondary mb-2">
                           Condition
@@ -709,7 +709,7 @@ export default function UploadPage() {
                           <option value="treatment">Treatment</option>
                         </select>
                       </div>
-                      
+
                       <div>
                         <label className="block text-sm font-serif text-text-secondary mb-2">
                           Replicate

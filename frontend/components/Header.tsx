@@ -9,7 +9,7 @@ export default function Header() {
     <header className="fixed top-0 left-0 right-0 z-50 bg-surface border-b border-border">
       <div className="max-w-[1200px] mx-auto px-8 h-20 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/app/dashboard" className="flex items-center hover:opacity-90 transition-opacity">
+        <Link href="/dashboard" className="flex items-center hover:opacity-90 transition-opacity">
           <Image src="/logo.jpeg" alt="SplicR" width={120} height={40} className="h-10 w-auto object-contain" priority />
         </Link>
 

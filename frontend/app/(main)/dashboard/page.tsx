@@ -192,7 +192,7 @@ function AnalysisRow({ analysis }: { analysis: Analysis }) {
   return (
     <tr className="border-b border-border-light hover:bg-background transition-colors duration-200">
       <td className="px-8 py-5">
-        <Link href={`/app/results/${analysis.id}`} className="block">
+        <Link href={`/results/${analysis.id}`} className="block">
           <div className="font-serif text-text-primary hover:text-accent transition-colors">{analysis.name}</div>
           <div className="text-sm text-text-tertiary mt-1">{analysis.fileKeys.length} files</div>
         </Link>
@@ -216,7 +216,7 @@ function AnalysisRow({ analysis }: { analysis: Analysis }) {
         </div>
       </td>
       <td className="px-8 py-5">
-        <Link href={`/app/results/${analysis.id}`}>
+        <Link href={`/results/${analysis.id}`}>
           <Button variant="outline" size="sm">View results</Button>
         </Link>
       </td>
@@ -250,7 +250,7 @@ function EmptyState() {
       <p className="text-text-secondary font-serif mb-8 max-w-md mx-auto">
         Run your first CRISPR screen analysis by uploading sequencing data and selecting an sgRNA library.
       </p>
-      <Link href="/app">
+      <Link href="/upload">
         <Button variant="primary" size="lg">Upload dataset</Button>
       </Link>
     </div>

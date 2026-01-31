@@ -26,9 +26,15 @@ const nextConfig = {
     return [
       {
         source: '/',
-        destination: '/app',
+        destination: '/dashboard',
         permanent: false,
       },
+      { source: '/app', destination: '/upload', permanent: true },
+      { source: '/app/dashboard', destination: '/dashboard', permanent: true },
+      { source: '/app/analyses', destination: '/analyses', permanent: true },
+      { source: '/app/reports', destination: '/reports', permanent: true },
+      { source: '/app/settings', destination: '/settings', permanent: true },
+      { source: '/app/results/:id', destination: '/results/:id', permanent: true },
     ];
   },
 };

@@ -168,7 +168,7 @@ export default function AuthButton() {
           {/* Menu Items */}
           <div className="py-2">
             <Link
-              href="/app/dashboard"
+              href="/dashboard"
               onClick={() => setMenuOpen(false)}
               className="flex items-center gap-3 px-4 py-2 text-sm font-serif text-text-primary hover:bg-background transition-colors"
             >
@@ -189,7 +189,7 @@ export default function AuthButton() {
             </Link>
 
             <Link
-              href="/app/settings"
+              href="/settings"
               onClick={() => setMenuOpen(false)}
               className="flex items-center gap-3 px-4 py-2 text-sm font-serif text-text-primary hover:bg-background transition-colors"
             >

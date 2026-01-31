@@ -60,7 +60,7 @@ export default function MyAnalysesPage() {
                 All CRISPR screen runs and their status.
               </p>
             </div>
-            <Link href="/app">
+            <Link href="/upload">
               <Button variant="primary" size="lg">
                 <Upload className="w-5 h-5 mr-2" strokeWidth={1.5} />
                 New analysis
@@ -117,7 +117,7 @@ export default function MyAnalysesPage() {
                   ? "Upload FASTQ files and start your first screen analysis."
                   : "No analyses match your filters."}
               </p>
-              <Link href="/app">
+              <Link href="/upload">
                 <Button variant="primary" size="lg">Upload dataset</Button>
               </Link>
             </div>
@@ -140,7 +140,7 @@ export default function MyAnalysesPage() {
                       className="border-b border-border-light hover:bg-background transition-colors duration-200"
                     >
                       <td className="px-8 py-5">
-                        <Link href={`/app/results/${analysis.id}`} className="block">
+                        <Link href={`/results/${analysis.id}`} className="block">
                           <div className="font-serif text-text-primary hover:text-accent transition-colors">{analysis.name}</div>
                           <div className="text-sm text-text-tertiary mt-1">{analysis.fileKeys.length} files</div>
                         </Link>
@@ -179,7 +179,7 @@ export default function MyAnalysesPage() {
                         </div>
                       </td>
                       <td className="px-8 py-5">
-                        <Link href={`/app/results/${analysis.id}`}>
+                        <Link href={`/results/${analysis.id}`}>
                           <Button variant="outline" size="sm">View results</Button>
                         </Link>
                       </td>

@@ -349,7 +349,7 @@ export default function ResultsPage() {
                   <MessageSquare className="w-4 h-4" strokeWidth={1.5} />
                   Collaboration
                 </Button>
-                <Link href="/app/analyses">
+                <Link href="/analyses">
                   <Button variant="secondary" size="md">
                     <Share2 className="w-4 h-4 mr-2" strokeWidth={1.5} />
                     Back to analyses
@@ -521,15 +521,15 @@ export default function ResultsPage() {
                         </div>
                         <div className="flex items-center justify-center gap-4 mt-6">
                           <Button variant="outline" onClick={() => { refreshAnalyses(); loadResults(); }}>Refresh</Button>
-                          <Link href="/app/analyses">
-                            <Button variant="ghost">Back to My analyses</Button>
+                          <Link href="/analyses">
+                            <Button variant="outline">Back to My analyses</Button>
                           </Link>
                         </div>
                       </>
                     ) : (
                       <div className="flex items-center justify-center gap-4 mt-6">
                         <Button variant="outline" onClick={() => { refreshAnalyses(); loadResults(); }}>Retry</Button>
-                        <Link href="/app/analyses" className="text-accent font-serif inline-block">Back to My analyses</Link>
+                        <Link href="/analyses" className="text-accent font-serif inline-block">Back to My analyses</Link>
                       </div>
                     )}
                   </>
@@ -538,7 +538,7 @@ export default function ResultsPage() {
                     <p className="text-text-secondary font-serif">Could not load results.</p>
                     <div className="flex items-center justify-center gap-4 mt-6">
                       <Button variant="outline" onClick={() => { refreshAnalyses(); loadResults(); }}>Retry</Button>
-                      <Link href="/app/analyses" className="text-accent font-serif inline-block">Back to My analyses</Link>
+                      <Link href="/analyses" className="text-accent font-serif inline-block">Back to My analyses</Link>
                     </div>
                   </>
                 )}
