@@ -5,6 +5,22 @@ import { Analysis, AnalysisResults } from './types';
  * In Electron desktop build, calls production API (splicr.org).
  */
 
+async function safeJson<T = unknown>(response: Response): Promise<T> {
+  const contentType = response.headers.get('content-type');
+  if (!contentType || !contentType.includes('application/json')) {
+    const text = await response.text();
+    const fallback = response.status === 404 ? 'Not found' : 'Invalid response from server.';
+    throw new Error(fallback);
+  }
+  const text = await response.text();
+  if (!text?.trim()) throw new Error('Empty response from server.');
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new Error('Invalid response from server.');
+  }
+}
+
 const API_BASE =
   typeof process !== 'undefined' &&
   process.env.NEXT_PUBLIC_IS_ELECTRON === 'true' &&
@@ -47,23 +63,23 @@ export const realApi = {
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await safeJson<{ message?: string }>(response).catch(() => ({} as { message?: string }));
       throw new Error(error.message || 'Failed to create analysis');
     }
 
-    return response.json();
+    return safeJson<Analysis>(response);
   },
 
   async getAnalyses(): Promise<Analysis[]> {
     const response = await fetch(`${API_BASE}/analysis/list`);
     if (!response.ok) throw new Error('Failed to fetch analyses');
-    return response.json();
+    return safeJson<Analysis[]>(response);
   },
 
   async getAnalysis(id: string): Promise<Analysis> {
     const response = await fetch(`${API_BASE}/analysis/${id}`);
     if (!response.ok) throw new Error('Failed to fetch analysis');
-    return response.json();
+    return safeJson<Analysis>(response);
   },
 
   async updateAnalysis(id: string, updates: Partial<Analysis>): Promise<Analysis> {
@@ -86,23 +102,28 @@ export const realApi = {
   }> {
     const response = await fetch(`${API_BASE}/analysis/${id}/status`);
     if (!response.ok) throw new Error('Failed to fetch status');
-    return response.json();
+    return safeJson(response);
   },
 
   /** Re-run a failed or existing analysis. Resets status to running and starts the pipeline. */
   async runAnalysis(id: string): Promise<{ success: boolean; analysisId: string }> {
     const response = await fetch(`${API_BASE}/analysis/${id}/run`, { method: 'POST' });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Failed to start analysis');
-    return data;
+    if (!response.ok) {
+      const data = await safeJson<{ error?: string }>(response).catch(() => ({}));
+      throw new Error(data.error || 'Failed to start analysis');
+    }
+    return safeJson<{ success: boolean; analysisId: string }>(response);
   },
 
   /** Returns results, or { results: null, analysis } when analysis exists but results aren't ready yet. */
   async getResults(id: string): Promise<AnalysisResults | { results: null; analysis: Analysis }> {
     const response = await fetch(`${API_BASE}/analysis/${id}/results`);
-    const data = await response.json();
-    if (!response.ok) throw new Error(typeof data?.message === 'string' ? data.message : 'Failed to fetch results');
-    if (data && typeof data === 'object' && data.results === null && data.analysis) {
+    if (!response.ok) {
+      const data = await safeJson<{ message?: string }>(response).catch(() => ({}));
+      throw new Error(typeof data.message === 'string' ? data.message : 'Failed to fetch results');
+    }
+    const data = await safeJson<AnalysisResults | { results: null; analysis: Analysis }>(response);
+    if (data && typeof data === 'object' && 'results' in data && data.results === null && 'analysis' in data && data.analysis) {
       return { results: null, analysis: data.analysis };
     }
     return data as AnalysisResults;
@@ -121,7 +142,7 @@ export const realApi = {
   async getNote(analysisId: string): Promise<string> {
     const response = await fetch(`${API_BASE}/notes/${analysisId}`);
     if (!response.ok) return '';
-    const data = await response.json();
+    const data = await safeJson<{ note?: string }>(response).catch(() => ({} as { note?: string }));
     return data.note || '';
   },
 

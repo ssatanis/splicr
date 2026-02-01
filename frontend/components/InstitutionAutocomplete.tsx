@@ -53,8 +53,20 @@ export default function InstitutionAutocomplete({
       const res = await fetch(
         `${base}/api/institutions/autocomplete?q=${encodeURIComponent(q)}`
       );
-      const data = await res.json();
-      const list = Array.isArray(data.results) ? data.results : [];
+      const contentType = res.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        setOptions([]);
+        return;
+      }
+      const text = await res.text();
+      let data: { results?: InstitutionOption[] };
+      try {
+        data = text && text.trim() ? JSON.parse(text) : {};
+      } catch {
+        setOptions([]);
+        return;
+      }
+      const list = Array.isArray(data?.results) ? data.results : [];
       setOptions(list);
       if (list.length > 0) setOpen(true);
     } catch {
@@ -77,7 +89,6 @@ export default function InstitutionAutocomplete({
     }
     debounceRef.current = setTimeout(() => {
       fetchOptions(query.trim());
-      setOpen(true);
     }, DEBOUNCE_MS);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -160,7 +171,8 @@ export default function InstitutionAutocomplete({
         <ul
           id="institution-listbox"
           role="listbox"
-          className="absolute z-50 w-full mt-1 py-1 bg-white border border-border rounded-xl shadow-elevated max-h-64 overflow-y-auto"
+          className="absolute z-50 w-full mt-1 py-1 bg-white border border-border rounded-xl shadow-elevated max-h-64 overflow-y-auto focus:outline-none"
+          style={{ willChange: 'opacity' }}
         >
           {loading && options.length === 0 ? (
             <li className="px-4 py-3 text-sm text-text-tertiary font-serif">

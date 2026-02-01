@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -561,7 +561,7 @@ export default function ResultsPage() {
                 {activeTab === "volcano" && <VolcanoTab results={results} />}
                 {activeTab === "heatmap" && <HeatmapTab results={results} />}
                 {activeTab === "network" && <NetworkTab results={results} analysisName={analysisName || analysis?.name} />}
-                {activeTab === "timecourse" && <TimeCourseTab results={results} />}
+                {activeTab === "timecourse" && <TimeCourseTab results={results} analysis={analysis ?? undefined} analysisName={analysisName || analysis?.name} />}
                 {activeTab === "drug-finder" && <DrugFinderTab results={results} />}
                 {activeTab === "advanced" && <AdvancedTab results={results} analysisId={id} onResultsUpdate={loadResults} />}
                 {activeTab === "top-hits" && <TopHitsTab results={results} onGeneClick={setSelectedGene} />}
@@ -822,23 +822,99 @@ function NetworkTab({ results, analysisName }: { results: AnalysisResults; analy
   );
 }
 
-function TimeCourseTab({ results }: { results: AnalysisResults }) {
-  const genes = (results.allGenes ?? [])
-    .filter((g) => g.fdr < 0.1)
-    .slice(0, 30)
-    .map((g) => ({
-      gene: g.gene,
-      sgrnaCount: g.sgrnaCount,
-      logFoldChange: g.logFoldChange,
-      pValue: g.pValue,
-      fdr: g.fdr,
-      rank: g.rank,
-    }));
+function TimeCourseTab({
+  results,
+  analysis,
+  analysisName,
+}: {
+  results: AnalysisResults;
+  analysis?: Analysis | null;
+  analysisName?: string;
+}) {
+  const { timepoints, series, genes } = useMemo(() => {
+    const sampleLabels =
+      analysis?.sampleLabels ??
+      (analysis as { parameters?: { sampleLabels?: unknown[] } } | undefined)?.parameters?.sampleLabels ??
+      [];
+    const treatmentSamples = (sampleLabels as { sampleName: string; condition: string; replicate?: number }[])
+      .filter((s) => s.condition === 'treatment')
+      .sort((a, b) => (a.replicate ?? 0) - (b.replicate ?? 0) || (a.sampleName || '').localeCompare(b.sampleName || ''));
+    const controlSamples = (sampleLabels as { sampleName: string; condition: string }[]).filter((s) => s.condition === 'control');
+    const timepoints =
+      treatmentSamples.length > 0
+        ? treatmentSamples.map((s) => s.sampleName || `Sample`).filter(Boolean)
+        : results.qcMetrics?.sampleStats
+          ? (results.qcMetrics.sampleStats as { name: string }[]).map((s) => s.name).slice(0, 8)
+          : ['Day 0', 'Day 7', 'Day 14', 'Day 21'];
+
+    const genes = (results.allGenes ?? [])
+      .filter((g) => g.fdr < 0.1)
+      .slice(0, 30)
+      .map((g) => ({
+        gene: g.gene,
+        sgrnaCount: g.sgrnaCount,
+        logFoldChange: g.logFoldChange,
+        pValue: g.pValue,
+        fdr: g.fdr,
+        rank: g.rank,
+      }));
+
+    const countMatrix = results.rawData?.countMatrix;
+    const treatmentNames = treatmentSamples.map((s) => s.sampleName).filter(Boolean);
+    const controlNames = controlSamples.map((s) => s.sampleName).filter(Boolean);
+    const hasRealTimepoints =
+      countMatrix &&
+      typeof countMatrix === 'object' &&
+      treatmentNames.length > 0 &&
+      Object.keys(countMatrix).length > 0;
+
+    if (hasRealTimepoints && controlNames.length > 0) {
+      const geneBySample: Record<string, Record<string, number>> = {};
+      for (const [sgRNA, counts] of Object.entries(countMatrix as Record<string, Record<string, number>>)) {
+        const gene = sgRNA.replace(/_sg\d+$/i, '').replace(/_sgRNA\d+$/i, '') || sgRNA;
+        if (!geneBySample[gene]) geneBySample[gene] = {};
+        for (const [sampleName, count] of Object.entries(counts)) {
+          geneBySample[gene][sampleName] = (geneBySample[gene][sampleName] ?? 0) + (count ?? 0);
+        }
+      }
+      const controlMeanByGene: Record<string, number> = {};
+      for (const gene of Object.keys(geneBySample)) {
+        const ctrlSum = controlNames.reduce((sum, name) => sum + (geneBySample[gene][name] ?? 0), 0);
+        controlMeanByGene[gene] = ctrlSum / Math.max(1, controlNames.length);
+      }
+      const geneList = genes.slice(0, 20).map((g) => g.gene);
+      const series = geneList
+        .filter((gene) => geneBySample[gene] && controlMeanByGene[gene] !== undefined)
+        .map((g) => {
+          const meta = genes.find((x) => x.gene === g);
+          const controlMean = (controlMeanByGene[g] ?? 0) + 1;
+          const values = treatmentNames.map(
+            (name) => Math.log2(((geneBySample[g][name] ?? 0) + 1) / controlMean)
+          );
+          return {
+            gene: g,
+            values,
+            fdr: meta?.fdr,
+            log2FC: meta?.logFoldChange,
+          };
+        })
+        .filter((s) => s.values.some((v) => Number.isFinite(v)));
+      if (series.length > 0) {
+        return { timepoints: treatmentNames, series, genes: [] };
+      }
+    }
+
+    return { timepoints, series: undefined, genes };
+  }, [results, analysis]);
+
   return (
     <TimeCourseVisualization
+      timepoints={timepoints}
+      series={series}
       genes={genes}
       maxGenes={15}
       height={520}
+      analysisName={analysisName}
     />
   );
 }

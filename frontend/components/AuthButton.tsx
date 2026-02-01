@@ -71,25 +71,43 @@ export default function AuthButton() {
     }
   }, [])
 
-  // Close menu when clicking outside
+  // Close menu when clicking outside or pressing Escape
   useEffect(() => {
+    if (!menuOpen) return
+
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setMenuOpen(false)
       }
     }
 
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMenuOpen(false)
+      }
+    }
+
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    document.addEventListener('keydown', handleEscape)
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [menuOpen])
 
   const handleSignOut = async () => {
-    setSigningOut(true)
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    setMenuOpen(false)
-    router.push('/auth/sign-in')
-    router.refresh()
+    try {
+      setSigningOut(true)
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      setMenuOpen(false)
+      router.push('/auth/sign-in')
+      router.refresh()
+    } catch (error) {
+      console.error('Sign out error:', error)
+      setSigningOut(false)
+    }
   }
 
   // Get display name
@@ -149,7 +167,11 @@ export default function AuthButton() {
 
       {/* Dropdown Menu */}
       {menuOpen && (
-        <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-elevated border border-border-light py-2 z-50 animate-fadeIn">
+        <div
+          className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-elevated border border-border-light py-2 z-[100] animate-fadeIn"
+          role="menu"
+          aria-orientation="vertical"
+        >
           {/* User Info */}
           <div className="px-4 py-3 border-b border-border-light">
             <p className="font-serif text-text-primary font-medium truncate">
@@ -168,6 +190,7 @@ export default function AuthButton() {
               href="/dashboard"
               onClick={() => setMenuOpen(false)}
               className="flex items-center gap-3 px-4 py-2 text-sm font-serif text-text-primary hover:bg-background transition-colors"
+              role="menuitem"
             >
               <svg
                 className="w-4 h-4 text-text-tertiary"
@@ -189,6 +212,7 @@ export default function AuthButton() {
               href="/settings"
               onClick={() => setMenuOpen(false)}
               className="flex items-center gap-3 px-4 py-2 text-sm font-serif text-text-primary hover:bg-background transition-colors"
+              role="menuitem"
             >
               <svg
                 className="w-4 h-4 text-text-tertiary"
@@ -218,7 +242,8 @@ export default function AuthButton() {
             <button
               onClick={handleSignOut}
               disabled={signingOut}
-              className="flex items-center gap-3 w-full px-4 py-2 text-sm font-serif text-error hover:bg-error/5 transition-colors disabled:opacity-50"
+              className="flex items-center gap-3 w-full px-4 py-2 text-sm font-serif text-error hover:bg-error/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              role="menuitem"
             >
               {signingOut ? (
                 <svg
@@ -266,15 +291,15 @@ export default function AuthButton() {
         @keyframes fadeIn {
           from {
             opacity: 0;
-            transform: translateY(-8px);
+            transform: translateY(-4px) scale(0.98);
           }
           to {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
           }
         }
         .animate-fadeIn {
-          animation: fadeIn 0.15s ease-out;
+          animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
       `}</style>
     </div>

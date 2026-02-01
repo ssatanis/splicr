@@ -1,14 +1,14 @@
-// Electron main process
+// Electron main process - no ESM deps so packaged app launches reliably
 'use strict';
 
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, protocol, net } = require('electron');
 const path = require('path');
+const fs = require('fs');
+const { pathToFileURL } = require('url');
 
-// Packaged app: always use production (serve from out/). Dev: use NODE_ENV.
 const isProd = process.env.NODE_ENV === 'production' || app.isPackaged;
 
 let mainWindow;
-let loadURL;
 
 function getOutDir() {
   if (app.isPackaged) {
@@ -18,6 +18,18 @@ function getOutDir() {
   }
   return path.join(__dirname, '..', 'out');
 }
+
+// Register app:// scheme before app.ready (required by Electron)
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'app',
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+    },
+  },
+]);
 
 function createWindow() {
   const winOpts = {
@@ -34,7 +46,6 @@ function createWindow() {
     },
     frame: true,
   };
-  // macOS-only options (avoid on other platforms to prevent native crashes)
   if (process.platform === 'darwin') {
     winOpts.titleBarStyle = 'hiddenInset';
     winOpts.trafficLightPosition = { x: 16, y: 16 };
@@ -47,16 +58,13 @@ function createWindow() {
 
   mainWindow = new BrowserWindow(winOpts);
 
-  if (isProd && typeof loadURL === 'function') {
-    loadURL(mainWindow);
-  } else if (!isProd) {
+  if (isProd) {
+    mainWindow.loadURL('app://-/');
+  } else {
     mainWindow.loadURL('http://localhost:3000');
     mainWindow.webContents.openDevTools();
-  } else {
-    mainWindow.loadFile(path.join(getOutDir(), 'index.html'));
   }
 
-  // Handle external links
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith('http://') || url.startsWith('https://')) {
       require('electron').shell.openExternal(url);
@@ -70,34 +78,40 @@ function createWindow() {
   });
 }
 
-// electron-serve is ESM: must use dynamic import. Call serve() before app ready.
-(async () => {
+app.whenReady().then(() => {
   if (isProd) {
-    try {
-      const { default: serve } = await import('electron-serve');
-      loadURL = serve({ directory: getOutDir() });
-    } catch (err) {
-      console.error('electron-serve failed:', err);
-      process.exit(1);
-    }
+    const outDir = getOutDir();
+    const indexHtml = path.join(outDir, 'index.html');
+    protocol.handle('app', (request) => {
+      let urlPath = request.url.slice('app://-'.length).replace(/^\/+/, '') || '';
+      let resolved = indexHtml;
+      if (urlPath && urlPath !== '/') {
+        const segments = urlPath.split('/').filter(Boolean);
+        const noExt = path.join(outDir, ...segments);
+        const withHtml = noExt + '.html';
+        const withIndex = path.join(noExt, 'index.html');
+        try {
+          if (fs.statSync(withHtml).isFile()) resolved = withHtml;
+          else if (fs.statSync(noExt).isDirectory() && fs.statSync(withIndex).isFile()) resolved = withIndex;
+          else if (fs.statSync(noExt).isFile()) resolved = noExt;
+        } catch (_) {
+          try {
+            if (fs.statSync(withIndex).isFile()) resolved = withIndex;
+          } catch (_) {}
+        }
+      }
+      return net.fetch(pathToFileURL(resolved).href);
+    });
   }
-  await app.whenReady();
   createWindow();
-})();
+});
 
-// macOS: re-create window when dock icon is clicked
 app.on('activate', () => {
-  if (mainWindow === null) {
-    createWindow();
-  }
+  if (mainWindow === null) createWindow();
 });
 
-// Quit when all windows are closed (except macOS)
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  if (process.platform !== 'darwin') app.quit();
 });
 
-// Set app name
 app.setName('SplicR');

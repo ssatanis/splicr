@@ -161,7 +161,7 @@ export interface AnalysisShare {
   permission: SharePermission | 'admin';
   status: 'pending' | 'accepted' | 'declined';
   user_id: string | null;
-  shared_by: string;
+  shared_by: string; // Database column is 'shared_by', not 'shared_by_user_id'
   created_at: string;
   accepted_at: string | null;
   // Link-based sharing fields
@@ -185,7 +185,7 @@ export interface LinkShareConfig {
   link_expires_at: string | null;
   institution_domain: string | null;
   institution_permission: SharePermission;
-  shared_by: string;
+  shared_by: string; // Database column is 'shared_by', not 'shared_by_user_id'
   created_at: string;
   updated_at: string;
 }

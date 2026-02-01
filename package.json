@@ -6,6 +6,7 @@
     "node": "24.x"
   },
   "scripts": {
+    "ensure-share-columns": "node scripts/ensure-analysis-share-columns.mjs",
     "build": "cd frontend && npm ci --include=dev && npm run build",
     "dev": "cd frontend && npm run dev",
     "start": "cd frontend && npm run start",
@@ -19,5 +20,8 @@
     "next": "15.5.11",
     "react": "^18.3.0",
     "react-dom": "^18.3.0"
+  },
+  "devDependencies": {
+    "pg": "^8.18.0"
   }
 }

@@ -44,6 +44,27 @@ export async function createClient() {
   )
 }
 
+/**
+ * Get user in API routes (uses getUser() for secure, server-verified auth)
+ */
+export async function getApiUser() {
+  const supabase = await createClient()
+  const timeoutMs = process.env.NODE_ENV === 'development' ? 8000 : 5000
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error('Auth timeout')), timeoutMs)
+  )
+
+  try {
+    const result = await Promise.race([
+      supabase.auth.getUser(),
+      timeout
+    ])
+    return { user: result.data.user ?? null, error: result.error }
+  } catch {
+    return { user: null, error: { message: 'Auth timeout' } }
+  }
+}
+
 // Admin client with service role key (for bypassing RLS)
 // USE ONLY IN API ROUTES - never expose in client components
 export async function createAdminClient() {
@@ -81,11 +102,7 @@ export async function createAdminClient() {
  */
 export async function getAuthenticatedUser() {
   const supabase = await createClient()
-  // In development use getSession() (cookie only, no network) so the dev server never hangs on Supabase
-  const user =
-    process.env.NODE_ENV === 'development'
-      ? (await supabase.auth.getSession()).data.session?.user ?? null
-      : (await supabase.auth.getUser()).data.user ?? null
+  const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
     redirect('/auth/sign-in')

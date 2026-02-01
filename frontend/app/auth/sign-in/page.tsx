@@ -63,10 +63,27 @@ function SignInForm() {
         body: JSON.stringify({ email, password }),
       })
 
-      const data = await response.json()
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        setError('We couldn’t reach the server. Please check your connection and try again.')
+        return
+      }
+
+      let data: { error?: string }
+      try {
+        const text = await response.text()
+        if (!text || !text.trim()) {
+          setError('Something went wrong. Please try again.')
+          return
+        }
+        data = JSON.parse(text)
+      } catch {
+        setError('Something went wrong. Please try again.')
+        return
+      }
 
       if (!response.ok) {
-        setError(data.error || 'Sign in failed')
+        setError(data?.error || 'Invalid email or password. Please try again.')
         return
       }
 
@@ -74,8 +91,12 @@ function SignInForm() {
       router.push(redirect)
       router.refresh()
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'An unexpected error occurred'
-      setError(message.includes('fetch') ? 'Cannot reach the server. Please try again.' : message)
+      console.error('Sign-in error:', err)
+      if (err instanceof TypeError && err.message.includes('fetch')) {
+        setError('We couldn’t reach the server. Please check your connection and try again.')
+      } else {
+        setError('Something went wrong. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -114,8 +135,8 @@ function SignInForm() {
 
           {/* Error Message */}
           {error && (
-            <div className="mb-6 p-4 bg-error/5 border border-error/20 rounded-xl animate-fadeIn">
-              <p className="text-error text-sm font-serif text-center">{error}</p>
+            <div className="mb-6 p-3.5 bg-red-50 border border-red-200 rounded-lg animate-fadeIn">
+              <p className="text-red-700 text-sm font-serif">{error}</p>
             </div>
           )}
 

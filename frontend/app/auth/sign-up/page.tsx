@@ -66,28 +66,28 @@ export default function SignUpPage() {
 
     // Validation
     if (password !== confirmPassword) {
-      setError('Passwords do not match')
+      setError('The passwords you entered do not match.')
       return
     }
 
     if (password.length < 8) {
-      setError('Password must be at least 8 characters')
+      setError('Your password must be at least 8 characters long.')
       return
     }
 
     if (!acceptTerms) {
-      setError('Please accept the terms of service')
+      setError('Please accept the Terms of Service and Privacy Policy to continue.')
       return
     }
 
     if (!institution?.trim()) {
-      setError('Please select your college or university')
+      setError('Please select your college or university from the dropdown.')
       return
     }
 
     const emailCheck = isEmailDomainAllowedForInstitution(email.trim(), institution.trim())
     if (!emailCheck.allowed) {
-      setError(emailCheck.message ?? 'Please use your institution email address.')
+      setError(emailCheck.message ?? 'Please use your institutional email address.')
       return
     }
 
@@ -109,18 +109,40 @@ export default function SignUpPage() {
         }),
       })
 
-      const data = await response.json()
+      // Check if response is JSON before parsing
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        setError('We couldn\'t reach the server. Please check your connection and try again.')
+        return
+      }
+
+      let data: { error?: string }
+      try {
+        const text = await response.text()
+        if (!text || !text.trim()) {
+          setError('Something went wrong. Please try again.')
+          return
+        }
+        data = JSON.parse(text)
+      } catch {
+        setError('Something went wrong. Please try again.')
+        return
+      }
 
       if (!response.ok) {
-        setError(data.error || 'Sign up failed')
+        setError(data?.error || 'Unable to create your account. Please try again.')
         return
       }
 
       // Success - show email confirmation message
       setSuccess(true)
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'An unexpected error occurred'
-      setError(message.includes('fetch') ? 'Cannot reach the server. Please try again.' : message)
+      console.error('Sign-up error:', err)
+      if (err instanceof TypeError && err.message.includes('fetch')) {
+        setError('We couldn\'t reach the server. Please check your connection and try again.')
+      } else {
+        setError('Something went wrong. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -217,10 +239,10 @@ export default function SignUpPage() {
             </p>
           </div>
 
-          {/* Error Message */}
+          {/* Error Message - right under header, above form */}
           {error && (
-            <div className="mb-6 p-4 bg-error/5 border border-error/20 rounded-xl animate-fadeIn">
-              <p className="text-error text-sm font-serif text-center whitespace-pre-wrap">{error}</p>
+            <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+              <p className="text-sm text-red-800">{error}</p>
             </div>
           )}
 

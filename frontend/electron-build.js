@@ -95,19 +95,54 @@ async function build() {
     console.log('\n✓ Build complete!');
     console.log('📦 Distributables are in the "dist" directory');
 
+    // Fix macOS Gatekeeper issues automatically
+    if (process.platform === 'darwin' && (args.includes('--mac') || !args.some(arg => ['--win', '--linux'].includes(arg)))) {
+      console.log('\n🔧 Fixing macOS Gatekeeper issues...');
+      try {
+        // Find the built app
+        let appPath = null;
+        if (fs.existsSync('dist/mac/SplicR.app')) {
+          appPath = 'dist/mac/SplicR.app';
+        } else if (fs.existsSync('dist/mac-arm64/SplicR.app')) {
+          appPath = 'dist/mac-arm64/SplicR.app';
+        }
+
+        if (appPath) {
+          // Remove quarantine attribute
+          await runCommand('xattr', ['-cr', appPath]);
+          console.log('✓ Removed quarantine attribute');
+          console.log('\n✅ App is ready to open!');
+          console.log(`   You can now open: ${appPath}`);
+        }
+      } catch (error) {
+        console.log('\n⚠️  Could not automatically fix Gatekeeper issues');
+        console.log('   Please run: ./fix-mac-app.sh');
+      }
+    }
+
   } catch (error) {
     console.error('\n❌ Build failed:', error.message);
     process.exit(1);
   } finally {
     if (moved.api && fs.existsSync(apiBackupDir)) {
+      // Remove existing api dir if it exists
+      if (fs.existsSync(apiDir)) {
+        fs.rmSync(apiDir, { recursive: true, force: true });
+      }
       fs.renameSync(apiBackupDir, apiDir);
       console.log('Restored app/api');
     }
     if (moved.authCallback && fs.existsSync(authCallbackBackup)) {
+      if (fs.existsSync(authCallbackDir)) {
+        fs.rmSync(authCallbackDir, { recursive: true, force: true });
+      }
       fs.renameSync(authCallbackBackup, authCallbackDir);
       console.log('Restored app/auth/callback');
     }
     if (moved.authSignOut && fs.existsSync(authSignOutBackup)) {
+      if (fs.existsSync(authSignOutDir)) {
+        fs.rmSync(authSignOutDir, { recursive: true, force: true });
+      }
       fs.renameSync(authSignOutBackup, authSignOutDir);
       console.log('Restored app/auth/sign-out');
     }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useState, useMemo, useRef, useEffect } from 'react';
-import { Download, Loader2, RefreshCw, Search } from 'lucide-react';
+import { Download, Loader2, RefreshCw, Search, Pause, Play, Info, Filter } from 'lucide-react';
 import { exportElementAsPNG } from '@/lib/chartExportUtils';
 import type { GeneResult } from '@/lib/types';
 
@@ -22,6 +22,7 @@ interface NodeData {
   y?: number;
   fx?: number;
   fy?: number;
+  degree?: number; // Number of connections (for hub gene analysis)
 }
 
 interface LinkData {
@@ -86,6 +87,14 @@ function buildGraphData(
   geneMap: Map<string, GeneResult>
 ): GraphData {
   const nodeList = Array.from(stringNodes);
+
+  // Calculate degree (number of connections) for each node
+  const degreeMap = new Map<string, number>();
+  stringEdges.forEach(e => {
+    degreeMap.set(e.a, (degreeMap.get(e.a) || 0) + 1);
+    degreeMap.set(e.b, (degreeMap.get(e.b) || 0) + 1);
+  });
+
   const nodes: NodeData[] = nodeList.map((id) => {
     const g = geneMap.get(id.toUpperCase()) ?? geneMap.get(id);
     const log2FC = g?.logFoldChange;
@@ -97,6 +106,7 @@ function buildGraphData(
       log2FC,
       fdr,
       negLog10Fdr,
+      degree: degreeMap.get(id) || 0,
     };
   });
   const linkSet = new Set<string>();
@@ -115,12 +125,14 @@ export default function GeneNetworkVisualization({
   genes,
   maxGenes = 50,
   requiredScore = 400,
-  height = 560,
+  height: initialHeight = 560,
   analysisName,
 }: GeneNetworkVisualizationProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const graphContainerRef = useRef<HTMLDivElement>(null);
   const graphInstanceRef = useRef<ForceGraphInstance | null>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const [height, setHeight] = useState(initialHeight);
   const [graphData, setGraphData] = useState<GraphData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -133,12 +145,62 @@ export default function GeneNetworkVisualization({
   const [exportScale, setExportScale] = useState(2);
   const [exporting, setExporting] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+  const [minDegree, setMinDegree] = useState(0);
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedGeneNeighbors, setSelectedGeneNeighbors] = useState<string | null>(null);
   const showLabelsRef = useRef(false);
+  const simulationRef = useRef<any>(null);
 
   // Ensure component only renders on client
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // Responsive height based on container width
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const updateDimensions = () => {
+      const width = containerRef.current?.offsetWidth || 0;
+      setContainerWidth(width);
+
+      // Adaptive height: smaller screens get shorter graphs
+      if (width < 640) {
+        // Mobile
+        setHeight(Math.min(initialHeight, 400));
+      } else if (width < 1024) {
+        // Tablet
+        setHeight(Math.min(initialHeight, 500));
+      } else {
+        // Desktop
+        setHeight(initialHeight);
+      }
+    };
+
+    updateDimensions();
+
+    const resizeObserver = new ResizeObserver(updateDimensions);
+    resizeObserver.observe(containerRef.current);
+
+    return () => resizeObserver.disconnect();
+  }, [initialHeight]);
+
+  // Update graph dimensions when container resizes
+  useEffect(() => {
+    const instance = graphInstanceRef.current;
+    const container = graphContainerRef.current;
+    if (!instance || !container) return;
+
+    const api = instance as unknown as {
+      width: (n: number) => typeof api;
+      height: (n: number) => typeof api;
+    };
+
+    api.width(container.offsetWidth);
+    api.height(height);
+  }, [containerWidth, height]);
 
   const geneMap = useMemo(() => {
     const m = new Map<string, GeneResult>();
@@ -154,6 +216,17 @@ export default function GeneNetworkVisualization({
     [genes, maxGenes]
   );
 
+  // Stable key so we only refetch when the actual gene list or score changes (not on every parent re-render).
+  // Prevents the graph from being destroyed/recreated and losing pinned positions.
+  const loadKey = useMemo(
+    () => geneNames.join(',') + '|' + String(requiredScore),
+    [geneNames, requiredScore]
+  );
+  const genesRef = useRef(genes);
+  const geneMapRef = useRef(geneMap);
+  genesRef.current = genes;
+  geneMapRef.current = geneMap;
+
   const loadNetwork = useCallback(async () => {
     const names = geneNames;
     if (names.length === 0) {
@@ -167,7 +240,12 @@ export default function GeneNetworkVisualization({
         names,
         requiredScore
       );
-      const data = buildGraphData(genes, stringNodes, stringEdges, geneMap);
+      const data = buildGraphData(
+        genesRef.current,
+        stringNodes,
+        stringEdges,
+        geneMapRef.current
+      );
       setGraphData(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load STRING network');
@@ -175,7 +253,7 @@ export default function GeneNetworkVisualization({
     } finally {
       setLoading(false);
     }
-  }, [geneNames, requiredScore, genes, geneMap]);
+  }, [loadKey, geneNames, requiredScore]);
 
   useEffect(() => {
     loadNetwork();
@@ -197,7 +275,13 @@ export default function GeneNetworkVisualization({
   const defaultExportTitle = `[${analysisName ?? 'Screen Analysis'}] Gene Interaction Network`;
 
   const handleOpenExportModal = () => {
-    setExportTitle(defaultExportTitle);
+    let title = defaultExportTitle;
+    if (selectedGeneNeighbors) {
+      title = `[${analysisName ?? 'Screen Analysis'}] ${selectedGeneNeighbors} Network Neighbors`;
+    } else if (minDegree > 0) {
+      title = `[${analysisName ?? 'Screen Analysis'}] Hub Genes Network (≥${minDegree} connections)`;
+    }
+    setExportTitle(title);
     setExportModalOpen(true);
   };
 
@@ -238,15 +322,80 @@ export default function GeneNetworkVisualization({
     window.open(`https://string-db.org/cgi/network?identifiers=${gene}&species=9606`, '_blank');
   };
 
+  // Filter nodes by degree (hub genes) or by neighbors of selected gene
+  const filteredGraphData = useMemo(() => {
+    if (!graphData) return graphData;
+
+    // Filter by neighbors of selected gene
+    if (selectedGeneNeighbors) {
+      const neighborSet = new Set<string>();
+      neighborSet.add(selectedGeneNeighbors);
+
+      // Find all direct neighbors
+      graphData.links.forEach(l => {
+        const sourceId = typeof l.source === 'string' ? l.source : (l.source as any).id;
+        const targetId = typeof l.target === 'string' ? l.target : (l.target as any).id;
+
+        if (sourceId === selectedGeneNeighbors) neighborSet.add(targetId);
+        if (targetId === selectedGeneNeighbors) neighborSet.add(sourceId);
+      });
+
+      const filteredNodes = graphData.nodes.filter(n => neighborSet.has(n.id));
+      const filteredLinks = graphData.links.filter(l => {
+        const sourceId = typeof l.source === 'string' ? l.source : (l.source as any).id;
+        const targetId = typeof l.target === 'string' ? l.target : (l.target as any).id;
+        return neighborSet.has(sourceId) && neighborSet.has(targetId);
+      });
+
+      return { nodes: filteredNodes, links: filteredLinks };
+    }
+
+    // Filter by minimum degree
+    if (minDegree === 0) return graphData;
+
+    const filteredNodes = graphData.nodes.filter(n => (n.degree || 0) >= minDegree);
+    const nodeIds = new Set(filteredNodes.map(n => n.id));
+    const filteredLinks = graphData.links.filter(l => {
+      const sourceId = typeof l.source === 'string' ? l.source : (l.source as any).id;
+      const targetId = typeof l.target === 'string' ? l.target : (l.target as any).id;
+      return nodeIds.has(sourceId) && nodeIds.has(targetId);
+    });
+
+    return { nodes: filteredNodes, links: filteredLinks };
+  }, [graphData, minDegree, selectedGeneNeighbors]);
+
+  // Calculate network statistics
+  const networkStats = useMemo(() => {
+    if (!graphData) return null;
+
+    const numNodes = graphData.nodes.length;
+    const numEdges = graphData.links.length;
+    const avgDegree = numNodes > 0 ? (2 * numEdges) / numNodes : 0;
+    const maxDegree = Math.max(...graphData.nodes.map(n => n.degree || 0), 0);
+    const hubGenes = graphData.nodes
+      .filter(n => (n.degree || 0) >= avgDegree * 1.5)
+      .sort((a, b) => (b.degree || 0) - (a.degree || 0))
+      .slice(0, 5);
+
+    return {
+      numNodes,
+      numEdges,
+      avgDegree,
+      maxDegree,
+      hubGenes,
+      density: numNodes > 1 ? (2 * numEdges) / (numNodes * (numNodes - 1)) : 0,
+    };
+  }, [graphData]);
+
   const searchLower = search.trim().toLowerCase();
   const highlightedIds = useMemo(() => {
-    if (!searchLower || !graphData) return new Set<string>();
+    if (!searchLower || !filteredGraphData) return new Set<string>();
     return new Set(
-      graphData.nodes
+      filteredGraphData.nodes
         .filter((n) => n.name.toLowerCase().includes(searchLower))
         .map((n) => n.id)
     );
-  }, [searchLower, graphData]);
+  }, [searchLower, filteredGraphData]);
 
   // Refs so nodeColor (called every frame) always sees latest highlight state without recreating the graph
   const highlightedIdsRef = useRef(highlightedIds);
@@ -254,13 +403,27 @@ export default function GeneNetworkVisualization({
   highlightedIdsRef.current = highlightedIds;
   highlightNodeRef.current = highlightNode;
 
+  // Toggle simulation pause/resume
+  const togglePause = useCallback(() => {
+    if (!simulationRef.current) return;
+    if (isPaused) {
+      simulationRef.current.restart();
+      setIsPaused(false);
+    } else {
+      simulationRef.current.stop();
+      setIsPaused(true);
+    }
+  }, [isPaused]);
+
   // Mount force-graph (2D only) when we have data; use force-graph package to avoid AFRAME/VR/AR
   useEffect(() => {
     const container = graphContainerRef.current;
-    if (!isMounted || !graphData || graphData.nodes.length === 0 || loading || !container) {
+    const dataToRender = filteredGraphData;
+    if (!isMounted || !dataToRender || dataToRender.nodes.length === 0 || loading || !container) {
       if (graphInstanceRef.current) {
         graphInstanceRef.current._destructor();
         graphInstanceRef.current = null;
+        simulationRef.current = null;
       }
       return;
     }
@@ -289,13 +452,14 @@ export default function GeneNetworkVisualization({
         enableNodeDrag: (enable: boolean) => typeof api;
         d3Force: (name: string) => { strength?: (v: number) => unknown; distance?: (v: number) => unknown } | undefined;
         d3ReheatSimulation: () => typeof api;
+        d3AlphaDecay: (n: number) => typeof api;
         width: (n: number) => typeof api;
         height: (n: number) => typeof api;
       };
-      // Spread nodes in a circle initially so they don’t start bunched
-      const n = graphData.nodes.length;
+      // Spread nodes in a circle initially so they don't start bunched
+      const n = dataToRender.nodes.length;
       const radius = Math.max(180, Math.min(280, n * 8));
-      graphData.nodes.forEach((node, i) => {
+      dataToRender.nodes.forEach((node, i) => {
         if (node.x == null && node.y == null) {
           const angle = (2 * Math.PI * i) / (n || 1);
           node.x = radius * Math.cos(angle);
@@ -303,13 +467,14 @@ export default function GeneNetworkVisualization({
         }
       });
       api
-        .graphData(graphData)
+        .graphData(dataToRender)
         .nodeId('id')
         .nodeLabel((node: unknown) => {
           const n = node as NodeData;
           const lfc = n.log2FC != null ? `Log₂FC: ${n.log2FC.toFixed(2)}` : '';
           const fdr = n.fdr != null ? `FDR: ${n.fdr.toExponential(2)}` : '';
-          return `${n.name}${lfc ? ` | ${lfc}` : ''}${fdr ? ` | ${fdr}` : ''}`;
+          const degree = n.degree != null ? `Connections: ${n.degree}` : '';
+          return `${n.name}${lfc ? ` | ${lfc}` : ''}${fdr ? ` | ${fdr}` : ''}${degree ? ` | ${degree}` : ''}`;
         })
         .nodeColor((node: unknown) => {
           const n = node as NodeData;
@@ -355,18 +520,25 @@ export default function GeneNetworkVisualization({
         })
         .onNodeRightClick((node: unknown, event: MouseEvent) => {
           event.preventDefault();
-          const g = (node as NodeData).name;
+          const nodeData = node as NodeData;
+          const g = nodeData.name;
           const menu = document.createElement('div');
-          menu.className = 'fixed z-50 bg-surface border border-border rounded-lg shadow-elevated py-1 min-w-[180px]';
+          menu.className = 'fixed z-50 bg-surface border border-border rounded-lg shadow-elevated py-1 min-w-[200px]';
           menu.style.left = `${event.clientX}px`;
           menu.style.top = `${event.clientY}px`;
+
           const items = [
-            { label: 'Show in pathway', fn: () => openInPathway(g) },
+            { label: `Show ${g} + neighbors only`, fn: () => {
+              setSelectedGeneNeighbors(g);
+              setMinDegree(0);
+            }, divider: true },
+            { label: 'Show in KEGG pathway', fn: () => openInPathway(g) },
             { label: 'View in GeneCards', fn: () => openInGeneCards(g) },
             { label: 'Compare to DepMap', fn: () => openInDepMap(g) },
             { label: 'Open in STRING', fn: () => openInString(g) },
           ];
-          items.forEach(({ label, fn }) => {
+
+          items.forEach(({ label, fn, divider }) => {
             const b = document.createElement('button');
             b.className = 'w-full px-4 py-2 text-left text-sm hover:bg-background flex items-center gap-2';
             b.textContent = label;
@@ -376,7 +548,14 @@ export default function GeneNetworkVisualization({
               document.removeEventListener('click', close);
             };
             menu.appendChild(b);
+
+            if (divider) {
+              const div = document.createElement('div');
+              div.className = 'border-t border-border my-1';
+              menu.appendChild(div);
+            }
           });
+
           const close = () => {
             menu.remove();
             document.removeEventListener('click', close);
@@ -384,7 +563,7 @@ export default function GeneNetworkVisualization({
           document.body.appendChild(menu);
           setTimeout(() => document.addEventListener('click', close), 0);
         });
-      // Spread layout: stronger repulsion and longer link distance so nodes aren’t bunched
+      // Spread layout: stronger repulsion and longer link distance so nodes aren't bunched
       const charge = api.d3Force('charge');
       if (charge && typeof (charge as { strength?: (v: number) => unknown }).strength === 'function') {
         (charge as { strength: (v: number) => unknown }).strength(-400);
@@ -393,6 +572,39 @@ export default function GeneNetworkVisualization({
       if (link && typeof (link as { distance?: (v: number) => unknown }).distance === 'function') {
         (link as { distance: (v: number) => unknown }).distance(100);
       }
+      // Cool down VERY quickly so the layout stabilizes and STOPS moving completely
+      api.d3AlphaDecay(0.15); // Increased from 0.06 to stop faster
+
+      // Get reference to d3 simulation to control it
+      const graphSimulation = (instance as any)?.d3Force?.('link');
+      let simulation: any = null;
+
+      // Try to get simulation from various possible locations in the force-graph API
+      if (graphSimulation) {
+        simulation = graphSimulation.simulation?.() || (instance as any).d3?.simulation?.();
+      }
+
+      // Fallback: access simulation through internal state
+      if (!simulation && (instance as any).d3) {
+        simulation = (instance as any).d3.simulation;
+      }
+
+      // Store simulation reference for pause/play
+      simulationRef.current = simulation;
+
+      // Stop the simulation completely after it cools down to prevent constant movement
+      if (simulation && typeof simulation.on === 'function') {
+        let tickCount = 0;
+        simulation.on('tick', () => {
+          tickCount++;
+          // Stop after enough ticks OR when alpha is very low
+          if (simulation.alpha() < 0.01 || tickCount > 300) {
+            simulation.stop();
+            setIsPaused(true);
+          }
+        });
+      }
+
       api.d3ReheatSimulation();
       api.width(container.offsetWidth);
       api.height(container.offsetHeight);
@@ -403,40 +615,176 @@ export default function GeneNetworkVisualization({
         graphInstanceRef.current._destructor();
         graphInstanceRef.current = null;
       }
+      simulationRef.current = null;
     };
-  }, [isMounted, graphData, loading, nodeColor, nodeVal]);
+  // Only recreate graph when filtered data or mount/loading change; nodeColor/nodeVal are stable and read via closure.
+  }, [isMounted, filteredGraphData, loading]);
 
   return (
-    <div ref={containerRef} className="w-full bg-surface rounded-xl p-6 border border-border shadow-card">
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-        <h3 className="text-2xl font-serif text-text-primary">Gene interaction network</h3>
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative">
+    <div ref={containerRef} className="w-full bg-surface rounded-xl p-4 sm:p-6 border border-border shadow-card">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4">
+        <h3 className="text-xl sm:text-2xl font-serif text-text-primary">Gene interaction network</h3>
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="relative flex-1 sm:flex-none min-w-[140px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
             <input
               type="text"
               placeholder="Find gene"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 pr-4 py-2 rounded-lg border border-border bg-background text-text-primary w-40 focus:outline-none focus:ring-2 focus:ring-accent/50"
+              className="w-full pl-10 pr-4 py-2 text-sm rounded-lg border border-border bg-background text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/50"
             />
           </div>
           <button
+            onClick={togglePause}
+            disabled={!simulationRef.current}
+            title={isPaused ? "Resume simulation" : "Pause simulation"}
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm rounded-lg border border-border bg-background text-text-primary hover:bg-accent/10 disabled:opacity-50"
+          >
+            {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+            <span className="hidden sm:inline">{isPaused ? 'Play' : 'Pause'}</span>
+          </button>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm rounded-lg border border-border bg-background text-text-primary hover:bg-accent/10"
+          >
+            <Filter className="w-4 h-4" />
+            <span className="hidden sm:inline">Filters</span>
+          </button>
+          <button
+            onClick={() => setShowStats(!showStats)}
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm rounded-lg border border-border bg-background text-text-primary hover:bg-accent/10"
+          >
+            <Info className="w-4 h-4" />
+            <span className="hidden sm:inline">Stats</span>
+          </button>
+          <button
             onClick={() => loadNetwork()}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-background text-text-primary hover:bg-accent/10 disabled:opacity-50"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm rounded-lg border border-border bg-background text-text-primary hover:bg-accent/10 disabled:opacity-50"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-            Refresh
+            <span className="hidden sm:inline">Refresh</span>
           </button>
           <button
             onClick={handleOpenExportModal}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-background text-text-primary hover:bg-accent/10"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm rounded-lg border border-border bg-background text-text-primary hover:bg-accent/10"
           >
-            <Download className="w-4 h-4" /> Export
+            <Download className="w-4 h-4" />
+            <span className="hidden sm:inline">Export</span>
           </button>
         </div>
       </div>
+
+      {/* Filters Panel */}
+      {showFilters && graphData && (
+        <div className="mb-4 p-4 rounded-lg bg-background border border-border">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-semibold text-text-primary">Filters</h4>
+            {(minDegree > 0 || selectedGeneNeighbors) && (
+              <button
+                onClick={() => {
+                  setMinDegree(0);
+                  setSelectedGeneNeighbors(null);
+                }}
+                className="text-xs text-accent hover:text-accent/80"
+              >
+                Reset filters
+              </button>
+            )}
+          </div>
+
+          {selectedGeneNeighbors && (
+            <div className="mb-3 p-3 rounded bg-accent/10 border border-accent/20">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-xs text-text-tertiary">Viewing neighbors of:</div>
+                  <div className="text-sm font-semibold text-accent">{selectedGeneNeighbors}</div>
+                </div>
+                <button
+                  onClick={() => setSelectedGeneNeighbors(null)}
+                  className="text-xs text-accent hover:text-accent/80"
+                >
+                  Clear
+                </button>
+              </div>
+              {filteredGraphData && (
+                <p className="text-xs text-text-secondary mt-2">
+                  Showing {filteredGraphData.nodes.length - 1} neighbors + {selectedGeneNeighbors}
+                </p>
+              )}
+            </div>
+          )}
+
+          {!selectedGeneNeighbors && (
+            <div className="space-y-2">
+              <label className="block text-sm text-text-secondary">
+                Minimum connections (degree): {minDegree}
+              </label>
+              <input
+                type="range"
+                min="0"
+                max={networkStats?.maxDegree || 10}
+                value={minDegree}
+                onChange={(e) => setMinDegree(Number(e.target.value))}
+                className="w-full h-2 bg-border rounded-lg appearance-none cursor-pointer accent-accent"
+              />
+              <div className="flex justify-between text-xs text-text-tertiary">
+                <span>All genes</span>
+                <span>Hub genes only ({networkStats?.maxDegree} max)</span>
+              </div>
+              {minDegree > 0 && filteredGraphData && (
+                <p className="text-xs text-text-secondary mt-2">
+                  Showing {filteredGraphData.nodes.length} of {graphData.nodes.length} genes
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Network Statistics Panel */}
+      {showStats && networkStats && (
+        <div className="mb-4 p-4 rounded-lg bg-background border border-border">
+          <h4 className="text-sm font-semibold text-text-primary mb-3">Network Statistics</h4>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+            <div>
+              <div className="text-xs text-text-tertiary">Nodes</div>
+              <div className="text-lg font-semibold text-text-primary">{networkStats.numNodes}</div>
+            </div>
+            <div>
+              <div className="text-xs text-text-tertiary">Edges</div>
+              <div className="text-lg font-semibold text-text-primary">{networkStats.numEdges}</div>
+            </div>
+            <div>
+              <div className="text-xs text-text-tertiary">Avg Degree</div>
+              <div className="text-lg font-semibold text-text-primary">{networkStats.avgDegree.toFixed(1)}</div>
+            </div>
+            <div>
+              <div className="text-xs text-text-tertiary">Density</div>
+              <div className="text-lg font-semibold text-text-primary">{(networkStats.density * 100).toFixed(1)}%</div>
+            </div>
+          </div>
+          {networkStats.hubGenes.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-border">
+              <div className="text-xs text-text-tertiary mb-2">Top hub genes (highly connected):</div>
+              <div className="flex flex-wrap gap-2">
+                {networkStats.hubGenes.map(gene => (
+                  <button
+                    key={gene.id}
+                    onClick={() => setSearch(gene.name)}
+                    className="px-2 py-1 text-xs rounded bg-accent/10 text-accent hover:bg-accent/20 transition-colors"
+                    title={`${gene.name}: ${gene.degree} connections`}
+                  >
+                    {gene.name} ({gene.degree})
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Export options modal: map-only image, zoom-to-fit, title and options */}
       {exportModalOpen && (
@@ -530,33 +878,73 @@ export default function GeneNetworkVisualization({
         </div>
       )}
 
-      <div style={{ height }} className="rounded-lg overflow-hidden bg-background border border-border">
+      {/* Graph Container */}
+      <div
+        style={{ height: `${height}px` }}
+        className="rounded-lg overflow-hidden bg-background border border-border relative"
+      >
         {loading && !graphData && (
           <div className="h-full flex items-center justify-center">
-            <Loader2 className="w-10 h-10 animate-spin text-accent" />
+            <div className="text-center">
+              <Loader2 className="w-10 h-10 animate-spin text-accent mx-auto mb-2" />
+              <p className="text-sm text-text-tertiary">Loading network from STRING DB...</p>
+            </div>
           </div>
         )}
-        {isMounted && graphData && graphData.nodes.length > 0 && !loading && (
-          <div ref={graphContainerRef} style={{ width: '100%', height }} />
+        {isMounted && filteredGraphData && filteredGraphData.nodes.length > 0 && !loading && (
+          <div ref={graphContainerRef} style={{ width: '100%', height: `${height}px` }} />
         )}
-        {graphData && graphData.nodes.length === 0 && !loading && (
-          <div className="h-full flex items-center justify-center text-text-tertiary">
-            No interactions found for the selected genes. Try increasing the gene set or lowering the score threshold.
+        {filteredGraphData && filteredGraphData.nodes.length === 0 && !loading && (
+          <div className="h-full flex items-center justify-center text-center px-4">
+            <div>
+              <p className="text-text-tertiary mb-2">
+                {selectedGeneNeighbors
+                  ? `${selectedGeneNeighbors} has no connections in the network.`
+                  : minDegree > 0
+                  ? `No genes with ${minDegree}+ connections. Try lowering the filter.`
+                  : 'No interactions found for the selected genes.'
+                }
+              </p>
+              {minDegree === 0 && !selectedGeneNeighbors && (
+                <p className="text-sm text-text-quaternary">
+                  Try increasing the gene set or lowering the confidence score threshold.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Simulation status indicator */}
+        {!loading && filteredGraphData && filteredGraphData.nodes.length > 0 && (
+          <div className="absolute top-3 right-3 px-2 py-1 rounded text-xs bg-background/90 backdrop-blur border border-border text-text-tertiary">
+            {isPaused ? '⏸ Paused' : '▶ Running'}
           </div>
         )}
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-6 text-sm text-text-secondary">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-[#EF4444]" /> Depleted
+      {/* Legend and Instructions */}
+      <div className="mt-4 space-y-3">
+        <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs sm:text-sm text-text-secondary">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-[#EF4444]" />
+            <span>Depleted</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-[#10B981]" />
+            <span>Enriched</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-[#9B9B9B]" />
+            <span>Other / STRING</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-[#10B981]" /> Enriched
+        <div className="text-xs sm:text-sm text-text-tertiary space-y-1">
+          <p>• Node size represents statistical significance (-log₁₀ FDR). Larger = more significant.</p>
+          <p>• <strong>Drag</strong> nodes to reposition (they stay pinned). <strong>Double-click</strong> to unpin.</p>
+          <p>• <strong>Right-click</strong> a node to focus on its neighbors or view in external databases</p>
+          <p>• <strong>Hub genes</strong> (highly connected) may be key regulatory or pathway nodes</p>
+          <p>• Data: STRING DB (Homo sapiens) - experimentally validated protein-protein interactions</p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-[#9B9B9B]" /> Other / STRING
-        </div>
-        <span>Node size ∝ -log₁₀(FDR). Data: STRING DB (human). Drag nodes to reposition; they stay put. Double-click a node to unpin.</span>
       </div>
     </div>
   );

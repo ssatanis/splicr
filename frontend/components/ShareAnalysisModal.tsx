@@ -168,9 +168,15 @@ export default function ShareAnalysisModal({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, permission }),
+        credentials: "include",
       });
 
-      const data = await response.json();
+      let data: { error?: string };
+      try {
+        data = await response.json();
+      } catch {
+        throw new Error("Failed to share analysis");
+      }
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to send invitation");
