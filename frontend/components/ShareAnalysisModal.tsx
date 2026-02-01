@@ -258,8 +258,8 @@ export default function ShareAnalysisModal({
             {isOwner && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <Link2 className="w-4 h-4 text-text-secondary" strokeWidth={1.5} />
-                  <h3 className="text-sm font-serif text-text-primary font-medium">
+                  <Link2 className="w-4 h-4 shrink-0 text-text-secondary" strokeWidth={1.5} />
+                  <h3 className="m-0 text-sm font-serif text-text-primary font-medium">
                     Share via Link
                   </h3>
                 </div>
@@ -306,13 +306,13 @@ export default function ShareAnalysisModal({
                       className="w-full px-3 py-2.5 bg-background border border-border rounded-xl text-sm font-serif focus:outline-none focus:border-accent transition-colors disabled:opacity-50"
                     >
                       <option value="private">
-                        🔒 Only people invited
+                        Only people invited
                       </option>
                       <option value="institution">
-                        🏛️ Anyone at {linkConfig.institution_domain || 'my institution'}
+                        Anyone at {linkConfig.institution_domain || 'my institution'}
                       </option>
                       <option value="public">
-                        🌍 Anyone with the link
+                        Anyone with the link
                       </option>
                     </select>
                   </div>
@@ -374,8 +374,8 @@ export default function ShareAnalysisModal({
             {isOwner && (
               <form onSubmit={handleInvite} className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-text-secondary" strokeWidth={1.5} />
-                  <h3 className="text-sm font-serif text-text-primary font-medium">
+                  <Mail className="w-4 h-4 shrink-0 text-text-secondary" strokeWidth={1.5} />
+                  <h3 className="m-0 text-sm font-serif text-text-primary font-medium">
                     Invite via Email
                   </h3>
                 </div>
