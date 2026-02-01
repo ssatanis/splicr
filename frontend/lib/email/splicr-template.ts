@@ -43,7 +43,6 @@ export function splicrEmailLayout(options: {
     footerText,
     closing = CLOSING,
   } = options;
-  const logoUrl = getLogoUrl();
   const fontCss =
     'https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap';
 
@@ -99,17 +98,6 @@ export function splicrEmailLayout(options: {
       <td align="center" style="padding: 48px 24px;">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 520px; margin: 0 auto;">
           <tr>
-            <td align="center" style="padding-bottom: 8px;">
-              <img src="${logoUrl}" alt="${BRAND_NAME}" width="112" height="auto" style="display: block; max-width: 112px; height: auto;" />
-            </td>
-          </tr>
-          <tr>
-            <td align="center" style="padding-bottom: 32px;">
-              <span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 20px; font-weight: 600; color: ${TEXT_PRIMARY}; letter-spacing: 0.02em;">${BRAND_NAME}</span>
-              <span style="font-family: 'Instrument Serif', Georgia, serif; font-size: 13px; color: ${TEXT_TERTIARY}; margin-left: 8px;">${SLOGAN}</span>
-            </td>
-          </tr>
-          <tr>
             <td style="
               background: ${BG_CARD};
               border-radius: 16px;
@@ -139,11 +127,6 @@ export function splicrEmailLayout(options: {
               </table>
             </td>
           </tr>
-          <tr>
-            <td align="center" style="padding-top: 28px; font-family: 'Instrument Serif', Georgia, serif; font-size: 11px; color: ${TEXT_TERTIARY};">
-              ${BRAND_NAME} · ${SLOGAN}
-            </td>
-          </tr>
         </table>
       </td>
     </tr>
@@ -153,15 +136,7 @@ export function splicrEmailLayout(options: {
   `.trim();
 }
 
-/** Derive a friendly first name from an email (e.g. john.doe@uni.edu → John) for personalization. */
-function firstNameFromEmail(email: string): string {
-  const local = email.split('@')[0] || '';
-  const name = local.replace(/[._0-9]+/g, ' ').trim() || local;
-  const first = name.split(/\s+/)[0] || name;
-  return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
-}
-
-/** Share invitation email — personalized, SplicR-branded, Resend-ready */
+/** Share invitation email — SplicR-branded, no logo, greeting is "Hi," */
 export function shareInviteEmailContent(options: {
   inviterNameOrEmail: string;
   inviterDisplayName?: string | null;
@@ -182,8 +157,7 @@ export function shareInviteEmailContent(options: {
   } = options;
 
   const inviterName = inviterDisplayName?.trim() || inviterNameOrEmail;
-  const recipientName = recipientDisplayName?.trim() || firstNameFromEmail(recipientEmail);
-  const greeting = recipientName ? `Hi ${recipientName},` : 'Hi there,';
+  const greeting = 'Hi,';
 
   const isEdit = permission === 'edit' || permission === 'admin';
   const permissionLabel = isEdit ? 'Can edit' : 'View only';
@@ -342,7 +316,7 @@ export function getResendTemplateHtml(): string {
             </td>
           </tr>
           <tr>
-            <td align="center" style="padding-top: 28px; font-family: 'Instrument Serif', Georgia, serif; font-size: 11px; color: ${TEXT_TERTIARY};">SplicR · CRISPR Screen Analysis</td>
+            <td align="center" style="padding-top: 28px; font-family: 'Instrument Serif', Georgia, serif; font-size: 11px; color: ${TEXT_TERTIARY};">SplicR</td>
           </tr>
         </table>
       </td>
