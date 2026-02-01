@@ -182,8 +182,9 @@ export default function ShareAnalysisModal({
         throw new Error(data.error || "Failed to send invitation");
       }
 
-      if (data.emailSent === false && data.emailError) {
-        setSuccess(`Collaborator added, but the email could not be sent. Check RESEND_API_KEY and RESEND_FROM in your environment.`);
+      if (data.emailSent === false) {
+        const errMsg = data.emailError || "Unknown error";
+        setSuccess(`Collaborator added, but the email could not be sent: ${errMsg}`);
       } else {
         setSuccess(`Invitation sent to ${email}`);
       }

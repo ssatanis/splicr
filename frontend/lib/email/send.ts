@@ -17,8 +17,20 @@ function getFromAddress(): string {
 
 function getResend(): Resend | null {
   const key = process.env.RESEND_API_KEY;
-  if (!key || typeof key !== 'string' || !key.startsWith('re_')) return null;
+  if (!key || typeof key !== 'string') return null;
+  if (!key.startsWith('re_')) return null;
   return new Resend(key);
+}
+
+function getResendConfigError(): string | null {
+  const key = process.env.RESEND_API_KEY;
+  if (!key || typeof key !== 'string') {
+    return 'RESEND_API_KEY is not set. Add it in frontend/.env.local (local) or Vercel → Project Settings → Environment Variables. Get a key from https://resend.com/api-keys';
+  }
+  if (!key.startsWith('re_')) {
+    return 'RESEND_API_KEY must start with re_. Get a valid key from https://resend.com/api-keys';
+  }
+  return null;
 }
 
 /**
@@ -34,12 +46,13 @@ export async function sendShareInviteEmail(options: {
   resultsUrl: string;
   recipientDisplayName?: string | null;
 }): Promise<{ success: boolean; error?: string; id?: string }> {
+  const configError = getResendConfigError();
+  if (configError) {
+    return { success: false, error: configError };
+  }
   const resend = getResend();
   if (!resend) {
-    return {
-      success: false,
-      error: 'Resend not configured. Set RESEND_API_KEY (starts with re_) in .env.local or Vercel Environment Variables.',
-    };
+    return { success: false, error: 'Resend not configured.' };
   }
 
   const fromAddress = getFromAddress();
