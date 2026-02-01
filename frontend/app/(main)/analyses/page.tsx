@@ -15,6 +15,9 @@ import {
   Upload,
   Users,
   RefreshCw,
+  Edit2,
+  Save,
+  X,
 } from "lucide-react";
 import BatchAnalysisUploader from "@/components/BatchAnalysisUploader";
 import { formatDate } from "@/lib/utils";
@@ -27,6 +30,8 @@ export default function MyAnalysesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [filteredAnalyses, setFilteredAnalyses] = useState<Analysis[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
 
   useEffect(() => {
     let filtered = analyses;
@@ -46,6 +51,34 @@ export default function MyAnalysesPage() {
     return () => clearInterval(interval);
   }, [analyses, refreshAnalyses]);
 
+  const handleStartEdit = (analysis: Analysis) => {
+    setEditingId(analysis.id);
+    setEditingName(analysis.name);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditingName("");
+  };
+
+  const handleSaveEdit = async (analysisId: string) => {
+    if (!editingName.trim()) return;
+    try {
+      const response = await fetch(`/api/analysis/${analysisId}/update`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: editingName.trim() }),
+      });
+      if (response.ok) {
+        await refreshAnalyses();
+        setEditingId(null);
+        setEditingName("");
+      }
+    } catch (error) {
+      console.error('Failed to save analysis name:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Sidebar />
@@ -57,7 +90,7 @@ export default function MyAnalysesPage() {
             className="mb-12 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6"
           >
             <div>
-              <h1 className="text-6xl font-serif text-text-primary mb-2">My analyses</h1>
+              <h1 className="text-6xl font-serif text-text-primary mb-2">My Analyses</h1>
               <p className="text-lg text-text-secondary">
                 All CRISPR screen runs and their status.
               </p>
@@ -142,25 +175,73 @@ export default function MyAnalysesPage() {
                       className="border-b border-border-light hover:bg-background transition-colors duration-200"
                     >
                       <td className="px-8 py-5">
-                        <Link href={`/results/${analysis.id}`} className="block">
+                        {editingId === analysis.id ? (
                           <div className="flex items-center gap-2">
-                            <span className="font-serif text-text-primary hover:text-accent transition-colors">{analysis.name}</span>
-                            {analysis.isShared && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-accent/10 text-accent text-xs rounded-full">
-                                <Users className="w-3 h-3" />
-                                Shared
-                              </span>
-                            )}
+                            <input
+                              type="text"
+                              value={editingName}
+                              onChange={(e) => setEditingName(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleSaveEdit(analysis.id);
+                                if (e.key === 'Escape') handleCancelEdit();
+                              }}
+                              className="flex-1 px-3 py-2 bg-background border border-border rounded-lg text-sm font-serif text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                              autoFocus
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleSaveEdit(analysis.id)}
+                              className="p-2 hover:bg-accent/10 rounded-lg transition-colors"
+                              title="Save"
+                            >
+                              <Save className="w-4 h-4 text-success" strokeWidth={1.5} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleCancelEdit}
+                              className="p-2 hover:bg-background rounded-lg transition-colors"
+                              title="Cancel"
+                            >
+                              <X className="w-4 h-4 text-text-secondary" strokeWidth={1.5} />
+                            </button>
                           </div>
-                          <div className="text-sm text-text-tertiary mt-1">
-                            {analysis.fileKeys.length} files
-                            {analysis.ownerEmail && (
-                              <span className="ml-2">
-                                • Owner: {analysis.isOwner ? analysis.ownerEmail : analysis.ownerEmail}
-                              </span>
-                            )}
+                        ) : (
+                          <div className="group">
+                            <div className="flex items-center gap-2">
+                              <Link href={`/results/${analysis.id}`} className="flex items-center gap-2 flex-1">
+                                <span className="font-serif text-text-primary hover:text-accent transition-colors">{analysis.name}</span>
+                              </Link>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleStartEdit(analysis);
+                                }}
+                                className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-accent/10 rounded-lg transition-all"
+                                title="Edit name"
+                              >
+                                <Edit2 className="w-4 h-4 text-text-primary" strokeWidth={1.5} />
+                              </button>
+                              {analysis.isShared && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-accent/10 text-accent text-xs rounded-full">
+                                  <Users className="w-3 h-3" />
+                                  Shared
+                                </span>
+                              )}
+                            </div>
+                            <Link href={`/results/${analysis.id}`}>
+                              <div className="text-sm text-text-tertiary mt-1">
+                                {analysis.fileKeys.length} files
+                                {analysis.ownerEmail && (
+                                  <span className="ml-2">
+                                    • Owner: {analysis.isOwner ? analysis.ownerEmail : analysis.ownerEmail}
+                                  </span>
+                                )}
+                              </div>
+                            </Link>
                           </div>
-                        </Link>
+                        )}
                       </td>
                       <td className="px-8 py-5 text-sm font-serif text-text-secondary">
                         {formatDate(analysis.createdAt)}

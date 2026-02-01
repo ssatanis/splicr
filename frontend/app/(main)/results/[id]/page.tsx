@@ -195,17 +195,22 @@ export default function ResultsPage() {
 
   const saveAnalysisName = async () => {
     if (!id || !analysisName.trim()) return;
+    const newName = analysisName.trim();
     try {
       const response = await fetch(`/api/analysis/${id}/update`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: analysisName.trim() }),
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newName }),
       });
       if (response.ok) {
+        setAnalysisFromApi((prev) => (prev ? { ...prev, name: newName } : null));
         await refreshAnalyses();
+      } else {
+        const data = await response.json().catch(() => ({}));
+        console.error("Failed to save analysis name:", data?.error ?? response.statusText);
       }
     } catch (error) {
-      console.error('Failed to save analysis name:', error);
+      console.error("Failed to save analysis name:", error);
     }
   };
 
@@ -349,37 +354,66 @@ export default function ResultsPage() {
   ];
 
   const headerActions = headerRoot ? (
-    <div className="flex items-center gap-4 w-full flex-wrap">
-      {/* Left side: Analysis name + edit icon */}
-      <div className="flex items-center gap-3 flex-wrap min-w-0 ml-4">
+    <div className="flex items-center justify-end gap-6 w-full flex-wrap min-h-[2.5rem]">
+      {/* Analysis title + edit + algorithm badges, aligned with action buttons on the right */}
+      <div className="flex items-center gap-3 flex-wrap min-w-0">
         {isEditingName ? (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <input
               type="text"
               value={analysisName}
               onChange={(e) => setAnalysisName(e.target.value)}
-              className="text-lg font-serif text-text-primary bg-transparent border-b-2 border-text-primary focus:outline-none max-w-[240px]"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  saveAnalysisName().then(() => setIsEditingName(false));
+                }
+                if (e.key === "Escape") setIsEditingName(false);
+              }}
+              className="text-xl font-serif text-text-primary bg-background border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-text-primary min-w-[200px] max-w-[320px]"
               autoFocus
+              aria-label="Edit analysis name"
             />
-            <button type="button" onClick={async () => { await saveAnalysisName(); setIsEditingName(false); }} className="p-1.5 hover:bg-accent rounded-lg transition-colors">
-              <Save className="w-4 h-4" strokeWidth={1.5} />
-            </button>
-            <button type="button" onClick={() => setIsEditingName(false)} className="p-1.5 hover:bg-background rounded-lg transition-colors">
-              <X className="w-4 h-4" strokeWidth={1.5} />
-            </button>
+            <span className="inline-flex items-center gap-1">
+              <button
+                type="button"
+                onClick={async () => { await saveAnalysisName(); setIsEditingName(false); }}
+                className="inline-flex items-center justify-center p-2 rounded-lg hover:bg-accent text-text-primary transition-colors"
+                aria-label="Save name"
+              >
+                <Save className="w-4 h-4" strokeWidth={1.5} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsEditingName(false)}
+                className="inline-flex items-center justify-center p-2 rounded-lg hover:bg-background text-text-secondary transition-colors"
+                aria-label="Cancel editing"
+              >
+                <X className="w-4 h-4" strokeWidth={1.5} />
+              </button>
+            </span>
           </div>
         ) : (
-          <div className="flex items-center gap-2">
-            <h1 className="text-lg font-serif font-semibold text-text-primary">{analysisName || "Screen Analysis"}</h1>
-            <button type="button" onClick={() => setIsEditingName(true)} className="p-1.5 hover:bg-background rounded-lg transition-colors">
-              <Edit2 className="w-4 h-4 text-text-primary" strokeWidth={1.5} />
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-xl font-serif font-semibold text-text-primary leading-tight">
+              {analysisName || "Screen Analysis"}
+            </h1>
+            <button
+              type="button"
+              onClick={() => setIsEditingName(true)}
+              className="inline-flex items-center justify-center w-9 h-9 rounded-lg hover:bg-background text-text-secondary hover:text-text-primary transition-colors shrink-0"
+              aria-label="Edit analysis name"
+            >
+              <Edit2 className="w-4 h-4" strokeWidth={1.5} />
             </button>
           </div>
         )}
         {analysis?.algorithm?.length ? (
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0">
             {analysis.algorithm.map((alg) => (
-              <span key={alg} className="px-2 py-0.5 bg-accent/20 rounded text-xs font-serif text-text-primary">
+              <span
+                key={alg}
+                className="px-2.5 py-1 bg-accent/20 rounded-md text-sm font-serif font-medium text-text-primary"
+              >
                 {String(alg).toUpperCase()}
               </span>
             ))}
@@ -387,9 +421,7 @@ export default function ResultsPage() {
         ) : null}
       </div>
 
-      <div className="flex-1" />
-
-      {/* Right side: Action buttons */}
+      {/* Action buttons — same row, aligned with title */}
       <div className="flex items-center gap-2 flex-wrap">
         <Button variant="secondary" size="md" onClick={() => setReportBuilderOpen(true)} className="inline-flex items-center gap-1.5 text-sm py-2">
           <FileText className="w-4 h-4" strokeWidth={1.5} />

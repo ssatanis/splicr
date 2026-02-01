@@ -11,7 +11,7 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  title: "SplicR - CRISPR Screen Analysis",
+  title: "App | SplicR",
   description: "Next-generation CRISPR screen analysis tool",
   icons: {
     icon: "/faviconslicr.png",
