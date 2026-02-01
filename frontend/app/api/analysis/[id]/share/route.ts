@@ -187,10 +187,10 @@ export async function POST(
       );
     }
 
-    // In-app notification for the invited user (if they exist)
+    // In-app notification for the invited user (if they exist); also get display name for email
     const { data: invitedUser } = await admin
       .from('profiles')
-      .select('id')
+      .select('id, full_name')
       .eq('email', email.toLowerCase())
       .maybeSingle();
 
@@ -204,15 +204,26 @@ export async function POST(
       }).catch(() => {});
     }
 
-    // Email notification via Resend (SplicR template)
+    // Inviter display name for personalized email (SplicR branding)
+    const { data: inviterProfile } = await admin
+      .from('profiles')
+      .select('full_name')
+      .eq('id', user.id)
+      .maybeSingle();
+
     const inviterNameOrEmail = user.email ?? 'A SplicR user';
+    const inviterDisplayName = inviterProfile?.full_name?.trim() || null;
+    const recipientDisplayName = invitedUser?.full_name?.trim() || null;
     const resultsUrl = `${getAppUrl().replace(/\/$/, '')}/results/${analysisId}`;
+
     const emailResult = await sendShareInviteEmail({
       to: email.toLowerCase(),
       inviterNameOrEmail,
+      inviterDisplayName,
       analysisName: analysis.name ?? 'Screen Analysis',
       permission,
       resultsUrl,
+      recipientDisplayName,
     });
     if (!emailResult.success) {
       console.warn('Share invite email failed:', emailResult.error);
@@ -222,6 +233,8 @@ export async function POST(
       success: true,
       share,
       message: `Invitation sent to ${email}`,
+      emailSent: emailResult.success,
+      emailError: emailResult.success ? undefined : emailResult.error,
     });
   } catch (error) {
     console.error('Share analysis error:', error);

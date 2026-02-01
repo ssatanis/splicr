@@ -4,8 +4,16 @@ All SplicR emails use the same template: **Instrument Serif**, SplicR logo, bran
 
 ## Env
 
-- `RESEND_API_KEY` – from [Resend API Keys](https://resend.com/api-keys)
+- `RESEND_API_KEY` – from [Resend API Keys](https://resend.com/api-keys); must start with `re_`
 - `RESEND_FROM` – e.g. `SplicR <notifications@yourdomain.com>` (use a verified domain in Resend)
+
+**Making sure emails actually send**
+
+1. **Local:** Set both in `frontend/.env.local`.
+2. **Vercel:** Add `RESEND_API_KEY` and `RESEND_FROM` in Project → Settings → Environment Variables (for Production/Preview/Development as needed).
+3. **Sender:** If you omit `RESEND_FROM`, the app uses `SplicR <onboarding@resend.dev>`. Resend only delivers from that address to the email you signed up with. To deliver to collaborators, add and verify a domain in Resend, then set `RESEND_FROM=SplicR <notifications@yourdomain.com>`.
+
+If the share API returns success but the invitee doesn’t get the email, the UI shows a warning and you’ll see the error in the API response (`emailSent: false`, `emailError`). Check Resend Dashboard → Logs for delivery status.
 
 ## What uses it
 

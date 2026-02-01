@@ -171,7 +171,7 @@ export default function ShareAnalysisModal({
         credentials: "include",
       });
 
-      let data: { error?: string };
+      let data: { error?: string; emailSent?: boolean; emailError?: string };
       try {
         data = await response.json();
       } catch {
@@ -182,7 +182,11 @@ export default function ShareAnalysisModal({
         throw new Error(data.error || "Failed to send invitation");
       }
 
-      setSuccess(`Invitation sent to ${email}`);
+      if (data.emailSent === false && data.emailError) {
+        setSuccess(`Collaborator added, but the email could not be sent. Check RESEND_API_KEY and RESEND_FROM in your environment.`);
+      } else {
+        setSuccess(`Invitation sent to ${email}`);
+      }
       setEmail("");
       fetchShares();
     } catch (err) {

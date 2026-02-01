@@ -13,7 +13,7 @@ const BORDER = '#E8E6E3';
 
 const BRAND_NAME = 'SplicR';
 const SLOGAN = 'CRISPR Screen Analysis';
-const CLOSING = '— The SplicR team';
+const CLOSING = '— The SplicR Team';
 
 function getAppUrl(): string {
   return process.env.NEXT_PUBLIC_APP_URL || 'https://splicr.org';
@@ -153,29 +153,99 @@ export function splicrEmailLayout(options: {
   `.trim();
 }
 
-/** Share invitation email content */
+/** Derive a friendly first name from an email (e.g. john.doe@uni.edu → John) for personalization. */
+function firstNameFromEmail(email: string): string {
+  const local = email.split('@')[0] || '';
+  const name = local.replace(/[._0-9]+/g, ' ').trim() || local;
+  const first = name.split(/\s+/)[0] || name;
+  return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+}
+
+/** Share invitation email — personalized, SplicR-branded, Resend-ready */
 export function shareInviteEmailContent(options: {
   inviterNameOrEmail: string;
+  inviterDisplayName?: string | null;
   analysisName: string;
   permission: string;
   resultsUrl: string;
+  recipientEmail: string;
+  recipientDisplayName?: string | null;
 }): { subject: string; html: string } {
-  const { inviterNameOrEmail, analysisName, permission, resultsUrl } = options;
-  const subject = `You're invited to collaborate on "${analysisName}"`;
-  const permissionLabel = permission === 'edit' ? 'edit' : 'view';
+  const {
+    inviterNameOrEmail,
+    inviterDisplayName,
+    analysisName,
+    permission,
+    resultsUrl,
+    recipientEmail,
+    recipientDisplayName,
+  } = options;
+
+  const inviterName = inviterDisplayName?.trim() || inviterNameOrEmail;
+  const recipientName = recipientDisplayName?.trim() || firstNameFromEmail(recipientEmail);
+  const greeting = recipientName ? `Hi ${recipientName},` : 'Hi there,';
+
+  const isEdit = permission === 'edit' || permission === 'admin';
+  const permissionLabel = isEdit ? 'Can edit' : 'View only';
+  const permissionSubtext = isEdit
+    ? 'You can view, comment, and edit this analysis.'
+    : 'You can view and comment on this analysis.';
+
+  const subject = `${inviterName} shared "${analysisName}" with you on SplicR`;
+
   const bodyHtml = `
-    <strong>${inviterNameOrEmail}</strong> has invited you to ${permissionLabel} their analysis
-    <strong>${analysisName}</strong>.<br><br>
-    Open the link below to see the analysis.
+    <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: ${TEXT_PRIMARY};">
+      ${greeting}
+    </p>
+    <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.65; color: ${TEXT_SECONDARY};">
+      <span style="color: ${ACCENT}; font-weight: 600;">${escapeHtml(inviterName)}</span> has invited you to collaborate on their CRISPR screen analysis.
+    </p>
+    <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 24px; max-width: 100%;">
+      <tr>
+        <td style="
+          background: ${BG_CARD};
+          border: 1px solid ${BORDER};
+          border-radius: 12px;
+          padding: 20px 24px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        ">
+          <p style="margin: 0 0 8px; font-size: 15px; font-weight: 600; color: ${TEXT_PRIMARY};">
+            ${escapeHtml(analysisName)}
+          </p>
+          <span style="
+            display: inline-block;
+            background: ${ACCENT};
+            color: ${BG_CARD};
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 8px;
+            letter-spacing: 0.02em;
+          ">${permissionLabel}</span>
+          <p style="margin: 12px 0 0; font-size: 14px; color: ${TEXT_SECONDARY}; line-height: 1.5;">
+            ${permissionSubtext}
+          </p>
+        </td>
+      </tr>
+    </table>
+    <p style="margin: 0 0 8px; font-size: 16px; line-height: 1.6; color: ${TEXT_SECONDARY};">
+      Click the button below to open the analysis in SplicR.
+    </p>
   `;
+
   const html = splicrEmailLayout({
-    title: 'Analysis shared with you',
+    title: 'You\'re invited to collaborate',
     bodyHtml,
-    ctaLabel: 'View analysis',
+    ctaLabel: 'Open analysis',
     ctaUrl: resultsUrl,
-    footerText: 'You received this because someone shared an analysis with you on SplicR.',
+    footerText: `You received this invite because ${escapeHtml(inviterName)} shared an analysis with you on SplicR. If you weren't expecting this, you can ignore this email.`,
   });
   return { subject, html };
+}
+
+function escapeHtml(text: string): string {
+  const map: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  return text.replace(/[&<>"']/g, (ch) => map[ch] ?? ch);
 }
 
 /** Email confirmation (e.g. signup) — for use with Resend or Supabase custom templates */
