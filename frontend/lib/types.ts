@@ -91,8 +91,13 @@ export interface GeneResult {
   rank: number;
 }
 
+/** When results are from the demo/mock pipeline vs real sequencing pipeline. */
+export type ResultsSource = 'demo' | 'pipeline';
+
 export interface AnalysisResults {
   id: string;
+  /** 'demo' = generated for demo; 'pipeline' = from real analysis (MAGeCK/DrugZ/BAGEL2). Omitted = legacy, treat as demo. */
+  resultsSource?: ResultsSource;
   summary: {
     totalGenes: number;
     significantHits: number;

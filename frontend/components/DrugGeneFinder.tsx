@@ -4,8 +4,13 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, Pill, ExternalLink } from 'lucide-react';
 
+const MAX_GENES_TO_QUERY = 100; // Query up to 100 significant genes for drugs (varies by analysis)
+
 interface DrugGeneFinderProps {
+  /** All significant genes from this analysis (FDR < 0.05); we query up to MAX_GENES_TO_QUERY for drugs. */
   significantGenes: string[];
+  /** Total genes in the screen/library (e.g. 18,166) for context. */
+  totalGenesInScreen?: number;
 }
 
 interface DrugItem {
@@ -39,7 +44,7 @@ interface CombinationItem {
 
 type TabId = 'drugs' | 'combinations';
 
-export default function DrugGeneFinder({ significantGenes }: DrugGeneFinderProps) {
+export default function DrugGeneFinder({ significantGenes, totalGenesInScreen }: DrugGeneFinderProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabId>('drugs');
@@ -49,8 +54,9 @@ export default function DrugGeneFinder({ significantGenes }: DrugGeneFinderProps
   } | null>(null);
   const [combinations, setCombinations] = useState<CombinationItem[]>([]);
 
-  const genes = significantGenes.slice(0, 20);
+  const genes = significantGenes.slice(0, MAX_GENES_TO_QUERY);
   const hasGenes = genes.length > 0;
+  const significantCount = significantGenes.length;
 
   const handleFindDrugs = async () => {
     if (!hasGenes) return;
@@ -67,13 +73,18 @@ export default function DrugGeneFinder({ significantGenes }: DrugGeneFinderProps
           ? fetch('/api/drug-gene', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ genes }),
+              body: JSON.stringify({ genes: genes.slice(0, 50) }),
             })
           : Promise.resolve(null),
       ]);
-      if (!getRes.ok) throw new Error('Failed to fetch drug-gene data');
+      if (!getRes.ok) {
+        const errBody = await getRes.json().catch(() => ({}));
+        throw new Error(errBody?.error ?? errBody?.details ?? 'Failed to fetch drug-gene data');
+      }
       const getData = await getRes.json();
-      setDrugResults({ results: getData.results ?? [], summary: getData.summary ?? { totalGenes: 0, totalDrugs: 0, approvedDrugs: 0 } });
+      const resultsList = getData.results ?? [];
+      const summary = getData.summary ?? { totalGenes: 0, totalDrugs: 0, approvedDrugs: 0 };
+      setDrugResults({ results: resultsList, summary });
       if (postRes?.ok) {
         const postData = await postRes.json();
         setCombinations(postData.combinations ?? []);
@@ -92,6 +103,16 @@ export default function DrugGeneFinder({ significantGenes }: DrugGeneFinderProps
         <p className="text-sm text-text-secondary mt-1">
           Find FDA-approved drugs and predicted combinations for your significant genes.
         </p>
+        {totalGenesInScreen != null || significantCount > 0 ? (
+          <p className="text-xs text-text-tertiary mt-2">
+            {totalGenesInScreen != null && (
+              <>This analysis has <strong>{totalGenesInScreen.toLocaleString()}</strong> genes in the screen.</>
+            )}
+            {significantCount > 0 && (
+              <> <strong>{significantCount.toLocaleString()}</strong> are significant (FDR &lt; 0.05). We search drugs for up to <strong>{MAX_GENES_TO_QUERY}</strong> of them.</>
+            )}
+          </p>
+        ) : null}
         {hasGenes ? (
           <button
             type="button"
@@ -127,7 +148,7 @@ export default function DrugGeneFinder({ significantGenes }: DrugGeneFinderProps
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 px-6 py-4 bg-background/50 dark:bg-gray-800/50">
             <div className="rounded-xl p-4 border border-border dark:border-gray-700">
               <div className="text-2xl font-serif text-text-primary">{drugResults.summary.totalGenes}</div>
-              <div className="text-xs text-text-secondary font-serif">Total genes</div>
+              <div className="text-xs text-text-secondary font-serif">Genes queried</div>
             </div>
             <div className="rounded-xl p-4 border border-border dark:border-gray-700">
               <div className="text-2xl font-serif text-text-primary">{drugResults.summary.totalDrugs}</div>

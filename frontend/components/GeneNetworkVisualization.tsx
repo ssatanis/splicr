@@ -1,19 +1,13 @@
 'use client';
 
 import { useCallback, useState, useMemo, useRef, useEffect } from 'react';
-import dynamic from 'next/dynamic';
-import { Download, ExternalLink, Loader2, RefreshCw, Search } from 'lucide-react';
+import { Download, Loader2, RefreshCw, Search } from 'lucide-react';
 import { exportElementAsPNG } from '@/lib/chartExportUtils';
 import type { GeneResult } from '@/lib/types';
 
-const ForceGraph2D = dynamic(() => import('react-force-graph').then((mod) => mod.ForceGraph2D), {
-  ssr: false,
-  loading: () => (
-    <div className="h-full flex items-center justify-center">
-      <Loader2 className="w-10 h-10 animate-spin text-accent" />
-    </div>
-  ),
-});
+// Use force-graph (2D only) directly to avoid loading react-force-graph's VR/AR modules,
+// which require global AFRAME and cause "AFRAME is not defined" in Next.js.
+type ForceGraphInstance = { _destructor: () => void };
 
 const STRING_API = 'https://string-db.org/api';
 const SPECIES = 9606; // Human
@@ -24,6 +18,10 @@ interface NodeData {
   log2FC?: number;
   fdr?: number;
   negLog10Fdr?: number;
+  x?: number;
+  y?: number;
+  fx?: number;
+  fy?: number;
 }
 
 interface LinkData {
@@ -45,7 +43,11 @@ interface GeneNetworkVisualizationProps {
   /** Minimum STRING combined score (0–1000, default 400 = medium confidence) */
   requiredScore?: number;
   height?: number;
+  /** Analysis/screen name used for export title: "[analysisName] Gene Interaction Network" */
+  analysisName?: string;
 }
+
+const DEFAULT_EXPORT_TITLE = '[Screen Analysis] Gene Interaction Network';
 
 async function fetchStringNetwork(
   geneNames: string[],
@@ -114,15 +116,24 @@ export default function GeneNetworkVisualization({
   maxGenes = 50,
   requiredScore = 400,
   height = 560,
+  analysisName,
 }: GeneNetworkVisualizationProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const graphContainerRef = useRef<HTMLDivElement>(null);
+  const graphInstanceRef = useRef<ForceGraphInstance | null>(null);
   const [graphData, setGraphData] = useState<GraphData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [highlightNode, setHighlightNode] = useState<string | null>(null);
-  const [exportOpen, setExportOpen] = useState(false);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [exportTitle, setExportTitle] = useState('');
+  const [exportIncludeLabels, setExportIncludeLabels] = useState(false);
+  const [exportPadding, setExportPadding] = useState(20);
+  const [exportScale, setExportScale] = useState(2);
+  const [exporting, setExporting] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const showLabelsRef = useRef(false);
 
   // Ensure component only renders on client
   useEffect(() => {
@@ -183,10 +194,35 @@ export default function GeneNetworkVisualization({
     return Math.max(3, Math.min(20, 2 + n * 1.5));
   }, []);
 
-  const handleExportPNG = async () => {
-    setExportOpen(false);
-    if (!containerRef.current) return;
-    await exportElementAsPNG(containerRef.current, `splicr-network-${Date.now()}.png`);
+  const defaultExportTitle = `[${analysisName ?? 'Screen Analysis'}] Gene Interaction Network`;
+
+  const handleOpenExportModal = () => {
+    setExportTitle(defaultExportTitle);
+    setExportModalOpen(true);
+  };
+
+  const handleExportWithOptions = async () => {
+    const el = graphContainerRef.current;
+    const instance = graphInstanceRef.current;
+    if (!el || !instance) return;
+    setExporting(true);
+    try {
+      showLabelsRef.current = exportIncludeLabels;
+      const zoomToFit = (instance as unknown as { zoomToFit?: (d?: number, p?: number) => void }).zoomToFit;
+      if (typeof zoomToFit === 'function') {
+        zoomToFit(0, exportPadding);
+      }
+      await new Promise<void>((r) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => r()));
+      });
+      const raw = (exportTitle.trim() || defaultExportTitle).replace(/\s+/g, ' ').trim();
+      const base = raw.replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'gene-interaction-network';
+      await exportElementAsPNG(el, `${base}.png`, { scale: exportScale });
+    } finally {
+      showLabelsRef.current = false;
+      setExporting(false);
+      setExportModalOpen(false);
+    }
   };
 
   const openInPathway = (gene: string) => {
@@ -212,6 +248,164 @@ export default function GeneNetworkVisualization({
     );
   }, [searchLower, graphData]);
 
+  // Refs so nodeColor (called every frame) always sees latest highlight state without recreating the graph
+  const highlightedIdsRef = useRef(highlightedIds);
+  const highlightNodeRef = useRef(highlightNode);
+  highlightedIdsRef.current = highlightedIds;
+  highlightNodeRef.current = highlightNode;
+
+  // Mount force-graph (2D only) when we have data; use force-graph package to avoid AFRAME/VR/AR
+  useEffect(() => {
+    const container = graphContainerRef.current;
+    if (!isMounted || !graphData || graphData.nodes.length === 0 || loading || !container) {
+      if (graphInstanceRef.current) {
+        graphInstanceRef.current._destructor();
+        graphInstanceRef.current = null;
+      }
+      return;
+    }
+    let mounted = true;
+    import('force-graph').then((mod) => {
+      if (!mounted || !container) return;
+      // force-graph default export is a Kapsule factory: call with () then (element)
+      const ForceGraph = mod.default as unknown as () => (el: HTMLElement) => ForceGraphInstance;
+      const instance = ForceGraph()(container);
+      graphInstanceRef.current = instance;
+      // Chainable API (force-graph typings are class-based, runtime is Kapsule)
+      const api = instance as unknown as {
+        graphData: (d: GraphData) => typeof api;
+        nodeId: (id: string) => typeof api;
+        nodeLabel: (fn: (n: unknown) => string) => typeof api;
+        nodeColor: (fn: (n: unknown) => string) => typeof api;
+        nodeVal: (fn: (n: unknown) => number) => typeof api;
+        nodeCanvasObject: (fn: (n: unknown, ctx: CanvasRenderingContext2D, scale: number) => void) => typeof api;
+        nodeCanvasObjectMode: (mode: string | (() => string)) => typeof api;
+        linkColor: (c: string) => typeof api;
+        linkWidth: (n: number) => typeof api;
+        linkDirectionalParticles: (n: number) => typeof api;
+        onNodeClick: (fn: (n: unknown, e: MouseEvent) => void) => typeof api;
+        onNodeRightClick: (fn: (n: unknown, e: MouseEvent) => void) => typeof api;
+        onNodeDragEnd: (fn: (n: unknown, t: { x: number; y: number }) => void) => typeof api;
+        enableNodeDrag: (enable: boolean) => typeof api;
+        d3Force: (name: string) => { strength?: (v: number) => unknown; distance?: (v: number) => unknown } | undefined;
+        d3ReheatSimulation: () => typeof api;
+        width: (n: number) => typeof api;
+        height: (n: number) => typeof api;
+      };
+      // Spread nodes in a circle initially so they don’t start bunched
+      const n = graphData.nodes.length;
+      const radius = Math.max(180, Math.min(280, n * 8));
+      graphData.nodes.forEach((node, i) => {
+        if (node.x == null && node.y == null) {
+          const angle = (2 * Math.PI * i) / (n || 1);
+          node.x = radius * Math.cos(angle);
+          node.y = radius * Math.sin(angle);
+        }
+      });
+      api
+        .graphData(graphData)
+        .nodeId('id')
+        .nodeLabel((node: unknown) => {
+          const n = node as NodeData;
+          const lfc = n.log2FC != null ? `Log₂FC: ${n.log2FC.toFixed(2)}` : '';
+          const fdr = n.fdr != null ? `FDR: ${n.fdr.toExponential(2)}` : '';
+          return `${n.name}${lfc ? ` | ${lfc}` : ''}${fdr ? ` | ${fdr}` : ''}`;
+        })
+        .nodeColor((node: unknown) => {
+          const n = node as NodeData;
+          const ids = highlightedIdsRef.current;
+          const hn = highlightNodeRef.current;
+          if (ids?.has(n.id) || n.id === hn) return '#6ABF36';
+          return nodeColor(n);
+        })
+        .nodeVal((node: unknown) => nodeVal(node as NodeData))
+        .nodeCanvasObjectMode(() => 'after')
+        .nodeCanvasObject((node: unknown, ctx: CanvasRenderingContext2D, globalScale: number) => {
+          if (!showLabelsRef.current) return;
+          const n = node as NodeData;
+          const x = (node as { x?: number }).x ?? 0;
+          const y = (node as { y?: number }).y ?? 0;
+          const val = nodeVal(n);
+          const fontSize = Math.max(9, Math.min(12, 11 / globalScale));
+          ctx.font = `${fontSize}px sans-serif`;
+          ctx.fillStyle = '#1a1a1a';
+          ctx.textAlign = 'center';
+          ctx.fillText(n.name, x, y + val + fontSize + 2);
+        })
+        .linkColor('#E8E6E3')
+        .linkWidth(1)
+        .linkDirectionalParticles(0)
+        .enableNodeDrag(true)
+        .onNodeClick((node: unknown, event: MouseEvent) => {
+          const n = node as NodeData;
+          if (event.detail === 2) {
+            n.fx = undefined;
+            n.fy = undefined;
+            api.d3ReheatSimulation();
+          } else {
+            setHighlightNode((prev) => (prev === n.id ? null : n.id));
+          }
+        })
+        .onNodeDragEnd((node: unknown) => {
+          const n = node as NodeData;
+          if (n.x != null && n.y != null) {
+            n.fx = n.x;
+            n.fy = n.y;
+          }
+        })
+        .onNodeRightClick((node: unknown, event: MouseEvent) => {
+          event.preventDefault();
+          const g = (node as NodeData).name;
+          const menu = document.createElement('div');
+          menu.className = 'fixed z-50 bg-surface border border-border rounded-lg shadow-elevated py-1 min-w-[180px]';
+          menu.style.left = `${event.clientX}px`;
+          menu.style.top = `${event.clientY}px`;
+          const items = [
+            { label: 'Show in pathway', fn: () => openInPathway(g) },
+            { label: 'View in GeneCards', fn: () => openInGeneCards(g) },
+            { label: 'Compare to DepMap', fn: () => openInDepMap(g) },
+            { label: 'Open in STRING', fn: () => openInString(g) },
+          ];
+          items.forEach(({ label, fn }) => {
+            const b = document.createElement('button');
+            b.className = 'w-full px-4 py-2 text-left text-sm hover:bg-background flex items-center gap-2';
+            b.textContent = label;
+            b.onclick = () => {
+              fn();
+              menu.remove();
+              document.removeEventListener('click', close);
+            };
+            menu.appendChild(b);
+          });
+          const close = () => {
+            menu.remove();
+            document.removeEventListener('click', close);
+          };
+          document.body.appendChild(menu);
+          setTimeout(() => document.addEventListener('click', close), 0);
+        });
+      // Spread layout: stronger repulsion and longer link distance so nodes aren’t bunched
+      const charge = api.d3Force('charge');
+      if (charge && typeof (charge as { strength?: (v: number) => unknown }).strength === 'function') {
+        (charge as { strength: (v: number) => unknown }).strength(-400);
+      }
+      const link = api.d3Force('link');
+      if (link && typeof (link as { distance?: (v: number) => unknown }).distance === 'function') {
+        (link as { distance: (v: number) => unknown }).distance(100);
+      }
+      api.d3ReheatSimulation();
+      api.width(container.offsetWidth);
+      api.height(container.offsetHeight);
+    });
+    return () => {
+      mounted = false;
+      if (graphInstanceRef.current) {
+        graphInstanceRef.current._destructor();
+        graphInstanceRef.current = null;
+      }
+    };
+  }, [isMounted, graphData, loading, nodeColor, nodeVal]);
+
   return (
     <div ref={containerRef} className="w-full bg-surface rounded-xl p-6 border border-border shadow-card">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
@@ -235,26 +429,100 @@ export default function GeneNetworkVisualization({
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
             Refresh
           </button>
-          <div className="relative">
-            <button
-              onClick={() => setExportOpen((o) => !o)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-background text-text-primary hover:bg-accent/10"
-            >
-              <Download className="w-4 h-4" /> Export
-            </button>
-            {exportOpen && (
-              <>
-                <div className="fixed inset-0 z-10" onClick={() => setExportOpen(false)} />
-                <div className="absolute right-0 top-full mt-1 py-2 bg-surface border border-border rounded-lg shadow-elevated z-20 min-w-[120px]">
-                  <button onClick={handleExportPNG} className="w-full px-4 py-2 text-left hover:bg-background text-sm">
-                    PNG
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+          <button
+            onClick={handleOpenExportModal}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-background text-text-primary hover:bg-accent/10"
+          >
+            <Download className="w-4 h-4" /> Export
+          </button>
         </div>
       </div>
+
+      {/* Export options modal: map-only image, zoom-to-fit, title and options */}
+      {exportModalOpen && (
+        <>
+          <div className="fixed inset-0 z-40 bg-black/50" onClick={() => !exporting && setExportModalOpen(false)} />
+          <div
+            className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-surface p-6 shadow-elevated"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h4 className="font-serif text-lg text-text-primary mb-4">Export gene network image</h4>
+            <p className="text-sm text-text-secondary mb-4">
+              Exports only the network map (no header/controls). View is zoomed to fit all nodes so everything is visible.
+            </p>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Image title (used as filename)</label>
+                <input
+                  type="text"
+                  value={exportTitle}
+                  onChange={(e) => setExportTitle(e.target.value)}
+                  placeholder={defaultExportTitle}
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/50"
+                />
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={exportIncludeLabels}
+                  onChange={(e) => setExportIncludeLabels(e.target.checked)}
+                  className="rounded border-border text-accent focus:ring-accent/50"
+                />
+                <span className="text-sm text-text-primary">Include node labels (gene names on the map)</span>
+              </label>
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Padding (px) around the map</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={exportPadding}
+                  onChange={(e) => setExportPadding(Math.max(0, Math.min(100, Number(e.target.value) || 0)))}
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Image scale</label>
+                <select
+                  value={exportScale}
+                  onChange={(e) => setExportScale(Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/50"
+                >
+                  <option value={1}>1× (faster, smaller file)</option>
+                  <option value={2}>2× (sharper, recommended)</option>
+                  <option value={3}>3× (high resolution)</option>
+                </select>
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => !exporting && setExportModalOpen(false)}
+                disabled={exporting}
+                className="px-4 py-2 rounded-lg border border-border bg-background text-text-primary hover:bg-background/80 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleExportWithOptions}
+                disabled={exporting}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent text-white hover:bg-accent/90 disabled:opacity-50"
+              >
+                {exporting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Exporting…
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4" /> Export PNG
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       {error && (
         <div className="mb-4 p-4 rounded-lg bg-error/10 text-error text-sm">
@@ -269,57 +537,7 @@ export default function GeneNetworkVisualization({
           </div>
         )}
         {isMounted && graphData && graphData.nodes.length > 0 && !loading && (
-          <ForceGraph2D
-            graphData={graphData}
-            nodeId="id"
-            nodeLabel={(node: unknown) => {
-              const n = node as NodeData;
-              const lfc = n.log2FC != null ? `Log₂FC: ${n.log2FC.toFixed(2)}` : '';
-              const fdr = n.fdr != null ? `FDR: ${n.fdr.toExponential(2)}` : '';
-              return `${n.name}${lfc ? ` | ${lfc}` : ''}${fdr ? ` | ${fdr}` : ''}`;
-            }}
-            nodeColor={(node: unknown) => {
-              const n = node as NodeData;
-              if (highlightedIds.has(n.id) || n.id === highlightNode) return '#6ABF36';
-              return nodeColor(n);
-            }}
-            nodeVal={(node: unknown) => nodeVal(node as NodeData)}
-            linkColor="#E8E6E3"
-            linkWidth={1}
-            linkDirectionalParticles={0}
-            onNodeClick={(node: unknown) => setHighlightNode((prev) => (prev === (node as NodeData).id ? null : (node as NodeData).id))}
-            onNodeRightClick={(node: unknown, event: { preventDefault: () => void; clientX: number; clientY: number }) => {
-              event.preventDefault();
-              const g = (node as NodeData).name;
-              const menu = document.createElement('div');
-              menu.className = 'fixed z-50 bg-surface border border-border rounded-lg shadow-elevated py-1 min-w-[180px]';
-              menu.style.left = `${event.clientX}px`;
-              menu.style.top = `${event.clientY}px`;
-              const items = [
-                { label: 'Show in pathway', fn: () => openInPathway(g) },
-                { label: 'View in GeneCards', fn: () => openInGeneCards(g) },
-                { label: 'Compare to DepMap', fn: () => openInDepMap(g) },
-                { label: 'Open in STRING', fn: () => openInString(g) },
-              ];
-              items.forEach(({ label, fn }) => {
-                const b = document.createElement('button');
-                b.className = 'w-full px-4 py-2 text-left text-sm hover:bg-background flex items-center gap-2';
-                b.textContent = label;
-                b.onclick = () => {
-                  fn();
-                  menu.remove();
-                  document.removeEventListener('click', close);
-                };
-                menu.appendChild(b);
-              });
-              const close = () => {
-                menu.remove();
-                document.removeEventListener('click', close);
-              };
-              document.body.appendChild(menu);
-              setTimeout(() => document.addEventListener('click', close), 0);
-            }}
-          />
+          <div ref={graphContainerRef} style={{ width: '100%', height }} />
         )}
         {graphData && graphData.nodes.length === 0 && !loading && (
           <div className="h-full flex items-center justify-center text-text-tertiary">
@@ -338,7 +556,7 @@ export default function GeneNetworkVisualization({
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-[#9B9B9B]" /> Other / STRING
         </div>
-        <span>Node size ∝ -log₁₀(FDR). Data: STRING DB (human).</span>
+        <span>Node size ∝ -log₁₀(FDR). Data: STRING DB (human). Drag nodes to reposition; they stay put. Double-click a node to unpin.</span>
       </div>
     </div>
   );

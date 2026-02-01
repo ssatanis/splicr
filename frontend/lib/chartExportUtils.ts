@@ -5,9 +5,14 @@
 import { saveAs } from 'file-saver';
 import html2canvas from 'html2canvas';
 
-export async function exportElementAsPNG(element: HTMLElement, filename: string): Promise<void> {
+export async function exportElementAsPNG(
+  element: HTMLElement,
+  filename: string,
+  options?: { scale?: number }
+): Promise<void> {
+  const scale = options?.scale ?? 2;
   const canvas = await html2canvas(element, {
-    scale: 2,
+    scale,
     useCORS: true,
     logging: false,
     backgroundColor: '#ffffff',

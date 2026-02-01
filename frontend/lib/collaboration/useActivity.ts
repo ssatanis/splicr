@@ -48,20 +48,20 @@ export function useActivity(analysisId: string) {
       // analysis_activity table may not exist
     }
 
+    // PERFORMANCE OPTIMIZATION: Query activity_logs with indexed resource_id instead of
+    // loading all logs and filtering client-side. The (resource_type, resource_id) composite
+    // index makes this query very fast.
     try {
       const { data: logs } = await supabase
         .from('activity_logs')
         .select('*')
         .eq('resource_type', 'analysis')
+        .eq('resource_id', analysisId) // Use indexed column instead of JSONB metadata filter
         .order('id', { ascending: false })
         .limit(50);
 
-      const filtered = (logs ?? []).filter(
-        (log: any) =>
-          log.metadata?.analysis_id === analysisId || log.metadata?.analysisId === analysisId
-      );
       setActivities(
-        filtered.map((a: any) => ({
+        (logs ?? []).map((a: any) => ({
           id: a.id,
           analysisId: analysisId,
           userId: a.user_id,

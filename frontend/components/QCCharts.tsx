@@ -17,6 +17,8 @@ interface QCChartsProps {
   coverage?: { sample: string; coverage: number }[];
   giniCoefficient?: number;
   sampleStats?: SampleStat[];
+  /** When 'demo', show notice that metrics are from demo data; run with sequencing data for real QC. */
+  resultsSource?: 'demo' | 'pipeline';
 }
 
 const EmptyQC = () => (
@@ -31,13 +33,15 @@ export default function QCCharts({
   correlation,
   coverage,
   giniCoefficient,
-  sampleStats
+  sampleStats,
+  resultsSource,
 }: QCChartsProps) {
   const hasReadCounts = readCounts && readCounts.length > 0;
   const hasCorrelation = correlation && correlation.length > 0;
   const hasCoverage = coverage && coverage.length > 0;
   const hasGini = typeof giniCoefficient === 'number';
   const hasSampleStats = sampleStats && sampleStats.length > 0;
+  const isDemo = resultsSource === 'demo';
 
   const sampleNames = sampleStats?.map(s => s.name) ||
     (hasReadCounts ? readCounts!.map(d => d.sample) : []);
@@ -54,6 +58,11 @@ export default function QCCharts({
 
   return (
     <div className="space-y-8">
+      {isDemo && (
+        <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-4 py-3 text-sm text-amber-800 dark:text-amber-200">
+          <strong>Demo data.</strong> These QC metrics are from a demo run. To see real Gini coefficient, read counts, and correlations from your sequencing data, run an analysis with your own FASTQ or count files.
+        </div>
+      )}
       {/* Sample Statistics Table — only when real data */}
       {hasSampleStats && (
         <div className="bg-surface rounded-xl p-6 shadow-card border border-border">
@@ -240,6 +249,11 @@ export default function QCCharts({
           <h3 className="text-xl font-serif mb-4 text-text-primary">Gini coefficient</h3>
           {hasGini ? (
             <>
+              {isDemo && (
+                <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-3 py-1.5 rounded-lg mb-3 text-center">
+                  Demo value — run with your sequencing data for real QC metrics.
+                </p>
+              )}
               <div className="text-7xl font-serif text-text-primary">{giniCoefficient!.toFixed(2)}</div>
               <p className="text-sm text-text-secondary mt-4">Distribution uniformity</p>
               <div className="mt-6 w-full max-w-xs">

@@ -8,7 +8,12 @@
   "scripts": {
     "build": "cd frontend && npm ci --include=dev && npm run build",
     "dev": "cd frontend && npm run dev",
-    "start": "cd frontend && npm run start"
+    "start": "cd frontend && npm run start",
+    "dev:electron": "cd frontend && npm run dev:electron",
+    "build:electron": "cd frontend && npm run build:electron",
+    "build:electron:mac": "cd frontend && npm run build:electron:mac",
+    "build:electron:win": "cd frontend && npm run build:electron:win",
+    "build:electron:linux": "cd frontend && npm run build:electron:linux"
   },
   "dependencies": {
     "next": "15.5.11",

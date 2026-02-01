@@ -85,6 +85,8 @@ export interface GeneResultUnified {
 
 export interface PipelineResults {
   id: string;
+  /** Set to 'pipeline' so UI knows QC and FDR are from real sequencing analysis. */
+  resultsSource: 'pipeline';
   summary: {
     totalGenes: number;
     significantHits: number;
@@ -326,6 +328,7 @@ export class AnalysisPipeline {
 
       return {
         id: analysisId,
+        resultsSource: 'pipeline' as const,
         summary: {
           totalGenes: unifiedResults.length,
           significantHits: significantGenes.length,

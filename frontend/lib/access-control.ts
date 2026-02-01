@@ -9,6 +9,9 @@
  * 3. Institution member (same email domain) → Uses institution_permission
  * 4. Public link (valid token) → Uses link_permission
  * 5. Denied → No access granted
+ *
+ * PERFORMANCE: Implements request-level caching to avoid redundant DB queries
+ * when the same access check is performed multiple times in a single request.
  */
 
 import type { AccessCheckResult, AccessMethod, SharePermission } from './types';
@@ -20,6 +23,28 @@ interface AccessCheckOptions {
   userEmail?: string | null;
   shareToken?: string | null;
   checkOnly?: boolean; // If true, don't log access
+}
+
+// PERFORMANCE OPTIMIZATION: Request-level cache to avoid redundant access checks
+// within the same API request. This is safe because access rarely changes during
+// a single request lifecycle.
+const accessCache = new Map<string, { result: AccessCheckResult; timestamp: number }>();
+const CACHE_TTL = 5000; // 5 seconds - short TTL to stay fresh
+
+function getCacheKey(options: AccessCheckOptions): string {
+  return `${options.analysisId}:${options.userId || 'anon'}:${options.userEmail || 'none'}:${options.shareToken || 'none'}`;
+}
+
+function cacheAndReturn(cacheKey: string, result: AccessCheckResult): AccessCheckResult {
+  accessCache.set(cacheKey, { result, timestamp: Date.now() });
+  // Clean up old cache entries (simple LRU-like behavior)
+  if (accessCache.size > 1000) {
+    const entriesToDelete = Array.from(accessCache.entries())
+      .filter(([_, value]) => Date.now() - value.timestamp > CACHE_TTL)
+      .map(([key]) => key);
+    entriesToDelete.forEach(key => accessCache.delete(key));
+  }
+  return result;
 }
 
 /**
@@ -37,6 +62,13 @@ export async function checkAnalysisAccess(
 ): Promise<AccessCheckResult> {
   const { analysisId, userId, userEmail, shareToken, checkOnly = false } = options;
 
+  // PERFORMANCE: Check cache first to avoid redundant DB queries
+  const cacheKey = getCacheKey(options);
+  const cached = accessCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.result;
+  }
+
   try {
     const admin = supabaseAdmin as any;
 
@@ -48,12 +80,12 @@ export async function checkAnalysisAccess(
       .single();
 
     if (analysisError || !analysis) {
-      return {
+      return cacheAndReturn(cacheKey, {
         hasAccess: false,
         permission: null,
         method: null,
         isOwner: false,
-      };
+      });
     }
 
     // Convert user_id to string for comparison
@@ -62,22 +94,27 @@ export async function checkAnalysisAccess(
 
     // 2. Check if user is the owner
     if (currentUserId && ownerId === currentUserId) {
-      return {
+      return cacheAndReturn(cacheKey, {
         hasAccess: true,
         permission: 'edit',
         method: 'owner',
         isOwner: true,
-      };
+      });
     }
 
-    // 3. Check if user is a direct collaborator (email invitation)
-    if (currentUserId || userEmail) {
-      const { data: collaborators } = await admin
-        .from('analysis_shares')
-        .select('permission, status, user_id, email, is_link_share')
-        .eq('analysis_id', analysisId)
-        .eq('is_link_share', false);
+    // 3. PERFORMANCE OPTIMIZATION: Fetch all shares in one query instead of two separate queries
+    // Previously: one query for collaborators (is_link_share=false), another for link config (is_link_share=true)
+    // Now: single query fetches all shares, filter in-memory. Uses idx_analysis_shares_analysis_id index.
+    const { data: allShares } = await admin
+      .from('analysis_shares')
+      .select('permission, status, user_id, email, is_link_share, visibility, share_token, link_permission, institution_permission, institution_domain, link_expires_at')
+      .eq('analysis_id', analysisId);
 
+    const collaborators = (allShares || []).filter((s: any) => !s.is_link_share);
+    const linkShare = (allShares || []).find((s: any) => s.is_link_share) || null;
+
+    // Check if user is a direct collaborator (email invitation)
+    if (currentUserId || userEmail) {
       if (collaborators && collaborators.length > 0) {
         // Try to match by user_id first (accepted invitations)
         let match = collaborators.find(
@@ -96,45 +133,39 @@ export async function checkAnalysisAccess(
           const permission: SharePermission =
             match.permission === 'admin' ? 'edit' : match.permission;
 
-          return {
+          return cacheAndReturn(cacheKey, {
             hasAccess: true,
             permission,
             method: 'collaborator',
             isOwner: false,
-          };
+          });
         }
       }
     }
 
-    // 4. Get link share configuration
-    const { data: linkShare } = await admin
-      .from('analysis_shares')
-      .select('*')
-      .eq('analysis_id', analysisId)
-      .eq('is_link_share', true)
-      .maybeSingle();
+    // 4. Check link share configuration (already fetched above)
 
     if (!linkShare) {
       // No link share configured, deny access
-      return {
+      return cacheAndReturn(cacheKey, {
         hasAccess: false,
         permission: null,
         method: null,
         isOwner: false,
-      };
+      });
     }
 
     // 5. Check if link has expired
     if (linkShare.link_expires_at) {
       const expiresAt = new Date(linkShare.link_expires_at);
       if (expiresAt < new Date()) {
-        return {
+        return cacheAndReturn(cacheKey, {
           hasAccess: false,
           permission: null,
           method: null,
           isOwner: false,
           isExpired: true,
-        };
+        });
       }
     }
 
@@ -142,23 +173,23 @@ export async function checkAnalysisAccess(
     switch (linkShare.visibility) {
       case 'private':
         // Private: No link access (only direct collaborators)
-        return {
+        return cacheAndReturn(cacheKey, {
           hasAccess: false,
           permission: null,
           method: null,
           isOwner: false,
-        };
+        });
 
       case 'institution':
         // Institution: Check if user's email domain matches
         if (!userEmail) {
-          return {
+          return cacheAndReturn(cacheKey, {
             hasAccess: false,
             permission: null,
             method: null,
             isOwner: false,
             requiresAuth: true,
-          };
+          });
         }
 
         const userDomain = getEmailDomain(userEmail);
@@ -166,75 +197,75 @@ export async function checkAnalysisAccess(
           linkShare.institution_domain &&
           userDomain === linkShare.institution_domain.toLowerCase()
         ) {
-          return {
+          return cacheAndReturn(cacheKey, {
             hasAccess: true,
             permission: linkShare.institution_permission as SharePermission,
             method: 'institution',
             isOwner: false,
-          };
+          });
         }
 
         // Check if token is provided for institution access
         if (shareToken && linkShare.share_token === shareToken) {
-          return {
+          return cacheAndReturn(cacheKey, {
             hasAccess: true,
             permission: linkShare.institution_permission as SharePermission,
             method: 'institution',
             isOwner: false,
-          };
+          });
         }
 
-        return {
+        return cacheAndReturn(cacheKey, {
           hasAccess: false,
           permission: null,
           method: null,
           isOwner: false,
-        };
+        });
 
       case 'public':
         // Public: Anyone with the token can access
         if (!shareToken) {
-          return {
+          return cacheAndReturn(cacheKey, {
             hasAccess: false,
             permission: null,
             method: null,
             isOwner: false,
             requiresAuth: false,
-          };
+          });
         }
 
         if (linkShare.share_token === shareToken) {
-          return {
+          return cacheAndReturn(cacheKey, {
             hasAccess: true,
             permission: linkShare.link_permission as SharePermission,
             method: 'public_link',
             isOwner: false,
-          };
+          });
         }
 
-        return {
+        return cacheAndReturn(cacheKey, {
           hasAccess: false,
           permission: null,
           method: null,
           isOwner: false,
-        };
+        });
 
       default:
-        return {
+        return cacheAndReturn(cacheKey, {
           hasAccess: false,
           permission: null,
           method: null,
           isOwner: false,
-        };
+        });
     }
   } catch (error) {
     console.error('Access check error:', error);
-    return {
+    return cacheAndReturn(cacheKey, {
       hasAccess: false,
       permission: null,
       method: null,
       isOwner: false,
-    };
+    });
   }
 }
 

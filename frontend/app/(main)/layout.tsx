@@ -6,7 +6,10 @@ export default async function ProtectedLayout({
 }: {
   children: React.ReactNode
 }) {
-  await getAuthenticatedUser()
+  // Skip server-side auth for static export (Electron desktop); auth is enforced client-side
+  if (process.env.ELECTRON_BUILD !== 'true') {
+    await getAuthenticatedUser()
+  }
 
   return (
     <div>

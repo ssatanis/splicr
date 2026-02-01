@@ -20,6 +20,9 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
+const ANALYSES_CACHE_KEY = "splicr_analyses_cache";
+const ANALYSES_CACHE_MAX_AGE_MS = 5 * 60 * 1000; // 5 minutes
+
 export function UserProvider({ children }: { children: ReactNode }) {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
@@ -48,16 +51,27 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loadUserData = async () => {
+    if (typeof window !== "undefined") {
+      const cached = sessionStorage.getItem(ANALYSES_CACHE_KEY);
+      if (cached) {
+        try {
+          const { data, at } = JSON.parse(cached);
+          if (Array.isArray(data) && typeof at === "number" && Date.now() - at < ANALYSES_CACHE_MAX_AGE_MS) {
+            setAnalyses(data);
+          }
+        } catch (_) {}
+      }
+    }
     setIsLoading(true);
     try {
       const analyses = await realApi.getAnalyses();
       const favorites = await realApi.getFavorites();
-      
+
       setAnalyses(analyses);
       setFavorites(favorites);
-      
-      // Load user data from storage
+
       if (typeof window !== "undefined") {
+        sessionStorage.setItem(ANALYSES_CACHE_KEY, JSON.stringify({ data: analyses, at: Date.now() }));
         const stored = localStorage.getItem("splicr_user_data");
         if (stored) {
           setUserData(JSON.parse(stored));
@@ -73,6 +87,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const refreshAnalyses = async () => {
     const analyses = await realApi.getAnalyses();
     setAnalyses(analyses);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(ANALYSES_CACHE_KEY, JSON.stringify({ data: analyses, at: Date.now() }));
+    }
   };
 
   const createAnalysis = async (analysis: Omit<Analysis, "id" | "createdAt" | "progress">) => {

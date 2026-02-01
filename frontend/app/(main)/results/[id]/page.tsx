@@ -560,7 +560,7 @@ export default function ResultsPage() {
                 {activeTab === "overview" && <OverviewTab results={results} />}
                 {activeTab === "volcano" && <VolcanoTab results={results} />}
                 {activeTab === "heatmap" && <HeatmapTab results={results} />}
-                {activeTab === "network" && <NetworkTab results={results} />}
+                {activeTab === "network" && <NetworkTab results={results} analysisName={analysisName || analysis?.name} />}
                 {activeTab === "timecourse" && <TimeCourseTab results={results} />}
                 {activeTab === "drug-finder" && <DrugFinderTab results={results} />}
                 {activeTab === "advanced" && <AdvancedTab results={results} analysisId={id} onResultsUpdate={loadResults} />}
@@ -789,7 +789,7 @@ function HeatmapTab({ results }: { results: AnalysisResults }) {
   );
 }
 
-function NetworkTab({ results }: { results: AnalysisResults }) {
+function NetworkTab({ results, analysisName }: { results: AnalysisResults; analysisName?: string }) {
   const significantGenes = [
     ...(results.topHits?.depleted ?? []).slice(0, 25),
     ...(results.topHits?.enriched ?? []).slice(0, 25),
@@ -817,6 +817,7 @@ function NetworkTab({ results }: { results: AnalysisResults }) {
       maxGenes={50}
       requiredScore={400}
       height={560}
+      analysisName={analysisName}
     />
   );
 }
@@ -851,9 +852,13 @@ function DrugFinderTab({ results }: { results: AnalysisResults }) {
     const enriched = (results.topHits?.enriched ?? []).map((g) => g.gene);
     return [...new Set([...depleted, ...enriched])];
   })();
+  const totalGenesInScreen = results?.summary?.totalGenes ?? (results?.allGenes?.length ?? undefined);
 
   return (
-    <DrugGeneFinder significantGenes={significantGenes} />
+    <DrugGeneFinder
+      significantGenes={significantGenes}
+      totalGenesInScreen={totalGenesInScreen}
+    />
   );
 }
 
@@ -985,6 +990,7 @@ function QCTab({ results }: { results: AnalysisResults }) {
       coverage={coverageData}
       giniCoefficient={results.qcMetrics.giniCoefficient}
       sampleStats={results.qcMetrics.sampleStats}
+      resultsSource={results.resultsSource}
     />
   );
 }
@@ -999,11 +1005,16 @@ function RankingsTab({
   onGeneClick?: (gene: string) => void;
 }) {
   return (
-    <InteractiveDataTable
-      data={results.allGenes || []}
-      analysisId={analysisId}
-      onGeneClick={onGeneClick}
-    />
+    <div className="space-y-4">
+      <p className="text-sm text-text-tertiary max-w-2xl">
+        <strong className="text-text-secondary">FDR (False Discovery Rate)</strong>: expected proportion of false positives among genes called significant. We use Benjamini–Hochberg correction. Lower FDR = more confidence (e.g. FDR &lt; 0.05 is standard).
+      </p>
+      <InteractiveDataTable
+        data={results.allGenes || []}
+        analysisId={analysisId}
+        onGeneClick={onGeneClick}
+      />
+    </div>
   );
 }
 
@@ -1102,7 +1113,11 @@ function RawDataTab({ results, analysisId }: { results: AnalysisResults; analysi
 
           <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
             {viewingData === 'genes' ? (
-              <table className="w-full">
+              <>
+                <p className="text-xs text-text-tertiary mb-3 max-w-2xl">
+                  <strong className="text-text-secondary">FDR (False Discovery Rate)</strong>: expected proportion of false positives among genes called significant. We use Benjamini–Hochberg correction. Lower FDR = more confidence (e.g. FDR &lt; 0.05 is standard).
+                </p>
+                <table className="w-full">
                 <thead className="bg-background sticky top-0 z-10">
                   <tr>
                     <th className="px-4 py-3 text-left text-sm font-serif text-text-secondary">Rank</th>
@@ -1128,6 +1143,7 @@ function RawDataTab({ results, analysisId }: { results: AnalysisResults; analysi
                   ))}
                 </tbody>
               </table>
+              </>
             ) : (
               <div className="text-sm text-text-secondary font-mono">
                 <p className="mb-4">Count matrix with {Object.keys(dataContent).length} sgRNAs</p>

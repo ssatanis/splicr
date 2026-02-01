@@ -2,9 +2,15 @@ import { Analysis, AnalysisResults } from './types';
 
 /**
  * Real API client (replaces mock-api.ts)
+ * In Electron desktop build, calls production API (splicr.org).
  */
 
-const API_BASE = '/api';
+const API_BASE =
+  typeof process !== 'undefined' &&
+  process.env.NEXT_PUBLIC_IS_ELECTRON === 'true' &&
+  process.env.NEXT_PUBLIC_APP_URL
+    ? `${String(process.env.NEXT_PUBLIC_APP_URL).replace(/\/$/, '')}/api`
+    : '/api';
 
 export const realApi = {
   // Analysis CRUD

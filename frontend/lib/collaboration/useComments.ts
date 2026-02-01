@@ -36,17 +36,19 @@ export function useComments(analysisId: string, targetType?: string, targetId?: 
     if (!analysisId) return;
     setLoading(true);
 
+    // PERFORMANCE OPTIMIZATION: Fetch all comments in a single query instead of N+1 pattern
+    // Previously: fetched top-level comments, then looped through each to fetch replies
+    // Now: fetch all comments at once and organize them in-memory
     let query = supabase
       .from('analysis_comments')
       .select('*')
       .eq('analysis_id', analysisId)
-      .is('parent_comment_id', null)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false }); // Top-level sorted desc, replies will be sorted asc below
 
     if (targetType) query = query.eq('target_type', targetType);
     if (targetId) query = query.eq('target_id', targetId);
 
-    const { data: topLevel, error } = await query;
+    const { data: allComments, error } = await query;
 
     if (error) {
       setComments([]);
@@ -54,7 +56,7 @@ export function useComments(analysisId: string, targetType?: string, targetId?: 
       return;
     }
 
-    const list = topLevel ?? [];
+    const list = allComments ?? [];
 
     const mapUserFromRow = (row: any) => ({
       displayName: row?.user?.display_name ?? row?.user?.email ?? 'User',
@@ -81,17 +83,30 @@ export function useComments(analysisId: string, targetType?: string, targetId?: 
       reactions: Array.isArray(row.reactions) ? row.reactions : [],
     });
 
-    const commentsWithReplies = await Promise.all(
-      list.map(async (comment: any) => {
-        const { data: replies } = await supabase
-          .from('analysis_comments')
-          .select('*')
-          .eq('parent_comment_id', comment.id)
-          .order('created_at', { ascending: true });
+    // Separate top-level comments and replies
+    const topLevelComments = list.filter((c: any) => !c.parent_comment_id);
+    const repliesMap = new Map<string, any[]>();
 
-        return mapRow(comment, replies ?? []);
-      })
-    );
+    // Group replies by parent comment ID
+    list
+      .filter((c: any) => c.parent_comment_id)
+      .forEach((reply: any) => {
+        if (!repliesMap.has(reply.parent_comment_id)) {
+          repliesMap.set(reply.parent_comment_id, []);
+        }
+        repliesMap.get(reply.parent_comment_id)!.push(reply);
+      });
+
+    // Sort replies chronologically (oldest first) within each parent
+    repliesMap.forEach((replies) => {
+      replies.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    });
+
+    // Build comment tree with replies
+    const commentsWithReplies = topLevelComments.map((comment: any) => {
+      const replies = repliesMap.get(comment.id) ?? [];
+      return mapRow(comment, replies);
+    });
 
     setComments(commentsWithReplies);
     setLoading(false);

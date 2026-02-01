@@ -117,12 +117,13 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
+    const MAX_GENES = 100;
     const genes = genesParam
       .split(',')
       .map((g) => g.trim().toUpperCase())
       .filter(Boolean)
       .filter((g, i, a) => a.indexOf(g) === i)
-      .slice(0, 20);
+      .slice(0, MAX_GENES);
     if (genes.length === 0 || genes.some((g) => !isValidGene(g))) {
       return NextResponse.json(
         { error: 'Invalid or missing gene symbols' },
@@ -130,63 +131,78 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const results: { gene: string; geneName: string; totalInteractions: number; drugs: any[] }[] = [];
-    let totalDrugs = 0;
-    let approvedDrugs = 0;
+    const BATCH_SIZE = 25;
+    const resultsByGene = new Map<string, { gene: string; geneName: string; totalInteractions: number; drugs: any[] }>();
 
-    for (const gene of genes) {
-      // Only check cache if not forcing refresh
+    for (let i = 0; i < genes.length; i += BATCH_SIZE) {
+      const chunk = genes.slice(i, i + BATCH_SIZE);
+      const toFetch: string[] = [];
       if (!forceRefresh) {
-        const { data: cachedRow } = await supabaseAdmin
-          .from('drug_gene_cache')
-          .select('drugs, cached_at')
-          .eq('gene_symbol', gene)
-          .maybeSingle();
-        const cached = cachedRow as { drugs: unknown; cached_at: string } | null;
-        const cachedAt = cached?.cached_at ? new Date(cached.cached_at).getTime() : 0;
-        if (cached && Date.now() - cachedAt < CACHE_MS && Array.isArray(cached.drugs)) {
-          const drugs = cached.drugs as any[];
-          results.push({
+        for (const gene of chunk) {
+          const { data: cachedRow } = await supabaseAdmin
+            .from('drug_gene_cache')
+            .select('drugs, cached_at')
+            .eq('gene_symbol', gene)
+            .maybeSingle();
+          const cached = cachedRow as { drugs: unknown; cached_at: string } | null;
+          const cachedAt = cached?.cached_at ? new Date(cached.cached_at).getTime() : 0;
+          if (cached && Date.now() - cachedAt < CACHE_MS && Array.isArray(cached.drugs)) {
+            const drugs = cached.drugs as any[];
+            resultsByGene.set(gene, {
+              gene,
+              geneName: gene,
+              totalInteractions: drugs.length,
+              drugs,
+            });
+          } else {
+            toFetch.push(gene);
+          }
+        }
+      } else {
+        toFetch.push(...chunk);
+      }
+
+      if (toFetch.length > 0) {
+        let apiData: any;
+        try {
+          apiData = await fetchDgidb(toFetch);
+        } catch (e) {
+          for (const gene of toFetch) {
+            resultsByGene.set(gene, { gene, geneName: gene, totalInteractions: 0, drugs: [] });
+          }
+          continue;
+        }
+        const normalized = normalizeDrugsFromApi(apiData ?? {});
+        const byName = new Map(normalized.map((r) => [r.gene.toUpperCase(), r]));
+        for (const gene of toFetch) {
+          const row = byName.get(gene);
+          const drugs = row?.drugs ?? [];
+          resultsByGene.set(gene, {
             gene,
-            geneName: gene,
+            geneName: row?.geneName ?? gene,
             totalInteractions: drugs.length,
             drugs,
           });
-          totalDrugs += drugs.length;
-          approvedDrugs += drugs.filter((d) => d.approved).length;
-          continue;
+          if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+            const table = supabaseAdmin.from('drug_gene_cache');
+            const { data: existing } = await table.select('id').eq('gene_symbol', gene).maybeSingle();
+            const rowData = { drugs, cached_at: new Date().toISOString() };
+            if (existing) {
+              await (table as any).update(rowData).eq('gene_symbol', gene);
+            } else {
+              await (table as any).insert({ gene_symbol: gene, ...rowData });
+            }
+          }
         }
       }
+    }
 
-      let apiData: any;
-      try {
-        apiData = await fetchDgidb([gene]);
-      } catch (e) {
-        results.push({ gene, geneName: gene, totalInteractions: 0, drugs: [] });
-        continue;
-      }
-      const normalized = normalizeDrugsFromApi(apiData ?? {});
-      const row = normalized[0];
-      const drugs = row?.drugs ?? [];
-      results.push({
-        gene,
-        geneName: row?.geneName ?? gene,
-        totalInteractions: drugs.length,
-        drugs,
-      });
-      totalDrugs += drugs.length;
-      approvedDrugs += drugs.filter((d: any) => d.approved).length;
-
-      if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
-        const table = supabaseAdmin.from('drug_gene_cache');
-        const { data: existing } = await table.select('id').eq('gene_symbol', gene).maybeSingle();
-        const row = { drugs, cached_at: new Date().toISOString() };
-        if (existing) {
-          await (table as any).update(row).eq('gene_symbol', gene);
-        } else {
-          await (table as any).insert({ gene_symbol: gene, ...row });
-        }
-      }
+    const results = genes.map((g) => resultsByGene.get(g) ?? { gene: g, geneName: g, totalInteractions: 0, drugs: [] });
+    let totalDrugs = 0;
+    let approvedDrugs = 0;
+    for (const r of results) {
+      totalDrugs += r.totalInteractions;
+      approvedDrugs += r.drugs.filter((d: any) => d.approved).length;
     }
 
     return NextResponse.json({
@@ -218,7 +234,7 @@ export async function POST(request: NextRequest) {
       .filter((g) => typeof g === 'string' && isValidGene(g))
       .map((g) => String(g).trim().toUpperCase())
       .filter((g, i, a) => a.indexOf(g) === i)
-      .slice(0, 15);
+      .slice(0, 50);
     if (genes.length < 2) {
       return NextResponse.json(
         { error: 'Provide at least 2 genes for combinations', details: 'Body: { "genes": ["TP53", "BRCA1"] }' },

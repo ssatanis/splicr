@@ -1,18 +1,26 @@
 const path = require('path');
 
+// Check if we're building for Electron (static export)
+const isElectronBuild = process.env.ELECTRON_BUILD === 'true';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   devIndicators: false,
   // Use frontend as root for file tracing (required when building from monorepo root)
   outputFileTracingRoot: __dirname,
-  experimental: {
-    optimizePackageImports: ['lucide-react'],
-  },
-  images: {
+  // Conditional static export for Electron builds
+  output: isElectronBuild ? 'export' : undefined,
+  // Disable image optimization for static export
+  images: isElectronBuild ? {
+    unoptimized: true,
+  } : {
     remotePatterns: [
       { protocol: 'https', hostname: 'ui-avatars.com', pathname: '/**' },
     ],
+  },
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
   },
   webpack: (config) => {
     // react-plotly.js expects 'plotly.js/dist/plotly'; we use plotly.js-dist-min
@@ -28,7 +36,11 @@ const nextConfig = {
       'plotly.js/dist/plotly': 'plotly.js-dist-min',
     },
   },
+  // Redirects only work in non-static builds
   async redirects() {
+    if (isElectronBuild) {
+      return [];
+    }
     return [
       {
         source: '/favicon.ico',

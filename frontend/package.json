@@ -1,10 +1,14 @@
 {
   "name": "splicr-frontend",
   "version": "1.0.0",
+  "description": "SplicR - CRISPR Screen Analysis Platform (web and desktop)",
+  "homepage": "https://splicr.org",
+  "author": "SplicR <team@splicr.org>",
   "private": true,
   "engines": {
     "node": "24.x"
   },
+  "main": "main/background.js",
   "scripts": {
     "dev": "next dev",
     "dev:webpack": "next dev --webpack",
@@ -14,7 +18,127 @@
     "start": "next start",
     "clean": "rm -rf .next node_modules/.cache",
     "lint": "next lint",
-    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "dev:electron": "concurrently -k \"npm run dev\" \"wait-on http://localhost:3000 -t 60000 && node electron.js\"",
+    "build:electron": "node electron-build.js --mac --win --linux",
+    "build:electron:mac": "node electron-build.js --mac",
+    "build:electron:win": "node electron-build.js --win",
+    "build:electron:linux": "node electron-build.js --linux"
+  },
+  "build": {
+    "appId": "com.splicr.app",
+    "productName": "SplicR",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main",
+      "out",
+      "node_modules/electron-serve"
+    ],
+    "asarUnpack": [
+      "main/**",
+      "out/**",
+      "node_modules/electron-serve/**"
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "icon": "build-resources/icon.icns",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "window": {
+        "width": 540,
+        "height": 380
+      }
+    },
+    "win": {
+      "icon": "build-resources/icon-256.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "verifyUpdateCodeSignature": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "linux": {
+      "icon": "build-resources/icon-512.png",
+      "maintainer": "SplicR <team@splicr.org>",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "rpm",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "category": "Science"
+    },
+    "publish": null
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.980.0",
@@ -37,6 +161,7 @@
     "docx": "^9.5.1",
     "fast-stats": "^0.0.7",
     "file-saver": "^2.0.5",
+    "force-graph": "^1.51.0",
     "framer-motion": "^11.0.0",
     "gifenc": "^1.0.3",
     "hierarchical-clustering": "^1.1.0",
@@ -55,7 +180,6 @@
     "postcss": "^8",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
-    "react-force-graph": "^1.48.1",
     "react-konva": "^18.2.14",
     "react-plotly.js": "^2.6.0",
     "recharts": "^3.7.0",
@@ -63,13 +187,20 @@
     "tailwindcss": "^3.4.0"
   },
   "devDependencies": {
+    "@electron/rebuild": "^4.0.3",
     "@types/file-saver": "^2.0.7",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "concurrently": "^9.2.1",
+    "electron": "^28.0.0",
+    "electron-builder": "^26.7.0",
+    "electron-icon-builder": "^2.0.1",
+    "electron-serve": "^3.0.1",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "prettier": "^3.2.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wait-on": "^9.0.3"
   }
 }

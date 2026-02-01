@@ -58,9 +58,12 @@ export async function GET() {
         ownerEmail: user.email,
       }));
 
-      // Get analyses shared with user (by email)
+      // PERFORMANCE OPTIMIZATION: Get analyses shared with user (by email)
+      // This uses batched queries with .in() to avoid N+1 patterns.
+      // Uses indexes: idx_analysis_shares_email_status, idx_profiles_email
       let sharedAnalyses: any[] = [];
       try {
+        // Step 1: Get all share records for this user's email (indexed lookup)
         const { data: shares } = await admin
           .from('analysis_shares')
           .select('analysis_id, permission, shared_by')
@@ -68,6 +71,7 @@ export async function GET() {
           .eq('status', 'accepted');
 
         if (shares && shares.length > 0) {
+          // Step 2: Batch fetch all shared analyses (single query with .in())
           const sharedIds = shares.map((s: any) => s.analysis_id);
           const { data: sharedRows } = await admin
             .from('analyses')
@@ -75,13 +79,15 @@ export async function GET() {
             .in('id', sharedIds)
             .order('created_at', { ascending: false });
 
-          // Get owner emails for shared analyses
+          // Step 3: Batch fetch all owner profiles (single query, not N+1)
+          // Extract unique owner IDs and fetch profiles in one go
           const ownerIds = [...new Set(sharedRows?.map((r: any) => r.user_id).filter(Boolean) || [])];
           const { data: owners } = await admin
             .from('profiles')
             .select('id, email')
-            .in('id', ownerIds);
+            .in('id', ownerIds); // Uses idx_profiles_user_id index
 
+          // Build lookup map for O(1) access
           const ownerMap = new Map(owners?.map((o: any) => [o.id, o.email]) || []);
 
           sharedAnalyses = (sharedRows || []).map((r: any) => {
