@@ -134,7 +134,7 @@ export default function ReportBuilder({
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-3 p-4 border-b border-border/80 bg-surface/50 backdrop-blur-sm rounded-b-2xl">
+      <div className="flex flex-wrap items-center gap-3 p-4 border-b border-border/50 bg-transparent">
         <input
           type="text"
           value={title}

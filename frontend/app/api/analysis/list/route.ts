@@ -35,11 +35,14 @@ function rowToAnalysis(row: any): Analysis {
 export async function GET() {
   try {
     const supabase = await createClient();
+    const admin = (await import('@/lib/supabase/server')).supabaseAdmin as any;
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (!authError && user) {
+      // Use admin client to avoid RLS infinite recursion issues with team_members policies
       // Get user's own analyses
-      const { data: ownRows, error: ownError } = await (supabase.from('analyses') as any)
+      const { data: ownRows, error: ownError } = await admin
+        .from('analyses')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
@@ -52,22 +55,34 @@ export async function GET() {
         ...rowToAnalysis(r),
         isOwner: true,
         isShared: false,
+        ownerEmail: user.email,
       }));
 
       // Get analyses shared with user (by email)
       let sharedAnalyses: any[] = [];
       try {
-        const { data: shares } = await (supabase.from('analysis_shares') as any)
-          .select('analysis_id, permission')
+        const { data: shares } = await admin
+          .from('analysis_shares')
+          .select('analysis_id, permission, shared_by')
           .eq('email', user.email?.toLowerCase())
           .eq('status', 'accepted');
 
         if (shares && shares.length > 0) {
           const sharedIds = shares.map((s: any) => s.analysis_id);
-          const { data: sharedRows } = await (supabase.from('analyses') as any)
+          const { data: sharedRows } = await admin
+            .from('analyses')
             .select('*')
             .in('id', sharedIds)
             .order('created_at', { ascending: false });
+
+          // Get owner emails for shared analyses
+          const ownerIds = [...new Set(sharedRows?.map((r: any) => r.user_id).filter(Boolean) || [])];
+          const { data: owners } = await admin
+            .from('profiles')
+            .select('id, email')
+            .in('id', ownerIds);
+
+          const ownerMap = new Map(owners?.map((o: any) => [o.id, o.email]) || []);
 
           sharedAnalyses = (sharedRows || []).map((r: any) => {
             const share = shares.find((s: any) => s.analysis_id === r.id);
@@ -76,10 +91,12 @@ export async function GET() {
               isOwner: false,
               isShared: true,
               permission: share?.permission || 'view',
+              ownerEmail: ownerMap.get(r.user_id) || 'Unknown',
             };
           });
         }
-      } catch {
+      } catch (err) {
+        console.error('Error fetching shared analyses:', err);
         // analysis_shares table might not exist
       }
 

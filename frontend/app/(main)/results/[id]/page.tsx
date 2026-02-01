@@ -28,6 +28,7 @@ import { realApi } from "@/lib/realApi";
 import { Analysis, AnalysisResults } from "@/lib/types";
 import { exportAsPDF, exportAsDOCX, exportAsLatex, exportComputationalLog, exportAsZIP } from "@/lib/exportUtils";
 import { generatePDF } from "@/lib/export/pdfGenerator";
+import { createPortal } from "react-dom";
 import {
   Download,
   Share2,
@@ -52,9 +53,11 @@ import {
   Clock,
   FlaskConical,
   MessageSquare,
+  Pill,
+  ArrowLeft,
 } from "lucide-react";
 
-type TabType = "overview" | "volcano" | "heatmap" | "network" | "timecourse" | "advanced" | "top-hits" | "qc" | "rankings" | "raw-data" | "logs";
+type TabType = "overview" | "volcano" | "heatmap" | "network" | "timecourse" | "advanced" | "top-hits" | "qc" | "rankings" | "raw-data" | "logs" | "drug-finder";
 
 interface LogEntry {
   timestamp: string;
@@ -83,6 +86,7 @@ export default function ResultsPage() {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const runTriggeredRef = useRef<string | null>(null);
+  const [headerRoot, setHeaderRoot] = useState<HTMLElement | null>(null);
 
   const analysisFromList = analyses.find((a) => a.id === id);
   const analysis = analysisFromApi ?? analysisFromList;
@@ -155,6 +159,25 @@ export default function ResultsPage() {
     return () => clearInterval(interval);
   }, [analysis?.id, analysis?.status, results, refreshAnalyses, loadResults]);
 
+  // Portal target for header actions (title + buttons in app header)
+  useEffect(() => {
+    const el = document.getElementById("header-actions");
+    if (el) setHeaderRoot(el);
+  }, []);
+
+  // Refetch results when tab becomes visible so reload/switch tab shows latest persisted data
+  useEffect(() => {
+    if (typeof document === "undefined" || !id) return;
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        loadResults();
+        refreshAnalyses();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [id, loadResults, refreshAnalyses]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (showExportMenu && !(event.target as HTMLElement).closest('.export-menu-container')) {
@@ -168,6 +191,22 @@ export default function ResultsPage() {
 
   const saveNotes = async () => {
     await realApi.saveNote(id, notes);
+  };
+
+  const saveAnalysisName = async () => {
+    if (!id || !analysisName.trim()) return;
+    try {
+      const response = await fetch(`/api/analysis/${id}/update`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: analysisName.trim() }),
+      });
+      if (response.ok) {
+        await refreshAnalyses();
+      }
+    } catch (error) {
+      console.error('Failed to save analysis name:', error);
+    }
   };
 
   const handleRetry = async () => {
@@ -300,6 +339,7 @@ export default function ResultsPage() {
     { id: "heatmap", label: "Heatmap", icon: Grid3X3 },
     { id: "network", label: "Gene Network", icon: Network },
     { id: "timecourse", label: "Time-Course", icon: Clock },
+    { id: "drug-finder", label: "Drug–Gene Finder", icon: Pill },
     { id: "advanced", label: "Advanced Analysis", icon: FlaskConical },
     { id: "top-hits", label: "Top Hits", icon: Star },
     { id: "qc", label: "QC Metrics", icon: BarChart3 },
@@ -308,184 +348,141 @@ export default function ResultsPage() {
     { id: "logs", label: "Analysis Logs", icon: Terminal },
   ];
 
+  const headerActions = headerRoot ? (
+    <div className="flex items-center gap-4 w-full flex-wrap">
+      {/* Left side: Analysis name + edit icon */}
+      <div className="flex items-center gap-3 flex-wrap min-w-0 ml-4">
+        {isEditingName ? (
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={analysisName}
+              onChange={(e) => setAnalysisName(e.target.value)}
+              className="text-lg font-serif text-text-primary bg-transparent border-b-2 border-text-primary focus:outline-none max-w-[240px]"
+              autoFocus
+            />
+            <button type="button" onClick={async () => { await saveAnalysisName(); setIsEditingName(false); }} className="p-1.5 hover:bg-accent rounded-lg transition-colors">
+              <Save className="w-4 h-4" strokeWidth={1.5} />
+            </button>
+            <button type="button" onClick={() => setIsEditingName(false)} className="p-1.5 hover:bg-background rounded-lg transition-colors">
+              <X className="w-4 h-4" strokeWidth={1.5} />
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-serif font-semibold text-text-primary">{analysisName || "Screen Analysis"}</h1>
+            <button type="button" onClick={() => setIsEditingName(true)} className="p-1.5 hover:bg-background rounded-lg transition-colors">
+              <Edit2 className="w-4 h-4 text-text-primary" strokeWidth={1.5} />
+            </button>
+          </div>
+        )}
+        {analysis?.algorithm?.length ? (
+          <div className="flex items-center gap-1.5">
+            {analysis.algorithm.map((alg) => (
+              <span key={alg} className="px-2 py-0.5 bg-accent/20 rounded text-xs font-serif text-text-primary">
+                {String(alg).toUpperCase()}
+              </span>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
+      <div className="flex-1" />
+
+      {/* Right side: Action buttons */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <Button variant="secondary" size="md" onClick={() => setReportBuilderOpen(true)} className="inline-flex items-center gap-1.5 text-sm py-2">
+          <FileText className="w-4 h-4" strokeWidth={1.5} />
+          Create Report
+        </Button>
+        <Button variant="secondary" size="md" onClick={() => setFigureCustomizationOpen(true)} className="inline-flex items-center gap-1.5 text-sm py-2">
+          <TrendingUp className="w-4 h-4" strokeWidth={1.5} />
+          Customize Figure
+        </Button>
+        <Button variant="secondary" size="md" onClick={() => setCollabSidebarOpen(true)} className="inline-flex items-center gap-1.5 text-sm py-2">
+          <MessageSquare className="w-4 h-4" strokeWidth={1.5} />
+          Collaboration
+        </Button>
+        <Button variant="secondary" size="md" onClick={() => setShareModalOpen(true)} className="inline-flex items-center gap-1.5 text-sm py-2">
+          <Share2 className="w-4 h-4" strokeWidth={1.5} />
+          Share
+        </Button>
+        <Link href="/analyses">
+          <Button variant="secondary" size="md" className="inline-flex items-center gap-1.5 text-sm py-2">
+            <ArrowLeft className="w-4 h-4" strokeWidth={1.5} />
+            Back to analyses
+          </Button>
+        </Link>
+        <div className="relative export-menu-container">
+          <Button variant="primary" size="md" onClick={() => setShowExportMenu(!showExportMenu)} className="inline-flex items-center gap-1.5 text-sm py-2">
+            <Download className="w-4 h-4" strokeWidth={1.5} />
+            Download results
+          </Button>
+          {showExportMenu && (
+            <div className="absolute right-0 mt-2 w-64 bg-surface rounded-lg shadow-lg border border-border py-2 z-50">
+              <button type="button" onClick={() => handleExport("csv")} className="w-full px-4 py-2 text-left hover:bg-background flex items-center gap-3 transition-colors">
+                <Table className="w-5 h-5 text-green-500" />
+                <div>
+                  <div className="font-medium text-text-primary">CSV Data</div>
+                  <div className="text-xs text-text-tertiary">Gene rankings table</div>
+                </div>
+              </button>
+              <button type="button" onClick={() => handleExport("pdf-complete")} className="w-full px-4 py-2 text-left hover:bg-background flex items-center gap-3 transition-colors">
+                <FileText className="w-5 h-5 text-[#6ABF36]" />
+                <div>
+                  <div className="font-medium text-text-primary">Complete PDF Report</div>
+                  <div className="text-xs text-text-tertiary">Volcano plot + top hits table</div>
+                </div>
+              </button>
+              <button type="button" onClick={() => handleExport("pdf")} className="w-full px-4 py-2 text-left hover:bg-background flex items-center gap-3 transition-colors">
+                <FileText className="w-5 h-5 text-red-500" />
+                <div>
+                  <div className="font-medium text-text-primary">PDF Report</div>
+                  <div className="text-xs text-text-tertiary">Summary + top depleted</div>
+                </div>
+              </button>
+              <button type="button" onClick={() => handleExport("docx")} className="w-full px-4 py-2 text-left hover:bg-background flex items-center gap-3 transition-colors">
+                <File className="w-5 h-5 text-blue-500" />
+                <div>
+                  <div className="font-medium text-text-primary">Word Document</div>
+                  <div className="text-xs text-text-tertiary">Editable DOCX format</div>
+                </div>
+              </button>
+              <button type="button" onClick={() => handleExport("latex")} className="w-full px-4 py-2 text-left hover:bg-background flex items-center gap-3 transition-colors">
+                <FileCode className="w-5 h-5 text-green-500" />
+                <div>
+                  <div className="font-medium text-text-primary">LaTeX Source</div>
+                  <div className="text-xs text-text-tertiary">Publication-ready .tex</div>
+                </div>
+              </button>
+              <button type="button" onClick={() => handleExport("log")} className="w-full px-4 py-2 text-left hover:bg-background flex items-center gap-3 transition-colors">
+                <Terminal className="w-5 h-5 text-purple-500" />
+                <div>
+                  <div className="font-medium text-text-primary">Computational Log</div>
+                  <div className="text-xs text-text-tertiary">Pipeline execution details</div>
+                </div>
+              </button>
+              <div className="border-t border-border my-2" />
+              <button type="button" onClick={() => handleExport("zip")} className="w-full px-4 py-2 text-left hover:bg-background flex items-center gap-3 transition-colors">
+                <Archive className="w-5 h-5 text-orange-500" />
+                <div>
+                  <div className="font-medium text-text-primary">Complete Package</div>
+                  <div className="text-xs text-text-tertiary">ZIP with all formats + data</div>
+                </div>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  ) : null;
+
   return (
     <div className="min-h-screen bg-background">
+      {headerRoot && createPortal(headerActions, headerRoot)}
       <Sidebar />
       <main className="ml-[260px] min-h-screen">
         <div className="max-w-[1600px] mx-auto px-8 py-12">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-12">
-            <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
-              <div className="flex-1 min-w-0">
-                {isEditingName ? (
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <input
-                      type="text"
-                      value={analysisName}
-                      onChange={(e) => setAnalysisName(e.target.value)}
-                      className="text-3xl md:text-5xl font-serif text-text-primary bg-transparent border-b-2 border-text-primary focus:outline-none w-full max-w-md"
-                      autoFocus
-                    />
-                    <button onClick={() => setIsEditingName(false)} className="p-2 hover:bg-accent rounded-lg transition-colors">
-                      <Save className="w-5 h-5" strokeWidth={1.5} />
-                    </button>
-                    <button onClick={() => setIsEditingName(false)} className="p-2 hover:bg-background rounded-lg transition-colors">
-                      <X className="w-5 h-5" strokeWidth={1.5} />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <h1 className="text-3xl md:text-5xl font-serif text-text-primary">{analysisName || "Results"}</h1>
-                    <button onClick={() => setIsEditingName(true)} className="p-2 hover:bg-background rounded-lg transition-colors opacity-0 hover:opacity-100">
-                      <Edit2 className="w-5 h-5 text-text-secondary" strokeWidth={1.5} />
-                    </button>
-                  </div>
-                )}
-                <div className="flex items-center gap-4 mt-3 flex-wrap">
-                  <span className="text-sm text-text-secondary font-serif">
-                    {analysis?.createdAt && new Date(analysis.createdAt).toLocaleDateString()}
-                  </span>
-                  {analysis?.algorithm?.map((alg) => (
-                    <span key={alg} className="px-3 py-1 bg-accent/20 rounded-lg text-xs font-serif text-text-primary">
-                      {alg.toUpperCase()}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="secondary"
-                  size="md"
-                  onClick={() => setReportBuilderOpen(true)}
-                  className="inline-flex items-center gap-2"
-                >
-                  <FileText className="w-4 h-4" strokeWidth={1.5} />
-                  Create Report
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="md"
-                  onClick={() => setFigureCustomizationOpen(true)}
-                  className="inline-flex items-center gap-2"
-                >
-                  <TrendingUp className="w-4 h-4" strokeWidth={1.5} />
-                  Customize Figure
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="md"
-                  onClick={() => setCollabSidebarOpen(true)}
-                  className="inline-flex items-center gap-2"
-                >
-                  <MessageSquare className="w-4 h-4" strokeWidth={1.5} />
-                  Collaboration
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="md"
-                  onClick={() => setShareModalOpen(true)}
-                  className="inline-flex items-center gap-2"
-                >
-                  <Share2 className="w-4 h-4" strokeWidth={1.5} />
-                  Share
-                </Button>
-                <Link href="/analyses">
-                  <Button variant="secondary" size="md">
-                    <Share2 className="w-4 h-4 mr-2" strokeWidth={1.5} />
-                    Back to analyses
-                  </Button>
-                </Link>
-                <div className="relative export-menu-container">
-                  <Button variant="primary" size="md" onClick={() => setShowExportMenu(!showExportMenu)}>
-                    <Download className="w-4 h-4 mr-2" strokeWidth={1.5} />
-                    Download results
-                  </Button>
-
-                  {showExportMenu && (
-                    <div className="absolute right-0 mt-2 w-64 bg-surface rounded-lg shadow-lg border border-border py-2 z-50">
-                      <button
-                        onClick={() => handleExport('csv')}
-                        className="w-full px-4 py-2 text-left hover:bg-background flex items-center gap-3 transition-colors"
-                      >
-                        <Table className="w-5 h-5 text-green-500" />
-                        <div>
-                          <div className="font-medium text-text-primary">CSV Data</div>
-                          <div className="text-xs text-text-tertiary">Gene rankings table</div>
-                        </div>
-                      </button>
-
-                      <button
-                        onClick={() => handleExport('pdf-complete')}
-                        className="w-full px-4 py-2 text-left hover:bg-background flex items-center gap-3 transition-colors"
-                      >
-                        <FileText className="w-5 h-5 text-[#6ABF36]" />
-                        <div>
-                          <div className="font-medium text-text-primary">Complete PDF Report</div>
-                          <div className="text-xs text-text-tertiary">Volcano plot + top hits table</div>
-                        </div>
-                      </button>
-                      <button
-                        onClick={() => handleExport('pdf')}
-                        className="w-full px-4 py-2 text-left hover:bg-background flex items-center gap-3 transition-colors"
-                      >
-                        <FileText className="w-5 h-5 text-red-500" />
-                        <div>
-                          <div className="font-medium text-text-primary">PDF Report</div>
-                          <div className="text-xs text-text-tertiary">Summary + top depleted</div>
-                        </div>
-                      </button>
-
-                      <button
-                        onClick={() => handleExport('docx')}
-                        className="w-full px-4 py-2 text-left hover:bg-background flex items-center gap-3 transition-colors"
-                      >
-                        <File className="w-5 h-5 text-blue-500" />
-                        <div>
-                          <div className="font-medium text-text-primary">Word Document</div>
-                          <div className="text-xs text-text-tertiary">Editable DOCX format</div>
-                        </div>
-                      </button>
-
-                      <button
-                        onClick={() => handleExport('latex')}
-                        className="w-full px-4 py-2 text-left hover:bg-background flex items-center gap-3 transition-colors"
-                      >
-                        <FileCode className="w-5 h-5 text-green-500" />
-                        <div>
-                          <div className="font-medium text-text-primary">LaTeX Source</div>
-                          <div className="text-xs text-text-tertiary">Publication-ready .tex</div>
-                        </div>
-                      </button>
-
-                      <button
-                        onClick={() => handleExport('log')}
-                        className="w-full px-4 py-2 text-left hover:bg-background flex items-center gap-3 transition-colors"
-                      >
-                        <Terminal className="w-5 h-5 text-purple-500" />
-                        <div>
-                          <div className="font-medium text-text-primary">Computational Log</div>
-                          <div className="text-xs text-text-tertiary">Pipeline execution details</div>
-                        </div>
-                      </button>
-
-                      <div className="border-t border-border my-2"></div>
-
-                      <button
-                        onClick={() => handleExport('zip')}
-                        className="w-full px-4 py-2 text-left hover:bg-background flex items-center gap-3 transition-colors"
-                      >
-                        <Archive className="w-5 h-5 text-orange-500" />
-                        <div>
-                          <div className="font-medium text-text-primary">Complete Package</div>
-                          <div className="text-xs text-text-tertiary">ZIP with all formats + data</div>
-                        </div>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -528,6 +525,7 @@ export default function ResultsPage() {
                 {activeTab === "heatmap" && <HeatmapTab results={results} />}
                 {activeTab === "network" && <NetworkTab results={results} />}
                 {activeTab === "timecourse" && <TimeCourseTab results={results} />}
+                {activeTab === "drug-finder" && <DrugFinderTab results={results} />}
                 {activeTab === "advanced" && <AdvancedTab results={results} analysisId={id} onResultsUpdate={loadResults} />}
                 {activeTab === "top-hits" && <TopHitsTab results={results} onGeneClick={setSelectedGene} />}
                 {activeTab === "qc" && <QCTab results={results} />}
@@ -604,17 +602,6 @@ export default function ResultsPage() {
               </div>
             )}
           </AnimatePresence>
-
-          {results && significantGenes.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="mt-12"
-            >
-              <DrugGeneFinder significantGenes={significantGenes} />
-            </motion.div>
-          )}
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -771,12 +758,22 @@ function NetworkTab({ results }: { results: AnalysisResults }) {
     ...(results.topHits?.enriched ?? []).slice(0, 25),
   ].map((g) => ({
     gene: g.gene,
-    sgrnaCount: g.sgrnaCount,
-    logFoldChange: g.logFoldChange,
-    pValue: g.pValue,
-    fdr: g.fdr,
-    rank: g.rank,
+    sgrnaCount: g.sgrnaCount ?? 4,
+    logFoldChange: g.logFoldChange ?? 0,
+    pValue: g.pValue ?? 1,
+    fdr: g.fdr ?? 1,
+    rank: g.rank ?? 0,
   }));
+
+  if (significantGenes.length === 0) {
+    return (
+      <div className="bg-surface rounded-xl p-12 border border-border text-center">
+        <p className="text-text-secondary font-serif">No significant genes available for network analysis.</p>
+        <p className="text-text-tertiary text-sm mt-2">Network visualization requires genes with FDR &lt; 0.05.</p>
+      </div>
+    );
+  }
+
   return (
     <GeneNetworkVisualization
       genes={significantGenes}
@@ -808,6 +805,21 @@ function TimeCourseTab({ results }: { results: AnalysisResults }) {
   );
 }
 
+function DrugFinderTab({ results }: { results: AnalysisResults }) {
+  const significantGenes = (() => {
+    if (!results) return [] as string[];
+    const fromAll = results.allGenes?.filter((g) => g.fdr < 0.05).map((g) => g.gene);
+    if (fromAll && fromAll.length > 0) return fromAll;
+    const depleted = (results.topHits?.depleted ?? []).map((g) => g.gene);
+    const enriched = (results.topHits?.enriched ?? []).map((g) => g.gene);
+    return [...new Set([...depleted, ...enriched])];
+  })();
+
+  return (
+    <DrugGeneFinder significantGenes={significantGenes} />
+  );
+}
+
 function AdvancedTab({
   results,
   analysisId,
@@ -836,22 +848,6 @@ function AdvancedTab({
 
   return (
     <div className="space-y-12">
-      <section>
-        <AdvancedAnalysisPanel analysisId={analysisId} onResultsUpdate={onResultsUpdate} />
-      </section>
-      <section>
-        <h3 className="text-xl font-serif text-text-primary mb-4">Pathway enrichment</h3>
-        <PathwayEnrichmentChart
-          genes={genesForPathwayAndDrug}
-          topN={10}
-          pValueCutoff={0.05}
-          height={420}
-        />
-      </section>
-      <section>
-        <h3 className="text-xl font-serif text-text-primary mb-4">Drug–gene interactions</h3>
-        <DrugGeneInteractionTable genes={genesForPathwayAndDrug} limitPerGene={15} />
-      </section>
       <section>
         <h3 className="text-xl font-serif text-text-primary mb-4">DepMap comparison</h3>
         <DepMapComparison genes={genesForDepMap} maxGenes={80} height={400} />
@@ -988,9 +984,9 @@ function RawDataTab({ results, analysisId }: { results: AnalysisResults; analysi
     }
   };
 
-  const handleDownload = (type: string) => {
+  const handleDownload = (type: string, fileName?: string) => {
     let content = '';
-    let filename = '';
+    let filename = fileName || '';
 
     if (type === 'counts' && results.rawData?.countMatrix) {
       const data = results.rawData.countMatrix;
@@ -1001,27 +997,29 @@ function RawDataTab({ results, analysisId }: { results: AnalysisResults; analysi
       sgRNAs.forEach(sgRNA => {
         content += [sgRNA, ...samples.map(s => data[sgRNA][s])].join('\t') + '\n';
       });
-      filename = `splicr-counts-${analysisId}.tsv`;
+      filename = fileName || `splicr-counts-${analysisId}.tsv`;
     } else if (type === 'genes' && results.allGenes) {
       content = 'Rank\tGene\tsgRNAs\tLog2FC\tP-value\tFDR\n';
       results.allGenes.forEach((gene: any) => {
         content += `${gene.rank}\t${gene.gene}\t${gene.sgrnaCount}\t${gene.logFoldChange.toFixed(4)}\t${gene.pValue.toExponential(3)}\t${gene.fdr.toFixed(6)}\n`;
       });
-      filename = `splicr-gene-summary-${analysisId}.tsv`;
+      filename = fileName || `splicr-gene-summary-${analysisId}.tsv`;
     }
 
-    const blob = new Blob([content], { type: 'text/tab-separated-values' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
+    if (content) {
+      const blob = new Blob([content], { type: 'text/tab-separated-values' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
   };
 
   const files = [
-    { name: "sgRNA Count Matrix", type: "counts", size: results.rawData?.countMatrix ? `${Object.keys(results.rawData.countMatrix).length} sgRNAs` : "N/A" },
-    { name: "Gene Summary", type: "genes", size: results.allGenes ? `${results.allGenes.length} genes` : "N/A" },
+    { name: "sgRNA Count Matrix", type: "counts", size: results.rawData?.countMatrix ? `${Object.keys(results.rawData.countMatrix).length} sgRNAs` : "N/A", downloadName: `${analysisId}-count-matrix.tsv` },
+    { name: "Gene Summary", type: "genes", size: results.allGenes ? `${results.allGenes.length} genes` : "N/A", downloadName: `${analysisId}-gene-summary.tsv` },
   ];
 
   return (
@@ -1043,7 +1041,7 @@ function RawDataTab({ results, analysisId }: { results: AnalysisResults; analysi
                   <Eye className="w-4 h-4 mr-2" strokeWidth={1.5} />
                   View
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => handleDownload(file.type)}>
+                <Button variant="outline" size="sm" onClick={() => handleDownload(file.type, file.downloadName)}>
                   <Download className="w-4 h-4" strokeWidth={1.5} />
                 </Button>
               </div>
@@ -1065,10 +1063,10 @@ function RawDataTab({ results, analysisId }: { results: AnalysisResults; analysi
             </Button>
           </div>
 
-          <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+          <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
             {viewingData === 'genes' ? (
               <table className="w-full">
-                <thead className="bg-background sticky top-0">
+                <thead className="bg-background sticky top-0 z-10">
                   <tr>
                     <th className="px-4 py-3 text-left text-sm font-serif text-text-secondary">Rank</th>
                     <th className="px-4 py-3 text-left text-sm font-serif text-text-secondary">Gene</th>
@@ -1079,7 +1077,7 @@ function RawDataTab({ results, analysisId }: { results: AnalysisResults; analysi
                   </tr>
                 </thead>
                 <tbody>
-                  {dataContent.slice(0, 100).map((gene: any) => (
+                  {dataContent.map((gene: any) => (
                     <tr key={gene.gene} className="border-b border-border-light hover:bg-background">
                       <td className="px-4 py-3 text-sm font-mono">{gene.rank}</td>
                       <td className="px-4 py-3 text-sm font-mono font-medium text-accent">{gene.gene}</td>
@@ -1096,15 +1094,8 @@ function RawDataTab({ results, analysisId }: { results: AnalysisResults; analysi
             ) : (
               <div className="text-sm text-text-secondary font-mono">
                 <p className="mb-4">Count matrix with {Object.keys(dataContent).length} sgRNAs</p>
-                <pre className="bg-background p-4 rounded-lg overflow-x-auto">
-                  {JSON.stringify(
-                    Object.fromEntries(
-                      Object.entries(dataContent).slice(0, 10)
-                    ),
-                    null,
-                    2
-                  )}
-                  {Object.keys(dataContent).length > 10 && '\n\n... and more'}
+                <pre className="bg-background p-4 rounded-lg overflow-x-auto max-h-[600px] overflow-y-auto">
+                  {JSON.stringify(dataContent, null, 2)}
                 </pre>
               </div>
             )}

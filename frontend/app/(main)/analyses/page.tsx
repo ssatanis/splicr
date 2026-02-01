@@ -152,7 +152,14 @@ export default function MyAnalysesPage() {
                               </span>
                             )}
                           </div>
-                          <div className="text-sm text-text-tertiary mt-1">{analysis.fileKeys.length} files</div>
+                          <div className="text-sm text-text-tertiary mt-1">
+                            {analysis.fileKeys.length} files
+                            {analysis.ownerEmail && (
+                              <span className="ml-2">
+                                • Owner: {analysis.isOwner ? analysis.ownerEmail : analysis.ownerEmail}
+                              </span>
+                            )}
+                          </div>
                         </Link>
                       </td>
                       <td className="px-8 py-5 text-sm font-serif text-text-secondary">

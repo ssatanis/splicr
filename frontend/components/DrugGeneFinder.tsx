@@ -60,8 +60,9 @@ export default function DrugGeneFinder({ significantGenes }: DrugGeneFinderProps
     setCombinations([]);
     try {
       const genesParam = genes.join(',');
+      // Always force refresh to get fresh data from DGIdb API
       const [getRes, postRes] = await Promise.all([
-        fetch(`/api/drug-gene?genes=${encodeURIComponent(genesParam)}`),
+        fetch(`/api/drug-gene?genes=${encodeURIComponent(genesParam)}&force=true`),
         genes.length >= 2
           ? fetch('/api/drug-gene', {
               method: 'POST',
@@ -214,17 +215,37 @@ export default function DrugGeneFinder({ significantGenes }: DrugGeneFinderProps
                               <div className="mt-2 text-xs text-text-secondary font-serif">
                                 {drug.interactionTypes?.map((t) => t.type).filter(Boolean).join(', ') || '—'}
                               </div>
-                              {drug.pmids?.length > 0 && (
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                {drug.pmids?.length > 0 && (
+                                  <a
+                                    href={`https://pubmed.ncbi.nlm.nih.gov/${drug.pmids[0]}/`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-xs text-[#6ABF36] hover:underline font-serif"
+                                  >
+                                    <ExternalLink className="w-3 h-3" />
+                                    PubMed
+                                  </a>
+                                )}
                                 <a
-                                  href={`https://pubmed.ncbi.nlm.nih.gov/${drug.pmids[0]}/`}
+                                  href={`https://go.drugbank.com/unearth/q?query=${encodeURIComponent(drug.name)}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="mt-2 inline-flex items-center gap-1 text-xs text-[#6ABF36] hover:underline font-serif"
+                                  className="inline-flex items-center gap-1 text-xs text-[#6ABF36] hover:underline font-serif"
                                 >
                                   <ExternalLink className="w-3 h-3" />
-                                  PubMed {drug.pmids[0]}
+                                  DrugBank
                                 </a>
-                              )}
+                                <a
+                                  href={`https://clinicaltrials.gov/search?term=${encodeURIComponent(drug.name)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-xs text-[#6ABF36] hover:underline font-serif"
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                  Trials
+                                </a>
+                              </div>
                             </div>
                           ))
                         )}

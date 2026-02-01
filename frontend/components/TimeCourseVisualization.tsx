@@ -176,8 +176,17 @@ export default function TimeCourseVisualization({
 
   return (
     <div ref={containerRef} className="w-full bg-surface rounded-xl p-6 border border-border shadow-card">
+      <div className="mb-6">
+        <h3 className="text-2xl font-serif text-text-primary mb-2">Time-course analysis</h3>
+        <p className="text-sm text-text-secondary font-serif max-w-3xl">
+          Track how guide RNA abundance changes over time in your CRISPR screen. This visualization reveals
+          gene essentiality kinetics—showing which genes cause immediate cell death (steep drops), gradual fitness
+          defects (steady decline), or delayed effects. Essential genes for cell survival typically show consistent
+          depletion across timepoints.
+        </p>
+      </div>
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-        <h3 className="text-2xl font-serif text-text-primary">Time-course</h3>
+        <div className="text-lg font-serif text-text-primary">Controls</div>
         <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={handlePlayPause}
@@ -277,8 +286,9 @@ export default function TimeCourseVisualization({
         </ResponsiveContainer>
       </div>
 
-      <p className="mt-3 text-sm text-text-tertiary">
-        Scrubbing the slider or pressing Play animates through timepoints. Export GIF captures the animation.
+      <p className="mt-4 text-sm text-text-tertiary">
+        Use the slider or Play button to animate through timepoints. Export to PNG for static images or GIF for animations.
+        Lines show log₂ fold-change relative to initial timepoint—steep negative slopes indicate essential genes.
       </p>
     </div>
   );

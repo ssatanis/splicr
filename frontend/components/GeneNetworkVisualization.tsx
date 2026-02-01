@@ -8,6 +8,11 @@ import type { GeneResult } from '@/lib/types';
 
 const ForceGraph2D = dynamic(() => import('react-force-graph').then((mod) => mod.ForceGraph2D), {
   ssr: false,
+  loading: () => (
+    <div className="h-full flex items-center justify-center">
+      <Loader2 className="w-10 h-10 animate-spin text-accent" />
+    </div>
+  ),
 });
 
 const STRING_API = 'https://string-db.org/api';
@@ -117,6 +122,12 @@ export default function GeneNetworkVisualization({
   const [search, setSearch] = useState('');
   const [highlightNode, setHighlightNode] = useState<string | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Ensure component only renders on client
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const geneMap = useMemo(() => {
     const m = new Map<string, GeneResult>();
@@ -257,7 +268,7 @@ export default function GeneNetworkVisualization({
             <Loader2 className="w-10 h-10 animate-spin text-accent" />
           </div>
         )}
-        {graphData && graphData.nodes.length > 0 && !loading && (
+        {isMounted && graphData && graphData.nodes.length > 0 && !loading && (
           <ForceGraph2D
             graphData={graphData}
             nodeId="id"

@@ -36,14 +36,14 @@ export default function ReportBuilderModal({
           transition={{ duration: 0.2 }}
           className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-sm"
         >
-          <div className="flex items-center justify-between px-6 py-4 border-b border-border/80 bg-surface/80 backdrop-blur-md rounded-b-2xl shadow-sm">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border/30 bg-transparent backdrop-blur-sm">
             <h2 className="text-xl font-semibold text-text-primary tracking-tight">
               Create Report
             </h2>
             <button
               type="button"
               onClick={onClose}
-              className="p-2.5 rounded-xl hover:bg-background/80 text-text-secondary hover:text-text-primary transition-colors focus:ring-2 focus:ring-success/30 focus:outline-none"
+              className="p-2.5 rounded-xl hover:bg-surface/50 text-text-secondary hover:text-text-primary transition-colors focus:ring-2 focus:ring-success/30 focus:outline-none"
               aria-label="Close"
             >
               <X className="w-5 h-5" />

@@ -109,6 +109,8 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const genesParam = searchParams.get('genes');
+    const forceRefresh = searchParams.get('force') === 'true';
+
     if (!genesParam) {
       return NextResponse.json(
         { error: 'Missing genes', details: 'Use ?genes=TP53,BRCA1' },
@@ -133,24 +135,27 @@ export async function GET(request: NextRequest) {
     let approvedDrugs = 0;
 
     for (const gene of genes) {
-      const { data: cachedRow } = await supabaseAdmin
-        .from('drug_gene_cache')
-        .select('drugs, cached_at')
-        .eq('gene_symbol', gene)
-        .maybeSingle();
-      const cached = cachedRow as { drugs: unknown; cached_at: string } | null;
-      const cachedAt = cached?.cached_at ? new Date(cached.cached_at).getTime() : 0;
-      if (cached && Date.now() - cachedAt < CACHE_MS && Array.isArray(cached.drugs)) {
-        const drugs = cached.drugs as any[];
-        results.push({
-          gene,
-          geneName: gene,
-          totalInteractions: drugs.length,
-          drugs,
-        });
-        totalDrugs += drugs.length;
-        approvedDrugs += drugs.filter((d) => d.approved).length;
-        continue;
+      // Only check cache if not forcing refresh
+      if (!forceRefresh) {
+        const { data: cachedRow } = await supabaseAdmin
+          .from('drug_gene_cache')
+          .select('drugs, cached_at')
+          .eq('gene_symbol', gene)
+          .maybeSingle();
+        const cached = cachedRow as { drugs: unknown; cached_at: string } | null;
+        const cachedAt = cached?.cached_at ? new Date(cached.cached_at).getTime() : 0;
+        if (cached && Date.now() - cachedAt < CACHE_MS && Array.isArray(cached.drugs)) {
+          const drugs = cached.drugs as any[];
+          results.push({
+            gene,
+            geneName: gene,
+            totalInteractions: drugs.length,
+            drugs,
+          });
+          totalDrugs += drugs.length;
+          approvedDrugs += drugs.filter((d) => d.approved).length;
+          continue;
+        }
       }
 
       let apiData: any;

@@ -80,7 +80,7 @@ export default function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-[260px] bg-surface border-r border-border z-40">
       <div className="flex flex-col h-full">
-        <div className="h-20 flex items-center px-6 border-b border-border">
+        <div className="h-20 flex items-center px-6 border-b border-border shrink-0">
           <Link href="/dashboard" className="flex items-center hover:opacity-90 transition-opacity">
             <Image src="/logo.jpeg" alt="SplicR" width={120} height={40} className="h-10 w-auto object-contain" priority />
           </Link>

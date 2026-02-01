@@ -50,6 +50,11 @@ export interface Analysis {
   resultsPath?: string;
   thumbnailPath?: string;
   userId?: string;
+  // Sharing fields
+  isOwner?: boolean;
+  isShared?: boolean;
+  permission?: 'view' | 'edit' | 'admin';
+  ownerEmail?: string;
 }
 
 export interface VolcanoDataPoint {

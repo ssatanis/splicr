@@ -82,16 +82,16 @@ export default function GeneInfoPopup({ geneSymbol, onClose }: GeneInfoPopupProp
           onClick={(e) => e.stopPropagation()}
         >
           <div className="bg-gradient-to-r from-[#6ABF36] to-[#5AA82F] px-6 py-4 flex items-center justify-between">
-            <h2 className="text-xl font-serif font-medium text-white">
+            <h2 className="text-xl font-serif font-medium text-black">
               {data?.symbol ?? geneSymbol}
               {data?.name && (
-                <span className="ml-2 font-normal opacity-90 text-sm hidden sm:inline">{data.name}</span>
+                <span className="ml-2 font-normal text-sm hidden sm:inline">{data.name}</span>
               )}
             </h2>
             <button
               type="button"
               onClick={onClose}
-              className="p-2 rounded-lg hover:bg-white/20 text-white transition-colors"
+              className="p-2 rounded-lg hover:bg-black/10 text-black transition-colors"
               aria-label="Close"
             >
               <X className="w-5 h-5" strokeWidth={2} />
