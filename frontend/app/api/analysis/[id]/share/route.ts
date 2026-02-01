@@ -35,11 +35,12 @@ export async function GET(
       return NextResponse.json({ error: 'Analysis not found' }, { status: 404 });
     }
 
-    // Get shares
+    // Get shares (only email invitations, not link shares)
     const { data: shares, error } = await admin
       .from('analysis_shares')
-      .select('id, email, permission, status, created_at, accepted_at, shared_by')
+      .select('id, email, permission, status, created_at, accepted_at, shared_by, user_id')
       .eq('analysis_id', analysisId)
+      .eq('is_link_share', false)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -119,6 +120,7 @@ export async function POST(
         permission,
         status: 'pending',
         shared_by: user.id,
+        is_link_share: false, // Email invitation, not link share
       })
       .select()
       .single();
@@ -137,6 +139,7 @@ export async function POST(
             permission,
             status: 'pending',
             shared_by: user.id,
+            is_link_share: false, // Email invitation, not link share
           })
           .select()
           .single();
@@ -214,8 +217,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 
-    // Delete share
-    let query = admin.from('analysis_shares').delete().eq('analysis_id', analysisId);
+    // Delete share (only email invitations, not link shares)
+    let query = admin.from('analysis_shares').delete()
+      .eq('analysis_id', analysisId)
+      .eq('is_link_share', false);
     if (shareId) {
       query = query.eq('id', shareId);
     } else if (email) {

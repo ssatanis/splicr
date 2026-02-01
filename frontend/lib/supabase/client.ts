@@ -360,6 +360,98 @@ export type Database = {
           created_at?: string
         }
       }
+      analysis_shares: {
+        Row: {
+          id: string
+          analysis_id: string
+          email: string
+          permission: 'view' | 'edit' | 'admin'
+          status: 'pending' | 'accepted' | 'declined'
+          user_id: string | null
+          shared_by: string
+          created_at: string
+          accepted_at: string | null
+          // Link-based sharing fields
+          visibility: 'private' | 'institution' | 'public'
+          share_token: string | null
+          link_permission: 'view' | 'edit'
+          link_expires_at: string | null
+          institution_domain: string | null
+          institution_permission: 'view' | 'edit'
+          updated_at: string
+          is_link_share: boolean
+        }
+        Insert: {
+          id?: string
+          analysis_id: string
+          email: string
+          permission?: 'view' | 'edit' | 'admin'
+          status?: 'pending' | 'accepted' | 'declined'
+          user_id?: string | null
+          shared_by: string
+          created_at?: string
+          accepted_at?: string | null
+          visibility?: 'private' | 'institution' | 'public'
+          share_token?: string | null
+          link_permission?: 'view' | 'edit'
+          link_expires_at?: string | null
+          institution_domain?: string | null
+          institution_permission?: 'view' | 'edit'
+          updated_at?: string
+          is_link_share?: boolean
+        }
+        Update: {
+          id?: string
+          analysis_id?: string
+          email?: string
+          permission?: 'view' | 'edit' | 'admin'
+          status?: 'pending' | 'accepted' | 'declined'
+          user_id?: string | null
+          shared_by?: string
+          created_at?: string
+          accepted_at?: string | null
+          visibility?: 'private' | 'institution' | 'public'
+          share_token?: string | null
+          link_permission?: 'view' | 'edit'
+          link_expires_at?: string | null
+          institution_domain?: string | null
+          institution_permission?: 'view' | 'edit'
+          updated_at?: string
+          is_link_share?: boolean
+        }
+      }
+      analysis_access_log: {
+        Row: {
+          id: string
+          analysis_id: string
+          user_id: string | null
+          access_type: string
+          access_method: 'owner' | 'collaborator' | 'institution' | 'public_link' | null
+          ip_address: string | null
+          user_agent: string | null
+          accessed_at: string
+        }
+        Insert: {
+          id?: string
+          analysis_id: string
+          user_id?: string | null
+          access_type: string
+          access_method?: 'owner' | 'collaborator' | 'institution' | 'public_link' | null
+          ip_address?: string | null
+          user_agent?: string | null
+          accessed_at?: string
+        }
+        Update: {
+          id?: string
+          analysis_id?: string
+          user_id?: string | null
+          access_type?: string
+          access_method?: 'owner' | 'collaborator' | 'institution' | 'public_link' | null
+          ip_address?: string | null
+          user_agent?: string | null
+          accessed_at?: string
+        }
+      }
     }
   }
 }

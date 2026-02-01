@@ -131,3 +131,97 @@ export interface UserData {
   favorites: string[]; // gene IDs
   notes: Record<string, string>; // analysisId -> notes
 }
+
+/**
+ * Sharing System Types
+ */
+
+// Visibility levels for link-based sharing
+export type ShareVisibility = 'private' | 'institution' | 'public';
+
+// Permission levels
+export type SharePermission = 'view' | 'edit';
+
+// Access methods for audit trail
+export type AccessMethod = 'owner' | 'collaborator' | 'institution' | 'public_link';
+
+// Access types for logging
+export type AccessType = 'view' | 'edit' | 'download' | 'share' | 'delete';
+
+// Analysis share record (email-based invitation)
+export interface AnalysisShare {
+  id: string;
+  analysis_id: string;
+  email: string;
+  permission: SharePermission | 'admin';
+  status: 'pending' | 'accepted' | 'declined';
+  user_id: string | null;
+  shared_by: string;
+  created_at: string;
+  accepted_at: string | null;
+  // Link-based sharing fields
+  visibility: ShareVisibility;
+  share_token: string | null;
+  link_permission: SharePermission;
+  link_expires_at: string | null;
+  institution_domain: string | null;
+  institution_permission: SharePermission;
+  updated_at: string;
+  is_link_share: boolean;
+}
+
+// Link share configuration
+export interface LinkShareConfig {
+  id: string;
+  analysis_id: string;
+  visibility: ShareVisibility;
+  share_token: string | null;
+  link_permission: SharePermission;
+  link_expires_at: string | null;
+  institution_domain: string | null;
+  institution_permission: SharePermission;
+  shared_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Access check result
+export interface AccessCheckResult {
+  hasAccess: boolean;
+  permission: SharePermission | null;
+  method: AccessMethod | null;
+  isOwner: boolean;
+  isExpired?: boolean;
+  requiresAuth?: boolean;
+}
+
+// Access log entry
+export interface AccessLogEntry {
+  id: string;
+  analysis_id: string;
+  user_id: string | null;
+  access_type: AccessType;
+  access_method: AccessMethod | null;
+  ip_address: string | null;
+  user_agent: string | null;
+  accessed_at: string;
+}
+
+// Share modal state
+export interface ShareModalState {
+  isOpen: boolean;
+  loading: boolean;
+  error: string | null;
+  success: string | null;
+}
+
+// Collaborator display (for UI)
+export interface Collaborator {
+  id: string;
+  email: string;
+  permission: SharePermission | 'admin';
+  status: 'pending' | 'accepted';
+  user_id: string | null;
+  created_at: string;
+  accepted_at: string | null;
+}
