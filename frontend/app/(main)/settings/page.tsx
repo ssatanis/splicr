@@ -23,6 +23,7 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
+  Trash2,
 } from "lucide-react";
 import InstitutionAutocomplete from "@/components/InstitutionAutocomplete";
 
@@ -41,6 +42,8 @@ export default function SettingsPage() {
   const [hasAuth, setHasAuth] = useState(false);
   const [isSupabaseAuth, setIsSupabaseAuth] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [clearDataStatus, setClearDataStatus] = useState<"idle" | "confirming" | "clearing" | "success" | "error">("idle");
+  const [clearDataError, setClearDataError] = useState<string | null>(null);
 
   const loadUserData = useCallback(async () => {
     if (typeof window === "undefined") return;
@@ -166,6 +169,48 @@ export default function SettingsPage() {
     localStorage.setItem("splicr_email_notifications", String(emailNotifications));
     setNotificationSaveSuccess(true);
     setTimeout(() => setNotificationSaveSuccess(false), 3000);
+  };
+
+  const handleClearDataClick = () => {
+    setClearDataError(null);
+    setClearDataStatus("confirming");
+  };
+
+  const handleClearDataConfirm = async () => {
+    if (typeof window === "undefined") return;
+    setClearDataError(null);
+    setClearDataStatus("clearing");
+    try {
+      if (isSupabaseAuth) {
+        const res = await fetch("/api/settings/clear-data", { method: "POST" });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setClearDataError(data.message || "Failed to clear data.");
+          setClearDataStatus("error");
+          return;
+        }
+      }
+      // Clear local storage keys (analyses cache, user data, etc.)
+      localStorage.removeItem("splicr_user_data");
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith("splicr_analysis_") || key.startsWith("splicr_"))) {
+          if (!["splicr_auth_token", "splicr_auth_user", "splicr_display_name", "splicr_institution", "splicr_email_notifications"].includes(key)) {
+            keysToRemove.push(key);
+          }
+        }
+      }
+      keysToRemove.forEach((k) => localStorage.removeItem(k));
+      setClearDataStatus("success");
+      setTimeout(() => {
+        setClearDataStatus("idle");
+        router.refresh();
+      }, 2000);
+    } catch (e) {
+      setClearDataError(e instanceof Error ? e.message : "Failed to clear data.");
+      setClearDataStatus("error");
+    }
   };
 
   return (
@@ -308,7 +353,7 @@ export default function SettingsPage() {
             </div>
           </motion.section>
 
-          {/* Data & privacy */}
+          {/* Data & storage */}
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -322,9 +367,65 @@ export default function SettingsPage() {
             <p className="text-text-secondary font-serif mb-4">
               When signed in, analyses, notes, and profile are stored in the database and persist across devices and sessions.
             </p>
-            <p className="text-sm text-text-tertiary font-serif">
-              Export and backup of analysis metadata can be added in a future release.
-            </p>
+            {clearDataStatus === "confirming" ? (
+              <div className="rounded-xl border border-border bg-background p-4 space-y-3">
+                <p className="font-serif text-text-primary">
+                  Clear all your analyses, notes, shared links, and activity from the database and this device. This cannot be undone.
+                </p>
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="primary"
+                    size="md"
+                    onClick={handleClearDataConfirm}
+                    disabled={clearDataStatus === "clearing"}
+                  >
+                    {clearDataStatus === "clearing" ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" strokeWidth={1.5} />
+                        Clearing…
+                      </>
+                    ) : (
+                      "Yes, clear all data"
+                    )}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    onClick={() => setClearDataStatus("idle")}
+                    disabled={clearDataStatus === "clearing"}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm text-text-tertiary font-serif mb-4">
+                  Export and backup of analysis metadata can be added in a future release.
+                </p>
+                {clearDataError && (
+                  <div className="flex items-center gap-2 text-error text-sm font-serif mb-3">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    {clearDataError}
+                  </div>
+                )}
+                {clearDataStatus === "success" && (
+                  <div className="flex items-center gap-2 text-success text-sm font-serif mb-3">
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    All data cleared. Refreshing…
+                  </div>
+                )}
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onClick={handleClearDataClick}
+                  disabled={clearDataStatus === "clearing" || clearDataStatus === "success"}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" strokeWidth={1.5} />
+                  Clear previous data
+                </Button>
+              </>
+            )}
           </motion.section>
 
           {/* API & developer */}
