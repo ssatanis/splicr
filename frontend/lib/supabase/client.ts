@@ -1,5 +1,4 @@
 import { createBrowserClient } from '@supabase/ssr'
-import { createClient as createSupabaseJsClient } from '@supabase/supabase-js'
 
 // Type-safe database schema
 export type Database = {
@@ -465,7 +464,39 @@ function getAnonKey(): string | undefined {
   return anon || undefined
 }
 
+// Supabase project URLs are https://<ref>.supabase.co — reject app/localhost URLs that return HTML and cause "Unexpected token '<'" auth errors
+function isValidSupabaseUrl(url: string): boolean {
+  if (!url || !url.trim()) return false
+  try {
+    const u = new URL(url.trim())
+    const host = u.hostname.toLowerCase()
+    if (host === 'localhost' || host === '127.0.0.1' || host.endsWith('.vercel.app') || host.endsWith('.netlify.app')) return false
+    return host.includes('supabase.co')
+  } catch {
+    return false
+  }
+}
+
+function assertValidSupabaseUrl(url: string) {
+  if (!isValidSupabaseUrl(url)) {
+    try {
+      new URL(url)
+    } catch {
+      throw new Error(
+        `NEXT_PUBLIC_SUPABASE_URL is not a valid URL: ${url}. Use your Supabase project URL (e.g. https://your-project.supabase.co).`
+      )
+    }
+    throw new Error(
+      `NEXT_PUBLIC_SUPABASE_URL must be your Supabase project URL (e.g. https://your-project.supabase.co), not the app URL. Currently: ${url}`
+    )
+  }
+}
+
+// Client instance cache for singleton pattern
+let browserClient: ReturnType<typeof createBrowserClient<Database>> | null = null
+
 // Create browser-side Supabase client (for Client Components)
+// Uses singleton pattern to prevent multiple GoTrueClient instances
 export function createClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
   const anonKey = getAnonKey()
@@ -474,20 +505,50 @@ export function createClient() {
       'Missing Supabase config. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in frontend/.env.local, then stop the dev server (Ctrl+C) and run "npm run dev" again from the frontend folder. If env was just added, clear the .next folder and restart.'
     )
   }
-  return createBrowserClient<Database>(url, anonKey)
+  assertValidSupabaseUrl(url)
+
+  // Return existing instance if on client side
+  if (typeof window !== 'undefined' && browserClient) {
+    return browserClient
+  }
+
+  // Create new instance
+  const client = createBrowserClient<Database>(url, anonKey)
+
+  // Cache for client-side reuse
+  if (typeof window !== 'undefined') {
+    browserClient = client
+  }
+
+  return client
 }
 
 // Singleton client for backward compatibility with existing code
-// Note: For new code, prefer using createClient() function
-// Uses @supabase/supabase-js directly for proper type inference
-const _url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || ''
-const _key = getAnonKey() || ''
-export const supabase = createSupabaseJsClient<Database>(_url, _key, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-  },
-})
+// Using createBrowserClient for consistency and proper SSR support
+let _supabaseInstance: ReturnType<typeof createBrowserClient<Database>> | null = null
+
+export const supabase = (() => {
+  if (typeof window === 'undefined') {
+    // Server-side: create a new instance each time (shouldn't be used server-side anyway)
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || ''
+    const key = getAnonKey() || ''
+    if (!url || !key) {
+      throw new Error('Missing Supabase configuration')
+    }
+    return createBrowserClient<Database>(url, key)
+  }
+
+  // Client-side: use singleton to prevent multiple instances
+  if (!_supabaseInstance) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || ''
+    const key = getAnonKey() || ''
+    if (!url || !key) {
+      throw new Error('Missing Supabase configuration')
+    }
+    _supabaseInstance = createBrowserClient<Database>(url, key)
+  }
+  return _supabaseInstance
+})()
 
 // Check if Supabase is configured
 export const isSupabaseConfigured = Boolean(

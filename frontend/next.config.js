@@ -22,6 +22,14 @@ const nextConfig = {
     );
     return config;
   },
+  turbopack: {
+    resolveAlias: {
+      'plotly.js/dist/plotly': path.resolve(
+        __dirname,
+        'node_modules/plotly.js-dist-min/plotly.min.js'
+      ),
+    },
+  },
   async redirects() {
     return [
       {

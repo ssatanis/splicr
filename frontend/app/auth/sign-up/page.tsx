@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { createClient } from '@/lib/supabase/client'
+import { Eye, EyeOff } from 'lucide-react'
 import InstitutionAutocomplete from '@/components/InstitutionAutocomplete'
 import { isEmailDomainAllowedForInstitution, getAllowedDomainsForInstitution } from '@/lib/institutionDomains'
 
@@ -14,23 +14,6 @@ const taglines = [
   'No credit card required',
   'Built for discovery',
 ]
-
-function normalizeAuthError(message: string): string {
-  const lower = message.toLowerCase()
-  if (lower.includes('invalid') && (lower.includes('api key') || lower.includes('key'))) {
-    return [
-      'Supabase rejected your API key.',
-      'In frontend/.env.local set NEXT_PUBLIC_PUBLISHABLE_KEY to your Client Key (sb_publishable_...) from Supabase Dashboard → Project Settings → API, or set NEXT_PUBLIC_SUPABASE_ANON_KEY to the anon JWT. Then run: rm -rf .next && npm run dev',
-    ].join(' ')
-  }
-  if (lower.includes('already registered') || lower.includes('already exists')) {
-    return 'An account with this email already exists.'
-  }
-  if (lower.includes('signup_disabled')) {
-    return 'New sign-ups are currently disabled.'
-  }
-  return message
-}
 
 export default function SignUpPage() {
   const [fullName, setFullName] = useState('')
@@ -44,6 +27,8 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false)
   const [taglineIndex, setTaglineIndex] = useState(0)
   const [taglineFading, setTaglineFading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   // Rotate taglines with fade animation
   useEffect(() => {
@@ -110,47 +95,32 @@ export default function SignUpPage() {
     setError('')
 
     try {
-      const supabase = createClient()
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            institution: institution.trim(),
-          },
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth/callback`,
+      // Use server-side auth endpoint to bypass CORS issues
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          email,
+          password,
+          fullName,
+          institution: institution.trim(),
+        }),
       })
 
-      if (signUpError) {
-        setError(normalizeAuthError(signUpError.message))
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || 'Sign up failed')
         return
       }
 
-      if (data.user) {
-        // Check if email confirmation is required
-        if (data.user.identities?.length === 0) {
-          setError('An account with this email already exists')
-          return
-        }
-
-        // Save institution (and profile) to database so it persists per user
-        await (supabase.from('profiles') as any).upsert(
-          {
-            id: data.user.id,
-            email: data.user.email ?? email,
-            full_name: fullName.trim() || null,
-            institution: institution.trim() || null,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: 'id' }
-        )
-
-        setSuccess(true)
-      }
+      // Success - show email confirmation message
+      setSuccess(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred')
+      const message = err instanceof Error ? err.message : 'An unexpected error occurred'
+      setError(message.includes('fetch') ? 'Cannot reach the server. Please try again.' : message)
     } finally {
       setLoading(false)
     }
@@ -314,15 +284,30 @@ export default function SignUpPage() {
               <label className="block text-sm font-serif text-text-secondary mb-2">
                 Password
               </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="new-password"
-                className="w-full px-4 py-3 bg-white border border-border rounded-xl font-serif text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
-                placeholder="At least 8 characters"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoComplete="new-password"
+                  className="w-full px-4 py-3 pr-11 bg-white border border-border rounded-xl font-serif text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
+                  placeholder="At least 8 characters"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((p) => !p)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-black/5 transition-colors focus:outline-none focus:ring-2 focus:ring-accent/30 focus:ring-offset-0"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" strokeWidth={1.5} />
+                  ) : (
+                    <Eye className="w-4 h-4" strokeWidth={1.5} />
+                  )}
+                </button>
+              </div>
               {password && (
                 <div className="mt-2 flex items-center gap-2">
                   <div className="flex-1 h-1 bg-border-light rounded-full overflow-hidden">
@@ -342,19 +327,34 @@ export default function SignUpPage() {
               <label className="block text-sm font-serif text-text-secondary mb-2">
                 Confirm password
               </label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                autoComplete="new-password"
-                className={`w-full px-4 py-3 bg-white border rounded-xl font-serif text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all ${
-                  confirmPassword && password !== confirmPassword
-                    ? 'border-error focus:border-error focus:ring-error/30'
-                    : 'border-border focus:border-accent'
-                }`}
-                placeholder="Confirm your password"
-              />
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  autoComplete="new-password"
+                  className={`w-full px-4 py-3 pr-11 bg-white border rounded-xl font-serif text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all ${
+                    confirmPassword && password !== confirmPassword
+                      ? 'border-error focus:border-error focus:ring-error/30'
+                      : 'border-border focus:border-accent'
+                  }`}
+                  placeholder="Confirm your password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((p) => !p)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-black/5 transition-colors focus:outline-none focus:ring-2 focus:ring-accent/30 focus:ring-offset-0"
+                  aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                  tabIndex={-1}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="w-4 h-4" strokeWidth={1.5} />
+                  ) : (
+                    <Eye className="w-4 h-4" strokeWidth={1.5} />
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Terms Checkbox */}

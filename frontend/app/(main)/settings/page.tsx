@@ -28,6 +28,7 @@ import {
 import InstitutionAutocomplete from "@/components/InstitutionAutocomplete";
 
 type ProfileSaveStatus = "idle" | "saving" | "success" | "error";
+type ClearDataStatus = "idle" | "confirming" | "clearing" | "success" | "error";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -42,7 +43,7 @@ export default function SettingsPage() {
   const [hasAuth, setHasAuth] = useState(false);
   const [isSupabaseAuth, setIsSupabaseAuth] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
-  const [clearDataStatus, setClearDataStatus] = useState<"idle" | "confirming" | "clearing" | "success" | "error">("idle");
+  const [clearDataStatus, setClearDataStatus] = useState<ClearDataStatus>("idle");
   const [clearDataError, setClearDataError] = useState<string | null>(null);
 
   const loadUserData = useCallback(async () => {
@@ -213,6 +214,11 @@ export default function SettingsPage() {
     }
   };
 
+  // Derive booleans before JSX so TypeScript doesn't narrow clearDataStatus inside conditionals (avoids "types have no overlap" errors).
+  const isClearDataConfirmingOrClearing =
+    clearDataStatus === "confirming" || clearDataStatus === "clearing";
+  const isClearDataClearing = clearDataStatus === "clearing";
+
   return (
     <div className="min-h-screen bg-background">
       <Sidebar />
@@ -367,7 +373,7 @@ export default function SettingsPage() {
             <p className="text-text-secondary font-serif mb-4">
               When signed in, analyses, notes, and profile are stored in the database and persist across devices and sessions.
             </p>
-            {clearDataStatus === "confirming" ? (
+            {isClearDataConfirmingOrClearing ? (
               <div className="rounded-xl border border-border bg-background p-4 space-y-3">
                 <p className="font-serif text-text-primary">
                   Clear all your analyses, notes, shared links, and activity from the database and this device. This cannot be undone.
@@ -377,9 +383,9 @@ export default function SettingsPage() {
                     variant="primary"
                     size="md"
                     onClick={handleClearDataConfirm}
-                    disabled={clearDataStatus === "clearing"}
+                    disabled={isClearDataClearing}
                   >
-                    {clearDataStatus === "clearing" ? (
+                    {isClearDataClearing ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" strokeWidth={1.5} />
                         Clearing…
@@ -392,7 +398,7 @@ export default function SettingsPage() {
                     variant="secondary"
                     size="md"
                     onClick={() => setClearDataStatus("idle")}
-                    disabled={clearDataStatus === "clearing"}
+                    disabled={isClearDataClearing}
                   >
                     Cancel
                   </Button>
@@ -419,7 +425,7 @@ export default function SettingsPage() {
                   variant="secondary"
                   size="md"
                   onClick={handleClearDataClick}
-                  disabled={clearDataStatus === "clearing" || clearDataStatus === "success"}
+                  disabled={clearDataStatus === "success"}
                 >
                   <Trash2 className="w-4 h-4 mr-2" strokeWidth={1.5} />
                   Clear previous data

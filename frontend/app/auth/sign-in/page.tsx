@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { createClient } from '@/lib/supabase/client'
+import { Eye, EyeOff } from 'lucide-react'
 
 const taglines = [
   'Analyze CRISPR screens with precision',
@@ -26,6 +26,7 @@ function SignInForm() {
   const [loading, setLoading] = useState(false)
   const [taglineIndex, setTaglineIndex] = useState(0)
   const [taglineFading, setTaglineFading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   // Rotate taglines with fade animation
   useEffect(() => {
@@ -53,29 +54,28 @@ function SignInForm() {
     setLoading(true)
 
     try {
-      const supabase = createClient()
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      // Use server-side auth endpoint to bypass CORS issues
+      const response = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
       })
 
-      if (signInError) {
-        if (signInError.message.includes('Invalid login credentials')) {
-          setError('Invalid email or password')
-        } else if (signInError.message.includes('Email not confirmed')) {
-          setError('Please verify your email before signing in')
-        } else {
-          setError(signInError.message)
-        }
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || 'Sign in failed')
         return
       }
 
-      if (data.user) {
-        router.push(redirect)
-        router.refresh()
-      }
+      // Success - redirect to dashboard
+      router.push(redirect)
+      router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred')
+      const message = err instanceof Error ? err.message : 'An unexpected error occurred'
+      setError(message.includes('fetch') ? 'Cannot reach the server. Please try again.' : message)
     } finally {
       setLoading(false)
     }
@@ -148,15 +148,30 @@ function SignInForm() {
                   Forgot password?
                 </Link>
               </div>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-                className="w-full px-4 py-3 bg-white border border-border rounded-xl font-serif text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
-                placeholder="Enter your password"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                  className="w-full px-4 py-3 pr-11 bg-white border border-border rounded-xl font-serif text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
+                  placeholder="Enter your password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((p) => !p)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-black/5 transition-colors focus:outline-none focus:ring-2 focus:ring-accent/30 focus:ring-offset-0"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" strokeWidth={1.5} />
+                  ) : (
+                    <Eye className="w-4 h-4" strokeWidth={1.5} />
+                  )}
+                </button>
+              </div>
             </div>
 
             <button

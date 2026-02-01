@@ -81,12 +81,13 @@ export async function createAdminClient() {
  */
 export async function getAuthenticatedUser() {
   const supabase = await createClient()
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
+  // In development use getSession() (cookie only, no network) so the dev server never hangs on Supabase
+  const user =
+    process.env.NODE_ENV === 'development'
+      ? (await supabase.auth.getSession()).data.session?.user ?? null
+      : (await supabase.auth.getUser()).data.user ?? null
 
-  if (error || !user) {
+  if (!user) {
     redirect('/auth/sign-in')
   }
 

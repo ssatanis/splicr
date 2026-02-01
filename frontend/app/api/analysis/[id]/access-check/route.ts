@@ -27,11 +27,12 @@ export async function GET(
     // Get user email from profile if user is authenticated
     let userEmail = user?.email || null;
     if (user && !userEmail) {
-      const { data: profile } = await supabase
+      const { data } = await supabase
         .from('profiles')
         .select('email')
         .eq('id', user.id)
         .single();
+      const profile = data as { email?: string | null } | null;
       userEmail = profile?.email || null;
     }
 

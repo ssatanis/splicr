@@ -64,11 +64,12 @@ export async function requireAnalysisAccess(
     // Get user email if authenticated
     let userEmail = user?.email || null;
     if (user && !userEmail) {
-      const { data: profile } = await supabase
+      const { data } = await supabase
         .from('profiles')
         .select('email')
         .eq('id', user.id)
         .single();
+      const profile = data as { email?: string | null } | null;
       userEmail = profile?.email || null;
     }
 
@@ -188,12 +189,13 @@ export async function requireAnalysisOwner(
 ): Promise<{ isOwner: boolean; response?: NextResponse }> {
   try {
     const supabase = await createClient();
-    const { data: analysis } = await supabase
+    const { data } = await supabase
       .from('analyses')
       .select('user_id')
       .eq('id', analysisId)
       .single();
 
+    const analysis = data as { user_id: string } | null;
     if (!analysis) {
       return {
         isOwner: false,

@@ -1,14 +1,20 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const GET_USER_TIMEOUT_MS = 4000
+
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  })
+  let supabaseResponse = NextResponse.next({ request })
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return supabaseResponse
+  }
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {
@@ -29,11 +35,20 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // IMPORTANT: Do not remove this. It refreshes the session if expired.
-  // If session refresh fails, the user will be logged out on next request.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  let user: Awaited<ReturnType<typeof supabase.auth.getUser>>['data']['user'] = null
+  try {
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('getUser timeout')), GET_USER_TIMEOUT_MS)
+    )
+    const result = await Promise.race([
+      supabase.auth.getUser(),
+      timeoutPromise,
+    ])
+    user = result.data?.user ?? null
+  } catch {
+    const { data: { session } } = await supabase.auth.getSession()
+    user = session?.user ?? null
+  }
 
   // Protected routes - redirect to sign-in if not authenticated
   const protectedPaths = ['/app', '/dashboard', '/analyses', '/reports', '/settings']

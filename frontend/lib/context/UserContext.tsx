@@ -33,7 +33,16 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const onFocus = () => refreshAnalyses();
+    let lastRefresh = 0;
+    const REFRESH_COOLDOWN = 5000; // Only refresh once every 5 seconds
+
+    const onFocus = () => {
+      const now = Date.now();
+      if (now - lastRefresh > REFRESH_COOLDOWN) {
+        lastRefresh = now;
+        refreshAnalyses();
+      }
+    };
     window.addEventListener('focus', onFocus);
     return () => window.removeEventListener('focus', onFocus);
   }, []);

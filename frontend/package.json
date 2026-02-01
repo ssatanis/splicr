@@ -7,6 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
+    "dev:webpack": "next dev --webpack",
     "dev:clean": "npm run clean && next dev",
     "build": "next build",
     "build:clean": "npm run clean && next build",
@@ -20,6 +21,7 @@
     "@aws-sdk/lib-storage": "^3.980.0",
     "@aws-sdk/s3-request-presigner": "^3.980.0",
     "@floating-ui/dom": "^1.7.5",
+    "@smithy/node-http-handler": "^4.4.8",
     "@stdlib/stats": "^0.3.3",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.93.3",
@@ -46,7 +48,7 @@
     "konva": "^10.2.0",
     "lucide-react": "^0.344.0",
     "mathjs": "^15.1.0",
-    "next": "15.5.11",
+    "next": "16.1.6",
     "pako": "^2.1.0",
     "papaparse": "^5.5.3",
     "plotly.js-dist-min": "^3.3.1",
@@ -65,12 +67,9 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "eslint": "^8",
-    "eslint-config-next": "15.5.11",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
     "prettier": "^3.2.0",
     "typescript": "^5"
-  },
-  "overrides": {
-    "@next/swc": "15.5.11"
   }
 }

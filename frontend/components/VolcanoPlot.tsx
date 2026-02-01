@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback, useMemo } from 'react';
 import {
   ScatterChart,
   Scatter,
@@ -52,7 +52,7 @@ export default function VolcanoPlot({
   lfcThreshold = 1.0,
   onGeneHighlight,
 }: VolcanoPlotProps) {
-  const volcanoData = data?.length ? data : [];
+  const volcanoData = useMemo(() => (data?.length ? data : []), [data]);
   const hasData = volcanoData.length > 0;
   const negLog10Threshold = -Math.log10(fdrThreshold);
   const containerRef = useRef<HTMLDivElement>(null);

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { Eye, EyeOff } from "lucide-react";
 import { register as registerApi } from "@/lib/api";
 
 const AUTH_TOKEN_KEY = "splicr_auth_token";
@@ -16,6 +17,7 @@ export default function RegisterPage() {
   const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,14 +88,29 @@ export default function RegisterPage() {
           </div>
           <div>
             <label className="block text-sm font-serif text-text-secondary mb-2">Password (min 8 characters)</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={8}
-              className="w-full px-4 py-3 bg-surface border border-border rounded-xl font-serif text-text-primary focus:outline-none focus:ring-2 focus:ring-text-primary"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+                className="w-full px-4 py-3 pr-11 bg-surface border border-border rounded-xl font-serif text-text-primary focus:outline-none focus:ring-2 focus:ring-text-primary"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((p) => !p)}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-black/5 transition-colors focus:outline-none focus:ring-2 focus:ring-accent/30 focus:ring-offset-0"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                tabIndex={-1}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" strokeWidth={1.5} />
+                ) : (
+                  <Eye className="w-4 h-4" strokeWidth={1.5} />
+                )}
+              </button>
+            </div>
           </div>
           <button
             type="submit"

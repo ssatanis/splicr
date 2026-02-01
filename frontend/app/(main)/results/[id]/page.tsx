@@ -146,7 +146,7 @@ export default function ResultsPage() {
       refreshAnalyses();
       loadResults();
     }).catch(console.error);
-  }, [id, analysis?.status, results, refreshAnalyses, loadResults]);
+  }, [id, analysis, results, refreshAnalyses, loadResults]);
 
   // Poll for progress when analysis is in progress so the progress bar and logs update
   useEffect(() => {
@@ -157,7 +157,7 @@ export default function ResultsPage() {
       loadResults();
     }, 2000);
     return () => clearInterval(interval);
-  }, [analysis?.id, analysis?.status, results, refreshAnalyses, loadResults]);
+  }, [analysis, results, refreshAnalyses, loadResults]);
 
   // Portal target for header actions (title + buttons in app header)
   useEffect(() => {
