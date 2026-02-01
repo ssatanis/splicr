@@ -109,7 +109,7 @@ export const realApi = {
   async runAnalysis(id: string): Promise<{ success: boolean; analysisId: string }> {
     const response = await fetch(`${API_BASE}/analysis/${id}/run`, { method: 'POST' });
     if (!response.ok) {
-      const data = await safeJson<{ error?: string }>(response).catch(() => ({}));
+      const data = await safeJson<{ error?: string }>(response).catch(() => ({ error: undefined }));
       throw new Error(data.error || 'Failed to start analysis');
     }
     return safeJson<{ success: boolean; analysisId: string }>(response);
@@ -119,7 +119,7 @@ export const realApi = {
   async getResults(id: string): Promise<AnalysisResults | { results: null; analysis: Analysis }> {
     const response = await fetch(`${API_BASE}/analysis/${id}/results`);
     if (!response.ok) {
-      const data = await safeJson<{ message?: string }>(response).catch(() => ({}));
+      const data = await safeJson<{ message?: string }>(response).catch(() => ({ message: undefined }));
       throw new Error(typeof data.message === 'string' ? data.message : 'Failed to fetch results');
     }
     const data = await safeJson<AnalysisResults | { results: null; analysis: Analysis }>(response);
