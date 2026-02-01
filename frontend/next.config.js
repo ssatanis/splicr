@@ -23,11 +23,9 @@ const nextConfig = {
     return config;
   },
   turbopack: {
+    // Use package name so Turbopack resolves via node_modules (avoids server-relative path error)
     resolveAlias: {
-      'plotly.js/dist/plotly': path.resolve(
-        __dirname,
-        'node_modules/plotly.js-dist-min/plotly.min.js'
-      ),
+      'plotly.js/dist/plotly': 'plotly.js-dist-min',
     },
   },
   async redirects() {
