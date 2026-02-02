@@ -444,10 +444,6 @@ export default function ResultsPage() {
           <FileText className="w-4 h-4" strokeWidth={1.5} />
           Create Report
         </Button>
-        <Button variant="secondary" size="md" onClick={() => setFigureCustomizationOpen(true)} className="inline-flex items-center gap-1.5 text-sm py-2">
-          <TrendingUp className="w-4 h-4" strokeWidth={1.5} />
-          Customize Figure
-        </Button>
         <Button variant="secondary" size="md" onClick={() => setCollabSidebarOpen(true)} className="inline-flex items-center gap-1.5 text-sm py-2">
           <MessageSquare className="w-4 h-4" strokeWidth={1.5} />
           Collaboration
@@ -570,14 +566,14 @@ export default function ResultsPage() {
                 transition={{ duration: 0.2 }}
               >
                 {activeTab === "overview" && <OverviewTab results={results} />}
-                {activeTab === "volcano" && <VolcanoTab results={results} />}
-                {activeTab === "heatmap" && <HeatmapTab results={results} />}
-                {activeTab === "network" && <NetworkTab results={results} analysisName={analysisName || analysis?.name} />}
+                {activeTab === "volcano" && <VolcanoTab results={results} onCustomize={() => setFigureCustomizationOpen(true)} />}
+                {activeTab === "heatmap" && <HeatmapTab results={results} onCustomize={() => setFigureCustomizationOpen(true)} />}
+                {activeTab === "network" && <NetworkTab results={results} analysisName={analysisName || analysis?.name} onCustomize={() => setFigureCustomizationOpen(true)} />}
                 {activeTab === "timecourse" && <TimeCourseTab results={results} analysis={analysis ?? undefined} analysisName={analysisName || analysis?.name} />}
                 {activeTab === "drug-finder" && <DrugFinderTab results={results} />}
                 {activeTab === "advanced" && <AdvancedTab results={results} analysisId={id} onResultsUpdate={loadResults} />}
                 {activeTab === "top-hits" && <TopHitsTab results={results} onGeneClick={setSelectedGene} />}
-                {activeTab === "qc" && <QCTab results={results} />}
+                {activeTab === "qc" && <QCTab results={results} onCustomize={() => setFigureCustomizationOpen(true)} />}
                 {activeTab === "rankings" && <RankingsTab results={results} analysisId={id} onGeneClick={setSelectedGene} />}
                 {activeTab === "raw-data" && <RawDataTab results={results} analysisId={id} />}
                 {activeTab === "logs" && <LogsTab results={results} />}
@@ -775,33 +771,53 @@ function OverviewTab({ results }: { results: AnalysisResults }) {
   );
 }
 
-function VolcanoTab({ results }: { results: AnalysisResults }) {
+function VolcanoTab({ results, onCustomize }: { results: AnalysisResults; onCustomize?: () => void }) {
   return (
-    <div id="volcano-plot" className="w-full">
-      <VolcanoPlot
-        data={results.volcanoData ?? undefined}
-        fdrThreshold={0.05}
-        lfcThreshold={1.0}
+    <div className="space-y-4">
+      {onCustomize && (
+        <div className="flex justify-end">
+          <Button variant="secondary" size="md" onClick={onCustomize} className="inline-flex items-center gap-1.5 text-sm py-2">
+            <TrendingUp className="w-4 h-4" strokeWidth={1.5} />
+            Customize Figure
+          </Button>
+        </div>
+      )}
+      <div id="volcano-plot" className="w-full">
+        <VolcanoPlot
+          data={results.volcanoData ?? undefined}
+          fdrThreshold={0.05}
+          lfcThreshold={1.0}
+        />
+      </div>
+    </div>
+  );
+}
+
+function HeatmapTab({ results, onCustomize }: { results: AnalysisResults; onCustomize?: () => void }) {
+  const sampleNames = results.qcMetrics?.sampleStats?.map((s) => s.name) ?? [];
+  const correlations = results.qcMetrics?.correlations ?? [];
+  const countMatrix = results.rawData?.countMatrix ?? {};
+  return (
+    <div className="space-y-4">
+      {onCustomize && (
+        <div className="flex justify-end">
+          <Button variant="secondary" size="md" onClick={onCustomize} className="inline-flex items-center gap-1.5 text-sm py-2">
+            <Grid3X3 className="w-4 h-4" strokeWidth={1.5} />
+            Customize Heatmap
+          </Button>
+        </div>
+      )}
+      <InteractiveHeatmap
+        correlations={correlations}
+        sampleNames={sampleNames}
+        countMatrix={Object.keys(countMatrix).length > 0 ? countMatrix : undefined}
+        height={560}
       />
     </div>
   );
 }
 
-function HeatmapTab({ results }: { results: AnalysisResults }) {
-  const sampleNames = results.qcMetrics?.sampleStats?.map((s) => s.name) ?? [];
-  const correlations = results.qcMetrics?.correlations ?? [];
-  const countMatrix = results.rawData?.countMatrix ?? {};
-  return (
-    <InteractiveHeatmap
-      correlations={correlations}
-      sampleNames={sampleNames}
-      countMatrix={Object.keys(countMatrix).length > 0 ? countMatrix : undefined}
-      height={560}
-    />
-  );
-}
-
-function NetworkTab({ results, analysisName }: { results: AnalysisResults; analysisName?: string }) {
+function NetworkTab({ results, analysisName, onCustomize }: { results: AnalysisResults; analysisName?: string; onCustomize?: () => void }) {
   const significantGenes = [
     ...(results.topHits?.depleted ?? []).slice(0, 25),
     ...(results.topHits?.enriched ?? []).slice(0, 25),
@@ -824,13 +840,23 @@ function NetworkTab({ results, analysisName }: { results: AnalysisResults; analy
   }
 
   return (
-    <GeneNetworkVisualization
-      genes={significantGenes}
-      maxGenes={50}
-      requiredScore={400}
-      height={560}
-      analysisName={analysisName}
-    />
+    <div className="space-y-4">
+      {onCustomize && (
+        <div className="flex justify-end">
+          <Button variant="secondary" size="md" onClick={onCustomize} className="inline-flex items-center gap-1.5 text-sm py-2">
+            <Network className="w-4 h-4" strokeWidth={1.5} />
+            Customize Network
+          </Button>
+        </div>
+      )}
+      <GeneNetworkVisualization
+        genes={significantGenes}
+        maxGenes={50}
+        requiredScore={400}
+        height={560}
+        analysisName={analysisName}
+      />
+    </div>
   );
 }
 
@@ -1059,7 +1085,7 @@ function TopHitsTab({ results, onGeneClick }: { results: AnalysisResults; onGene
   );
 }
 
-function QCTab({ results }: { results: AnalysisResults }) {
+function QCTab({ results, onCustomize }: { results: AnalysisResults; onCustomize?: () => void }) {
   // Pass real QC data to the component
   const readCountData = results.qcMetrics.sampleStats?.map((s: any) => ({
     sample: s.name,
@@ -1072,14 +1098,24 @@ function QCTab({ results }: { results: AnalysisResults }) {
   })) || [];
 
   return (
-    <QCCharts
-      readCounts={readCountData}
-      correlation={results.qcMetrics.correlations}
-      coverage={coverageData}
-      giniCoefficient={results.qcMetrics.giniCoefficient}
-      sampleStats={results.qcMetrics.sampleStats}
-      resultsSource={results.resultsSource}
-    />
+    <div className="space-y-4">
+      {onCustomize && (
+        <div className="flex justify-end">
+          <Button variant="secondary" size="md" onClick={onCustomize} className="inline-flex items-center gap-1.5 text-sm py-2">
+            <BarChart3 className="w-4 h-4" strokeWidth={1.5} />
+            Customize QC Charts
+          </Button>
+        </div>
+      )}
+      <QCCharts
+        readCounts={readCountData}
+        correlation={results.qcMetrics.correlations}
+        coverage={coverageData}
+        giniCoefficient={results.qcMetrics.giniCoefficient}
+        sampleStats={results.qcMetrics.sampleStats}
+        resultsSource={results.resultsSource}
+      />
+    </div>
   );
 }
 

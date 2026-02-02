@@ -53,6 +53,8 @@ export default function DrugGeneFinder({ significantGenes, totalGenesInScreen }:
     summary: { totalGenes: number; totalDrugs: number; approvedDrugs: number };
   } | null>(null);
   const [combinations, setCombinations] = useState<CombinationItem[]>([]);
+  const [progress, setProgress] = useState(0);
+  const [progressMessage, setProgressMessage] = useState('');
 
   const genes = significantGenes.slice(0, MAX_GENES_TO_QUERY);
   const hasGenes = genes.length > 0;
@@ -64,35 +66,69 @@ export default function DrugGeneFinder({ significantGenes, totalGenesInScreen }:
     setError(null);
     setDrugResults(null);
     setCombinations([]);
+    setProgress(0);
+    setProgressMessage('Starting drug-gene search...');
+
     try {
       const genesParam = genes.join(',');
-      // Always force refresh to get fresh data from DGIdb API
-      const [getRes, postRes] = await Promise.all([
-        fetch(`/api/drug-gene?genes=${encodeURIComponent(genesParam)}&force=true`),
-        genes.length >= 2
-          ? fetch('/api/drug-gene', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ genes: genes.slice(0, 50) }),
-            })
-          : Promise.resolve(null),
-      ]);
+      const BATCH_SIZE = 25;
+      const totalBatches = Math.ceil(genes.length / BATCH_SIZE);
+
+      // Simulate progress tracking for drug-gene fetching
+      setProgress(10);
+      setProgressMessage(`Fetching drug interactions for ${genes.length} genes...`);
+
+      // Fetch drug-gene interactions
+      const getResPromise = fetch(`/api/drug-gene?genes=${encodeURIComponent(genesParam)}&force=true`);
+
+      // Update progress while waiting
+      const progressInterval = setInterval(() => {
+        setProgress(prev => Math.min(prev + 5, 70));
+      }, 500);
+
+      const getRes = await getResPromise;
+      clearInterval(progressInterval);
+      setProgress(75);
+
       if (!getRes.ok) {
         const errBody = await getRes.json().catch(() => ({}));
         throw new Error(errBody?.error ?? errBody?.details ?? 'Failed to fetch drug-gene data');
       }
+
+      setProgressMessage('Processing drug-gene interactions...');
       const getData = await getRes.json();
       const resultsList = getData.results ?? [];
       const summary = getData.summary ?? { totalGenes: 0, totalDrugs: 0, approvedDrugs: 0 };
       setDrugResults({ results: resultsList, summary });
-      if (postRes?.ok) {
-        const postData = await postRes.json();
-        setCombinations(postData.combinations ?? []);
+      setProgress(85);
+
+      // Fetch combinations if we have enough genes
+      if (genes.length >= 2) {
+        setProgressMessage('Computing drug combinations...');
+        const postRes = await fetch('/api/drug-gene', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ genes: genes.slice(0, 50) }),
+        });
+
+        if (postRes?.ok) {
+          const postData = await postRes.json();
+          setCombinations(postData.combinations ?? []);
+        }
       }
+
+      setProgress(100);
+      setProgressMessage('Complete!');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong');
+      setProgress(0);
+      setProgressMessage('');
     } finally {
-      setLoading(false);
+      setTimeout(() => {
+        setLoading(false);
+        setProgress(0);
+        setProgressMessage('');
+      }, 500);
     }
   };
 
@@ -140,6 +176,23 @@ export default function DrugGeneFinder({ significantGenes, totalGenesInScreen }:
       {error && (
         <div className="mx-6 mt-4 py-3 px-4 rounded-xl bg-error/10 text-error font-serif text-sm">
           {error}
+        </div>
+      )}
+
+      {loading && (
+        <div className="mx-6 mt-4 space-y-3">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-text-secondary font-serif">{progressMessage}</span>
+            <span className="text-text-primary font-mono font-semibold">{progress}%</span>
+          </div>
+          <div className="h-2 bg-background rounded-full overflow-hidden border border-border">
+            <motion.div
+              className="h-full bg-[#6ABF36] rounded-full"
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            />
+          </div>
         </div>
       )}
 

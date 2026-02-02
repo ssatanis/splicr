@@ -47,13 +47,13 @@ export default function DepMapComparison({
   const containerRef = useRef<HTMLDivElement>(null);
   const [depMapData, setDepMapData] = useState<DepMapGeneSummary[]>([]);
   const [loading, setLoading] = useState(false);
-  const [fetchScores, setFetchScores] = useState(false);
 
   const limited = genes.slice(0, maxGenes);
   const geneNamesStr = limited.map((g) => g.gene).join(',');
 
+  // Auto-fetch DepMap scores on mount
   useEffect(() => {
-    if (!fetchScores || !geneNamesStr) return;
+    if (!geneNamesStr) return;
     let cancelled = false;
     setLoading(true);
     const names = geneNamesStr.split(',').filter(Boolean);
@@ -61,13 +61,16 @@ export default function DepMapComparison({
       .then((data) => {
         if (!cancelled) setDepMapData(data);
       })
+      .catch((error) => {
+        console.error('Failed to fetch DepMap scores:', error);
+      })
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
     return () => {
       cancelled = true;
     };
-  }, [fetchScores, geneNamesStr]);
+  }, [geneNamesStr]);
 
   const points: Point[] = limited.map((g) => {
     const dm = depMapData.find((d) => d.gene.toUpperCase() === g.gene.toUpperCase());
@@ -93,16 +96,16 @@ export default function DepMapComparison({
   return (
     <div ref={containerRef} className="w-full bg-surface rounded-xl p-6 border border-border shadow-card">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-        <h3 className="text-2xl font-serif text-text-primary">DepMap comparison</h3>
+        <div>
+          <h3 className="text-2xl font-serif text-text-primary">DepMap comparison</h3>
+          {loading && (
+            <div className="flex items-center gap-2 text-sm text-text-secondary mt-1">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Loading DepMap scores...
+            </div>
+          )}
+        </div>
         <div className="flex flex-wrap items-center gap-3">
-          <button
-            onClick={() => setFetchScores(true)}
-            disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-background text-text-primary hover:bg-accent/10 disabled:opacity-50"
-          >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-            Fetch DepMap scores
-          </button>
           {points.length > 0 && (
             <button
               onClick={handleExportPNG}
