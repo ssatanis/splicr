@@ -151,7 +151,8 @@ export default function GeneNetworkVisualization({
   const [showFilters, setShowFilters] = useState(false);
   const [selectedGeneNeighbors, setSelectedGeneNeighbors] = useState<string | null>(null);
   const showLabelsRef = useRef(false);
-  const simulationRef = useRef<any>(null);
+  /** Saved node positions (id -> {x,y,fx,fy}) so filter changes don't reset layout */
+  const nodePositionsRef = useRef<Map<string, { x?: number; y?: number; fx?: number; fy?: number }>>(new Map());
 
   // Ensure component only renders on client
   useEffect(() => {
@@ -403,14 +404,23 @@ export default function GeneNetworkVisualization({
   highlightedIdsRef.current = highlightedIds;
   highlightNodeRef.current = highlightNode;
 
-  // Toggle simulation pause/resume
+  // Toggle simulation pause/resume via force-graph's cooldown (no direct sim access)
   const togglePause = useCallback(() => {
-    if (!simulationRef.current) return;
+    const instance = graphInstanceRef.current;
+    if (!instance) return;
+    const api = instance as unknown as {
+      cooldownTicks: (n: number) => unknown;
+      cooldownTime: (n: number) => unknown;
+      d3ReheatSimulation: () => unknown;
+    };
     if (isPaused) {
-      simulationRef.current.restart();
+      api.cooldownTicks(Infinity);
+      api.cooldownTime(15000);
+      api.d3ReheatSimulation();
       setIsPaused(false);
     } else {
-      simulationRef.current.stop();
+      api.cooldownTicks(0);
+      api.cooldownTime(0);
       setIsPaused(true);
     }
   }, [isPaused]);
@@ -423,14 +433,37 @@ export default function GeneNetworkVisualization({
       if (graphInstanceRef.current) {
         graphInstanceRef.current._destructor();
         graphInstanceRef.current = null;
-        simulationRef.current = null;
       }
       return;
     }
+
+    // Save current node positions from existing graph so filter changes don't reset layout
+    const prevInstance = graphInstanceRef.current;
+    if (prevInstance) {
+      const currentData = (prevInstance as unknown as { graphData?: () => GraphData }).graphData?.();
+      if (currentData?.nodes) {
+        const map = nodePositionsRef.current;
+        map.clear();
+        currentData.nodes.forEach((node: NodeData) => {
+          const id = node.id;
+          if (id != null)
+            map.set(String(id), {
+              x: node.x,
+              y: node.y,
+              fx: node.fx,
+              fy: node.fy,
+            });
+        });
+      }
+    }
+
     let mounted = true;
     import('force-graph').then((mod) => {
       if (!mounted || !container) return;
-      // force-graph default export is a Kapsule factory: call with () then (element)
+      if (graphInstanceRef.current) {
+        graphInstanceRef.current._destructor();
+        graphInstanceRef.current = null;
+      }
       const ForceGraph = mod.default as unknown as () => (el: HTMLElement) => ForceGraphInstance;
       const instance = ForceGraph()(container);
       graphInstanceRef.current = instance;
@@ -450,17 +483,24 @@ export default function GeneNetworkVisualization({
         onNodeRightClick: (fn: (n: unknown, e: MouseEvent) => void) => typeof api;
         onNodeDragEnd: (fn: (n: unknown, t: { x: number; y: number }) => void) => typeof api;
         enableNodeDrag: (enable: boolean) => typeof api;
+        onEngineStop: (fn: () => void) => typeof api;
         d3Force: (name: string) => { strength?: (v: number) => unknown; distance?: (v: number) => unknown } | undefined;
         d3ReheatSimulation: () => typeof api;
         d3AlphaDecay: (n: number) => typeof api;
         width: (n: number) => typeof api;
         height: (n: number) => typeof api;
       };
-      // Spread nodes in a circle initially so they don't start bunched
+      const savedPos = nodePositionsRef.current;
       const n = dataToRender.nodes.length;
       const radius = Math.max(180, Math.min(280, n * 8));
       dataToRender.nodes.forEach((node, i) => {
-        if (node.x == null && node.y == null) {
+        const pos = savedPos.get(node.id);
+        if (pos && (pos.x != null || pos.fx != null)) {
+          node.x = pos.x ?? node.x;
+          node.y = pos.y ?? node.y;
+          node.fx = pos.fx;
+          node.fy = pos.fy;
+        } else if (node.x == null && node.y == null) {
           const angle = (2 * Math.PI * i) / (n || 1);
           node.x = radius * Math.cos(angle);
           node.y = radius * Math.sin(angle);
@@ -501,6 +541,7 @@ export default function GeneNetworkVisualization({
         .linkWidth(1)
         .linkDirectionalParticles(0)
         .enableNodeDrag(true)
+        .onEngineStop(() => setIsPaused(true))
         .onNodeClick((node: unknown, event: MouseEvent) => {
           const n = node as NodeData;
           if (event.detail === 2) {
@@ -572,39 +613,8 @@ export default function GeneNetworkVisualization({
       if (link && typeof (link as { distance?: (v: number) => unknown }).distance === 'function') {
         (link as { distance: (v: number) => unknown }).distance(100);
       }
-      // Cool down VERY quickly so the layout stabilizes and STOPS moving completely
-      api.d3AlphaDecay(0.15); // Increased from 0.06 to stop faster
-
-      // Get reference to d3 simulation to control it
-      const graphSimulation = (instance as any)?.d3Force?.('link');
-      let simulation: any = null;
-
-      // Try to get simulation from various possible locations in the force-graph API
-      if (graphSimulation) {
-        simulation = graphSimulation.simulation?.() || (instance as any).d3?.simulation?.();
-      }
-
-      // Fallback: access simulation through internal state
-      if (!simulation && (instance as any).d3) {
-        simulation = (instance as any).d3.simulation;
-      }
-
-      // Store simulation reference for pause/play
-      simulationRef.current = simulation;
-
-      // Stop the simulation completely after it cools down to prevent constant movement
-      if (simulation && typeof simulation.on === 'function') {
-        let tickCount = 0;
-        simulation.on('tick', () => {
-          tickCount++;
-          // Stop after enough ticks OR when alpha is very low
-          if (simulation.alpha() < 0.01 || tickCount > 300) {
-            simulation.stop();
-            setIsPaused(true);
-          }
-        });
-      }
-
+      // Cool down quickly so the layout stabilizes and onEngineStop fires (no constant movement)
+      api.d3AlphaDecay(0.15);
       api.d3ReheatSimulation();
       api.width(container.offsetWidth);
       api.height(container.offsetHeight);
@@ -615,7 +625,6 @@ export default function GeneNetworkVisualization({
         graphInstanceRef.current._destructor();
         graphInstanceRef.current = null;
       }
-      simulationRef.current = null;
     };
   // Only recreate graph when filtered data or mount/loading change; nodeColor/nodeVal are stable and read via closure.
   }, [isMounted, filteredGraphData, loading]);
@@ -638,7 +647,7 @@ export default function GeneNetworkVisualization({
           </div>
           <button
             onClick={togglePause}
-            disabled={!simulationRef.current}
+            disabled={!graphInstanceRef.current}
             title={isPaused ? "Resume simulation" : "Pause simulation"}
             className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm rounded-lg border border-border bg-background text-text-primary hover:bg-accent/10 disabled:opacity-50"
           >

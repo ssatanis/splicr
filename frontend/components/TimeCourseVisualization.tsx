@@ -267,9 +267,10 @@ export default function TimeCourseVisualization({
           <button
             onClick={handlePlayPause}
             className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-background text-text-primary hover:bg-accent/10"
+            aria-label={playing ? 'Pause' : 'Play'}
           >
             {playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-            {playing ? 'Pause' : isComplete ? 'Replay' : 'Play'}
+            {playing ? 'Pause' : 'Play'}
           </button>
           <button
             onClick={handleReset}
@@ -346,7 +347,7 @@ export default function TimeCourseVisualization({
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={dataToRender}
-            margin={{ top: 20, right: 80, bottom: 60, left: 60 }}
+            margin={{ top: 20, right: 80, bottom: 60, left: 88 }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#E8E6E3" />
             <XAxis
@@ -355,8 +356,16 @@ export default function TimeCourseVisualization({
               label={{ value: 'Timepoint', position: 'insideBottom', offset: -10 }}
             />
             <YAxis
-              label={{ value: 'Log₂ FC (or value)', angle: -90, position: 'insideLeft' }}
+              label={{
+                value: 'Log₂ FC (or value)',
+                angle: -90,
+                position: 'insideLeft',
+                style: { textAnchor: 'middle' },
+                dx: -18,
+              }}
               domain={yDomain}
+              width={60}
+              tickMargin={8}
             />
             <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
             <ReferenceLine y={0} stroke="#9B9B9B" strokeDasharray="3 3" />

@@ -153,11 +153,23 @@ export type Database = {
           gene_symbol: string
           drugs: unknown
           cached_at: string
+          created_at: string
+          updated_at: string
         }
         Insert: {
           gene_symbol: string
           drugs: unknown
           cached_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          gene_symbol?: string
+          drugs?: unknown
+          cached_at?: string
+          created_at?: string
+          updated_at?: string
         }
       }
       clinical_trials_cache: {

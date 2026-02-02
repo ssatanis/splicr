@@ -193,8 +193,8 @@ export default function ResultsPage() {
     await realApi.saveNote(id, notes);
   };
 
-  const saveAnalysisName = async () => {
-    if (!id || !analysisName.trim()) return;
+  const saveAnalysisName = async (): Promise<boolean> => {
+    if (!id || !analysisName.trim()) return false;
     const newName = analysisName.trim();
     try {
       const response = await fetch(`/api/analysis/${id}/update`, {
@@ -205,12 +205,14 @@ export default function ResultsPage() {
       if (response.ok) {
         setAnalysisFromApi((prev) => (prev ? { ...prev, name: newName } : null));
         await refreshAnalyses();
-      } else {
-        const data = await response.json().catch(() => ({}));
-        console.error("Failed to save analysis name:", data?.error ?? response.statusText);
+        return true;
       }
+      const data = await response.json().catch(() => ({}));
+      console.error("Failed to save analysis name:", data?.error ?? response.statusText);
+      return false;
     } catch (error) {
       console.error("Failed to save analysis name:", error);
+      return false;
     }
   };
 
@@ -334,9 +336,10 @@ export default function ResultsPage() {
     URL.revokeObjectURL(url);
   };
 
+  // Sync display name from server only when not editing, so typing isn't overwritten by polling/refetch
   useEffect(() => {
-    if (analysis) setAnalysisName(analysis.name);
-  }, [analysis]);
+    if (analysis && !isEditingName) setAnalysisName(analysis.name ?? "");
+  }, [analysis, isEditingName]);
 
   const tabs = [
     { id: "overview", label: "Overview", icon: Activity },
@@ -369,9 +372,12 @@ export default function ResultsPage() {
                 onChange={(e) => setAnalysisName(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
-                    saveAnalysisName().then(() => setIsEditingName(false));
+                    saveAnalysisName().then((ok) => ok && setIsEditingName(false));
                   }
-                  if (e.key === "Escape") setIsEditingName(false);
+                  if (e.key === "Escape") {
+                    setAnalysisName(analysis?.name ?? "");
+                    setIsEditingName(false);
+                  }
                 }}
                 className="text-xl font-serif text-text-primary bg-background border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-text-primary min-w-[200px] max-w-[320px]"
                 autoFocus
@@ -380,7 +386,10 @@ export default function ResultsPage() {
               <span className="inline-flex items-center gap-1">
                 <button
                   type="button"
-                  onClick={async () => { await saveAnalysisName(); setIsEditingName(false); }}
+                  onClick={async () => {
+                    const ok = await saveAnalysisName();
+                    if (ok) setIsEditingName(false);
+                  }}
                   className="inline-flex items-center justify-center p-2 rounded-lg hover:bg-accent text-text-primary transition-colors"
                   aria-label="Save name"
                 >
@@ -388,7 +397,10 @@ export default function ResultsPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setIsEditingName(false)}
+                  onClick={() => {
+                    setAnalysisName(analysis?.name ?? "");
+                    setIsEditingName(false);
+                  }}
                   className="inline-flex items-center justify-center p-2 rounded-lg hover:bg-background text-text-secondary transition-colors"
                   aria-label="Cancel editing"
                 >
