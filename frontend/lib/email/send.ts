@@ -1,7 +1,9 @@
 /**
  * Send emails via Resend using the SplicR template.
- * Set RESEND_API_KEY and RESEND_FROM (e.g. SplicR <notifications@yourdomain.com>) in .env.local or Vercel env.
- * With onboarding@resend.dev, Resend only delivers to your Resend account email; use a verified domain to send to anyone.
+ * Set RESEND_API_KEY and RESEND_FROM in .env.local or Vercel env.
+ * To send to collaborators (not just yourself), use a verified domain in Resend and set:
+ *   RESEND_FROM=SplicR <notifications@splicr.org>
+ * With onboarding@resend.dev, Resend only delivers to your Resend account email.
  */
 
 import { Resend } from 'resend';
@@ -12,7 +14,7 @@ import {
 } from './splicr-template';
 
 function getFromAddress(): string {
-  return process.env.RESEND_FROM || 'SplicR <onboarding@resend.dev>';
+  return process.env.RESEND_FROM || 'SplicR <notifications@splicr.org>';
 }
 
 function getResend(): Resend | null {

@@ -238,18 +238,41 @@ export function confirmEmailContent(options: { confirmUrl: string }): { subject:
   return { subject, html };
 }
 
-/** Password reset — for use with Resend or Supabase custom templates */
+/** Password reset — same clean, modern layout as sign-up (confirm) with rounded corners */
 export function resetPasswordEmailContent(options: { resetUrl: string }): { subject: string; html: string } {
   const subject = 'Reset your SplicR password';
   const bodyHtml = `
-    We received a request to reset your password. Click the button below to choose a new password.
+    <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: ${TEXT_PRIMARY};">
+      We received a request to reset your password.
+    </p>
+    <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 24px; max-width: 100%;">
+      <tr>
+        <td style="
+          background: ${BG_CARD};
+          border: 1px solid ${BORDER};
+          border-radius: 12px;
+          padding: 20px 24px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        ">
+          <p style="margin: 0 0 8px; font-size: 15px; font-weight: 600; color: ${TEXT_PRIMARY};">
+            Choose a new password
+          </p>
+          <p style="margin: 0; font-size: 14px; color: ${TEXT_SECONDARY}; line-height: 1.5;">
+            Click the button below to set a new password. The link expires in 1 hour.
+          </p>
+        </td>
+      </tr>
+    </table>
+    <p style="margin: 0 0 8px; font-size: 16px; line-height: 1.6; color: ${TEXT_SECONDARY};">
+      If this wasn’t you, you can safely ignore this email.
+    </p>
   `;
   const html = splicrEmailLayout({
     title: 'Reset your password',
     bodyHtml,
     ctaLabel: 'Reset password',
     ctaUrl: options.resetUrl,
-    footerText: "If you didn't request a reset, you can ignore this email. The link expires in 1 hour.",
+    footerText: "If you didn't request a password reset, you can ignore this email. The link expires in 1 hour.",
   });
   return { subject, html };
 }

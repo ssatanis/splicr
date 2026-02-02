@@ -1,8 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Pill, ExternalLink } from 'lucide-react';
+import { Loader2, Pill, ExternalLink, Download, FileText, Table, FileJson, List } from 'lucide-react';
+import {
+  exportDrugGeneCSV,
+  exportDrugGeneTSV,
+  exportDrugGenePDF,
+  exportDrugGeneJSON,
+  exportDrugGenePMIDList,
+  type DrugGeneExportData,
+} from '@/lib/drugGeneExport';
 
 const MAX_GENES_TO_QUERY = 100; // Query up to 100 significant genes for drugs (varies by analysis)
 
@@ -11,6 +19,8 @@ interface DrugGeneFinderProps {
   significantGenes: string[];
   /** Total genes in the screen/library (e.g. 18,166) for context. */
   totalGenesInScreen?: number;
+  /** Optional analysis name for PDF export title. */
+  analysisName?: string;
 }
 
 interface DrugItem {
@@ -44,7 +54,7 @@ interface CombinationItem {
 
 type TabId = 'drugs' | 'combinations';
 
-export default function DrugGeneFinder({ significantGenes, totalGenesInScreen }: DrugGeneFinderProps) {
+export default function DrugGeneFinder({ significantGenes, totalGenesInScreen, analysisName }: DrugGeneFinderProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabId>('drugs');
@@ -55,10 +65,14 @@ export default function DrugGeneFinder({ significantGenes, totalGenesInScreen }:
   const [combinations, setCombinations] = useState<CombinationItem[]>([]);
   const [progress, setProgress] = useState(0);
   const [progressMessage, setProgressMessage] = useState('');
+  const [exportOpen, setExportOpen] = useState(false);
+  const exportMenuRef = useRef<HTMLDivElement>(null);
 
   const genes = significantGenes.slice(0, MAX_GENES_TO_QUERY);
   const hasGenes = genes.length > 0;
   const significantCount = significantGenes.length;
+
+  const BATCH_SIZE = 25;
 
   const handleFindDrugs = async () => {
     if (!hasGenes) return;
@@ -70,39 +84,54 @@ export default function DrugGeneFinder({ significantGenes, totalGenesInScreen }:
     setProgressMessage('Starting drug-gene search...');
 
     try {
-      const genesParam = genes.join(',');
-      const BATCH_SIZE = 25;
       const totalBatches = Math.ceil(genes.length / BATCH_SIZE);
+      const resultsByGene = new Map<string, { gene: string; geneName: string; totalInteractions: number; drugs: DrugItem[] }>();
 
-      // Simulate progress tracking for drug-gene fetching
-      setProgress(10);
-      setProgressMessage(`Fetching drug interactions for ${genes.length} genes...`);
+      // Fetch in batches so we can report real progress
+      for (let i = 0; i < genes.length; i += BATCH_SIZE) {
+        const batchIndex = Math.floor(i / BATCH_SIZE) + 1;
+        const chunk = genes.slice(i, i + BATCH_SIZE);
+        const chunkParam = chunk.join(',');
+        const pct = Math.round((batchIndex / totalBatches) * 70);
+        setProgress(pct);
+        setProgressMessage(`Fetching drug interactions (${batchIndex}/${totalBatches} batches, ${chunk.length} genes)...`);
 
-      // Fetch drug-gene interactions
-      const getResPromise = fetch(`/api/drug-gene?genes=${encodeURIComponent(genesParam)}&force=true`);
-
-      // Update progress while waiting
-      const progressInterval = setInterval(() => {
-        setProgress(prev => Math.min(prev + 5, 70));
-      }, 500);
-
-      const getRes = await getResPromise;
-      clearInterval(progressInterval);
-      setProgress(75);
-
-      if (!getRes.ok) {
-        const errBody = await getRes.json().catch(() => ({}));
-        throw new Error(errBody?.error ?? errBody?.details ?? 'Failed to fetch drug-gene data');
+        const getRes = await fetch(`/api/drug-gene?genes=${encodeURIComponent(chunkParam)}&force=true`);
+        if (!getRes.ok) {
+          const errBody = await getRes.json().catch(() => ({}));
+          throw new Error(errBody?.error ?? errBody?.details ?? 'Failed to fetch drug-gene data');
+        }
+        const getData = await getRes.json();
+        const list = getData.results ?? [];
+        for (const row of list) {
+          resultsByGene.set(row.gene?.toUpperCase() ?? row.gene, {
+            gene: row.gene,
+            geneName: row.geneName ?? row.gene,
+            totalInteractions: row.totalInteractions ?? (row.drugs?.length ?? 0),
+            drugs: row.drugs ?? [],
+          });
+        }
       }
 
-      setProgressMessage('Processing drug-gene interactions...');
-      const getData = await getRes.json();
-      const resultsList = getData.results ?? [];
-      const summary = getData.summary ?? { totalGenes: 0, totalDrugs: 0, approvedDrugs: 0 };
-      setDrugResults({ results: resultsList, summary });
+      setProgress(75);
+      setProgressMessage('Processing results...');
+
+      const resultsList = genes.map((g) => {
+        const row = resultsByGene.get(g.toUpperCase()) ?? resultsByGene.get(g);
+        return row ?? { gene: g, geneName: g, totalInteractions: 0, drugs: [] };
+      });
+      let totalDrugs = 0;
+      let approvedDrugs = 0;
+      for (const r of resultsList) {
+        totalDrugs += r.totalInteractions;
+        approvedDrugs += (r.drugs ?? []).filter((d: DrugItem) => d.approved).length;
+      }
+      setDrugResults({
+        results: resultsList,
+        summary: { totalGenes: genes.length, totalDrugs, approvedDrugs },
+      });
       setProgress(85);
 
-      // Fetch combinations if we have enough genes
       if (genes.length >= 2) {
         setProgressMessage('Computing drug combinations...');
         const postRes = await fetch('/api/drug-gene', {
@@ -110,7 +139,6 @@ export default function DrugGeneFinder({ significantGenes, totalGenesInScreen }:
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ genes: genes.slice(0, 50) }),
         });
-
         if (postRes?.ok) {
           const postData = await postRes.json();
           setCombinations(postData.combinations ?? []);
@@ -131,6 +159,55 @@ export default function DrugGeneFinder({ significantGenes, totalGenesInScreen }:
       }, 500);
     }
   };
+
+  // Close export menu on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (exportOpen && exportMenuRef.current && !exportMenuRef.current.contains(e.target as Node)) {
+        setExportOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [exportOpen]);
+
+  const handleExport = useCallback(
+    (format: 'csv' | 'tsv' | 'pdf' | 'json' | 'pmid') => {
+      if (!drugResults) return;
+      setExportOpen(false);
+      const ts = Date.now();
+      switch (format) {
+        case 'csv':
+          exportDrugGeneCSV(drugResults.results, `splicr-drug-gene-${ts}.csv`);
+          break;
+        case 'tsv':
+          exportDrugGeneTSV(drugResults.results, `splicr-drug-gene-${ts}.tsv`);
+          break;
+        case 'pdf':
+          exportDrugGenePDF(
+            { results: drugResults.results, summary: drugResults.summary, combinations },
+            { analysisName: analysisName || undefined },
+            `splicr-drug-gene-report-${ts}.pdf`
+          );
+          break;
+        case 'json':
+          exportDrugGeneJSON(
+            {
+              results: drugResults.results,
+              summary: drugResults.summary,
+              combinations,
+              exportedAt: new Date().toISOString(),
+            },
+            `splicr-drug-gene-${ts}.json`
+          );
+          break;
+        case 'pmid':
+          exportDrugGenePMIDList(drugResults.results, `splicr-drug-gene-pmids-${ts}.txt`);
+          break;
+      }
+    },
+    [drugResults, combinations, analysisName]
+  );
 
   return (
     <div className="bg-surface dark:bg-gray-900 rounded-2xl shadow-card border border-border dark:border-gray-700 overflow-hidden">
@@ -198,22 +275,61 @@ export default function DrugGeneFinder({ significantGenes, totalGenesInScreen }:
 
       {drugResults && !loading && (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 px-6 py-4 bg-background/50 dark:bg-gray-800/50">
-            <div className="rounded-xl p-4 border border-border dark:border-gray-700">
-              <div className="text-2xl font-serif text-text-primary">{drugResults.summary.totalGenes}</div>
-              <div className="text-xs text-text-secondary font-serif">Genes queried</div>
+          <div className="px-6 py-4 bg-background/50 dark:bg-gray-800/50 flex flex-wrap items-center justify-between gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 flex-1 min-w-0">
+              <div className="rounded-xl p-4 border border-border dark:border-gray-700">
+                <div className="text-2xl font-serif text-text-primary">{drugResults.summary.totalGenes}</div>
+                <div className="text-xs text-text-secondary font-serif">Genes queried</div>
+              </div>
+              <div className="rounded-xl p-4 border border-border dark:border-gray-700">
+                <div className="text-2xl font-serif text-text-primary">{drugResults.summary.totalDrugs}</div>
+                <div className="text-xs text-text-secondary font-serif">Total drugs</div>
+              </div>
+              <div className="rounded-xl p-4 border border-border dark:border-gray-700">
+                <div className="text-2xl font-serif text-[#6ABF36]">{drugResults.summary.approvedDrugs}</div>
+                <div className="text-xs text-text-secondary font-serif">FDA approved</div>
+              </div>
+              <div className="rounded-xl p-4 border border-border dark:border-gray-700">
+                <div className="text-2xl font-serif text-[#6ABF36]">{combinations.length}</div>
+                <div className="text-xs text-text-secondary font-serif">Combinations</div>
+              </div>
             </div>
-            <div className="rounded-xl p-4 border border-border dark:border-gray-700">
-              <div className="text-2xl font-serif text-text-primary">{drugResults.summary.totalDrugs}</div>
-              <div className="text-xs text-text-secondary font-serif">Total drugs</div>
-            </div>
-            <div className="rounded-xl p-4 border border-border dark:border-gray-700">
-              <div className="text-2xl font-serif text-[#6ABF36]">{drugResults.summary.approvedDrugs}</div>
-              <div className="text-xs text-text-secondary font-serif">FDA approved</div>
-            </div>
-            <div className="rounded-xl p-4 border border-border dark:border-gray-700">
-              <div className="text-2xl font-serif text-[#6ABF36]">{combinations.length}</div>
-              <div className="text-xs text-text-secondary font-serif">Combinations</div>
+            <div className="relative shrink-0" ref={exportMenuRef}>
+              <button
+                type="button"
+                onClick={() => setExportOpen((o) => !o)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border dark:border-gray-600 bg-surface dark:bg-gray-900 text-text-primary font-serif text-sm font-medium hover:bg-background dark:hover:bg-gray-800 hover:border-[#6ABF36]/40 transition-colors shadow-sm"
+              >
+                <Download className="w-4 h-4 text-[#6ABF36]" strokeWidth={2} />
+                Export
+              </button>
+              {exportOpen && (
+                <div className="absolute right-0 top-full mt-2 w-64 bg-surface dark:bg-gray-900 border border-border dark:border-gray-700 rounded-xl shadow-xl py-1.5 z-50 overflow-hidden">
+                  <div className="px-4 py-2.5 border-b border-border dark:border-gray-700">
+                    <p className="text-xs font-serif font-medium text-text-tertiary uppercase tracking-wide">Export for research</p>
+                  </div>
+                  {[
+                    { format: 'csv' as const, icon: Table, label: 'CSV', hint: 'Excel, R, Python' },
+                    { format: 'tsv' as const, icon: Table, label: 'TSV', hint: 'Tab-separated, bioinformatics' },
+                    { format: 'pdf' as const, icon: FileText, label: 'PDF report', hint: 'Publication-ready summary & tables' },
+                    { format: 'json' as const, icon: FileJson, label: 'JSON', hint: 'Individual drugs + predicted combinations' },
+                    { format: 'pmid' as const, icon: List, label: 'PMID list', hint: 'Import into Zotero, Mendeley' },
+                  ].map(({ format, icon: Icon, label, hint }) => (
+                    <button
+                      key={format}
+                      type="button"
+                      onClick={() => handleExport(format)}
+                      className="w-full px-4 py-2.5 text-left flex items-start gap-3 hover:bg-background/80 dark:hover:bg-gray-800/80 transition-colors group"
+                    >
+                      <Icon className="w-4 h-4 text-[#6ABF36] shrink-0 mt-0.5" strokeWidth={2} />
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        <span className="font-serif text-sm font-medium text-text-primary group-hover:text-[#6ABF36] transition-colors">{label}</span>
+                        <span className="text-xs text-text-tertiary">{hint}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

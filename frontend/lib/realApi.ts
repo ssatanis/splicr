@@ -119,8 +119,18 @@ export const realApi = {
   async getResults(id: string): Promise<AnalysisResults | { results: null; analysis: Analysis }> {
     const response = await fetch(`${API_BASE}/analysis/${id}/results`);
     if (!response.ok) {
-      const data = await safeJson<{ message?: string }>(response).catch(() => ({ message: undefined }));
-      throw new Error(typeof data.message === 'string' ? data.message : 'Failed to fetch results');
+      let message: string;
+      try {
+        const data = await safeJson<{ message?: string }>(response);
+        message = typeof data.message === 'string' && data.message ? data.message : `Failed to fetch results (${response.status})`;
+      } catch {
+        message = response.status === 401
+          ? 'Please sign in to view results.'
+          : response.status === 404
+            ? 'Results not found.'
+            : `Failed to fetch results (${response.status}). Please try again.`;
+      }
+      throw new Error(message);
     }
     const data = await safeJson<AnalysisResults | { results: null; analysis: Analysis }>(response);
     if (data && typeof data === 'object' && 'results' in data && data.results === null && 'analysis' in data && data.analysis) {

@@ -4,7 +4,7 @@ import depmapGeneScores from '@/lib/depmap-gene-scores.json';
 /**
  * Proxy for DepMap dependency data. Returns dependency scores (CERES-like, negative = essential)
  * for requested genes. Uses a built-in map of real DepMap-style mean dependency scores for
- * common genes; genes not in the map return null. The UI also provides links to depmap.org/portal/gene/{gene}.
+ * common genes; genes not in the map return null.
  */
 const scoresMap = depmapGeneScores as Record<string, number>;
 

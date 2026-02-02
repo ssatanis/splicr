@@ -570,7 +570,7 @@ export default function ResultsPage() {
                 {activeTab === "heatmap" && <HeatmapTab results={results} onCustomize={() => setFigureCustomizationOpen(true)} />}
                 {activeTab === "network" && <NetworkTab results={results} analysisName={analysisName || analysis?.name} onCustomize={() => setFigureCustomizationOpen(true)} />}
                 {activeTab === "timecourse" && <TimeCourseTab results={results} analysis={analysis ?? undefined} analysisName={analysisName || analysis?.name} />}
-                {activeTab === "drug-finder" && <DrugFinderTab results={results} />}
+                {activeTab === "drug-finder" && <DrugFinderTab results={results} analysisName={analysisName || analysis?.name} />}
                 {activeTab === "advanced" && <AdvancedTab results={results} analysisId={id} onResultsUpdate={loadResults} />}
                 {activeTab === "top-hits" && <TopHitsTab results={results} onGeneClick={setSelectedGene} />}
                 {activeTab === "qc" && <QCTab results={results} onCustomize={() => setFigureCustomizationOpen(true)} />}
@@ -957,7 +957,7 @@ function TimeCourseTab({
   );
 }
 
-function DrugFinderTab({ results }: { results: AnalysisResults }) {
+function DrugFinderTab({ results, analysisName }: { results: AnalysisResults; analysisName?: string | null }) {
   const significantGenes = (() => {
     if (!results) return [] as string[];
     const fromAll = results.allGenes?.filter((g) => g.fdr < 0.05).map((g) => g.gene);
@@ -972,6 +972,7 @@ function DrugFinderTab({ results }: { results: AnalysisResults }) {
     <DrugGeneFinder
       significantGenes={significantGenes}
       totalGenesInScreen={totalGenesInScreen}
+      analysisName={analysisName ?? undefined}
     />
   );
 }

@@ -41,8 +41,23 @@ export async function GET(
     const params = await context.params;
     const id = params.id;
 
-    const supabase = await createClient();
-    const { user } = await (await import("@/lib/supabase/server")).getApiUser();
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error('Results route: missing Supabase env (NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY)');
+      return NextResponse.json(
+        { message: 'Server configuration error. Please try again later.' },
+        { status: 500 }
+      );
+    }
+
+    const { user, error: authError } = await (await import('@/lib/supabase/server')).getApiUser();
+
+    if (authError && !user) {
+      const isTimeout = String(authError?.message || '').toLowerCase().includes('timeout');
+      return NextResponse.json(
+        { message: isTimeout ? 'Session expired or auth timeout. Please sign in again.' : 'Please sign in to view results.' },
+        { status: 401 }
+      );
+    }
 
     const { data: row, error } = await (supabaseAdmin as any)
       .from('analyses')
@@ -51,9 +66,9 @@ export async function GET(
       .maybeSingle();
 
     if (error) {
-      console.error('Results fetch error:', error);
+      console.error('Results fetch error:', error.message ?? error);
       return NextResponse.json(
-        { message: 'Failed to fetch results' },
+        { message: 'Failed to load analysis from database. Please try again.' },
         { status: 500 }
       );
     }
@@ -82,9 +97,10 @@ export async function GET(
       { status: 404 }
     );
   } catch (error) {
-    console.error('Results route error:', error);
+    const errMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Results route error:', errMessage, error);
     return NextResponse.json(
-      { message: 'Failed to fetch results' },
+      { message: 'Failed to fetch results. Please try again.' },
       { status: 500 }
     );
   }
