@@ -34,6 +34,10 @@ function runCommand(command, args, options = {}) {
 
 function moveDir(src, dest) {
   if (fs.existsSync(src)) {
+    // If destination already exists (from failed build), remove it first
+    if (fs.existsSync(dest)) {
+      fs.rmSync(dest, { recursive: true, force: true });
+    }
     fs.renameSync(src, dest);
     return true;
   }
@@ -45,16 +49,23 @@ async function build() {
   try {
     console.log('🔨 Building SplicR Desktop App...\n');
 
-    // Step 0: Move server-only routes out so static export only has pages (desktop calls production API)
+    // Step 0: Clean previous builds
+    console.log('Step 0: Cleaning previous builds...');
+    if (fs.existsSync('out')) fs.rmSync('out', { recursive: true, force: true });
+    if (fs.existsSync('dist')) fs.rmSync('dist', { recursive: true, force: true });
+    if (fs.existsSync('.next')) fs.rmSync('.next', { recursive: true, force: true });
+    console.log('✓ Cleaned previous builds\n');
+
+    // Step 1: Move server-only routes out so static export only has pages (desktop calls production API)
     if (moveDir(apiDir, apiBackupDir)) {
-      console.log('Step 0: Temporarily moving app/api for static export...');
+      console.log('Step 1: Temporarily moving app/api for static export...');
       moved.api = true;
     }
     if (moveDir(authCallbackDir, authCallbackBackup)) moved.authCallback = true;
     if (moveDir(authSignOutDir, authSignOutBackup)) moved.authSignOut = true;
 
-    // Step 1: Build Next.js for static export
-    console.log('Step 1: Building Next.js static export...');
+    // Step 2: Build Next.js for static export
+    console.log('Step 2: Building Next.js static export...');
     await runCommand('npm', ['run', 'build'], {
       env: {
         ...process.env,
@@ -71,10 +82,10 @@ async function build() {
 
     console.log('✓ Next.js build complete\n');
 
-    // Step 2: Build Electron with electron-builder
-    console.log('Step 2: Building Electron distributables...');
+    // Step 3: Build Electron with electron-builder
+    console.log('Step 3: Building Electron distributables...');
 
-    const builderArgs = ['electron-builder'];
+    const builderArgs = ['electron-builder', '--publish', 'never'];
 
     // Add platform-specific flags based on command line args
     const args = process.argv.slice(2);
@@ -99,23 +110,42 @@ async function build() {
     if (process.platform === 'darwin' && (args.includes('--mac') || !args.some(arg => ['--win', '--linux'].includes(arg)))) {
       console.log('\n🔧 Fixing macOS Gatekeeper issues...');
       try {
-        // Find the built app
-        let appPath = null;
+        // Find all built apps
+        const appPaths = [];
         if (fs.existsSync('dist/mac/SplicR.app')) {
-          appPath = 'dist/mac/SplicR.app';
-        } else if (fs.existsSync('dist/mac-arm64/SplicR.app')) {
-          appPath = 'dist/mac-arm64/SplicR.app';
+          appPaths.push('dist/mac/SplicR.app');
+        }
+        if (fs.existsSync('dist/mac-arm64/SplicR.app')) {
+          appPaths.push('dist/mac-arm64/SplicR.app');
         }
 
-        if (appPath) {
-          // Remove quarantine attribute
+        for (const appPath of appPaths) {
+          console.log(`\n  Processing: ${appPath}`);
+          
+          // Step 1: Remove quarantine attribute
           await runCommand('xattr', ['-cr', appPath]);
-          console.log('✓ Removed quarantine attribute');
-          console.log('\n✅ App is ready to open!');
-          console.log(`   You can now open: ${appPath}`);
+          console.log('  ✓ Removed quarantine attribute');
+          
+          // Step 2: Ad-hoc sign the app (required for macOS 15+)
+          await runCommand('codesign', ['--force', '--deep', '--sign', '-', appPath]);
+          console.log('  ✓ Applied ad-hoc signature');
+          
+          // Step 3: Allow app to run locally
+          try {
+            await runCommand('xattr', ['-d', 'com.apple.quarantine', appPath]);
+          } catch (e) {
+            // Attribute might not exist, that's ok
+          }
+        }
+
+        console.log('\n✅ Apps are ready to open!');
+        if (appPaths.length > 0) {
+          console.log(`   Intel Mac: dist/mac/SplicR.app`);
+          console.log(`   Apple Silicon: dist/mac-arm64/SplicR.app`);
         }
       } catch (error) {
         console.log('\n⚠️  Could not automatically fix Gatekeeper issues');
+        console.log('   Error:', error.message);
         console.log('   Please run: ./fix-mac-app.sh');
       }
     }

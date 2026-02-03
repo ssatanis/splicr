@@ -510,7 +510,10 @@ let browserClient: ReturnType<typeof createBrowserClient<Database>> | null = nul
 // Create browser-side Supabase client (for Client Components)
 // Uses singleton pattern to prevent multiple GoTrueClient instances
 export function createClient() {
+  // Always use the standard HTTPS URL for browser client
+  // NEVER use database connection strings (pooler URLs) with createBrowserClient!
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+  
   const anonKey = getAnonKey()
   if (!url || !anonKey) {
     throw new Error(
@@ -524,8 +527,22 @@ export function createClient() {
     return browserClient
   }
 
-  // Create new instance
-  const client = createBrowserClient<Database>(url, anonKey)
+  // Create new instance with optimized settings
+  const client = createBrowserClient<Database>(url, anonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+    db: {
+      schema: 'public',
+    },
+    global: {
+      headers: {
+        'X-Client-Info': 'splicr-web',
+      },
+    },
+  })
 
   // Cache for client-side reuse
   if (typeof window !== 'undefined') {

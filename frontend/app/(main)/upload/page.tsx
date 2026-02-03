@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import Sidebar from "@/components/Sidebar";
 import FastqUploader from "@/components/FastqUploader";
 import Button from "@/components/Button";
 import { useUser } from "@/lib/context/UserContext";
@@ -151,10 +150,8 @@ export default function UploadPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar />
-
-      <main className="ml-[260px] min-h-screen">
+    <>
+      <div className="min-h-screen">
         <div className="max-w-[1200px] mx-auto px-8 py-12">
           {/* Header */}
           <motion.div
@@ -638,7 +635,7 @@ export default function UploadPage() {
             </motion.div>
           )}
         </div>
-      </main>
+      </div>
 
       {/* Sample Labeling Modal - edit only; labels stay visible on page when closed */}
       <AnimatePresence>
@@ -751,7 +748,7 @@ export default function UploadPage() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </>
   );
 }
 

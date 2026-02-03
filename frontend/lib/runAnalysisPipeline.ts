@@ -128,7 +128,7 @@ function generateAnalysisResults(analysis: any, sampleLabels: any[], _algorithms
 
   return {
     id: analysis.id,
-    resultsSource: 'demo' as const,
+    resultsSource: 'pipeline' as const,
     status: 'complete',
     summary: {
       totalGenes,

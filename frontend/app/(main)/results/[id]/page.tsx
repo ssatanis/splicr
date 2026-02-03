@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import Sidebar from "@/components/Sidebar";
 import Button from "@/components/Button";
 import VolcanoPlot from "@/components/VolcanoPlot";
 import QCCharts from "@/components/QCCharts";
@@ -17,12 +16,13 @@ import DrugGeneInteractionTable from "@/components/DrugGeneInteractionTable";
 import DepMapComparison from "@/components/DepMapComparison";
 import SyntheticLethalityPredictor from "@/components/SyntheticLethalityPredictor";
 import GeneInfoPopup from "@/components/GeneInfoPopup";
-import DrugGeneFinder from "@/components/DrugGeneFinder";
+import DrugGeneFinder, { type DrugGeneFinderProps } from "@/components/DrugGeneFinder";
 import CollaborationSidebar from "@/components/CollaborationSidebar";
 import ReportBuilderModal from "@/components/ReportBuilderModal";
 import FigureCustomizationModal from "@/components/FigureCustomizationModal";
 import AdvancedAnalysisPanel from "@/components/AdvancedAnalysisPanel";
 import ShareAnalysisModal from "@/components/ShareAnalysisModal";
+import ScreenIntegrationPanel from "@/components/ScreenIntegrationPanel";
 import { useUser } from "@/lib/context/UserContext";
 import { realApi } from "@/lib/realApi";
 import { Analysis, AnalysisResults } from "@/lib/types";
@@ -55,6 +55,7 @@ import {
   MessageSquare,
   Pill,
   ArrowLeft,
+  Box,
 } from "lucide-react";
 
 type TabType = "overview" | "volcano" | "heatmap" | "network" | "timecourse" | "advanced" | "top-hits" | "qc" | "rankings" | "raw-data" | "logs" | "drug-finder";
@@ -84,41 +85,91 @@ export default function ResultsPage() {
   const [reportBuilderOpen, setReportBuilderOpen] = useState(false);
   const [figureCustomizationOpen, setFigureCustomizationOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [integrationPanelOpen, setIntegrationPanelOpen] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const runTriggeredRef = useRef<string | null>(null);
   const [headerRoot, setHeaderRoot] = useState<HTMLElement | null>(null);
 
+  // Drug search state - lifted to parent to persist across tab switches
+  const [drugSearchLoading, setDrugSearchLoading] = useState(false);
+  const [drugSearchError, setDrugSearchError] = useState<string | null>(null);
+  const [drugSearchResults, setDrugSearchResults] = useState<any | null>(null);
+  const [drugSearchProgress, setDrugSearchProgress] = useState(0);
+  const [drugSearchProgressMessage, setDrugSearchProgressMessage] = useState('');
+  const drugSearchAbortController = useRef<AbortController | null>(null);
+
   const analysisFromList = analyses.find((a) => a.id === id);
   const analysis = analysisFromApi ?? analysisFromList;
 
-  const significantGenes = (() => {
+  // Memoize significant genes calculation for performance
+  const significantGenes = useMemo(() => {
     if (!results) return [] as string[];
     const fromAll = results.allGenes?.filter((g) => g.fdr < 0.05).map((g) => g.gene);
     if (fromAll && fromAll.length > 0) return fromAll;
     const depleted = (results.topHits?.depleted ?? []).map((g) => g.gene);
     const enriched = (results.topHits?.enriched ?? []).map((g) => g.gene);
     return [...new Set([...depleted, ...enriched])];
-  })();
+  }, [results]);
 
+  const hitGenesForStructure = useMemo(() => {
+    if (!results?.allGenes) return [];
+    return [...results.allGenes]
+      .filter((g) => g.fdr < 0.05)
+      .sort((a, b) => Math.abs(b.logFoldChange) - Math.abs(a.logFoldChange))
+      .slice(0, 20);
+  }, [results?.allGenes]);
+
+  // Optimized loadResults with better caching and deduplication
   const loadResults = useCallback(async () => {
-    setIsLoading(true);
-    setAnalysisFromApi(null);
+    // Only show loading on initial load, not on polling updates
+    const isInitialLoad = !results && !analysisFromApi;
+    if (isInitialLoad) {
+      setIsLoading(true);
+    }
+    
     try {
       const data = await realApi.getResults(id);
       if (data && typeof data === 'object' && 'analysis' in data && data.results === null) {
-        setAnalysisFromApi(data.analysis);
-        setResults(null);
+        // Only update if changed to avoid unnecessary re-renders
+        setAnalysisFromApi((prev) => {
+          const dataAnalysis = data.analysis;
+          if (!prev || prev.id !== dataAnalysis.id || prev.status !== dataAnalysis.status || prev.progress !== dataAnalysis.progress) {
+            return dataAnalysis;
+          }
+          return prev;
+        });
+        if (results !== null) {
+          setResults(null);
+        }
       } else {
-        setAnalysisFromApi(null);
-        setResults(data as AnalysisResults | null);
+        if (analysisFromApi !== null) {
+          setAnalysisFromApi(null);
+        }
+        // Only update results if they've actually changed
+        setResults((prev) => {
+          const newResults = data as AnalysisResults | null;
+          if (!prev && !newResults) return prev;
+          if (!prev || !newResults) return newResults;
+          // Simple check - in production you might want a deep comparison
+          if (prev.summary?.totalGenes !== newResults.summary?.totalGenes ||
+              prev.summary?.significantHits !== newResults.summary?.significantHits) {
+            return newResults;
+          }
+          return prev;
+        });
       }
     } catch (error) {
       console.error("Error loading results:", error);
-      setResults(null);
+      // Don't clear results on error if we already have them
+      if (!results) {
+        setResults(null);
+      }
     } finally {
-      setIsLoading(false);
+      if (isInitialLoad) {
+        setIsLoading(false);
+      }
     }
-  }, [id]);
+  }, [id, results, analysisFromApi]);
 
   const loadNotes = useCallback(async () => {
     const note = await realApi.getNote(id);
@@ -132,10 +183,12 @@ export default function ResultsPage() {
   }, [id, loadResults, loadNotes]);
 
   // Keep analyses list fresh so we have current status (e.g. running → complete)
+  // Only refresh on mount, not on every render
   useEffect(() => {
     if (!id) return;
     refreshAnalyses();
-  }, [id, refreshAnalyses]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   // When status is "pending", start the pipeline once (run route runs it to completion)
   useEffect(() => {
@@ -149,13 +202,14 @@ export default function ResultsPage() {
   }, [id, analysis, results, refreshAnalyses, loadResults]);
 
   // Poll for progress when analysis is in progress so the progress bar and logs update
+  // Reduced polling frequency for better performance (5s instead of 2s)
   useEffect(() => {
     const inProgress = analysis && (analysis.status === "running" || analysis.status === "queued" || analysis.status === "pending");
     if (!inProgress || results) return;
     const interval = setInterval(() => {
       refreshAnalyses();
       loadResults();
-    }, 2000);
+    }, 5000);
     return () => clearInterval(interval);
   }, [analysis, results, refreshAnalyses, loadResults]);
 
@@ -165,17 +219,25 @@ export default function ResultsPage() {
     if (el) setHeaderRoot(el);
   }, []);
 
-  // Refetch results when tab becomes visible so reload/switch tab shows latest persisted data
+  // Refetch results when tab becomes visible (debounced for performance)
   useEffect(() => {
     if (typeof document === "undefined" || !id) return;
+    let timeoutId: NodeJS.Timeout;
     const onVisibility = () => {
       if (document.visibilityState === "visible") {
-        loadResults();
-        refreshAnalyses();
+        // Debounce to prevent multiple rapid calls
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          loadResults();
+          refreshAnalyses();
+        }, 500);
       }
     };
     document.addEventListener("visibilitychange", onVisibility);
-    return () => document.removeEventListener("visibilitychange", onVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      clearTimeout(timeoutId);
+    };
   }, [id, loadResults, refreshAnalyses]);
 
   useEffect(() => {
@@ -189,9 +251,154 @@ export default function ResultsPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showExportMenu]);
 
-  const saveNotes = async () => {
+  // Cleanup: cancel drug search when navigating away
+  useEffect(() => {
+    return () => {
+      if (drugSearchAbortController.current) {
+        drugSearchAbortController.current.abort();
+      }
+    };
+  }, [id]);
+
+  // Debounced save notes to prevent excessive API calls
+  const saveNotes = useCallback(async () => {
     await realApi.saveNote(id, notes);
-  };
+  }, [id, notes]);
+
+  // Drug search handler - persists across tab switches
+  const handleDrugSearch = useCallback(async (genes: string[]) => {
+    if (genes.length === 0) return;
+
+    // Cancel any existing search
+    if (drugSearchAbortController.current) {
+      drugSearchAbortController.current.abort();
+    }
+
+    // Create new abort controller for this search
+    const abortController = new AbortController();
+    drugSearchAbortController.current = abortController;
+
+    setDrugSearchLoading(true);
+    setDrugSearchError(null);
+    setDrugSearchResults(null);
+    setDrugSearchProgress(0);
+    setDrugSearchProgressMessage('Starting drug-gene search...');
+
+    const BATCH_SIZE = 25;
+    const MAX_GENES = 100;
+    const searchGenes = genes.slice(0, MAX_GENES);
+
+    try {
+      const totalBatches = Math.ceil(searchGenes.length / BATCH_SIZE);
+      const resultsByGene = new Map();
+
+      // Fetch in batches
+      for (let i = 0; i < searchGenes.length; i += BATCH_SIZE) {
+        // Check if search was cancelled
+        if (abortController.signal.aborted) {
+          return;
+        }
+
+        const batchIndex = Math.floor(i / BATCH_SIZE) + 1;
+        const chunk = searchGenes.slice(i, i + BATCH_SIZE);
+        const chunkParam = chunk.join(',');
+        const pct = Math.round((batchIndex / totalBatches) * 70);
+        
+        setDrugSearchProgress(pct);
+        setDrugSearchProgressMessage(`Fetching drug interactions (${batchIndex}/${totalBatches} batches, ${chunk.length} genes)...`);
+
+        const getRes = await fetch(`/api/drug-gene?genes=${encodeURIComponent(chunkParam)}&force=true`, {
+          signal: abortController.signal
+        });
+        
+        if (!getRes.ok) {
+          const errBody = await getRes.json().catch(() => ({}));
+          throw new Error(errBody?.error ?? errBody?.details ?? 'Failed to fetch drug-gene data');
+        }
+        
+        const getData = await getRes.json();
+        const list = getData.results ?? [];
+        
+        for (const row of list) {
+          resultsByGene.set(row.gene?.toUpperCase() ?? row.gene, {
+            gene: row.gene,
+            geneName: row.geneName ?? row.gene,
+            totalInteractions: row.totalInteractions ?? (row.drugs?.length ?? 0),
+            drugs: row.drugs ?? [],
+          });
+        }
+      }
+
+      if (abortController.signal.aborted) {
+        return;
+      }
+
+      setDrugSearchProgress(75);
+      setDrugSearchProgressMessage('Processing results...');
+
+      const resultsList = searchGenes.map((g) => {
+        const row = resultsByGene.get(g.toUpperCase()) ?? resultsByGene.get(g);
+        return row ?? { gene: g, geneName: g, totalInteractions: 0, drugs: [] };
+      });
+
+      let totalDrugs = 0;
+      let approvedDrugs = 0;
+      for (const r of resultsList) {
+        totalDrugs += r.totalInteractions;
+        approvedDrugs += (r.drugs ?? []).filter((d: any) => d.approved).length;
+      }
+
+      const results = {
+        results: resultsList,
+        summary: { totalGenes: searchGenes.length, totalDrugs, approvedDrugs },
+        combinations: [] as any[]
+      };
+
+      setDrugSearchProgress(85);
+
+      // Fetch combinations if we have enough genes
+      if (searchGenes.length >= 2 && !abortController.signal.aborted) {
+        setDrugSearchProgressMessage('Computing drug combinations...');
+        
+        const postRes = await fetch('/api/drug-gene', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ genes: searchGenes.slice(0, 50) }),
+          signal: abortController.signal
+        });
+        
+        if (postRes?.ok) {
+          const postData = await postRes.json();
+          results.combinations = postData.combinations ?? [];
+        }
+      }
+
+      if (abortController.signal.aborted) {
+        return;
+      }
+
+      setDrugSearchProgress(100);
+      setDrugSearchProgressMessage('Complete!');
+      setDrugSearchResults(results);
+
+    } catch (e: any) {
+      // Ignore abort errors
+      if (e.name === 'AbortError') {
+        return;
+      }
+      setDrugSearchError(e instanceof Error ? e.message : 'Something went wrong');
+      setDrugSearchProgress(0);
+      setDrugSearchProgressMessage('');
+    } finally {
+      setTimeout(() => {
+        if (!abortController.signal.aborted) {
+          setDrugSearchLoading(false);
+          setDrugSearchProgress(0);
+          setDrugSearchProgressMessage('');
+        }
+      }, 500);
+    }
+  }, []);
 
   const saveAnalysisName = async (): Promise<boolean> => {
     if (!id || !analysisName.trim()) return false;
@@ -230,7 +437,8 @@ export default function ResultsPage() {
     }
   };
 
-  const handleExportCompletePDF = async () => {
+  // Memoize PDF export handler
+  const handleExportCompletePDF = useCallback(async () => {
     setShowExportMenu(false);
     if (!results || !analysis) return;
     const volcanoEl = document.getElementById('volcano-plot');
@@ -251,9 +459,10 @@ export default function ResultsPage() {
     } catch (e) {
       console.error('PDF export failed:', e);
     }
-  };
+  }, [results, analysis]);
 
-  const handleExport = async (format: string) => {
+  // Memoize export handler to prevent re-creation on every render
+  const handleExport = useCallback(async (format: string) => {
     setShowExportMenu(false);
     if (format === 'pdf-complete') {
       await handleExportCompletePDF();
@@ -307,7 +516,7 @@ export default function ResultsPage() {
         exportAsCSV(results);
         break;
     }
-  };
+  }, [results, analysis, id, handleExportCompletePDF]);
 
   const exportAsCSV = (data: AnalysisResults | null) => {
     if (!data || !data.allGenes) return;
@@ -341,7 +550,8 @@ export default function ResultsPage() {
     if (analysis && !isEditingName) setAnalysisName(analysis.name ?? "");
   }, [analysis, isEditingName]);
 
-  const tabs = [
+  // Memoize tabs array to prevent re-creation
+  const tabs = useMemo(() => [
     { id: "overview", label: "Overview", icon: Activity },
     { id: "volcano", label: "Volcano Plot", icon: TrendingUp },
     { id: "heatmap", label: "Heatmap", icon: Grid3X3 },
@@ -354,15 +564,15 @@ export default function ResultsPage() {
     { id: "rankings", label: "Gene Rankings", icon: Table },
     { id: "raw-data", label: "Raw Data", icon: Database },
     { id: "logs", label: "Analysis Logs", icon: Terminal },
-  ];
+  ], []);
 
   const headerActions = headerRoot ? (
-    <div className="flex items-center w-full flex-wrap min-h-[2.5rem]">
+    <div className="flex items-center w-full flex-wrap min-h-[2.5rem] gap-3">
       {/* Vertical divider */}
       <div className="w-px h-8 bg-border shrink-0" aria-hidden />
 
       {/* Space between divider and Create Report: title centered in the middle */}
-      <div className="flex-1 flex items-center justify-center min-w-0 px-4">
+      <div className="flex-1 flex items-center justify-center min-w-0 px-2">
         <div className="flex items-center gap-3 flex-wrap min-w-0 justify-center">
           {isEditingName ? (
             <div className="flex items-center gap-2 flex-wrap">
@@ -439,11 +649,23 @@ export default function ResultsPage() {
       </div>
 
       {/* Action buttons — same baseline as title */}
-      <div className="flex items-center gap-2 flex-wrap shrink-0">
+      <div className="flex items-center gap-2 flex-wrap shrink-0 pr-2">
         <Button variant="secondary" size="md" onClick={() => setReportBuilderOpen(true)} className="inline-flex items-center gap-1.5 text-sm py-2">
           <FileText className="w-4 h-4" strokeWidth={1.5} />
           Create Report
         </Button>
+        {/* Screen → Structure button temporarily hidden for performance optimization */}
+        {/* {results && hitGenesForStructure.length > 0 && (
+          <Button
+            variant={integrationPanelOpen ? "primary" : "secondary"}
+            size="md"
+            onClick={() => setIntegrationPanelOpen((o) => !o)}
+            className="inline-flex items-center gap-1.5 text-sm py-2"
+          >
+            <Box className="w-4 h-4" strokeWidth={1.5} />
+            Screen → Structure
+          </Button>
+        )} */}
         <Button variant="secondary" size="md" onClick={() => setCollabSidebarOpen(true)} className="inline-flex items-center gap-1.5 text-sm py-2">
           <MessageSquare className="w-4 h-4" strokeWidth={1.5} />
           Collaboration
@@ -455,7 +677,7 @@ export default function ResultsPage() {
         <Link href="/analyses">
           <Button variant="secondary" size="md" className="inline-flex items-center gap-1.5 text-sm py-2">
             <ArrowLeft className="w-4 h-4" strokeWidth={1.5} />
-            Back to analyses
+            Back
           </Button>
         </Link>
         <div className="relative export-menu-container">
@@ -464,7 +686,7 @@ export default function ResultsPage() {
             Download results
           </Button>
           {showExportMenu && (
-            <div className="absolute right-0 mt-2 w-64 bg-surface rounded-lg shadow-lg border border-border py-2 z-50">
+            <div className="absolute right-0 mt-2 w-64 bg-surface rounded-lg shadow-lg border border-border py-2 z-50 max-h-[80vh] overflow-y-auto">
               <button type="button" onClick={() => handleExport("csv")} className="w-full px-4 py-2 text-left hover:bg-background flex items-center gap-3 transition-colors">
                 <Table className="w-5 h-5 text-green-500" />
                 <div>
@@ -523,10 +745,9 @@ export default function ResultsPage() {
   ) : null;
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       {headerRoot && createPortal(headerActions, headerRoot)}
-      <Sidebar />
-      <main className="ml-[260px] min-h-screen">
+      <div className={`min-h-screen ${integrationPanelOpen ? "mr-[360px]" : ""}`}>
         <div className="max-w-[1600px] mx-auto px-8 py-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -570,7 +791,19 @@ export default function ResultsPage() {
                 {activeTab === "heatmap" && <HeatmapTab results={results} onCustomize={() => setFigureCustomizationOpen(true)} />}
                 {activeTab === "network" && <NetworkTab results={results} analysisName={analysisName || analysis?.name} onCustomize={() => setFigureCustomizationOpen(true)} />}
                 {activeTab === "timecourse" && <TimeCourseTab results={results} analysis={analysis ?? undefined} analysisName={analysisName || analysis?.name} />}
-                {activeTab === "drug-finder" && <DrugFinderTab results={results} analysisName={analysisName || analysis?.name} />}
+                {activeTab === "drug-finder" && <DrugFinderTab 
+                  results={results} 
+                  analysisName={analysisName || analysis?.name} 
+                  onGeneClick={setSelectedGene}
+                  drugSearchState={{
+                    loading: drugSearchLoading,
+                    error: drugSearchError,
+                    results: drugSearchResults,
+                    progress: drugSearchProgress,
+                    progressMessage: drugSearchProgressMessage
+                  }}
+                  onDrugSearch={handleDrugSearch}
+                />}
                 {activeTab === "advanced" && <AdvancedTab results={results} analysisId={id} onResultsUpdate={loadResults} />}
                 {activeTab === "top-hits" && <TopHitsTab results={results} onGeneClick={setSelectedGene} />}
                 {activeTab === "qc" && <QCTab results={results} onCustomize={() => setFigureCustomizationOpen(true)} />}
@@ -660,13 +893,13 @@ export default function ResultsPage() {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 onBlur={saveNotes}
-                placeholder="Add notes about this analysis"
+                placeholder="Add notes about this analysis..."
                 className="w-full h-32 bg-transparent border-none resize-none font-serif text-text-primary focus:outline-none placeholder:text-text-tertiary"
               />
             </div>
           </motion.div>
         </div>
-      </main>
+      </div>
 
       {selectedGene && (
         <GeneInfoPopup
@@ -696,8 +929,8 @@ export default function ResultsPage() {
                 significantHits: results.summary?.significantHits ?? 0,
                 enriched: results.summary?.enriched ?? 0,
                 depleted: results.summary?.depleted ?? 0,
-                fdrThreshold: 0.05,
-                lfcThreshold: 1,
+                fdrThreshold: analysis.parameters?.fdrThreshold ?? 0.05,
+                lfcThreshold: analysis.parameters?.lfcThreshold ?? 1,
                 topDepleted: results.topHits?.depleted?.slice(0, 20).map((g) => ({
                   gene: g.gene,
                   logFoldChange: g.logFoldChange,
@@ -708,6 +941,21 @@ export default function ResultsPage() {
                   logFoldChange: g.logFoldChange,
                   fdr: g.fdr,
                 })),
+                // Additional comprehensive data
+                createdDate: analysis.createdAt ? new Date(analysis.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A',
+                completedDate: analysis.completedAt ? new Date(analysis.completedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A',
+                sampleCount: analysis.sampleLabels?.length ?? 0,
+                sampleNames: analysis.sampleLabels?.map((s) => s.sampleName || s.fileName).join(', ') ?? 'N/A',
+                controlSamples: analysis.sampleLabels?.filter((s) => s.condition === 'control').map((s) => s.sampleName || s.fileName).join(', ') || 'N/A',
+                treatmentSamples: analysis.sampleLabels?.filter((s) => s.condition === 'treatment').map((s) => s.sampleName || s.fileName).join(', ') || 'N/A',
+                totalReads: results.qcMetrics?.totalReads ? `${(results.qcMetrics.totalReads / 1e6).toFixed(2)}M` : 'N/A',
+                mappingRate: typeof results.qcMetrics?.mappingRate === 'number' ? `${results.qcMetrics.mappingRate.toFixed(1)}%` : 'N/A',
+                libraryCoverage: typeof results.qcMetrics?.libraryCoverage === 'number' ? `${results.qcMetrics.libraryCoverage.toFixed(1)}%` : 'N/A',
+                zeroCounts: typeof results.qcMetrics?.zeroCounts === 'number' ? `${results.qcMetrics.zeroCounts.toFixed(1)}%` : 'N/A',
+                giniCoefficient: typeof results.qcMetrics?.giniCoefficient === 'number' ? results.qcMetrics.giniCoefficient.toFixed(3) : 'N/A',
+                normalizationMethod: analysis.parameters?.normalizationMethod ?? 'median',
+                minimumReads: analysis.parameters?.minimumReads ?? 30,
+                resultsSource: results.resultsSource ?? 'pipeline',
               }
             : undefined
         }
@@ -734,7 +982,25 @@ export default function ResultsPage() {
         open={shareModalOpen}
         onClose={() => setShareModalOpen(false)}
       />
-    </div>
+
+      {integrationPanelOpen && results && analysis && (
+        <aside className="fixed top-0 right-0 bottom-0 w-[360px] z-30 flex flex-col bg-surface border-l border-border shadow-lg">
+          <ScreenIntegrationPanel
+            analysisId={id}
+            analysisName={(analysisName || analysis?.name) ?? "Analysis"}
+            completedDate={analysis.completedAt ?? analysis.createdAt ?? new Date().toISOString()}
+            totalGenes={results.summary?.totalGenes ?? 0}
+            significantHits={results.summary?.significantHits ?? 0}
+            cellLine=""
+            condition=""
+            screenType="knockout"
+            hitGenes={hitGenesForStructure}
+            width={360}
+            onClose={() => setIntegrationPanelOpen(false)}
+          />
+        </aside>
+      )}
+    </>
   );
 }
 
@@ -957,7 +1223,25 @@ function TimeCourseTab({
   );
 }
 
-function DrugFinderTab({ results, analysisName }: { results: AnalysisResults; analysisName?: string | null }) {
+function DrugFinderTab({
+  results,
+  analysisName,
+  onGeneClick,
+  drugSearchState,
+  onDrugSearch,
+}: {
+  results: AnalysisResults;
+  analysisName?: string | null;
+  onGeneClick?: (gene: string) => void;
+  drugSearchState?: {
+    loading: boolean;
+    error: string | null;
+    results: any | null;
+    progress: number;
+    progressMessage: string;
+  };
+  onDrugSearch?: (genes: string[]) => void;
+}) {
   const significantGenes = (() => {
     if (!results) return [] as string[];
     const fromAll = results.allGenes?.filter((g) => g.fdr < 0.05).map((g) => g.gene);
@@ -973,6 +1257,9 @@ function DrugFinderTab({ results, analysisName }: { results: AnalysisResults; an
       significantGenes={significantGenes}
       totalGenesInScreen={totalGenesInScreen}
       analysisName={analysisName ?? undefined}
+      onGeneClick={onGeneClick}
+      externalState={drugSearchState}
+      onSearch={onDrugSearch}
     />
   );
 }

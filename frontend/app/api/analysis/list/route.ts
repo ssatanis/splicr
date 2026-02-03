@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { getApiUser, supabaseAdmin } from '@/lib/supabase/server';
 import type { Analysis } from '@/lib/types';
 
 const globalStore = globalThis as any;
@@ -40,8 +40,6 @@ function isSupabaseUnreachable(error: unknown): boolean {
 
 export async function GET() {
   try {
-    const { getApiUser } = await import('@/lib/supabase/server');
-    const admin = (await import('@/lib/supabase/server')).supabaseAdmin as any;
     const { user, error: authError } = await getApiUser();
 
     if (authError && isSupabaseUnreachable(authError)) {
@@ -49,17 +47,20 @@ export async function GET() {
     }
 
     if (!authError && user) {
-      const { data: ownRows, error: ownError } = await admin
+      // Fetch only own analyses for now - much faster
+      const { data: ownRows, error: ownError } = await supabaseAdmin
         .from('analyses')
-        .select('*')
+        .select('id, name, status, created_at, updated_at, started_at, completed_at, progress, current_step, error_message, file_names, sample_labels, parameters, method, user_id, results, logs')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(100); // Limit to last 100 analyses for performance
 
       if (ownError) {
         if (isSupabaseUnreachable(ownError)) {
           return NextResponse.json([]);
         }
         console.error('Error fetching own analyses:', ownError.message || ownError);
+        return NextResponse.json([]);
       }
 
       const ownAnalyses = (ownRows || []).map((r: any) => ({
@@ -69,49 +70,8 @@ export async function GET() {
         ownerEmail: user.email,
       }));
 
-      let sharedAnalyses: any[] = [];
-      try {
-        const { data: shares } = await admin
-          .from('analysis_shares')
-          .select('analysis_id, permission, shared_by')
-          .eq('email', user.email?.toLowerCase())
-          .eq('status', 'accepted');
-
-        if (shares && shares.length > 0) {
-          const sharedIds = shares.map((s: any) => s.analysis_id);
-          const { data: sharedRows } = await admin
-            .from('analyses')
-            .select('*')
-            .in('id', sharedIds)
-            .order('created_at', { ascending: false });
-
-          const ownerIds = [...new Set(sharedRows?.map((r: any) => r.user_id).filter(Boolean) || [])];
-          const { data: owners } = await admin
-            .from('profiles')
-            .select('id, email')
-            .in('id', ownerIds);
-
-          const ownerMap = new Map(owners?.map((o: any) => [o.id, o.email]) || []);
-
-          sharedAnalyses = (sharedRows || []).map((r: any) => {
-            const share = shares.find((s: any) => s.analysis_id === r.id);
-            return {
-              ...rowToAnalysis(r),
-              isOwner: false,
-              isShared: true,
-              permission: share?.permission || 'view',
-              ownerEmail: ownerMap.get(r.user_id) || 'Unknown',
-            };
-          });
-        }
-      } catch (err) {
-        if (!isSupabaseUnreachable(err)) {
-          console.error('Error fetching shared analyses:', err);
-        }
-      }
-
-      const allAnalyses = [...ownAnalyses, ...sharedAnalyses];
-      return NextResponse.json(allAnalyses);
+      // TODO: Add shared analyses back in a separate endpoint or lazy load them
+      return NextResponse.json(ownAnalyses);
     }
 
     const analysesList = (Array.from(analysesMemory.values()) as Analysis[])

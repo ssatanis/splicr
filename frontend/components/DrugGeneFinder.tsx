@@ -14,13 +14,25 @@ import {
 
 const MAX_GENES_TO_QUERY = 100; // Query up to 100 significant genes for drugs (varies by analysis)
 
-interface DrugGeneFinderProps {
+export interface DrugGeneFinderProps {
   /** All significant genes from this analysis (FDR < 0.05); we query up to MAX_GENES_TO_QUERY for drugs. */
   significantGenes: string[];
   /** Total genes in the screen/library (e.g. 18,166) for context. */
   totalGenesInScreen?: number;
   /** Optional analysis name for PDF export title. */
   analysisName?: string;
+  /** Called when user clicks a gene name to view gene info (opens popup without navigating). */
+  onGeneClick?: (gene: string) => void;
+  /** External state for drug search (persists across tab switches) */
+  externalState?: {
+    loading: boolean;
+    error: string | null;
+    results: any | null;
+    progress: number;
+    progressMessage: string;
+  };
+  /** External search handler (persists across tab switches) */
+  onSearch?: (genes: string[]) => void;
 }
 
 interface DrugItem {
@@ -54,17 +66,31 @@ interface CombinationItem {
 
 type TabId = 'drugs' | 'combinations';
 
-export default function DrugGeneFinder({ significantGenes, totalGenesInScreen, analysisName }: DrugGeneFinderProps) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export default function DrugGeneFinder({ significantGenes, totalGenesInScreen, analysisName, onGeneClick, externalState, onSearch }: DrugGeneFinderProps) {
+  // Use external state if provided, otherwise use local state
+  const [localLoading, setLocalLoading] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
+  const [localDrugResults, setLocalDrugResults] = useState<any | null>(null);
+  const [localProgress, setLocalProgress] = useState(0);
+  const [localProgressMessage, setLocalProgressMessage] = useState('');
+  
+  const loading = externalState?.loading ?? localLoading;
+  const error = externalState?.error ?? localError;
+  const progress = externalState?.progress ?? localProgress;
+  const progressMessage = externalState?.progressMessage ?? localProgressMessage;
+  
+  // Extract drugResults and combinations from external or local state
+  const drugResults = externalState?.results ? {
+    results: externalState.results.results ?? [],
+    summary: externalState.results.summary ?? { totalGenes: 0, totalDrugs: 0, approvedDrugs: 0 }
+  } : (localDrugResults ? {
+    results: localDrugResults.results ?? [],
+    summary: localDrugResults.summary ?? { totalGenes: 0, totalDrugs: 0, approvedDrugs: 0 }
+  } : null);
+  
+  const combinations = externalState?.results?.combinations ?? localDrugResults?.combinations ?? [];
+  
   const [activeTab, setActiveTab] = useState<TabId>('drugs');
-  const [drugResults, setDrugResults] = useState<{
-    results: GeneDrugResult[];
-    summary: { totalGenes: number; totalDrugs: number; approvedDrugs: number };
-  } | null>(null);
-  const [combinations, setCombinations] = useState<CombinationItem[]>([]);
-  const [progress, setProgress] = useState(0);
-  const [progressMessage, setProgressMessage] = useState('');
   const [exportOpen, setExportOpen] = useState(false);
   const exportMenuRef = useRef<HTMLDivElement>(null);
 
@@ -76,12 +102,19 @@ export default function DrugGeneFinder({ significantGenes, totalGenesInScreen, a
 
   const handleFindDrugs = async () => {
     if (!hasGenes) return;
-    setLoading(true);
-    setError(null);
-    setDrugResults(null);
-    setCombinations([]);
-    setProgress(0);
-    setProgressMessage('Starting drug-gene search...');
+    
+    // If external handler is provided, use it (for persistent state)
+    if (onSearch) {
+      onSearch(genes);
+      return;
+    }
+    
+    // Otherwise, use local state management
+    setLocalLoading(true);
+    setLocalError(null);
+    setLocalDrugResults(null);
+    setLocalProgress(0);
+    setLocalProgressMessage('Starting drug-gene search...');
 
     try {
       const totalBatches = Math.ceil(genes.length / BATCH_SIZE);
@@ -93,8 +126,8 @@ export default function DrugGeneFinder({ significantGenes, totalGenesInScreen, a
         const chunk = genes.slice(i, i + BATCH_SIZE);
         const chunkParam = chunk.join(',');
         const pct = Math.round((batchIndex / totalBatches) * 70);
-        setProgress(pct);
-        setProgressMessage(`Fetching drug interactions (${batchIndex}/${totalBatches} batches, ${chunk.length} genes)...`);
+        setLocalProgress(pct);
+        setLocalProgressMessage(`Fetching drug interactions (${batchIndex}/${totalBatches} batches, ${chunk.length} genes)...`);
 
         const getRes = await fetch(`/api/drug-gene?genes=${encodeURIComponent(chunkParam)}&force=true`);
         if (!getRes.ok) {
@@ -113,8 +146,8 @@ export default function DrugGeneFinder({ significantGenes, totalGenesInScreen, a
         }
       }
 
-      setProgress(75);
-      setProgressMessage('Processing results...');
+      setLocalProgress(75);
+      setLocalProgressMessage('Processing results...');
 
       const resultsList = genes.map((g) => {
         const row = resultsByGene.get(g.toUpperCase()) ?? resultsByGene.get(g);
@@ -126,14 +159,17 @@ export default function DrugGeneFinder({ significantGenes, totalGenesInScreen, a
         totalDrugs += r.totalInteractions;
         approvedDrugs += (r.drugs ?? []).filter((d: DrugItem) => d.approved).length;
       }
-      setDrugResults({
+      
+      const results = {
         results: resultsList,
         summary: { totalGenes: genes.length, totalDrugs, approvedDrugs },
-      });
-      setProgress(85);
+        combinations: [] as CombinationItem[]
+      };
+      
+      setLocalProgress(85);
 
       if (genes.length >= 2) {
-        setProgressMessage('Computing drug combinations...');
+        setLocalProgressMessage('Computing drug combinations...');
         const postRes = await fetch('/api/drug-gene', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -141,21 +177,22 @@ export default function DrugGeneFinder({ significantGenes, totalGenesInScreen, a
         });
         if (postRes?.ok) {
           const postData = await postRes.json();
-          setCombinations(postData.combinations ?? []);
+          results.combinations = postData.combinations ?? [];
         }
       }
 
-      setProgress(100);
-      setProgressMessage('Complete!');
+      setLocalProgress(100);
+      setLocalProgressMessage('Complete!');
+      setLocalDrugResults(results);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Something went wrong');
-      setProgress(0);
-      setProgressMessage('');
+      setLocalError(e instanceof Error ? e.message : 'Something went wrong');
+      setLocalProgress(0);
+      setLocalProgressMessage('');
     } finally {
       setTimeout(() => {
-        setLoading(false);
-        setProgress(0);
-        setProgressMessage('');
+        setLocalLoading(false);
+        setLocalProgress(0);
+        setLocalProgressMessage('');
       }, 500);
     }
   };
@@ -376,12 +413,22 @@ export default function DrugGeneFinder({ significantGenes, totalGenesInScreen, a
                       transition={{ delay: idx * 0.05 }}
                       className="rounded-xl border border-border dark:border-gray-700 overflow-hidden"
                     >
-                      <div className="px-4 py-3 bg-background dark:bg-gray-800 font-serif font-medium text-text-primary">
-                        {row.gene}
-                        {row.geneName !== row.gene && (
-                          <span className="ml-2 text-sm font-normal text-text-secondary">{row.geneName}</span>
+                      <div className="px-4 py-3 bg-background dark:bg-gray-800 font-serif font-medium text-text-primary flex flex-wrap items-center gap-1">
+                        {onGeneClick ? (
+                          <button
+                            type="button"
+                            onClick={() => onGeneClick(row.gene)}
+                            className="text-[#6ABF36] hover:underline text-left font-medium"
+                          >
+                            {row.gene}
+                          </button>
+                        ) : (
+                          <span>{row.gene}</span>
                         )}
-                        <span className="ml-2 text-xs text-text-tertiary">({row.totalInteractions} drugs)</span>
+                        {row.geneName !== row.gene && (
+                          <span className="ml-0 text-sm font-normal text-text-secondary">{row.geneName}</span>
+                        )}
+                        <span className="ml-0 text-xs text-text-tertiary">({row.totalInteractions} drugs)</span>
                       </div>
                       <div className="p-4 flex flex-wrap gap-3">
                         {row.drugs.length === 0 ? (

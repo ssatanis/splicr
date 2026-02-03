@@ -33,39 +33,38 @@
     },
     "files": [
       "main",
-      "out"
+      "out",
+      "!out/**/*.map"
     ],
-    "asarUnpack": [
-      "main/**",
-      "out/**"
-    ],
+    "asar": false,
     "mac": {
       "category": "public.app-category.developer-tools",
       "icon": "build-resources/icon.icns",
       "target": [
-        {
-          "target": "dmg",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        },
         {
           "target": "zip",
           "arch": [
             "x64",
             "arm64"
           ]
+        },
+        {
+          "target": "dir",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ],
-      "hardenedRuntime": true,
+      "hardenedRuntime": false,
       "gatekeeperAssess": false,
-      "identity": null,
-      "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist",
-      "signIgnore": [
-        "Electron Framework.framework/Versions/A/Helpers/chrome_crashpad_handler"
-      ]
+      "identity": "-",
+      "type": "development",
+      "extendInfo": {
+        "NSSupportsAutomaticGraphicsSwitching": true,
+        "NSHighResolutionCapable": true,
+        "LSMinimumSystemVersion": "11.0"
+      }
     },
     "dmg": {
       "contents": [
@@ -147,10 +146,13 @@
     "@aws-sdk/lib-storage": "^3.980.0",
     "@aws-sdk/s3-request-presigner": "^3.980.0",
     "@floating-ui/dom": "^1.7.5",
+    "@google/generative-ai": "^0.24.1",
     "@smithy/node-http-handler": "^4.4.8",
     "@stdlib/stats": "^0.3.3",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.93.3",
+    "@tanstack/react-query": "^5.90.20",
+    "@tanstack/react-query-devtools": "^5.91.3",
     "@tiptap/extension-image": "^3.18.0",
     "@tiptap/extension-placeholder": "^3.18.0",
     "@tiptap/pm": "^3.18.0",
@@ -176,6 +178,7 @@
     "lucide-react": "^0.344.0",
     "mathjs": "^15.1.0",
     "next": "16.1.6",
+    "ngl": "^2.4.0",
     "pako": "^2.1.0",
     "papaparse": "^5.5.3",
     "plotly.js-dist-min": "^3.3.1",
@@ -196,7 +199,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "concurrently": "^9.2.1",
-    "electron": "^28.0.0",
+    "electron": "^33.3.1",
     "electron-builder": "^26.7.0",
     "electron-icon-builder": "^2.0.1",
     "electron-serve": "^3.0.1",

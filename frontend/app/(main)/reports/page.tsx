@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import Sidebar from "@/components/Sidebar";
 import { useUser } from "@/lib/context/UserContext";
 import {
   BarChart3,
@@ -27,9 +26,7 @@ export default function ReportsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar />
-      <main className="ml-[260px] min-h-screen">
+      <div className="min-h-screen">
         <div className="max-w-[1200px] mx-auto px-8 py-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -127,7 +124,6 @@ export default function ReportsPage() {
             </div>
           </motion.div>
         </div>
-      </main>
-    </div>
+      </div>
   );
 }

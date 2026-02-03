@@ -3,10 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import Sidebar from "@/components/Sidebar";
 import Button from "@/components/Button";
 import APIKeyManager from "@/components/APIKeyManager";
-import TemplateLibrary from "@/components/TemplateLibrary";
 import { useUser } from "@/lib/context/UserContext";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
@@ -220,9 +218,7 @@ export default function SettingsPage() {
   const isClearDataClearing = clearDataStatus === "clearing";
 
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar />
-      <main className="ml-[260px] min-h-screen">
+      <div className="min-h-screen">
         <div className="max-w-[800px] mx-auto px-8 py-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -446,7 +442,6 @@ export default function SettingsPage() {
               Developer & API
             </h2>
             <APIKeyManager />
-            <TemplateLibrary />
           </motion.section>
 
           {/* Security & sign out */}
@@ -515,7 +510,6 @@ export default function SettingsPage() {
             </motion.p>
           )}
         </div>
-      </main>
-    </div>
+      </div>
   );
 }

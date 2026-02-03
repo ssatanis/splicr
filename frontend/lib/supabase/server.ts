@@ -49,7 +49,7 @@ export async function createClient() {
  */
 export async function getApiUser() {
   const supabase = await createClient()
-  const timeoutMs = process.env.NODE_ENV === 'development' ? 8000 : 5000
+  const timeoutMs = process.env.NODE_ENV === 'development' ? 3000 : 2000
   const timeout = new Promise<never>((_, reject) =>
     setTimeout(() => reject(new Error('Auth timeout')), timeoutMs)
   )

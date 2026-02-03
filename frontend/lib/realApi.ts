@@ -5,6 +5,27 @@ import { Analysis, AnalysisResults } from './types';
  * In Electron desktop build, calls production API (splicr.org).
  */
 
+// Simple cache for API responses to improve performance
+const apiCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL = 10000; // 10 seconds cache for most requests
+
+function getCachedData<T>(key: string): T | null {
+  const cached = apiCache.get(key);
+  if (!cached) return null;
+  
+  const age = Date.now() - cached.timestamp;
+  if (age > CACHE_TTL) {
+    apiCache.delete(key);
+    return null;
+  }
+  
+  return cached.data as T;
+}
+
+function setCachedData(key: string, data: any): void {
+  apiCache.set(key, { data, timestamp: Date.now() });
+}
+
 async function safeJson<T = unknown>(response: Response): Promise<T> {
   const contentType = response.headers.get('content-type');
   if (!contentType || !contentType.includes('application/json')) {
@@ -117,6 +138,13 @@ export const realApi = {
 
   /** Returns results, or { results: null, analysis } when analysis exists but results aren't ready yet. */
   async getResults(id: string): Promise<AnalysisResults | { results: null; analysis: Analysis }> {
+    // Check cache first
+    const cacheKey = `results:${id}`;
+    const cached = getCachedData<AnalysisResults | { results: null; analysis: Analysis }>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+    
     const response = await fetch(`${API_BASE}/analysis/${id}/results`);
     if (!response.ok) {
       let message: string;
@@ -133,9 +161,19 @@ export const realApi = {
       throw new Error(message);
     }
     const data = await safeJson<AnalysisResults | { results: null; analysis: Analysis }>(response);
-    if (data && typeof data === 'object' && 'results' in data && data.results === null && 'analysis' in data && data.analysis) {
-      return { results: null, analysis: data.analysis };
+    
+    // Cache successful results (but not pending/null results)
+    if (data && typeof data === 'object') {
+      if ('results' in data && data.results === null && 'analysis' in data && data.analysis) {
+        // Don't cache null results
+        return { results: null, analysis: data.analysis };
+      } else {
+        // Cache completed results
+        setCachedData(cacheKey, data);
+        return data as AnalysisResults;
+      }
     }
+    
     return data as AnalysisResults;
   },
 
@@ -147,13 +185,27 @@ export const realApi = {
       body: JSON.stringify({ note }),
     });
     if (!response.ok) throw new Error('Failed to save note');
+    
+    // Invalidate note cache after save
+    apiCache.delete(`note:${analysisId}`);
   },
 
   async getNote(analysisId: string): Promise<string> {
+    // Check cache first
+    const cacheKey = `note:${analysisId}`;
+    const cached = getCachedData<string>(cacheKey);
+    if (cached !== null) {
+      return cached;
+    }
+    
     const response = await fetch(`${API_BASE}/notes/${analysisId}`);
     if (!response.ok) return '';
     const data = await safeJson<{ note?: string }>(response).catch(() => ({} as { note?: string }));
-    return data.note || '';
+    const note = data.note || '';
+    
+    // Cache the note
+    setCachedData(cacheKey, note);
+    return note;
   },
 
   // Favorites

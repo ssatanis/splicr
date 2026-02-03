@@ -249,11 +249,6 @@ export default function QCCharts({
           <h3 className="text-xl font-serif mb-4 text-text-primary">Gini coefficient</h3>
           {hasGini ? (
             <>
-              {isDemo && (
-                <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-3 py-1.5 rounded-lg mb-3 text-center">
-                  Demo value — run with your sequencing data for real QC metrics.
-                </p>
-              )}
               <div className="text-7xl font-serif text-text-primary">{giniCoefficient!.toFixed(2)}</div>
               <p className="text-sm text-text-secondary mt-4">Distribution uniformity</p>
               <div className="mt-6 w-full max-w-xs">

@@ -1,5 +1,21 @@
 # SplicR Electron Desktop App Setup
 
+## ⚠️ macOS Users: Code Signing Fix Applied!
+
+**The macOS Gatekeeper issue has been FIXED!** The app now uses ad-hoc signing and can be opened.
+
+**Quick Start:**
+```bash
+npm run build:electron:mac
+./open-splicr.sh
+```
+
+If blocked by Gatekeeper, **right-click** the app and choose **"Open"**.
+
+📖 **Full documentation**: [MACOS_GATEKEEPER_FIX.md](./MACOS_GATEKEEPER_FIX.md)
+
+---
+
 ## Current Status
 
 The Electron desktop app infrastructure has been set up with the following components:
@@ -53,9 +69,11 @@ You can run all commands from the project root; they delegate to the frontend:
 
 ```bash
 npm run build:electron        # Mac, Windows, Linux
-npm run build:electron:mac    # Mac only
+npm run build:electron:mac    # Mac only (ZIP + directory)
 npm run dev:electron          # Dev mode (Next + Electron)
 ```
+
+**Note**: DMG creation is disabled by default (slow, uses lots of disk space). ZIP files work perfectly for distribution.
 
 ### Security & Distribution
 

@@ -9,6 +9,8 @@ const nextConfig = {
   devIndicators: false,
   // Use frontend as root for file tracing (required when building from monorepo root)
   outputFileTracingRoot: __dirname,
+  // Use consistent build ID for Electron builds to avoid path issues
+  generateBuildId: isElectronBuild ? async () => 'electron-build' : undefined,
   // Conditional static export for Electron builds
   output: isElectronBuild ? 'export' : undefined,
   // Disable image optimization for static export
@@ -21,6 +23,9 @@ const nextConfig = {
   },
   experimental: {
     optimizePackageImports: ['lucide-react'],
+    // Disable Turbopack persistent cache to avoid "Persisting failed" / "write batch" / range-index crashes
+    turbopackFileSystemCacheForDev: false,
+    turbopackFileSystemCacheForBuild: false,
   },
   webpack: (config) => {
     // react-plotly.js expects 'plotly.js/dist/plotly'; we use plotly.js-dist-min

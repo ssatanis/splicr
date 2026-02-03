@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import Sidebar from "@/components/Sidebar";
 import Button from "@/components/Button";
-import { useUser } from "@/lib/context/UserContext";
+import { useAnalyses, useUpdateAnalysis } from "@/lib/hooks/useAnalyses";
 import { Analysis } from "@/lib/types";
 import {
   Search,
@@ -26,32 +25,46 @@ import Link from "next/link";
 const IN_PROGRESS_STATUSES = ["running", "queued", "pending"];
 
 export default function MyAnalysesPage() {
-  const { analyses, isLoading, refreshAnalyses } = useUser();
+  // ⚡ INSTANT LOADING with TanStack Query
+  const { data: analyses = [], isLoading, refetch: refreshAnalyses } = useAnalyses();
+  const updateAnalysis = useUpdateAnalysis();
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [filteredAnalyses, setFilteredAnalyses] = useState<Analysis[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
 
-  useEffect(() => {
+  // Memoized filtering for performance
+  const filteredAnalyses = useMemo(() => {
     let filtered = analyses;
-    if (statusFilter !== "all") filtered = filtered.filter((a) => a.status === statusFilter);
-    if (searchQuery)
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((a) => a.status === statusFilter);
+    }
+    if (searchQuery) {
       filtered = filtered.filter((a) =>
         a.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
-    setFilteredAnalyses(filtered);
+    }
+    return filtered;
   }, [analyses, statusFilter, searchQuery]);
 
   // Auto-refresh list while any analysis is in progress so progress bars update
   useEffect(() => {
     const hasInProgress = analyses.some((a) => IN_PROGRESS_STATUSES.includes(a.status));
     if (!hasInProgress) return;
-    const interval = setInterval(refreshAnalyses, 4000);
+    const interval = setInterval(() => refreshAnalyses(), 4000);
     return () => clearInterval(interval);
   }, [analyses, refreshAnalyses]);
 
-  const handleStartEdit = (analysis: Analysis) => {
+  // Track page load time
+  useEffect(() => {
+    console.time('⏱️ Analyses Page Interactive');
+    return () => {
+      console.timeEnd('⏱️ Analyses Page Interactive');
+    };
+  }, []);
+
+  const handleStartEdit = (analysis: any) => {
     setEditingId(analysis.id);
     setEditingName(analysis.name);
   };
@@ -63,26 +76,27 @@ export default function MyAnalysesPage() {
 
   const handleSaveEdit = async (analysisId: string) => {
     if (!editingName.trim()) return;
-    try {
-      const response = await fetch(`/api/analysis/${analysisId}/update`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: editingName.trim() }),
-      });
-      if (response.ok) {
-        await refreshAnalyses();
-        setEditingId(null);
-        setEditingName("");
+    
+    // ⚡ OPTIMISTIC UPDATE - instant UI feedback
+    updateAnalysis.mutate(
+      {
+        id: analysisId,
+        updates: { name: editingName.trim() }
+      },
+      {
+        onSuccess: () => {
+          setEditingId(null);
+          setEditingName("");
+        },
+        onError: (error) => {
+          console.error('Failed to save analysis name:', error);
+        }
       }
-    } catch (error) {
-      console.error('Failed to save analysis name:', error);
-    }
+    );
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar />
-      <main className="ml-[260px] min-h-screen">
+      <div className="min-h-screen">
         <div className="max-w-[1400px] mx-auto px-8 py-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -137,13 +151,7 @@ export default function MyAnalysesPage() {
             </select>
           </motion.div>
 
-          {isLoading ? (
-            <div className="bg-surface rounded-2xl p-32 shadow-card border border-border">
-              <div className="flex items-center justify-center">
-                <div className="animate-pulse text-text-secondary font-serif">Loading analyses...</div>
-              </div>
-            </div>
-          ) : filteredAnalyses.length === 0 ? (
+          {filteredAnalyses.length === 0 ? (
             <div className="bg-surface rounded-2xl p-32 shadow-card border border-border text-center">
               <FileText className="w-16 h-16 text-text-tertiary mx-auto mb-6" strokeWidth={1} />
               <h3 className="text-2xl font-serif text-text-primary mb-3">No analyses found</h3>
@@ -319,8 +327,7 @@ export default function MyAnalysesPage() {
             </motion.section>
           )}
         </div>
-      </main>
-    </div>
+      </div>
   );
 }
 

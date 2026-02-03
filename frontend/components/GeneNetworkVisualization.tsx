@@ -1,9 +1,11 @@
 'use client';
 
 import { useCallback, useState, useMemo, useRef, useEffect } from 'react';
-import { Download, Loader2, RefreshCw, Search, Pause, Play, Info, Filter } from 'lucide-react';
+import { Download, Loader2, RefreshCw, Search, Pause, Play, Info, Filter, TrendingUp } from 'lucide-react';
 import { exportElementAsPNG } from '@/lib/chartExportUtils';
 import type { GeneResult } from '@/lib/types';
+import GeneDetailPopup from './GeneDetailPopup';
+import PathwayEnrichmentPanel from './PathwayEnrichmentPanel';
 
 // Use force-graph (2D only) directly to avoid loading react-force-graph's VR/AR modules,
 // which require global AFRAME and cause "AFRAME is not defined" in Next.js.
@@ -151,6 +153,8 @@ export default function GeneNetworkVisualization({
   const [showFilters, setShowFilters] = useState(false);
   const [selectedGeneNeighbors, setSelectedGeneNeighbors] = useState<string | null>(null);
   const showLabelsRef = useRef(false);
+  const [popupNode, setPopupNode] = useState<{ gene: string; position: { x: number; y: number }; data: NodeData } | null>(null);
+  const [showEnrichmentPanel, setShowEnrichmentPanel] = useState(false);
   /** Saved node positions (id -> {x,y,fx,fy}) so filter changes don't reset layout */
   const nodePositionsRef = useRef<Map<string, { x?: number; y?: number; fx?: number; fy?: number }>>(new Map());
 
@@ -218,18 +222,19 @@ export default function GeneNetworkVisualization({
   );
 
   // Stable key so we only refetch when the actual gene list or score changes (not on every parent re-render).
-  // Prevents the graph from being destroyed/recreated and losing pinned positions.
   const loadKey = useMemo(
     () => geneNames.join(',') + '|' + String(requiredScore),
     [geneNames, requiredScore]
   );
   const genesRef = useRef(genes);
   const geneMapRef = useRef(geneMap);
+  const geneNamesRef = useRef(geneNames);
   genesRef.current = genes;
   geneMapRef.current = geneMap;
+  geneNamesRef.current = geneNames;
 
   const loadNetwork = useCallback(async () => {
-    const names = geneNames;
+    const names = geneNamesRef.current;
     if (names.length === 0) {
       setGraphData({ nodes: [], links: [] });
       return;
@@ -254,11 +259,14 @@ export default function GeneNetworkVisualization({
     } finally {
       setLoading(false);
     }
-  }, [loadKey, geneNames, requiredScore]);
+  }, [loadKey, requiredScore]);
 
+  const lastLoadKeyRef = useRef<string | null>(null);
   useEffect(() => {
+    if (lastLoadKeyRef.current === loadKey) return;
+    lastLoadKeyRef.current = loadKey;
     loadNetwork();
-  }, [loadNetwork]);
+  }, [loadKey, loadNetwork]);
 
   const nodeColor = useCallback((node: NodeData) => {
     const lfc = node.log2FC;
@@ -429,13 +437,21 @@ export default function GeneNetworkVisualization({
   useEffect(() => {
     const container = graphContainerRef.current;
     const dataToRender = filteredGraphData;
-    if (!isMounted || !dataToRender || dataToRender.nodes.length === 0 || loading || !container) {
+    if (!isMounted || !container) {
       if (graphInstanceRef.current) {
         graphInstanceRef.current._destructor();
         graphInstanceRef.current = null;
       }
       return;
     }
+    if (!dataToRender || dataToRender.nodes.length === 0) {
+      if (graphInstanceRef.current) {
+        graphInstanceRef.current._destructor();
+        graphInstanceRef.current = null;
+      }
+      return;
+    }
+    if (loading) return;
 
     // Save current node positions from existing graph so filter changes don't reset layout
     const prevInstance = graphInstanceRef.current;
@@ -549,7 +565,13 @@ export default function GeneNetworkVisualization({
             n.fy = undefined;
             api.d3ReheatSimulation();
           } else {
-            setHighlightNode((prev) => (prev === n.id ? null : n.id));
+            // Show popup with gene details
+            setPopupNode({
+              gene: n.name,
+              position: { x: event.clientX + 20, y: event.clientY },
+              data: n,
+            });
+            setHighlightNode(n.id);
           }
         })
         .onNodeDragEnd((node: unknown) => {
@@ -557,6 +579,7 @@ export default function GeneNetworkVisualization({
           if (n.x != null && n.y != null) {
             n.fx = n.x;
             n.fy = n.y;
+            nodePositionsRef.current.set(n.id, { x: n.x, y: n.y, fx: n.fx, fy: n.fy });
           }
         })
         .onNodeRightClick((node: unknown, event: MouseEvent) => {
@@ -629,8 +652,38 @@ export default function GeneNetworkVisualization({
   // Only recreate graph when filtered data or mount/loading change; nodeColor/nodeVal are stable and read via closure.
   }, [isMounted, filteredGraphData, loading]);
 
+  // Get all gene names for enrichment
+  const allGeneNames = useMemo(() => {
+    if (!filteredGraphData) return [];
+    return filteredGraphData.nodes.map(n => n.name);
+  }, [filteredGraphData]);
+
   return (
-    <div ref={containerRef} className="w-full bg-surface rounded-xl p-4 sm:p-6 border border-border shadow-card">
+    <>
+      {/* Gene Detail Popup */}
+      {popupNode && (
+        <GeneDetailPopup
+          gene={popupNode.gene}
+          log2FC={popupNode.data.log2FC}
+          fdr={popupNode.data.fdr}
+          degree={popupNode.data.degree}
+          position={popupNode.position}
+          onClose={() => {
+            setPopupNode(null);
+            setHighlightNode(null);
+          }}
+        />
+      )}
+
+      {/* Pathway Enrichment Panel */}
+      {showEnrichmentPanel && allGeneNames.length > 0 && (
+        <PathwayEnrichmentPanel
+          genes={allGeneNames}
+          onClose={() => setShowEnrichmentPanel(false)}
+        />
+      )}
+
+      <div ref={containerRef} className="w-full bg-surface rounded-xl p-4 sm:p-6 border border-border shadow-card">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4">
         <h3 className="text-xl sm:text-2xl font-serif text-text-primary">Gene interaction network</h3>
@@ -667,6 +720,15 @@ export default function GeneNetworkVisualization({
           >
             <Info className="w-4 h-4" />
             <span className="hidden sm:inline">Stats</span>
+          </button>
+          <button
+            onClick={() => setShowEnrichmentPanel(true)}
+            disabled={!filteredGraphData || filteredGraphData.nodes.length === 0}
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm rounded-lg border border-border bg-accent/10 text-accent hover:bg-accent/20 disabled:opacity-50 disabled:hover:bg-accent/10"
+            title="Analyze pathways for genes in network"
+          >
+            <TrendingUp className="w-4 h-4" />
+            <span className="hidden sm:inline">Enrichment</span>
           </button>
           <button
             onClick={() => loadNetwork()}
@@ -949,6 +1011,7 @@ export default function GeneNetworkVisualization({
         </div>
         <div className="text-xs sm:text-sm text-text-tertiary space-y-1">
           <p>• Node size represents statistical significance (-log₁₀ FDR). Larger = more significant.</p>
+          <p>• <strong>Click</strong> a node to view detailed information (gene info, papers, drugs, interactions)</p>
           <p>• <strong>Drag</strong> nodes to reposition (they stay pinned). <strong>Double-click</strong> to unpin.</p>
           <p>• <strong>Right-click</strong> a node to focus on its neighbors or view in external databases</p>
           <p>• <strong>Hub genes</strong> (highly connected) may be key regulatory or pathway nodes</p>
@@ -956,5 +1019,6 @@ export default function GeneNetworkVisualization({
         </div>
       </div>
     </div>
+    </>
   );
 }

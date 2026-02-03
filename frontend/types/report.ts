@@ -93,4 +93,19 @@ export interface AnalysisContextForReport {
   lfcThreshold: number;
   topDepleted?: Array<{ gene: string; logFoldChange: number; fdr: number }>;
   topEnriched?: Array<{ gene: string; logFoldChange: number; fdr: number }>;
+  // Additional fields for comprehensive reporting
+  createdDate?: string;
+  completedDate?: string;
+  sampleCount?: number;
+  sampleNames?: string;
+  controlSamples?: string;
+  treatmentSamples?: string;
+  totalReads?: string;
+  mappingRate?: string;
+  libraryCoverage?: string;
+  zeroCounts?: string;
+  giniCoefficient?: string;
+  normalizationMethod?: string;
+  minimumReads?: number;
+  resultsSource?: string;
 }

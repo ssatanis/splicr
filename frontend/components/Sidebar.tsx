@@ -10,23 +10,41 @@ import {
   Upload,
   BarChart3,
   Settings,
+  Box,
+  PanelRightOpen,
+  PanelLeftClose,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { useSidebar } from "@/lib/context/SidebarContext";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "My Analyses", href: "/analyses", icon: FileText },
   { name: "Upload New", href: "/upload", icon: Upload },
   { name: "Reports", href: "/reports", icon: BarChart3 },
+  // { name: "Structure Viewer", href: "/structure-viewer", icon: Box }, // Hidden - can be restored by uncommenting
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
-export default function Sidebar() {
+export interface SidebarProps {
+  /** Override context when set (e.g. for tests); normally uses global context */
+  minimized?: boolean;
+  onMaximize?: () => void;
+}
+
+export default function Sidebar({ minimized: minimizedProp, onMaximize: onMaximizeProp }: SidebarProps) {
   const pathname = usePathname();
+  const ctx = useSidebar();
   const [displayName, setDisplayName] = useState("Researcher");
   const [email, setEmail] = useState("user@example.com");
   const [hasAuth, setHasAuth] = useState(false);
+
+  // Use context state, but allow prop override for testing
+  const minimized = minimizedProp ?? ctx.isMinimized;
+  const setMinimized = ctx.setMinimized;
+  const onMaximize = onMaximizeProp ?? (() => setMinimized(false));
+  const onMinimize = () => setMinimized(true);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -77,16 +95,30 @@ export default function Sidebar() {
     loadUserData();
   }, [pathname]);
 
+  const widthClass = minimized ? "w-sidebar-min" : "w-sidebar-max";
+
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-[260px] bg-surface border-r border-border z-40">
+    <aside
+      className={cn(
+        "fixed left-0 top-0 bottom-0 bg-surface border-r border-border z-50 transition-all duration-200 ease-in-out",
+        widthClass
+      )}
+    >
       <div className="flex flex-col h-full">
-        <div className="h-20 flex items-center px-6 border-b border-border shrink-0">
-          <Link href="/dashboard" className="flex items-center hover:opacity-90 transition-opacity">
-            <Image src="/logo.jpeg" alt="SplicR" width={120} height={40} className="h-10 w-auto object-contain" priority />
+        <div className={cn("h-20 flex items-center border-b border-border shrink-0", minimized ? "justify-center px-0" : "px-6")}>
+          <Link href="/dashboard" className="flex items-center hover:opacity-90 transition-opacity" title="SplicR">
+            <Image
+              src="/logo.jpeg"
+              alt="SplicR"
+              width={minimized ? 36 : 120}
+              height={minimized ? 36 : 40}
+              className={cn("object-contain", minimized ? "h-9 w-9 rounded" : "h-10 w-auto")}
+              priority
+            />
           </Link>
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-1">
+        <nav className={cn("flex-1 py-6 space-y-1", minimized ? "px-2" : "px-4")}>
           {navigation.map((item) => {
             const isActive = pathname === item.href || (item.href === "/upload" && pathname === "/upload");
             const Icon = item.icon;
@@ -95,33 +127,63 @@ export default function Sidebar() {
               <Link
                 key={item.name}
                 href={item.href}
+                title={item.name}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-serif transition-all duration-200",
+                  "flex items-center rounded-xl text-sm font-serif transition-all duration-200",
+                  minimized ? "justify-center p-3" : "gap-3 px-4 py-3",
                   isActive
                     ? "bg-accent text-text-primary"
                     : "text-text-secondary hover:bg-background hover:text-text-primary"
                 )}
               >
-                <Icon className="w-5 h-5" strokeWidth={1.5} />
-                <span>{item.name}</span>
+                <Icon className="w-5 h-5 shrink-0" strokeWidth={1.5} />
+                {!minimized && <span>{item.name}</span>}
               </Link>
             );
           })}
         </nav>
 
-        <div className="px-4 py-6 border-t border-border">
+        {/* Minimize when expanded / Maximize when minimized — available on all pages */}
+        <div className={cn("border-t border-border", minimized ? "px-2 py-4" : "px-4 py-2")}>
+          <button
+            type="button"
+            onClick={minimized ? onMaximize : onMinimize}
+            title={minimized ? "Expand sidebar" : "Collapse sidebar"}
+            className={cn(
+              "w-full flex items-center rounded-xl hover:bg-background transition-colors text-text-secondary hover:text-text-primary",
+              minimized ? "justify-center p-3" : "gap-3 px-4 py-3"
+            )}
+          >
+            {minimized ? (
+              <PanelRightOpen className="w-5 h-5 shrink-0" strokeWidth={1.5} />
+            ) : (
+              <>
+                <PanelLeftClose className="w-5 h-5 shrink-0" strokeWidth={1.5} />
+                <span className="text-sm font-serif">Collapse sidebar</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        <div className={cn("border-t border-border", minimized ? "px-2 py-4" : "px-4 py-6")}>
           <Link
             href={hasAuth ? "/settings" : "/auth/sign-in"}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-background transition-colors"
+            title={displayName}
+            className={cn(
+              "flex items-center rounded-xl hover:bg-background transition-colors",
+              minimized ? "justify-center p-3" : "gap-3 px-4 py-3"
+            )}
           >
             <div className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center shrink-0">
               <span className="text-sm font-serif text-text-primary">
                 {displayName.charAt(0).toUpperCase()}
               </span>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-serif text-text-primary truncate">{displayName}</p>
-            </div>
+            {!minimized && (
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-serif text-text-primary truncate">{displayName}</p>
+              </div>
+            )}
           </Link>
         </div>
       </div>

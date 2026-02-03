@@ -8,6 +8,7 @@ import Image from "@tiptap/extension-image";
 import { fillPlaceholders, getDefaultAnalysisContext } from "@/lib/template-engine";
 import { exportTipTapToDocx } from "@/lib/docx-export";
 import { exportElementToPdf } from "@/lib/pdf-export";
+import { exportTipTapToLatex } from "@/lib/latex-export";
 import { defaultTemplates } from "@/lib/default-templates";
 import { journalPresets } from "@/lib/journal-presets";
 import type { TipTapDoc, AnalysisContextForReport, JournalPresetKey } from "@/types/report";
@@ -20,6 +21,7 @@ import {
   Heading3,
   FileText,
   Download,
+  Code,
 } from "lucide-react";
 
 const extensions = [
@@ -131,6 +133,21 @@ export default function ReportBuilder({
     }
   };
 
+  const handleExportLatex = () => {
+    if (!editor) return;
+    setExporting(true);
+    try {
+      const doc = editor.getJSON() as TipTapDoc;
+      exportTipTapToLatex(
+        doc,
+        `${title.replace(/\s+/g, "-")}.tex`,
+        journalPreset
+      );
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Toolbar */}
@@ -233,7 +250,7 @@ export default function ReportBuilder({
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-success/20 text-success hover:bg-success/30 text-sm font-medium disabled:opacity-50 transition-colors"
         >
           <FileText className="w-4 h-4" />
-          Export DOCX
+          DOCX
         </button>
         <button
           type="button"
@@ -242,7 +259,16 @@ export default function ReportBuilder({
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-accent/20 text-text-primary hover:bg-accent/30 text-sm font-medium disabled:opacity-50 transition-colors"
         >
           <Download className="w-4 h-4" />
-          Export PDF
+          PDF
+        </button>
+        <button
+          type="button"
+          onClick={handleExportLatex}
+          disabled={exporting}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-info/20 text-info hover:bg-info/30 text-sm font-medium disabled:opacity-50 transition-colors"
+        >
+          <Code className="w-4 h-4" />
+          LaTeX
         </button>
       </div>
 

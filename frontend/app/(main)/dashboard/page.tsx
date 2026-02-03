@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import Sidebar from "@/components/Sidebar";
 import Button from "@/components/Button";
-import { useUser } from "@/lib/context/UserContext";
+import { useAnalyses } from "@/lib/hooks/useAnalyses";
 import { Analysis } from "@/lib/types";
 import {
   Search,
@@ -19,10 +18,10 @@ import { formatDate } from "@/lib/utils";
 import Link from "next/link";
 
 export default function DashboardPage() {
-  const { analyses, isLoading } = useUser();
+  // ⚡ INSTANT LOADING with TanStack Query
+  const { data: analyses = [], isLoading } = useAnalyses();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [filteredAnalyses, setFilteredAnalyses] = useState<Analysis[]>([]);
 
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -31,27 +30,38 @@ export default function DashboardPage() {
     day: "numeric",
   });
 
-  const stats = {
+  // Memoized stats calculation for performance
+  const stats = useMemo(() => ({
     total: analyses.length,
     completed: analyses.filter((a) => a.status === "complete").length,
     running: analyses.filter((a) => a.status === "running" || a.status === "queued").length,
     failed: analyses.filter((a) => a.status === "failed").length,
-  };
+  }), [analyses]);
 
-  useEffect(() => {
+  // Memoized filtering for performance
+  const filteredAnalyses = useMemo(() => {
     let filtered = analyses;
-    if (statusFilter !== "all") filtered = filtered.filter((a) => a.status === statusFilter);
-    if (searchQuery)
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((a) => a.status === statusFilter);
+    }
+    if (searchQuery) {
       filtered = filtered.filter((a) =>
         a.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
-    setFilteredAnalyses(filtered);
+    }
+    return filtered;
   }, [analyses, statusFilter, searchQuery]);
 
+  // Track page load time
+  useEffect(() => {
+    console.time('⏱️ Dashboard Page Interactive');
+    return () => {
+      console.timeEnd('⏱️ Dashboard Page Interactive');
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar />
-      <main className="ml-[260px] min-h-screen">
+      <div className="min-h-screen">
         <div className="max-w-[1400px] mx-auto px-8 py-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -129,15 +139,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {isLoading ? (
-              <div className="bg-surface rounded-2xl p-32 shadow-card border border-border">
-                <div className="flex items-center justify-center">
-                  <div className="animate-pulse text-text-secondary font-serif">
-                    Loading analyses...
-                  </div>
-                </div>
-              </div>
-            ) : filteredAnalyses.length === 0 ? (
+            {filteredAnalyses.length === 0 ? (
               <EmptyState />
             ) : (
               <div className="bg-surface rounded-2xl shadow-card border border-border overflow-hidden">
@@ -161,8 +163,7 @@ export default function DashboardPage() {
             )}
           </motion.div>
         </div>
-      </main>
-    </div>
+      </div>
   );
 }
 

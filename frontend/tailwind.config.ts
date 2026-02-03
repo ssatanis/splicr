@@ -6,6 +6,12 @@ const config: Config = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  safelist: [
+    'w-sidebar-min',
+    'w-sidebar-max',
+    'ml-sidebar-min',
+    'ml-sidebar-max',
+  ],
   theme: {
     extend: {
       colors: {
@@ -24,6 +30,18 @@ const config: Config = {
       },
       fontFamily: {
         serif: ["var(--font-instrument-serif)", "Georgia", "serif"],
+      },
+      spacing: {
+        '72': '72px',
+        '260': '260px',
+      },
+      width: {
+        'sidebar-min': '72px',
+        'sidebar-max': '260px',
+      },
+      margin: {
+        'sidebar-min': '72px',
+        'sidebar-max': '260px',
       },
       boxShadow: {
         card: "var(--shadow-card)",
