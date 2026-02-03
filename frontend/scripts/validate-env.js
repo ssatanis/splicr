@@ -38,35 +38,48 @@ function isValidJWT(token) {
 function validateEnv() {
   console.log('🔍 Validating environment configuration...\n');
 
-  if (!fs.existsSync(ENV_FILE)) {
-    console.error('❌ .env.local file not found!');
-    console.error('   Copy .env.example to .env.local and fill in your values\n');
-    process.exit(1);
-  }
-
-  const envContent = fs.readFileSync(ENV_FILE, 'utf8');
-  const lines = envContent.split('\n');
+  // Check if running in CI/Production (Vercel, etc.)
+  const isProduction = process.env.VERCEL || process.env.CI || process.env.NODE_ENV === 'production';
+  
   const errors = [];
   const warnings = [];
-
   let supabaseUrl, anonKey, serviceKey, resendKey;
 
-  lines.forEach((line, index) => {
-    const lineNum = index + 1;
-    const trimmed = line.trim();
+  if (isProduction) {
+    // In production, read from environment variables directly
+    console.log('📦 Running in production environment, using environment variables\n');
+    supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    resendKey = process.env.RESEND_API_KEY;
+  } else {
+    // In development, require .env.local file
+    if (!fs.existsSync(ENV_FILE)) {
+      console.error('❌ .env.local file not found!');
+      console.error('   Copy .env.example to .env.local and fill in your values\n');
+      process.exit(1);
+    }
 
-    // Skip comments and empty lines
-    if (!trimmed || trimmed.startsWith('#')) return;
+    const envContent = fs.readFileSync(ENV_FILE, 'utf8');
+    const lines = envContent.split('\n');
 
-    const [key, ...valueParts] = trimmed.split('=');
-    const value = valueParts.join('=').trim();
+    lines.forEach((line, index) => {
+      const lineNum = index + 1;
+      const trimmed = line.trim();
 
-    // Store values for validation
-    if (key === 'NEXT_PUBLIC_SUPABASE_URL') supabaseUrl = value;
-    if (key === 'NEXT_PUBLIC_SUPABASE_ANON_KEY') anonKey = value;
-    if (key === 'SUPABASE_SERVICE_ROLE_KEY') serviceKey = value;
-    if (key === 'RESEND_API_KEY') resendKey = value;
-  });
+      // Skip comments and empty lines
+      if (!trimmed || trimmed.startsWith('#')) return;
+
+      const [key, ...valueParts] = trimmed.split('=');
+      const value = valueParts.join('=').trim();
+
+      // Store values for validation
+      if (key === 'NEXT_PUBLIC_SUPABASE_URL') supabaseUrl = value;
+      if (key === 'NEXT_PUBLIC_SUPABASE_ANON_KEY') anonKey = value;
+      if (key === 'SUPABASE_SERVICE_ROLE_KEY') serviceKey = value;
+      if (key === 'RESEND_API_KEY') resendKey = value;
+    });
+  }
 
   // Validate Supabase URL
   if (!supabaseUrl) {
