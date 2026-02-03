@@ -390,13 +390,23 @@ export default function SignUpPage() {
               />
               <label htmlFor="terms" className="text-sm font-serif text-text-secondary">
                 I agree to the{' '}
-                <Link href="/terms" className="text-accent hover:underline">
-                  Terms of Service
-                </Link>{' '}
+                <a
+                  href="https://splicr.org/terms-and-conditions"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-accent hover:underline"
+                >
+                  Terms & Conditions
+                </a>{' '}
                 and{' '}
-                <Link href="/privacy" className="text-accent hover:underline">
-                  Privacy Policy
-                </Link>
+                <a
+                  href="https://splicr.org/privacy-and-security"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-accent hover:underline"
+                >
+                  Privacy & Security
+                </a>
               </label>
             </div>
 
@@ -445,6 +455,32 @@ export default function SignUpPage() {
               Sign in
             </Link>
           </p>
+        </div>
+
+        {/* Footer Disclaimer */}
+        <div className="mt-8 text-center space-y-3">
+          <p className="text-xs text-text-tertiary font-serif max-w-md mx-auto">
+            Your privacy and security are important to us. SplicR is committed to protecting your data.
+          </p>
+          <div className="flex items-center justify-center gap-3 text-xs">
+            <a
+              href="https://splicr.org/privacy-and-security"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-text-tertiary hover:text-text-secondary transition-colors font-serif"
+            >
+              Privacy & Security
+            </a>
+            <span className="text-border">•</span>
+            <a
+              href="https://splicr.org/terms-and-conditions"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-text-tertiary hover:text-text-secondary transition-colors font-serif"
+            >
+              Terms & Conditions
+            </a>
+          </div>
         </div>
       </div>
 

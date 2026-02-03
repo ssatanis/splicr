@@ -509,6 +509,39 @@ export default function SettingsPage() {
               Profile saved to database.
             </motion.p>
           )}
+
+          {/* Privacy & Security Disclaimer */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="mt-16 pt-8 border-t border-border/50"
+          >
+            <div className="flex flex-col items-center justify-center gap-3 text-center">
+              <p className="text-xs text-text-tertiary font-serif max-w-2xl leading-relaxed">
+                Your privacy and security are important to us. SplicR is committed to protecting your data and maintaining the highest standards of security.
+              </p>
+              <div className="flex items-center gap-4 text-xs">
+                <a
+                  href="https://splicr.org/privacy-and-security"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-text-tertiary hover:text-text-primary transition-colors font-serif underline decoration-text-tertiary/30 hover:decoration-text-primary/50 underline-offset-2"
+                >
+                  Privacy & Security
+                </a>
+                <span className="text-border">•</span>
+                <a
+                  href="https://splicr.org/terms-and-conditions"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-text-tertiary hover:text-text-primary transition-colors font-serif underline decoration-text-tertiary/30 hover:decoration-text-primary/50 underline-offset-2"
+                >
+                  Terms & Conditions
+                </a>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </div>
   );

@@ -379,6 +379,29 @@ export default function ResetPasswordPage() {
             </button>
           </form>
         </div>
+
+        {/* Footer Disclaimer */}
+        <div className="mt-8 text-center">
+          <div className="flex items-center justify-center gap-3 text-xs">
+            <a
+              href="https://splicr.org/privacy-and-security"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-text-tertiary hover:text-text-secondary transition-colors font-serif"
+            >
+              Privacy & Security
+            </a>
+            <span className="text-border">•</span>
+            <a
+              href="https://splicr.org/terms-and-conditions"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-text-tertiary hover:text-text-secondary transition-colors font-serif"
+            >
+              Terms & Conditions
+            </a>
+          </div>
+        </div>
       </div>
 
       <style jsx>{`

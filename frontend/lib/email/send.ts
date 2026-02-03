@@ -6,23 +6,12 @@
  * With onboarding@resend.dev, Resend only delivers to your Resend account email.
  */
 
-import { Resend } from 'resend';
 import {
   shareInviteEmailContent,
   confirmEmailContent,
   resetPasswordEmailContent,
 } from './splicr-template';
-
-function getFromAddress(): string {
-  return process.env.RESEND_FROM || 'SplicR <notifications@splicr.org>';
-}
-
-function getResend(): Resend | null {
-  const key = process.env.RESEND_API_KEY;
-  if (!key || typeof key !== 'string') return null;
-  if (!key.startsWith('re_')) return null;
-  return new Resend(key);
-}
+import { getResendClient, getFromAddress, getResendError } from './resend-client';
 
 function getResendConfigError(): string | null {
   const key = process.env.RESEND_API_KEY;
@@ -31,6 +20,10 @@ function getResendConfigError(): string | null {
   }
   if (!key.startsWith('re_')) {
     return 'RESEND_API_KEY must start with re_. Get a valid key from https://resend.com/api-keys';
+  }
+  const initError = getResendError();
+  if (initError) {
+    return `Resend initialization failed: ${initError}`;
   }
   return null;
 }
@@ -52,7 +45,7 @@ export async function sendShareInviteEmail(options: {
   if (configError) {
     return { success: false, error: configError };
   }
-  const resend = getResend();
+  const resend = getResendClient();
   if (!resend) {
     return { success: false, error: 'Resend not configured.' };
   }
@@ -98,7 +91,7 @@ export async function sendConfirmEmail(options: {
   to: string;
   confirmUrl: string;
 }): Promise<{ success: boolean; error?: string }> {
-  const resend = getResend();
+  const resend = getResendClient();
   if (!resend) return { success: false, error: 'Resend not configured' };
   const { subject, html } = confirmEmailContent({ confirmUrl: options.confirmUrl });
   const { error } = await resend.emails.send({
@@ -122,7 +115,7 @@ export async function sendResetPasswordEmail(options: {
   to: string;
   resetUrl: string;
 }): Promise<{ success: boolean; error?: string }> {
-  const resend = getResend();
+  const resend = getResendClient();
   if (!resend) return { success: false, error: 'Resend not configured' };
   const { subject, html } = resetPasswordEmailContent({ resetUrl: options.resetUrl });
   const { error } = await resend.emails.send({

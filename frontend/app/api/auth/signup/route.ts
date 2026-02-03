@@ -83,9 +83,10 @@ export async function POST(request: Request) {
       { onConflict: 'id' }
     );
 
+    // Email verification is disabled - users can sign in immediately
     return NextResponse.json({
       user: { id: data.user.id, email: data.user.email },
-      requiresEmailConfirmation: data.user.email_confirmed_at === null,
+      requiresEmailConfirmation: false, // Always false - email verification disabled
     });
   } catch (error) {
     console.error('Sign-up error:', error);

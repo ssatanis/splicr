@@ -252,16 +252,19 @@ function SignInForm() {
         </div>
 
         {/* Footer */}
-        <p className="mt-8 text-center text-xs text-text-tertiary font-serif">
-          By signing in, you agree to our{' '}
-          <Link href="/terms" className="underline hover:text-text-secondary transition-colors">
-            Terms of Service
-          </Link>{' '}
-          and{' '}
-          <Link href="/privacy" className="underline hover:text-text-secondary transition-colors">
-            Privacy Policy
-          </Link>
-        </p>
+        <div className="mt-8 text-center">
+          <p className="text-xs text-text-tertiary font-serif">
+            By signing in, you agree to our{' '}
+            <a
+              href="https://splicr.org/terms-and-conditions"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent underline hover:text-accent/80 transition-colors"
+            >
+              Terms & Conditions
+            </a>
+          </p>
+        </div>
       </div>
 
       <style jsx>{`

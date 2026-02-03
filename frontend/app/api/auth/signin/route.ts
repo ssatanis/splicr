@@ -17,6 +17,15 @@ export async function POST(request: Request) {
       );
     }
 
+    // Validate environment configuration
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.error('❌ Missing Supabase environment variables');
+      return NextResponse.json(
+        { error: 'Server configuration error. Please contact support.' },
+        { status: 500 }
+      );
+    }
+
     const supabase = await createClient();
 
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -26,9 +35,20 @@ export async function POST(request: Request) {
 
     if (error) {
       const msg = String(error.message ?? '');
+
+      // Check for API key errors
+      if (msg.toLowerCase().includes('api key') || msg.toLowerCase().includes('invalid key')) {
+        console.error('❌ SUPABASE API KEY ERROR:', msg);
+        console.error('→ Check your .env.local file and run: npm run validate-env');
+        return NextResponse.json(
+          { error: 'Server configuration error. Please check server logs.' },
+          { status: 500 }
+        );
+      }
+
       if (msg.includes('521') || msg.includes('Web server is down') || msg.includes('<!DOCTYPE') || msg.includes('fetch')) {
         return NextResponse.json(
-          { error: 'We couldn’t reach the server. Please check your connection and try again.' },
+          { error: 'We could not reach the server. Please check your connection and try again.' },
           { status: 503 }
         );
       }
@@ -44,6 +64,10 @@ export async function POST(request: Request) {
           { status: 401 }
         );
       }
+
+      // Log unexpected errors for debugging
+      console.error('Sign-in error:', error.message);
+
       return NextResponse.json(
         { error: error.message },
         { status: 401 }
@@ -64,7 +88,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Sign-in error:', error);
     return NextResponse.json(
-      { error: 'We couldn’t reach the server. Please check your connection and try again.' },
+      { error: 'We could not reach the server. Please check your connection and try again.' },
       { status: 503 }
     );
   }
