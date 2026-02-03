@@ -51,7 +51,7 @@ export function NotificationSettings() {
       }
 
       if (data) {
-        setSettings(prev => ({ ...prev, ...data }));
+        setSettings(prev => ({ ...prev, ...(data as Partial<typeof settings>) } as typeof settings));
       }
     } catch (error) {
       console.error('Error:', error);
@@ -67,8 +67,8 @@ export function NotificationSettings() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { error: err } = await supabase
-        .from('user_settings')
+      const { error: err } = await (supabase
+        .from('user_settings') as any)
         .upsert({
           user_id: user.id,
           ...settings,

@@ -87,7 +87,7 @@ export function AnalysisDefaultsSettings() {
       }
 
       if (data) {
-        setDefaults(prev => ({ ...prev, ...data }));
+        setDefaults(prev => ({ ...prev, ...(data as Partial<AnalysisDefaults>) } as AnalysisDefaults));
       }
     } catch (error) {
       console.error('Error:', error);
@@ -121,8 +121,8 @@ export function AnalysisDefaultsSettings() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { error } = await supabase
-        .from('analysis_defaults')
+      const { error } = await (supabase
+        .from('analysis_defaults') as any)
         .upsert({
           user_id: user.id,
           ...defaults,
@@ -148,8 +148,8 @@ export function AnalysisDefaultsSettings() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { error } = await supabase
-        .from('analysis_presets')
+      const { error } = await (supabase
+        .from('analysis_presets') as any)
         .insert({
           user_id: user.id,
           name: newPresetName,

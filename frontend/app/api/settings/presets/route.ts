@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 // GET all presets for current user (including shared ones)
 export async function GET() {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
@@ -32,7 +32,7 @@ export async function GET() {
 // POST create a new preset
 export async function POST(request: Request) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
@@ -49,8 +49,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data, error } = await supabase
-      .from('analysis_presets')
+    const { data, error } = await (supabase
+      .from('analysis_presets') as any)
       .insert({
         user_id: user.id,
         name,
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
 // DELETE a preset
 export async function DELETE(request: Request) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {

@@ -405,7 +405,7 @@ export default function DrugGeneFinder({ significantGenes, totalGenesInScreen, a
                   exit={{ opacity: 0 }}
                   className="space-y-8"
                 >
-                  {drugResults.results.map((row, idx) => (
+                  {drugResults.results.map((row: GeneDrugResult, idx: number) => (
                     <motion.div
                       key={row.gene}
                       initial={{ opacity: 0, y: 10 }}
@@ -434,7 +434,7 @@ export default function DrugGeneFinder({ significantGenes, totalGenesInScreen, a
                         {row.drugs.length === 0 ? (
                           <p className="text-text-tertiary text-sm font-serif">No drugs found.</p>
                         ) : (
-                          row.drugs.slice(0, 30).map((drug, i) => (
+                          row.drugs.slice(0, 30).map((drug: DrugItem, i: number) => (
                             <div
                               key={i}
                               className="rounded-xl p-4 border border-border dark:border-gray-700 bg-surface dark:bg-gray-900 hover:shadow-card transition-shadow min-w-[200px]"
@@ -450,7 +450,7 @@ export default function DrugGeneFinder({ significantGenes, totalGenesInScreen, a
                                 )}
                               </div>
                               <div className="mt-2 text-xs text-text-secondary font-serif">
-                                {drug.interactionTypes?.map((t) => t.type).filter(Boolean).join(', ') || '—'}
+                                {drug.interactionTypes?.map((t: { type: string; directionality: string }) => t.type).filter(Boolean).join(', ') || '—'}
                               </div>
                               <div className="mt-2 flex flex-wrap gap-2">
                                 {drug.pmids?.length > 0 && (
@@ -505,7 +505,7 @@ export default function DrugGeneFinder({ significantGenes, totalGenesInScreen, a
                       No combinations (need at least 2 genes with approved drugs).
                     </p>
                   ) : (
-                    combinations.map((combo, idx) => (
+                    combinations.map((combo: CombinationItem, idx: number) => (
                       <motion.div
                         key={idx}
                         initial={{ opacity: 0, y: 10 }}

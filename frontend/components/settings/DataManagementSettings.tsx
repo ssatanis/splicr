@@ -73,7 +73,7 @@ export function DataManagementSettings() {
       }
 
       if (data) {
-        setSettings(prev => ({ ...prev, ...data }));
+        setSettings(prev => ({ ...prev, ...(data as Partial<DataManagementSettings>) } as DataManagementSettings));
       }
     } catch (error) {
       console.error('Error:', error);
@@ -89,8 +89,8 @@ export function DataManagementSettings() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { error } = await supabase
-        .from('data_management_settings')
+      const { error } = await (supabase
+        .from('data_management_settings') as any)
         .upsert({
           user_id: user.id,
           ...settings,

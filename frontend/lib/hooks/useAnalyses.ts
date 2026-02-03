@@ -109,8 +109,8 @@ export function useCreateAnalysis() {
       console.log('🚀 [useCreateAnalysis] Creating analysis...');
       const startTime = performance.now();
 
-      const { data, error } = await supabase
-        .from('analyses')
+      const { data, error } = await (supabase
+        .from('analyses') as any)
         .insert([newAnalysis])
         .select()
         .single();
@@ -132,9 +132,8 @@ export function useCreateAnalysis() {
 
       // Optimistically update cache
       queryClient.setQueryData<Analysis[]>(analysisKeys.lists(), (old) => {
-        const optimisticAnalysis: Analysis = {
+        const optimisticAnalysis = {
           id: `temp-${Date.now()}`,
-          name: newAnalysis.name || 'New Analysis',
           status: 'created',
           algorithm: [],
           libraryType: 'brunello',
@@ -144,7 +143,8 @@ export function useCreateAnalysis() {
           createdAt: new Date().toISOString(),
           progress: 0,
           ...newAnalysis,
-        } as Analysis;
+          name: newAnalysis.name || 'New Analysis',
+        } as unknown as Analysis;
 
         return old ? [optimisticAnalysis, ...old] : [optimisticAnalysis];
       });
@@ -183,8 +183,8 @@ export function useUpdateAnalysis() {
       console.log(`🔄 [useUpdateAnalysis] Updating ${id}...`);
       const startTime = performance.now();
 
-      const { data, error } = await supabase
-        .from('analyses')
+      const { data, error } = await (supabase
+        .from('analyses') as any)
         .update(updates)
         .eq('id', id)
         .select()

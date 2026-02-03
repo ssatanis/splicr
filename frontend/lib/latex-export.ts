@@ -2,8 +2,8 @@
  * Export TipTap/ProseMirror JSON content to LaTeX
  */
 
-import type { TipTapDoc, TipTapNode } from '@/types/report';
-import { journalPresets, type JournalPresetKey } from './journal-presets';
+import type { TipTapDoc, TipTapNode, JournalPresetKey } from '@/types/report';
+import { journalPresets } from './journal-presets';
 
 function escapeLatex(text: string): string {
   return text

@@ -85,7 +85,7 @@ export function QualityControlSettings() {
       }
 
       if (data) {
-        setSettings(prev => ({ ...prev, ...data }));
+        setSettings(prev => ({ ...prev, ...(data as Partial<QCSettings>) } as QCSettings));
       }
     } catch (error) {
       console.error('Error:', error);
@@ -101,8 +101,8 @@ export function QualityControlSettings() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { error } = await supabase
-        .from('qc_settings')
+      const { error } = await (supabase
+        .from('qc_settings') as any)
         .upsert({
           user_id: user.id,
           ...settings,

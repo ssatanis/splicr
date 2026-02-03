@@ -26,7 +26,7 @@ export default function Providers({ children }: ProvidersProps) {
             retry: 1, // Only retry once (fail fast)
             
             // INSTANT perception - show old data while fetching new
-            placeholderData: (previousData) => previousData,
+            placeholderData: (previousData: unknown) => previousData,
           },
           mutations: {
             // Fast fail for mutations
@@ -43,7 +43,7 @@ export default function Providers({ children }: ProvidersProps) {
       </UserProvider>
       {/* DevTools only in development */}
       {process.env.NODE_ENV === 'development' && (
-        <ReactQueryDevtools initialIsOpen={false} position="bottom-right" />
+        <ReactQueryDevtools initialIsOpen={false} />
       )}
     </QueryClientProvider>
   );

@@ -463,6 +463,312 @@ export type Database = {
           accessed_at?: string
         }
       }
+      user_settings: {
+        Row: {
+          id: string
+          user_id: string
+          email_on_analysis_complete: boolean
+          email_on_error: boolean
+          email_weekly_digest: boolean
+          email_shared_updates: boolean
+          email_system_announcements: boolean
+          desktop_notifications: boolean
+          sound_alerts: boolean
+          notification_position: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          email_on_analysis_complete?: boolean
+          email_on_error?: boolean
+          email_weekly_digest?: boolean
+          email_shared_updates?: boolean
+          email_system_announcements?: boolean
+          desktop_notifications?: boolean
+          sound_alerts?: boolean
+          notification_position?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          email_on_analysis_complete?: boolean
+          email_on_error?: boolean
+          email_weekly_digest?: boolean
+          email_shared_updates?: boolean
+          email_system_announcements?: boolean
+          desktop_notifications?: boolean
+          sound_alerts?: boolean
+          notification_position?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          type: string
+          title: string
+          message: string
+          metadata: unknown
+          read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          type: string
+          title: string
+          message: string
+          metadata?: unknown
+          read?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          type?: string
+          title?: string
+          message?: string
+          metadata?: unknown
+          read?: boolean
+          created_at?: string
+        }
+      }
+      analysis_defaults: {
+        Row: {
+          id: string
+          user_id: string
+          fdr_cutoff: number
+          log2_fold_change: number
+          p_value_threshold: number
+          normalization_method: string
+          default_library: string
+          organism: string
+          guides_per_gene: number
+          gene_annotation: string
+          chart_type: string
+          color_scheme: string
+          show_gene_labels: boolean
+          label_top_n: number
+          point_size: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          fdr_cutoff?: number
+          log2_fold_change?: number
+          p_value_threshold?: number
+          normalization_method?: string
+          default_library?: string
+          organism?: string
+          guides_per_gene?: number
+          gene_annotation?: string
+          chart_type?: string
+          color_scheme?: string
+          show_gene_labels?: boolean
+          label_top_n?: number
+          point_size?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          fdr_cutoff?: number
+          log2_fold_change?: number
+          p_value_threshold?: number
+          normalization_method?: string
+          default_library?: string
+          organism?: string
+          guides_per_gene?: number
+          gene_annotation?: string
+          chart_type?: string
+          color_scheme?: string
+          show_gene_labels?: boolean
+          label_top_n?: number
+          point_size?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      analysis_presets: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          description: string | null
+          settings: unknown
+          is_shared: boolean
+          lab_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          description?: string | null
+          settings: unknown
+          is_shared?: boolean
+          lab_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          description?: string | null
+          settings?: unknown
+          is_shared?: boolean
+          lab_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      data_management_settings: {
+        Row: {
+          id: string
+          user_id: string
+          auto_save_enabled: boolean
+          auto_save_interval_minutes: number
+          save_intermediate_results: boolean
+          create_checkpoint_before_major_ops: boolean
+          keep_failed_analyses_days: number
+          archive_old_analyses_days: number
+          auto_delete_archived_days: number | null
+          default_export_format: string
+          include_metadata: boolean
+          include_parameters: boolean
+          compress_large_files: boolean
+          compress_large_files_threshold_mb: number
+          compression_format: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          auto_save_enabled?: boolean
+          auto_save_interval_minutes?: number
+          save_intermediate_results?: boolean
+          create_checkpoint_before_major_ops?: boolean
+          keep_failed_analyses_days?: number
+          archive_old_analyses_days?: number
+          auto_delete_archived_days?: number | null
+          default_export_format?: string
+          include_metadata?: boolean
+          include_parameters?: boolean
+          compress_large_files?: boolean
+          compress_large_files_threshold_mb?: number
+          compression_format?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          auto_save_enabled?: boolean
+          auto_save_interval_minutes?: number
+          save_intermediate_results?: boolean
+          create_checkpoint_before_major_ops?: boolean
+          keep_failed_analyses_days?: number
+          archive_old_analyses_days?: number
+          auto_delete_archived_days?: number | null
+          default_export_format?: string
+          include_metadata?: boolean
+          include_parameters?: boolean
+          compress_large_files?: boolean
+          compress_large_files_threshold_mb?: number
+          compression_format?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      qc_settings: {
+        Row: {
+          id: string
+          user_id: string
+          min_read_depth_per_sample: number
+          max_low_quality_guides_pct: number
+          min_guide_representation: number
+          max_gini_coefficient: number
+          auto_flag_low_quality: boolean
+          warn_before_analyzing_flagged: boolean
+          include_qc_report_in_exports: boolean
+          min_replicate_correlation: number
+          replicate_correlation_action: string
+          verify_essential_gene_depletion: boolean
+          expected_essential_gene_lfc: number
+          check_nontargeting_distribution: boolean
+          expected_nt_guide_lfc_range: number
+          validate_positive_controls: boolean
+          generate_qc_report_always: boolean
+          include_fastqc_metrics: boolean
+          flag_outliers_automatically: boolean
+          compare_to_historical_qc: boolean
+          qc_report_format: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          min_read_depth_per_sample?: number
+          max_low_quality_guides_pct?: number
+          min_guide_representation?: number
+          max_gini_coefficient?: number
+          auto_flag_low_quality?: boolean
+          warn_before_analyzing_flagged?: boolean
+          include_qc_report_in_exports?: boolean
+          min_replicate_correlation?: number
+          replicate_correlation_action?: string
+          verify_essential_gene_depletion?: boolean
+          expected_essential_gene_lfc?: number
+          check_nontargeting_distribution?: boolean
+          expected_nt_guide_lfc_range?: number
+          validate_positive_controls?: boolean
+          generate_qc_report_always?: boolean
+          include_fastqc_metrics?: boolean
+          flag_outliers_automatically?: boolean
+          compare_to_historical_qc?: boolean
+          qc_report_format?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          min_read_depth_per_sample?: number
+          max_low_quality_guides_pct?: number
+          min_guide_representation?: number
+          max_gini_coefficient?: number
+          auto_flag_low_quality?: boolean
+          warn_before_analyzing_flagged?: boolean
+          include_qc_report_in_exports?: boolean
+          min_replicate_correlation?: number
+          replicate_correlation_action?: string
+          verify_essential_gene_depletion?: boolean
+          expected_essential_gene_lfc?: number
+          check_nontargeting_distribution?: boolean
+          expected_nt_guide_lfc_range?: number
+          validate_positive_controls?: boolean
+          generate_qc_report_always?: boolean
+          include_fastqc_metrics?: boolean
+          flag_outliers_automatically?: boolean
+          compare_to_historical_qc?: boolean
+          qc_report_format?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }

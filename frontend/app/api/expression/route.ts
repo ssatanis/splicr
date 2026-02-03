@@ -135,13 +135,13 @@ async function fetchEssentialityData(gene: string) {
       const data = await res.json();
       return {
         isEssential: (data.dependency_score || 0) < -0.5,
-        conservationScore: data.conservation_score || null,
+        conservationScore: data.conservation_score || undefined,
       };
     }
   } catch (e) {
     console.error('Essentiality data fetch error:', e);
   }
-  return { isEssential: null, conservationScore: null };
+  return { isEssential: undefined, conservationScore: undefined };
 }
 
 export async function GET(request: NextRequest) {

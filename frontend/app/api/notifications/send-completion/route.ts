@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     const { data: userData, error: userError } = await supabase
       .from('profiles')
       .select('email, full_name')
-      .eq('id', analysis.user_id || userId)
+      .eq('id', (analysis as any).user_id || userId)
       .single();
 
     if (userError || !userData) {
@@ -53,11 +53,11 @@ export async function POST(request: NextRequest) {
     const { data: preferences } = await supabase
       .from('user_settings')
       .select('email_on_analysis_complete')
-      .eq('user_id', analysis.user_id || userId)
+      .eq('user_id', (analysis as any).user_id || userId)
       .single();
 
     // If user has disabled email notifications, skip
-    if (preferences && preferences.email_on_analysis_complete === false) {
+    if (preferences && (preferences as any).email_on_analysis_complete === false) {
       console.log('⏭️  User has disabled email notifications, skipping');
       return NextResponse.json({
         success: true,
@@ -68,22 +68,22 @@ export async function POST(request: NextRequest) {
 
     // Calculate duration
     const duration = calculateDuration(
-      analysis.created_at,
-      analysis.updated_at || new Date().toISOString()
+      (analysis as any).created_at,
+      (analysis as any).updated_at || new Date().toISOString()
     );
 
     // Extract key results
-    const results = analysis.results || {};
+    const results = (analysis as any).results || {};
     const significantHits = results.significant_hits || results.hit_count || 0;
     const topGene = results.top_gene || results.top_hit || 'N/A';
     const enrichmentScore = results.enrichment_score || results.max_score || 0;
 
     // Send email
     const emailResult = await sendAnalysisCompleteEmail({
-      userName: userData.full_name || 'Researcher',
-      userEmail: userData.email,
-      screenName: analysis.name || analysis.screen_name || 'Untitled Screen',
-      completedAt: new Date(analysis.updated_at || analysis.created_at).toLocaleString('en-US', {
+      userName: (userData as any).full_name || 'Researcher',
+      userEmail: (userData as any).email,
+      screenName: (analysis as any).name || (analysis as any).screen_name || 'Untitled Screen',
+      completedAt: new Date((analysis as any).updated_at || (analysis as any).created_at).toLocaleString('en-US', {
         dateStyle: 'medium',
         timeStyle: 'short',
       }),
@@ -102,11 +102,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Log notification
-    await supabase.from('notifications').insert({
-      user_id: analysis.user_id || userId,
+    await (supabase.from('notifications') as any).insert({
+      user_id: (analysis as any).user_id || userId,
       type: 'analysis_complete',
       title: 'Analysis Complete',
-      message: `Your analysis "${analysis.name}" has completed`,
+      message: `Your analysis "${(analysis as any).name}" has completed`,
       metadata: {
         analysis_id: analysisId,
         email_sent: true,
