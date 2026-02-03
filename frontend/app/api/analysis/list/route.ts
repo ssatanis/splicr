@@ -8,16 +8,23 @@ const analysesMemory = globalStore.analysesStore;
 
 /** Map DB row to Analysis for frontend */
 function rowToAnalysis(row: any): Analysis {
-  const fileKeys = row.file_names?.length ? row.file_names : (row.parameters?.r2Keys || []);
+  // Handle file keys from multiple sources
+  const fileKeys = row.file_names?.length ? row.file_names : (row.parameters?.r2Keys || row.parameters?.fileKeys || []);
+  
+  // Handle sample labels from multiple sources
   const sampleLabels = row.sample_labels?.length ? row.sample_labels : (row.parameters?.sampleLabels || []);
-  const algorithms = row.parameters?.algorithms ||
+  
+  // Handle algorithms from multiple sources (note: database has both 'method' and 'algorithms')
+  const algorithms = row.algorithms || 
+    row.parameters?.algorithms ||
     (Array.isArray(row.method) ? row.method : [row.method || 'mageck']);
+  
   return {
     id: row.id,
     name: row.name,
     status: (row.status || 'pending') as Analysis['status'],
     algorithm: algorithms,
-    libraryType: (row.library || row.library_type || 'brunello') as Analysis['libraryType'],
+    libraryType: (row.library_type || row.library || row.parameters?.libraryType || 'brunello') as Analysis['libraryType'],
     fileKeys,
     sampleLabels,
     parameters: row.parameters || {},
@@ -50,7 +57,7 @@ export async function GET() {
       // Fetch only own analyses for now - much faster
       const { data: ownRows, error: ownError } = await supabaseAdmin
         .from('analyses')
-        .select('id, name, status, created_at, updated_at, started_at, completed_at, progress, current_step, error_message, file_names, sample_labels, parameters, method, user_id, results, logs')
+        .select('id, name, status, created_at, updated_at, started_at, completed_at, progress, current_step, error_message, file_names, sample_labels, parameters, method, algorithms, library_type, user_id, results, logs')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(100); // Limit to last 100 analyses for performance
