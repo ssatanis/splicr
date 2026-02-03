@@ -3,8 +3,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@/lib/supabase/client';
+import type { Analysis } from '@/lib/types';
 
-type Analysis = Database['public']['Tables']['analyses']['Row'];
+type DbAnalysis = Database['public']['Tables']['analyses']['Row'];
 type AnalysisInsert = Database['public']['Tables']['analyses']['Insert'];
 type AnalysisUpdate = Database['public']['Tables']['analyses']['Update'];
 
@@ -87,7 +88,7 @@ export function useAnalysis(id: string | undefined | null) {
       console.log(`⚡ [useAnalysis] Loaded in ${elapsed.toFixed(0)}ms`);
 
       if (error) throw error;
-      return data as Analysis;
+      return data as DbAnalysis;
     },
     enabled: !!id, // Only run if ID exists
     staleTime: 20 * 1000, // Fresh for 20 seconds
@@ -118,7 +119,7 @@ export function useCreateAnalysis() {
       console.log(`✅ [useCreateAnalysis] Created in ${elapsed.toFixed(0)}ms`);
 
       if (error) throw error;
-      return data as Analysis;
+      return data as DbAnalysis;
     },
 
     // OPTIMISTIC UPDATE (INSTANT UI FEEDBACK)
@@ -133,16 +134,15 @@ export function useCreateAnalysis() {
       queryClient.setQueryData<Analysis[]>(analysisKeys.lists(), (old) => {
         const optimisticAnalysis: Analysis = {
           id: `temp-${Date.now()}`,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          name: newAnalysis.name || 'New Analysis',
           status: 'created',
+          algorithm: [],
+          libraryType: 'brunello',
+          fileKeys: [],
+          sampleLabels: [],
+          parameters: {},
+          createdAt: new Date().toISOString(),
           progress: 0,
-          results: null,
-          completed_at: null,
-          started_at: null,
-          current_step: null,
-          error_message: null,
-          logs: null,
           ...newAnalysis,
         } as Analysis;
 
@@ -194,7 +194,7 @@ export function useUpdateAnalysis() {
       console.log(`✅ [useUpdateAnalysis] Updated in ${elapsed.toFixed(0)}ms`);
 
       if (error) throw error;
-      return data as Analysis;
+      return data as DbAnalysis;
     },
 
     onMutate: async ({ id, updates }) => {
@@ -202,19 +202,19 @@ export function useUpdateAnalysis() {
       await queryClient.cancelQueries({ queryKey: analysisKeys.detail(id) });
 
       const previousAnalyses = queryClient.getQueryData<Analysis[]>(analysisKeys.lists());
-      const previousAnalysis = queryClient.getQueryData<Analysis>(analysisKeys.detail(id));
+      const previousAnalysis = queryClient.getQueryData<DbAnalysis>(analysisKeys.detail(id));
 
       // Optimistically update list
       queryClient.setQueryData<Analysis[]>(analysisKeys.lists(), (old) =>
         old?.map((analysis) =>
           analysis.id === id
-            ? { ...analysis, ...updates, updated_at: new Date().toISOString() }
+            ? { ...analysis, ...updates as any }
             : analysis
         )
       );
 
       // Optimistically update detail
-      queryClient.setQueryData<Analysis>(analysisKeys.detail(id), (old) =>
+      queryClient.setQueryData<DbAnalysis>(analysisKeys.detail(id), (old) =>
         old ? { ...old, ...updates, updated_at: new Date().toISOString() } : old
       );
 
@@ -316,7 +316,7 @@ export function useAnalysesBatch(ids: string[]) {
       console.log(`⚡ [useAnalysesBatch] Loaded ${data?.length || 0} in ${elapsed.toFixed(0)}ms`);
 
       if (error) throw error;
-      return data as Analysis[];
+      return data as DbAnalysis[];
     },
     enabled: ids.length > 0,
     staleTime: 30 * 1000,
