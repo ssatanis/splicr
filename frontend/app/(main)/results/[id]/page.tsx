@@ -1293,12 +1293,10 @@ function AdvancedTab({
   return (
     <div className="space-y-12">
       <section>
-        <h3 className="text-xl font-serif text-text-primary mb-4">DepMap comparison</h3>
-        <DepMapComparison genes={genesForDepMap} maxGenes={80} height={400} />
+        <DepMapComparison genes={genesForDepMap} maxGenes={80} height={400} onGeneClick={setSelectedGene} />
       </section>
       <section>
-        <h3 className="text-xl font-serif text-text-primary mb-4">Genetic interaction predictor</h3>
-        <SyntheticLethalityPredictor genes={genesForSyntheticLethality} minScore={0.4} />
+        <SyntheticLethalityPredictor genes={genesForSyntheticLethality} minScore={0.4} onGeneClick={setSelectedGene} />
       </section>
     </div>
   );

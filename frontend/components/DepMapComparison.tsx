@@ -28,6 +28,8 @@ interface DepMapComparisonProps {
   /** Max genes to compare */
   maxGenes?: number;
   height?: number;
+  /** Callback when a gene is clicked */
+  onGeneClick?: (gene: string) => void;
 }
 
 interface Point {
@@ -43,10 +45,13 @@ export default function DepMapComparison({
   genes,
   maxGenes = 100,
   height = 480,
+  onGeneClick,
 }: DepMapComparisonProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [depMapData, setDepMapData] = useState<DepMapGeneSummary[]>([]);
   const [loading, setLoading] = useState(false);
+  const [hoveredPoint, setHoveredPoint] = useState<Point | null>(null);
+  const tooltipTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const limited = genes.slice(0, maxGenes);
   const geneNamesStr = limited.map((g) => g.gene).join(',');
@@ -142,29 +147,76 @@ export default function DepMapComparison({
               />
               <Tooltip
                 content={({ active, payload }) => {
-                  if (!active || !payload?.[0]) return null;
+                  if (!active || !payload?.[0]) {
+                    if (tooltipTimeout.current) {
+                      clearTimeout(tooltipTimeout.current);
+                    }
+                    tooltipTimeout.current = setTimeout(() => {
+                      setHoveredPoint(null);
+                    }, 200);
+                    return null;
+                  }
                   const p = payload[0].payload as Point;
-                  return (
-                    <div className="bg-surface p-4 rounded-lg shadow-lg border border-border">
-                      <p className="font-bold text-text-primary">{p.gene}</p>
-                      <p className="text-sm text-text-secondary">Your Log₂ FC: {p.log2FC.toFixed(3)}</p>
-                      <p className="text-sm text-text-secondary">FDR: {p.fdr.toExponential(2)}</p>
-                      {p.depMapScore != null && (
-                        <p className="text-sm text-text-secondary">DepMap score: {p.depMapScore.toFixed(3)}</p>
+                  if (tooltipTimeout.current) {
+                    clearTimeout(tooltipTimeout.current);
+                  }
+                  setHoveredPoint(p);
+                  return null;
+                }}
+              />
+              {hoveredPoint && (
+                <div
+                  style={{
+                    position: 'fixed',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: 9999,
+                    pointerEvents: 'auto',
+                  }}
+                  onMouseEnter={() => {
+                    if (tooltipTimeout.current) {
+                      clearTimeout(tooltipTimeout.current);
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    tooltipTimeout.current = setTimeout(() => {
+                      setHoveredPoint(null);
+                    }, 200);
+                  }}
+                >
+                  <div className="bg-surface p-4 rounded-lg shadow-lg border border-border">
+                    <p className="font-bold text-text-primary mb-2">{hoveredPoint.gene}</p>
+                    <p className="text-sm text-text-secondary">Your Log₂ FC: {hoveredPoint.log2FC.toFixed(3)}</p>
+                    <p className="text-sm text-text-secondary">FDR: {hoveredPoint.fdr.toExponential(2)}</p>
+                    {hoveredPoint.depMapScore != null && (
+                      <p className="text-sm text-text-secondary">DepMap score: {hoveredPoint.depMapScore.toFixed(3)}</p>
+                    )}
+                    <p className="text-sm text-accent mb-2">{hoveredPoint.label}</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {onGeneClick && (
+                        <button
+                          onClick={() => {
+                            onGeneClick(hoveredPoint.gene);
+                            setHoveredPoint(null);
+                          }}
+                          className="text-sm text-accent hover:underline font-medium"
+                        >
+                          View Details
+                        </button>
                       )}
-                      <p className="text-sm text-accent">{p.label}</p>
                       <a
-                        href={depMapGeneLink(p.gene)}
+                        href={depMapGeneLink(hoveredPoint.gene)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-sm text-accent hover:underline mt-1"
+                        className="inline-flex items-center gap-1 text-sm text-accent hover:underline"
                       >
                         View in DepMap <ExternalLink className="w-3 h-3" />
                       </a>
                     </div>
-                  );
-                }}
-              />
+                  </div>
+                </div>
+              )}
               {hasDepMapScores && <ReferenceLine y={-0.5} stroke="#9B9B9B" strokeDasharray="3 3" />}
               <ReferenceLine x={0} stroke="#9B9B9B" strokeDasharray="3 3" />
               <Scatter name="Genes" data={points} fill="#6ABF36">
@@ -199,7 +251,19 @@ export default function DepMapComparison({
           <tbody>
             {limited.map((g) => (
               <tr key={g.gene} className="border-t border-border hover:bg-background/50">
-                <td className="px-4 py-2 font-medium text-text-primary">{g.gene}</td>
+                <td className="px-4 py-2">
+                  {onGeneClick ? (
+                    <button
+                      type="button"
+                      onClick={() => onGeneClick(g.gene)}
+                      className="font-medium text-text-primary hover:text-accent hover:underline text-left"
+                    >
+                      {g.gene}
+                    </button>
+                  ) : (
+                    <span className="font-medium text-text-primary">{g.gene}</span>
+                  )}
+                </td>
                 <td className="px-4 py-2 text-text-primary">{g.logFoldChange.toFixed(3)}</td>
                 <td className="px-4 py-2 text-text-secondary">{g.fdr.toExponential(2)}</td>
                 <td className="px-4 py-2">

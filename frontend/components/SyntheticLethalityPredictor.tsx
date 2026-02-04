@@ -14,11 +14,14 @@ interface SyntheticLethalityPredictorProps {
   genes: string[];
   /** Minimum STRING score (0–1) */
   minScore?: number;
+  /** Callback when a gene is clicked */
+  onGeneClick?: (gene: string) => void;
 }
 
 export default function SyntheticLethalityPredictor({
   genes,
   minScore = 0.4,
+  onGeneClick,
 }: SyntheticLethalityPredictorProps) {
   const [pairs, setPairs] = useState<PredictedInteraction[]>([]);
   const [loading, setLoading] = useState(false);
@@ -87,8 +90,32 @@ export default function SyntheticLethalityPredictor({
             <tbody>
               {pairs.map((row, idx) => (
                 <tr key={idx} className="border-t border-border hover:bg-background/50">
-                  <td className="px-4 py-2 font-medium text-text-primary">{row.geneA}</td>
-                  <td className="px-4 py-2 font-medium text-text-primary">{row.geneB}</td>
+                  <td className="px-4 py-2">
+                    {onGeneClick ? (
+                      <button
+                        type="button"
+                        onClick={() => onGeneClick(row.geneA)}
+                        className="font-medium text-text-primary hover:text-accent hover:underline text-left"
+                      >
+                        {row.geneA}
+                      </button>
+                    ) : (
+                      <span className="font-medium text-text-primary">{row.geneA}</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-2">
+                    {onGeneClick ? (
+                      <button
+                        type="button"
+                        onClick={() => onGeneClick(row.geneB)}
+                        className="font-medium text-text-primary hover:text-accent hover:underline text-left"
+                      >
+                        {row.geneB}
+                      </button>
+                    ) : (
+                      <span className="font-medium text-text-primary">{row.geneB}</span>
+                    )}
+                  </td>
                   <td className="px-4 py-2 text-text-secondary">
                     {(row.combinedScore * 1000).toFixed(0)}
                   </td>
