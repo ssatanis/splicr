@@ -57,7 +57,7 @@ export async function GET() {
       // Fetch only own analyses for now - much faster
       const { data: ownRows, error: ownError } = await supabaseAdmin
         .from('analyses')
-        .select('id, name, status, created_at, updated_at, started_at, completed_at, progress, current_step, error_message, file_names, sample_labels, parameters, method, algorithms, library_type, user_id, results, logs')
+        .select('id, name, status, created_at, updated_at, started_at, completed_at, progress, current_step, error_message, file_names, sample_labels, parameters, method, library, user_id, results, logs')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(100); // Limit to last 100 analyses for performance
