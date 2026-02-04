@@ -11,6 +11,9 @@ export type Database = {
           display_name: string | null
           avatar_url: string | null
           created_at: string
+          updated_at?: string
+          public_profile_id: string | null
+          public_profile_enabled: boolean
         }
         Insert: {
           id?: string
@@ -18,6 +21,9 @@ export type Database = {
           display_name?: string | null
           avatar_url?: string | null
           created_at?: string
+          updated_at?: string
+          public_profile_id?: string | null
+          public_profile_enabled?: boolean
         }
         Update: {
           id?: string
@@ -25,6 +31,9 @@ export type Database = {
           display_name?: string | null
           avatar_url?: string | null
           created_at?: string
+          updated_at?: string
+          public_profile_id?: string | null
+          public_profile_enabled?: boolean
         }
       }
       profiles: {
@@ -32,8 +41,16 @@ export type Database = {
           id: string
           email: string
           full_name: string | null
+          display_name: string | null
           avatar_url: string | null
           institution: string | null
+          department_lab: string | null
+          orcid_id: string | null
+          orcid_verified: boolean
+          research_areas: string[]
+          team_role: string | null
+          profile_visibility: 'public' | 'team' | 'private'
+          timezone: string
           created_at: string
           updated_at: string
         }
@@ -41,8 +58,16 @@ export type Database = {
           id: string
           email: string
           full_name?: string | null
+          display_name?: string | null
           avatar_url?: string | null
           institution?: string | null
+          department_lab?: string | null
+          orcid_id?: string | null
+          orcid_verified?: boolean
+          research_areas?: string[]
+          team_role?: string | null
+          profile_visibility?: 'public' | 'team' | 'private'
+          timezone?: string
           created_at?: string
           updated_at?: string
         }
@@ -50,8 +75,16 @@ export type Database = {
           id?: string
           email?: string
           full_name?: string | null
+          display_name?: string | null
           avatar_url?: string | null
           institution?: string | null
+          department_lab?: string | null
+          orcid_id?: string | null
+          orcid_verified?: boolean
+          research_areas?: string[]
+          team_role?: string | null
+          profile_visibility?: 'public' | 'team' | 'private'
+          timezone?: string
           created_at?: string
           updated_at?: string
         }
@@ -461,6 +494,38 @@ export type Database = {
           ip_address?: string | null
           user_agent?: string | null
           accessed_at?: string
+        }
+      }
+      public_analyses: {
+        Row: {
+          id: string
+          analysis_id: string
+          title: string
+          description: string | null
+          published_by: string
+          published_at: string
+          views?: number
+          likes?: number
+        }
+        Insert: {
+          id?: string
+          analysis_id: string
+          title: string
+          description?: string | null
+          published_by: string
+          published_at?: string
+          views?: number
+          likes?: number
+        }
+        Update: {
+          id?: string
+          analysis_id?: string
+          title?: string
+          description?: string | null
+          published_by?: string
+          published_at?: string
+          views?: number
+          likes?: number
         }
       }
       user_settings: {

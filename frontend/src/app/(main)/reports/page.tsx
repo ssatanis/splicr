@@ -181,29 +181,6 @@ export default function ReportsPage() {
               </table>
             )}
           </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <h2 className="text-2xl font-serif text-text-primary mb-6 flex items-center gap-3">
-              <FileText className="w-6 h-6" strokeWidth={1.5} />
-              Quick actions
-            </h2>
-            <div className="flex flex-wrap gap-4">
-              <Link href="/upload">
-                <button className="px-6 py-3 bg-accent text-text-primary font-serif rounded-xl hover:opacity-90 transition-opacity">
-                  New analysis
-                </button>
-              </Link>
-              <Link href="/analyses">
-                <button className="px-6 py-3 bg-surface border border-border text-text-primary font-serif rounded-xl hover:bg-background transition-colors">
-                  View all analyses
-                </button>
-              </Link>
-            </div>
-          </motion.div>
         </div>
       </div>
   );

@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(request: Request) {
   try {
-    const { email, password, fullName, institution } = await request.json();
+    const { email, password, fullName, institution, lab_invite_code } = await request.json();
 
     if (!email || !password) {
       return NextResponse.json(
@@ -83,9 +83,39 @@ export async function POST(request: Request) {
       { onConflict: 'id' }
     );
 
+    // ===== JOIN LAB IF INVITE CODE PROVIDED =====
+    let labInfo = null;
+    if (lab_invite_code?.trim()) {
+      const code = lab_invite_code.trim().toUpperCase();
+
+      // Validate and find lab by invite code
+      const { data: lab } = await (supabase.from('labs') as any)
+        .select('id, name, institution')
+        .eq('invite_code', code)
+        .maybeSingle();
+
+      if (lab) {
+        // Join lab as member
+        const joinResult = await (supabase.from('lab_members') as any).insert({
+          lab_id: lab.id,
+          user_id: data.user.id,
+          role: 'member',
+          joined_at: new Date().toISOString(),
+        });
+
+        // If join successful, include lab info in response
+        if (!joinResult.error) {
+          labInfo = { id: lab.id, name: lab.name };
+        }
+      }
+      // Note: We don't error out if lab code is invalid during sign-up
+      // This ensures the user account is still created even if code is wrong
+    }
+
     // Email verification is disabled - users can sign in immediately
     return NextResponse.json({
       user: { id: data.user.id, email: data.user.email },
+      lab: labInfo, // Include lab info if joined
       requiresEmailConfirmation: false, // Always false - email verification disabled
     });
   } catch (error) {

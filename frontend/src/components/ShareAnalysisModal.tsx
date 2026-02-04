@@ -19,6 +19,7 @@ import {
   Globe,
   Building2,
   Lock,
+  User,
 } from "lucide-react";
 import type { ShareVisibility, SharePermission, Collaborator } from "@/lib/types";
 
@@ -67,6 +68,9 @@ export default function ShareAnalysisModal({
   const [success, setSuccess] = useState<string | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
 
+  const [onPublicProfile, setOnPublicProfile] = useState(false);
+  const [publicProfileLoading, setPublicProfileLoading] = useState(false);
+
   // Fetch email collaborators
   const fetchShares = useCallback(async () => {
     try {
@@ -78,6 +82,16 @@ export default function ShareAnalysisModal({
       }
     } catch (err) {
       console.error("Failed to fetch shares:", err);
+    }
+  }, [analysisId]);
+
+  const fetchPublicProfileStatus = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/analysis/${analysisId}/publish`);
+      const data = await res.json();
+      setOnPublicProfile(!!data.published);
+    } catch {
+      setOnPublicProfile(false);
     }
   }, [analysisId]);
 
@@ -116,8 +130,9 @@ export default function ShareAnalysisModal({
     if (open) {
       fetchShares();
       fetchLinkConfig();
+      fetchPublicProfileStatus();
     }
-  }, [open, fetchShares, fetchLinkConfig]);
+  }, [open, fetchShares, fetchLinkConfig, fetchPublicProfileStatus]);
 
   // Update link share configuration
   const handleUpdateLinkSharing = async (updates: Partial<LinkShareConfig>) => {
@@ -367,13 +382,71 @@ export default function ShareAnalysisModal({
                         Anyone with a <strong>@{linkConfig.institution_domain}</strong> email can access with the link
                       </>
                     )}
-                    {linkConfig.visibility === 'public' && (
+                    {linkConfig.visibility === "public" && (
                       <>
                         <Globe className="w-3 h-3 inline mr-1" />
                         Anyone with the link can access this analysis
                       </>
                     )}
                   </p>
+                </div>
+
+                {/* Show on my public profile */}
+                <div className="pt-4 border-t border-border">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <User className="w-4 h-4 shrink-0 text-text-secondary" strokeWidth={1.5} />
+                      <div>
+                        <p className="text-sm font-serif text-text-primary font-medium">
+                          Show on my public profile
+                        </p>
+                        <p className="text-xs text-text-secondary">
+                          Anyone signed in can see this analysis on your profile page
+                        </p>
+                      </div>
+                    </div>
+                    <label className="shrink-0 flex items-center gap-2">
+                      <span className="text-sm text-text-secondary">
+                        {onPublicProfile ? "On" : "Off"}
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={onPublicProfile}
+                        disabled={publicProfileLoading}
+                        onChange={async () => {
+                          setPublicProfileLoading(true);
+                          setError(null);
+                          try {
+                            if (onPublicProfile) {
+                              const res = await fetch(`/api/analysis/${analysisId}/publish`, {
+                                method: "DELETE",
+                              });
+                              if (!res.ok) throw new Error("Failed to remove from profile");
+                              setOnPublicProfile(false);
+                              setSuccess("Removed from public profile");
+                            } else {
+                              const res = await fetch(`/api/analysis/${analysisId}/publish`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ title: analysisName }),
+                              });
+                              if (!res.ok) {
+                                const d = await res.json().catch(() => ({}));
+                                throw new Error(d.message || "Failed to add to profile");
+                              }
+                              setOnPublicProfile(true);
+                              setSuccess("Added to your public profile");
+                            }
+                          } catch (err) {
+                            setError(err instanceof Error ? err.message : "Request failed");
+                          } finally {
+                            setPublicProfileLoading(false);
+                          }
+                        }}
+                        className="rounded border-border bg-background text-accent focus:ring-accent"
+                      />
+                    </label>
+                  </div>
                 </div>
               </div>
             )}

@@ -37,9 +37,10 @@ export default function InstitutionAutocomplete({
   const [options, setOptions] = useState<InstitutionOption[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [selected, setSelected] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const isFocusedRef = useRef(false);
+  const lastValueRef = useRef(value);
 
   const fetchOptions = useCallback(async (q: string) => {
     if (q.length < MIN_QUERY_LENGTH) {
@@ -58,17 +59,10 @@ export default function InstitutionAutocomplete({
         setOptions([]);
         return;
       }
-      const text = await res.text();
-      let data: { results?: InstitutionOption[] };
-      try {
-        data = text && text.trim() ? JSON.parse(text) : {};
-      } catch {
-        setOptions([]);
-        return;
-      }
+      const data = await res.json().catch(() => ({}));
       const list = Array.isArray(data?.results) ? data.results : [];
       setOptions(list);
-      if (list.length > 0) setOpen(true);
+      setOpen(true);
     } catch {
       setOptions([]);
     } finally {
@@ -77,14 +71,17 @@ export default function InstitutionAutocomplete({
   }, []);
 
   useEffect(() => {
-    setQuery(value);
+    if (!isFocusedRef.current) {
+      lastValueRef.current = value;
+      setQuery(value);
+    }
   }, [value]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (!query.trim()) {
       setOptions([]);
-      setOpen(false);
+      if (!isFocusedRef.current) setOpen(false);
       return;
     }
     debounceRef.current = setTimeout(() => {
@@ -106,9 +103,10 @@ export default function InstitutionAutocomplete({
   }, []);
 
   const handleSelect = (option: InstitutionOption) => {
-    onChange(option.display_name);
-    setQuery(option.display_name);
-    setSelected(true);
+    const name = option.display_name;
+    lastValueRef.current = name;
+    setQuery(name);
+    onChange(name);
     setOpen(false);
     setOptions([]);
   };
@@ -116,18 +114,22 @@ export default function InstitutionAutocomplete({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value;
     setQuery(v);
-    setSelected(false);
     onChange(v);
+    if (v.trim().length >= MIN_QUERY_LENGTH) setOpen(true);
+    else setOptions([]);
   };
 
   const handleFocus = () => {
+    isFocusedRef.current = true;
     if (query.trim().length >= MIN_QUERY_LENGTH) {
-      if (options.length > 0) {
-        setOpen(true);
-      } else {
-        fetchOptions(query.trim());
-      }
+      if (options.length > 0) setOpen(true);
+      else fetchOptions(query.trim());
     }
+  };
+
+  const handleBlur = () => {
+    isFocusedRef.current = false;
+    setTimeout(() => setOpen(false), 180);
   };
 
   const showDropdown = open && (options.length > 0 || loading);
@@ -144,6 +146,7 @@ export default function InstitutionAutocomplete({
           value={query}
           onChange={handleInputChange}
           onFocus={handleFocus}
+          onBlur={handleBlur}
           required={required}
           disabled={disabled}
           autoComplete="off"
@@ -151,9 +154,10 @@ export default function InstitutionAutocomplete({
           aria-expanded={showDropdown}
           aria-autocomplete="list"
           aria-controls="institution-listbox"
+          aria-haspopup="listbox"
           id="institution-autocomplete"
           placeholder={placeholder}
-          className={`w-full pl-11 pr-10 py-3 bg-white border rounded-xl font-serif text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all ${error ? 'border-error focus:ring-error/30 focus:border-error' : 'border-border'} ${inputClassName}`}
+          className={`w-full pl-11 pr-10 py-3 bg-background border rounded-xl font-serif text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all ${error ? 'border-error focus:ring-error/30 focus:border-error' : 'border-border'} ${inputClassName}`}
         />
         <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-text-tertiary">
           {loading ? (
@@ -171,8 +175,12 @@ export default function InstitutionAutocomplete({
         <ul
           id="institution-listbox"
           role="listbox"
-          className="absolute z-50 w-full mt-1 py-1 bg-white border border-border rounded-xl shadow-elevated max-h-64 overflow-y-auto focus:outline-none"
+          className="absolute z-[100] w-full mt-1 py-1 bg-surface border border-border rounded-xl shadow-elevated max-h-64 overflow-y-auto focus:outline-none"
           style={{ willChange: 'opacity' }}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
         >
           {loading && options.length === 0 ? (
             <li className="px-4 py-3 text-sm text-text-tertiary font-serif">
@@ -187,15 +195,9 @@ export default function InstitutionAutocomplete({
                 onMouseDown={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
+                  handleSelect(option);
                 }}
-                onClick={() => handleSelect(option)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleSelect(option);
-                  }
-                }}
-                className="flex flex-col gap-0.5 px-4 py-3 cursor-pointer font-serif text-text-primary hover:bg-background focus:bg-background focus:outline-none border-b border-border-light last:border-b-0"
+                className="flex flex-col gap-0.5 px-4 py-3 cursor-pointer font-serif text-text-primary hover:bg-background focus:bg-background focus:outline-none border-b border-border last:border-b-0"
               >
                 <span className="font-medium">{option.display_name}</span>
                 {option.hint && (

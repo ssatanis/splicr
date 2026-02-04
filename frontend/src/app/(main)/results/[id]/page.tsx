@@ -91,6 +91,7 @@ export default function ResultsPage() {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [integrationPanelOpen, setIntegrationPanelOpen] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [queueWarning, setQueueWarning] = useState<string | null>(null);
   const runTriggeredRef = useRef<string | null>(null);
   const [headerRoot, setHeaderRoot] = useState<HTMLElement | null>(null);
 
@@ -272,6 +273,17 @@ export default function ResultsPage() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showExportMenu]);
+
+  // Show one-time warning when analysis was created but queue was unavailable
+  useEffect(() => {
+    if (!id || typeof sessionStorage === 'undefined') return;
+    const key = `splicr_analysis_warning_${id}`;
+    const msg = sessionStorage.getItem(key);
+    if (msg) {
+      setQueueWarning(msg);
+      sessionStorage.removeItem(key);
+    }
+  }, [id]);
 
   // Cleanup: cancel drug search when navigating away
   useEffect(() => {
@@ -771,6 +783,26 @@ export default function ResultsPage() {
       {headerRoot && createPortal(headerActions, headerRoot)}
       <div className={`min-h-screen ${integrationPanelOpen ? "mr-[360px]" : ""}`}>
         <div className="max-w-[1600px] mx-auto px-8 py-12">
+          {queueWarning && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-200"
+            >
+              <span className="flex items-center gap-2">
+                <Info className="w-4 h-4 shrink-0" />
+                {queueWarning}
+              </span>
+              <button
+                type="button"
+                onClick={() => setQueueWarning(null)}
+                className="shrink-0 p-1 rounded hover:bg-amber-500/20"
+                aria-label="Dismiss"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </motion.div>
+          )}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

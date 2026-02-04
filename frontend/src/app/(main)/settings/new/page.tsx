@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   User,
@@ -11,27 +12,40 @@ import {
   Users,
   Zap,
   FileText,
-  GitBranch,
   Palette,
-  Key,
+  Search,
+  CreditCard,
+  FlaskConical,
+  ChevronRight,
 } from "lucide-react";
+import { ProfileSettings } from "@/components/settings/ProfileSettings";
 import { NotificationSettings } from "@/components/settings/notification-settings";
 import { AnalysisDefaultsSettings } from "@/components/settings/AnalysisDefaultsSettings";
 import { QualityControlSettings } from "@/components/settings/QualityControlSettings";
 import { DataManagementSettings } from "@/components/settings/DataManagementSettings";
+import { LibraryManagementSettings } from "@/components/settings/LibraryManagementSettings";
+import { CollaborationSettings } from "@/components/settings/CollaborationSettings";
+import { PrivacySecuritySettings } from "@/components/settings/PrivacySecuritySettings";
+import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
+import { ComputePerformanceSettings } from "@/components/settings/ComputePerformanceSettings";
+import { BillingUsageSettings } from "@/components/settings/BillingUsageSettings";
+import { AdvancedSettings } from "@/components/settings/AdvancedSettings";
+import { LabManagementSettings } from "@/components/settings/LabManagementSettings";
 
 type SettingsTab =
   | "profile"
   | "notifications"
   | "analysis-defaults"
   | "quality-control"
+  | "library-management"
   | "data-management"
+  | "lab-management"
   | "collaboration"
   | "privacy-security"
   | "compute-performance"
-  | "reproducibility"
   | "appearance"
-  | "developer-api";
+  | "billing"
+  | "advanced";
 
 interface Tab {
   id: SettingsTab;
@@ -42,98 +56,29 @@ interface Tab {
 }
 
 const tabs: Tab[] = [
-  {
-    id: "profile",
-    label: "Profile",
-    icon: <User className="w-4 h-4" />,
-    description: "Manage your personal information",
-  },
-  {
-    id: "notifications",
-    label: "Notifications",
-    icon: <Bell className="w-4 h-4" />,
-    description: "Email and in-app alerts",
-  },
-  {
-    id: "analysis-defaults",
-    label: "Analysis Defaults",
-    icon: <Sliders className="w-4 h-4" />,
-    badge: "Essential",
-    description: "Save time with preset parameters",
-  },
-  {
-    id: "quality-control",
-    label: "Quality Control",
-    icon: <Shield className="w-4 h-4" />,
-    badge: "Essential",
-    description: "QC thresholds and automated checks",
-  },
-  {
-    id: "data-management",
-    label: "Data Management",
-    icon: <Database className="w-4 h-4" />,
-    description: "Auto-save, retention, and exports",
-  },
-  {
-    id: "collaboration",
-    label: "Collaboration",
-    icon: <Users className="w-4 h-4" />,
-    description: "Labs, sharing, and teamwork",
-  },
-  {
-    id: "privacy-security",
-    label: "Privacy & Security",
-    icon: <Shield className="w-4 h-4" />,
-    description: "2FA, sessions, and compliance",
-  },
-  {
-    id: "compute-performance",
-    label: "Compute & Performance",
-    icon: <Zap className="w-4 h-4" />,
-    description: "Resource allocation and caching",
-  },
-  {
-    id: "reproducibility",
-    label: "Reproducibility",
-    icon: <GitBranch className="w-4 h-4" />,
-    badge: "Publication",
-    description: "Versioning and methods generation",
-  },
-  {
-    id: "appearance",
-    label: "Appearance",
-    icon: <Palette className="w-4 h-4" />,
-    description: "Theme and visual preferences",
-  },
-  {
-    id: "developer-api",
-    label: "Developer & API",
-    icon: <Key className="w-4 h-4" />,
-    description: "API keys and webhooks",
-  },
+  { id: "profile", label: "Profile", icon: <User className="w-4 h-4" />, description: "Personal information and display" },
+  { id: "notifications", label: "Notifications", icon: <Bell className="w-4 h-4" />, description: "Email and in-app alerts" },
+  { id: "analysis-defaults", label: "Analysis Defaults", icon: <Sliders className="w-4 h-4" />, description: "MAGeCK, BAGEL2, presets" },
+  { id: "quality-control", label: "Quality Control", icon: <Shield className="w-4 h-4" />, description: "QC thresholds and checks" },
+  { id: "library-management", label: "Library Management", icon: <FileText className="w-4 h-4" />, description: "sgRNA libraries and gene sets" },
+  { id: "data-management", label: "Data Management", icon: <Database className="w-4 h-4" />, description: "Retention, export, backup" },
+  { id: "lab-management", label: "Lab & Team", icon: <Users className="w-4 h-4" />, description: "Join or create research labs" },
+  { id: "collaboration", label: "Collaboration", icon: <Users className="w-4 h-4" />, description: "Team and sharing" },
+  { id: "privacy-security", label: "Privacy & Security", icon: <Shield className="w-4 h-4" />, description: "2FA, sessions, compliance" },
+  { id: "compute-performance", label: "Compute & Performance", icon: <Zap className="w-4 h-4" />, description: "Priority and resources" },
+  { id: "appearance", label: "Appearance", icon: <Palette className="w-4 h-4" />, description: "Theme and visual preferences" },
+  { id: "billing", label: "Billing & Usage", icon: <CreditCard className="w-4 h-4" />, description: "Plan and usage stats" },
+  { id: "advanced", label: "Advanced", icon: <FlaskConical className="w-4 h-4" />, description: "Experimental and developer" },
 ];
 
 export default function NewSettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const renderTabContent = () => {
     switch (activeTab) {
       case "profile":
-        return (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-serif text-text-primary mb-2">Profile</h2>
-              <p className="text-sm text-text-secondary">
-                Manage your personal information
-              </p>
-            </div>
-            <div className="bg-surface border border-border rounded-xl p-6">
-              <p className="text-text-secondary">
-                Profile settings (existing implementation to be integrated)
-              </p>
-            </div>
-          </div>
-        );
+        return <ProfileSettings />;
       
       case "notifications":
         return <NotificationSettings />;
@@ -143,149 +88,85 @@ export default function NewSettingsPage() {
       
       case "quality-control":
         return <QualityControlSettings />;
-      
+
+      case "library-management":
+        return <LibraryManagementSettings />;
+
       case "data-management":
         return <DataManagementSettings />;
-      
+
+      case "lab-management":
+        return <LabManagementSettings />;
+
       case "collaboration":
-        return (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-serif text-text-primary mb-2 flex items-center gap-2">
-                <Users className="w-6 h-6" />
-                Collaboration
-              </h2>
-              <p className="text-sm text-text-secondary">
-                Labs, sharing permissions, and team management
-              </p>
-            </div>
-            <div className="bg-surface border border-border rounded-xl p-6">
-              <p className="text-text-secondary">
-                Collaboration settings (coming soon)
-              </p>
-            </div>
-          </div>
-        );
+        return <CollaborationSettings />;
       
       case "privacy-security":
-        return (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-serif text-text-primary mb-2 flex items-center gap-2">
-                <Shield className="w-6 h-6" />
-                Privacy & Security
-              </h2>
-              <p className="text-sm text-text-secondary">
-                2FA, active sessions, and data visibility
-              </p>
-            </div>
-            <div className="bg-surface border border-border rounded-xl p-6">
-              <p className="text-text-secondary">
-                Privacy & security settings (coming soon)
-              </p>
-            </div>
-          </div>
-        );
+        return <PrivacySecuritySettings />;
       
       case "compute-performance":
-        return (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-serif text-text-primary mb-2 flex items-center gap-2">
-                <Zap className="w-6 h-6" />
-                Compute & Performance
-              </h2>
-              <p className="text-sm text-text-secondary">
-                Resource allocation, priorities, and caching
-              </p>
-            </div>
-            <div className="bg-surface border border-border rounded-xl p-6">
-              <p className="text-text-secondary">
-                Compute & performance settings (coming soon)
-              </p>
-            </div>
-          </div>
-        );
-      
-      case "reproducibility":
-        return (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-serif text-text-primary mb-2 flex items-center gap-2">
-                <GitBranch className="w-6 h-6" />
-                Reproducibility
-              </h2>
-              <p className="text-sm text-text-secondary">
-                Versioning, methods generation, and provenance tracking
-              </p>
-            </div>
-            <div className="bg-surface border border-border rounded-xl p-6">
-              <p className="text-text-secondary">
-                Reproducibility settings (coming soon)
-              </p>
-            </div>
-          </div>
-        );
+        return <ComputePerformanceSettings />;
       
       case "appearance":
-        return (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-serif text-text-primary mb-2 flex items-center gap-2">
-                <Palette className="w-6 h-6" />
-                Appearance
-              </h2>
-              <p className="text-sm text-text-secondary">
-                Theme, colors, and display preferences
-              </p>
-            </div>
-            <div className="bg-surface border border-border rounded-xl p-6">
-              <p className="text-text-secondary">
-                Appearance settings (coming soon)
-              </p>
-            </div>
-          </div>
-        );
-      
-      case "developer-api":
-        return (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-serif text-text-primary mb-2 flex items-center gap-2">
-                <Key className="w-6 h-6" />
-                Developer & API
-              </h2>
-              <p className="text-sm text-text-secondary">
-                API keys, webhooks, and SDK access
-              </p>
-            </div>
-            <div className="bg-surface border border-border rounded-xl p-6">
-              <p className="text-text-secondary">
-                Developer & API settings (existing implementation to be integrated)
-              </p>
-            </div>
-          </div>
-        );
-      
+        return <AppearanceSettings />;
+      case "billing":
+        return <BillingUsageSettings />;
+      case "advanced":
+        return <AdvancedSettings />;
       default:
         return <div>Select a tab</div>;
     }
   };
 
+  const activeTabLabel = tabs.find((t) => t.id === activeTab)?.label ?? "Settings";
+  const filteredTabs = useMemo(() => {
+    if (!searchQuery.trim()) return tabs;
+    const q = searchQuery.toLowerCase();
+    return tabs.filter(
+      (t) =>
+        t.label.toLowerCase().includes(q) ||
+        t.description.toLowerCase().includes(q)
+    );
+  }, [searchQuery]);
+
   return (
     <div className="min-h-screen">
       <div className="max-w-[1400px] mx-auto px-8 py-12">
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-2 text-sm text-text-tertiary mb-4" aria-label="Breadcrumb">
+          <Link href="/" className="hover:text-text-secondary transition-colors">Home</Link>
+          <ChevronRight className="w-4 h-4" />
+          <Link href="/settings" className="hover:text-text-secondary transition-colors">Settings</Link>
+          <ChevronRight className="w-4 h-4" />
+          <span className="text-text-primary">{activeTabLabel}</span>
+        </nav>
+
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-12"
+          className="mb-8"
         >
-          <h1 className="text-6xl font-serif text-text-primary mb-2">Settings</h1>
+          <h1 className="text-5xl md:text-6xl font-serif text-text-primary mb-2">Settings</h1>
           <p className="text-lg text-text-secondary">
-            Production-grade controls for your research platform
+            Customize your settings and preferences
           </p>
         </motion.div>
+
+        {/* Search */}
+        <div className="mb-6">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary" />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search settings..."
+              className="w-full pl-10 pr-4 py-2.5 bg-surface border border-border rounded-xl text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent"
+              aria-label="Search settings"
+            />
+          </div>
+        </div>
 
         {/* Layout: Sidebar + Content */}
         <div className="flex gap-8">
@@ -297,7 +178,7 @@ export default function NewSettingsPage() {
             className="w-64 flex-shrink-0"
           >
             <div className="sticky top-8 space-y-1">
-              {tabs.map((tab) => (
+              {filteredTabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
@@ -327,6 +208,9 @@ export default function NewSettingsPage() {
                   </div>
                 </button>
               ))}
+              {filteredTabs.length === 0 && (
+                <p className="px-4 py-3 text-sm text-text-tertiary">No matching sections</p>
+              )}
             </div>
           </motion.aside>
 
@@ -341,39 +225,6 @@ export default function NewSettingsPage() {
             {renderTabContent()}
           </motion.main>
         </div>
-
-        {/* Footer */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-16 pt-8 border-t border-border/50"
-        >
-          <div className="flex flex-col items-center justify-center gap-3 text-center">
-            <p className="text-xs text-text-tertiary font-serif max-w-2xl leading-relaxed">
-              Your privacy and security are important to us. SplicR is committed to protecting your data and maintaining the highest standards of security.
-            </p>
-            <div className="flex items-center gap-4 text-xs">
-              <a
-                href="https://splicr.org/privacy-and-security"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-text-tertiary hover:text-text-primary transition-colors font-serif underline decoration-text-tertiary/30 hover:decoration-text-primary/50 underline-offset-2"
-              >
-                Privacy & Security
-              </a>
-              <span className="text-border">•</span>
-              <a
-                href="https://splicr.org/terms-and-conditions"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-text-tertiary hover:text-text-primary transition-colors font-serif underline decoration-text-tertiary/30 hover:decoration-text-primary/50 underline-offset-2"
-              >
-                Terms & Conditions
-              </a>
-            </div>
-          </div>
-        </motion.div>
       </div>
     </div>
   );

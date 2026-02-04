@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/Button';
-import { Save, Loader2, CheckCircle2, AlertCircle, Plus, Trash2 } from 'lucide-react';
+import { Save, Loader2, CheckCircle2, AlertCircle, Plus, Trash2, Info } from 'lucide-react';
 
 interface AnalysisDefaults {
   fdr_cutoff: number;
@@ -19,6 +19,21 @@ interface AnalysisDefaults {
   show_gene_labels: boolean;
   label_top_n: number;
   point_size: string;
+  // MAGeCK-specific
+  mageck_normalization: 'median' | 'total' | 'control' | 'none';
+  mageck_gene_test_method: 'rra' | 'mle';
+  mageck_control_sgrna_normalization: boolean;
+  mageck_variance_estimation_threshold: number;
+  mageck_fdr_method: 'benjamini-hochberg' | 'holm' | 'pounds';
+  // BAGEL2-specific
+  bagel2_essential_ref_list: string;
+  bagel2_nonessential_ref_list: string;
+  bagel2_method: 'bootstrap' | 'cross_validation';
+  bagel2_multi_target_correction: boolean;
+  bagel2_bayes_factor_threshold: number;
+  // Visualization
+  figure_resolution_dpi: number;
+  export_format: 'png' | 'svg' | 'pdf';
 }
 
 interface Preset {
@@ -49,6 +64,18 @@ export function AnalysisDefaultsSettings() {
     show_gene_labels: true,
     label_top_n: 20,
     point_size: 'medium',
+    mageck_normalization: 'median',
+    mageck_gene_test_method: 'rra',
+    mageck_control_sgrna_normalization: true,
+    mageck_variance_estimation_threshold: 5,
+    mageck_fdr_method: 'benjamini-hochberg',
+    bagel2_essential_ref_list: 'CEGv2',
+    bagel2_nonessential_ref_list: 'NEGv1',
+    bagel2_method: 'bootstrap',
+    bagel2_multi_target_correction: true,
+    bagel2_bayes_factor_threshold: 5,
+    figure_resolution_dpi: 300,
+    export_format: 'png',
   });
 
   const [presets, setPresets] = useState<Preset[]>([]);
@@ -342,25 +369,172 @@ export function AnalysisDefaultsSettings() {
         </div>
       </div>
 
+      {/* MAGeCK Defaults */}
+      <div className="bg-surface rounded-xl p-6 border border-border">
+        <h3 className="text-lg font-serif text-text-primary mb-4 flex items-center gap-2">
+          MAGeCK
+          <span className="text-xs font-normal text-text-tertiary flex items-center gap-1" title="Model-based Analysis of Genome-wide CRISPR-Cas9 Knockout">
+            <Info className="w-4 h-4" />
+          </span>
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-serif text-text-secondary mb-2">Normalization method</label>
+            <select
+              value={defaults.mageck_normalization}
+              onChange={(e) => setDefaults({ ...defaults, mageck_normalization: e.target.value as AnalysisDefaults['mageck_normalization'] })}
+              className="w-full px-4 py-2 bg-background border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            >
+              <option value="median">Median</option>
+              <option value="total">Total</option>
+              <option value="control">Control</option>
+              <option value="none">None</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-serif text-text-secondary mb-2">Gene test method</label>
+            <select
+              value={defaults.mageck_gene_test_method}
+              onChange={(e) => setDefaults({ ...defaults, mageck_gene_test_method: e.target.value as 'rra' | 'mle' })}
+              className="w-full px-4 py-2 bg-background border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            >
+              <option value="rra">RRA (Robust Rank Aggregation)</option>
+              <option value="mle">MLE (Maximum Likelihood)</option>
+            </select>
+          </div>
+          <div className="md:col-span-2 flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="mageck_control_norm"
+              checked={defaults.mageck_control_sgrna_normalization}
+              onChange={(e) => setDefaults({ ...defaults, mageck_control_sgrna_normalization: e.target.checked })}
+              className="w-4 h-4 rounded border-border accent-accent"
+            />
+            <label htmlFor="mageck_control_norm" className="text-sm text-text-primary cursor-pointer">
+              Control sgRNA normalization
+            </label>
+          </div>
+          <div>
+            <label className="block text-sm font-serif text-text-secondary mb-2">Variance estimation sample threshold</label>
+            <input
+              type="number"
+              min="1"
+              max="50"
+              value={defaults.mageck_variance_estimation_threshold}
+              onChange={(e) => setDefaults({ ...defaults, mageck_variance_estimation_threshold: parseInt(e.target.value) || 5 })}
+              className="w-full px-4 py-2 bg-background border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-serif text-text-secondary mb-2">FDR adjustment method</label>
+            <select
+              value={defaults.mageck_fdr_method}
+              onChange={(e) => setDefaults({ ...defaults, mageck_fdr_method: e.target.value as AnalysisDefaults['mageck_fdr_method'] })}
+              className="w-full px-4 py-2 bg-background border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            >
+              <option value="benjamini-hochberg">Benjamini–Hochberg</option>
+              <option value="holm">Holm</option>
+              <option value="pounds">Pounds</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* BAGEL2 Defaults */}
+      <div className="bg-surface rounded-xl p-6 border border-border">
+        <h3 className="text-lg font-serif text-text-primary mb-4 flex items-center gap-2">
+          BAGEL2
+          <span className="text-xs font-normal text-text-tertiary flex items-center gap-1" title="Bayesian Analysis of Gene Essentiality">
+            <Info className="w-4 h-4" />
+          </span>
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-serif text-text-secondary mb-2">Essential reference list</label>
+            <select
+              value={defaults.bagel2_essential_ref_list}
+              onChange={(e) => setDefaults({ ...defaults, bagel2_essential_ref_list: e.target.value })}
+              className="w-full px-4 py-2 bg-background border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            >
+              <option value="CEGv2">CEGv2 (Core Essential Genes)</option>
+              <option value="CEGv1">CEGv1</option>
+              <option value="custom">Custom (upload)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-serif text-text-secondary mb-2">Non-essential reference list</label>
+            <select
+              value={defaults.bagel2_nonessential_ref_list}
+              onChange={(e) => setDefaults({ ...defaults, bagel2_nonessential_ref_list: e.target.value })}
+              className="w-full px-4 py-2 bg-background border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            >
+              <option value="NEGv1">NEGv1 (Non-Essential Genes)</option>
+              <option value="NEGv2">NEGv2</option>
+              <option value="custom">Custom (upload)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-serif text-text-secondary mb-2">Method</label>
+            <select
+              value={defaults.bagel2_method}
+              onChange={(e) => setDefaults({ ...defaults, bagel2_method: e.target.value as 'bootstrap' | 'cross_validation' })}
+              className="w-full px-4 py-2 bg-background border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            >
+              <option value="bootstrap">Bootstrap</option>
+              <option value="cross_validation">Cross-validation</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="bagel2_multi"
+              checked={defaults.bagel2_multi_target_correction}
+              onChange={(e) => setDefaults({ ...defaults, bagel2_multi_target_correction: e.target.checked })}
+              className="w-4 h-4 rounded border-border accent-accent"
+            />
+            <label htmlFor="bagel2_multi" className="text-sm text-text-primary cursor-pointer">
+              Multi-target correction
+            </label>
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-serif text-text-secondary mb-2">
+              Bayes Factor threshold (default: 5)
+            </label>
+            <input
+              type="range"
+              min="1"
+              max="20"
+              step="0.5"
+              value={defaults.bagel2_bayes_factor_threshold}
+              onChange={(e) => setDefaults({ ...defaults, bagel2_bayes_factor_threshold: parseFloat(e.target.value) })}
+              className="w-full h-2 bg-background rounded-lg appearance-none cursor-pointer accent-accent"
+            />
+            <span className="text-sm text-text-tertiary">{defaults.bagel2_bayes_factor_threshold}</span>
+          </div>
+        </div>
+      </div>
+
       {/* Visualization Defaults */}
       <div className="bg-surface rounded-xl p-6 border border-border">
         <h3 className="text-lg font-serif text-text-primary mb-4">Visualization Defaults</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-serif text-text-secondary mb-2">Default Chart Type</label>
+            <label className="block text-sm font-serif text-text-secondary mb-2">Default plot type</label>
             <select
               value={defaults.chart_type}
               onChange={(e) => setDefaults({ ...defaults, chart_type: e.target.value })}
               className="w-full px-4 py-2 bg-background border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
             >
-              <option value="volcano">Volcano Plot</option>
-              <option value="waterfall">Waterfall Plot</option>
-              <option value="scatter">Scatter Plot</option>
+              <option value="volcano">Volcano</option>
+              <option value="rank">Rank</option>
+              <option value="qc">QC</option>
+              <option value="waterfall">Waterfall</option>
+              <option value="scatter">Scatter</option>
               <option value="heatmap">Heatmap</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm font-serif text-text-secondary mb-2">Color Scheme</label>
+            <label className="block text-sm font-serif text-text-secondary mb-2">Color scheme</label>
             <select
               value={defaults.color_scheme}
               onChange={(e) => setDefaults({ ...defaults, color_scheme: e.target.value })}
@@ -371,6 +545,30 @@ export function AnalysisDefaultsSettings() {
               <option value="inferno">Inferno</option>
               <option value="magma">Magma</option>
               <option value="cividis">Cividis (accessible)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-serif text-text-secondary mb-2">Figure resolution (DPI)</label>
+            <select
+              value={defaults.figure_resolution_dpi}
+              onChange={(e) => setDefaults({ ...defaults, figure_resolution_dpi: parseInt(e.target.value) })}
+              className="w-full px-4 py-2 bg-background border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            >
+              <option value={300}>300</option>
+              <option value={600}>600</option>
+              <option value={1200}>1200</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-serif text-text-secondary mb-2">Export format</label>
+            <select
+              value={defaults.export_format}
+              onChange={(e) => setDefaults({ ...defaults, export_format: e.target.value as 'png' | 'svg' | 'pdf' })}
+              className="w-full px-4 py-2 bg-background border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            >
+              <option value="png">PNG</option>
+              <option value="svg">SVG</option>
+              <option value="pdf">PDF</option>
             </select>
           </div>
           <div>
@@ -385,7 +583,7 @@ export function AnalysisDefaultsSettings() {
             </label>
           </div>
           <div>
-            <label className="block text-sm font-serif text-text-secondary mb-2">Label Top N Hits</label>
+            <label className="block text-sm font-serif text-text-secondary mb-2">Label top N hits</label>
             <input
               type="number"
               min="0"
@@ -396,7 +594,7 @@ export function AnalysisDefaultsSettings() {
             />
           </div>
           <div>
-            <label className="block text-sm font-serif text-text-secondary mb-2">Point Size</label>
+            <label className="block text-sm font-serif text-text-secondary mb-2">Point size</label>
             <select
               value={defaults.point_size}
               onChange={(e) => setDefaults({ ...defaults, point_size: e.target.value })}
@@ -480,8 +678,40 @@ export function AnalysisDefaultsSettings() {
         )}
       </div>
 
-      {/* Save Button */}
-      <div className="flex justify-end pt-4 border-t border-border">
+      {/* Actions */}
+      <div className="flex justify-between items-center pt-4 border-t border-border">
+        <Button
+          variant="secondary"
+          onClick={() => setDefaults({
+            fdr_cutoff: 0.05,
+            log2_fold_change: 1.0,
+            p_value_threshold: 0.05,
+            normalization_method: 'deseq2',
+            default_library: 'brunello_v2',
+            organism: 'human',
+            guides_per_gene: 4,
+            gene_annotation: 'ensembl_110',
+            chart_type: 'volcano',
+            color_scheme: 'viridis',
+            show_gene_labels: true,
+            label_top_n: 20,
+            point_size: 'medium',
+            mageck_normalization: 'median',
+            mageck_gene_test_method: 'rra',
+            mageck_control_sgrna_normalization: true,
+            mageck_variance_estimation_threshold: 5,
+            mageck_fdr_method: 'benjamini-hochberg',
+            bagel2_essential_ref_list: 'CEGv2',
+            bagel2_nonessential_ref_list: 'NEGv1',
+            bagel2_method: 'bootstrap',
+            bagel2_multi_target_correction: true,
+            bagel2_bayes_factor_threshold: 5,
+            figure_resolution_dpi: 300,
+            export_format: 'png',
+          })}
+        >
+          Reset to defaults
+        </Button>
         <Button onClick={saveSettings} disabled={saving} size="lg">
           {saving ? (
             <>

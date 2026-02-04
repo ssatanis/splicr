@@ -1,0 +1,45 @@
+# SplicR Analysis Worker - Node.js + Python/MAGeCK
+# Uses Node 24 per project engines; Python/MAGeCK for optional binary pipeline.
+FROM node:24-bookworm-slim
+
+# Install Python 3 and MAGeCK dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    python3-pip \
+    python3-dev \
+    build-essential \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install MAGeCK and scientific stack (latest stable; matches reproducibility docs)
+RUN pip3 install --no-cache-dir --break-system-packages \
+    mageck==0.5.9.5 \
+    numpy \
+    scipy \
+    pandas \
+    matplotlib
+
+# Verify MAGeCK is on PATH
+RUN mageck -h > /dev/null 2>&1 || (echo "MAGeCK installation failed" && exit 1)
+
+# Application directory
+WORKDIR /app
+
+# Copy root package files (for any root-level deps if needed)
+COPY package*.json ./
+
+# Copy frontend package files and install dependencies (include dev for tsx)
+COPY frontend/package*.json frontend/
+RUN cd frontend && npm ci
+
+# Copy application code (use .dockerignore to exclude node_modules, .next, etc.)
+COPY . .
+
+# Ensure frontend node_modules exist (already from npm ci above)
+RUN test -d frontend/node_modules || (echo "frontend/node_modules missing" && exit 1)
+
+# Optional: health check port (if you add a small HTTP server later)
+EXPOSE 8080
+
+# Single entrypoint: runs the existing TypeScript worker from frontend
+CMD ["node", "worker/index.js"]

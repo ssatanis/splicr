@@ -1,5 +1,8 @@
 {
   "installCommand": "npm ci",
+  "env": {
+    "NODE_OPTIONS": "--max-old-space-size=8192"
+  },
   "headers": [
     {
       "source": "/(.*)",

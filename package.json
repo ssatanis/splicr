@@ -9,7 +9,7 @@
     "ensure-share-columns": "node scripts/ensure-analysis-share-columns.mjs",
     "seed:libraries": "node scripts/seed-libraries.mjs",
     "seed:all": "node scripts/seed-all-libraries.mjs",
-    "build": "cd frontend && npm ci --include=dev && npm run build",
+    "build": "cd frontend && NODE_OPTIONS=--max-old-space-size=8192 npm ci --include=dev && NODE_OPTIONS=--max-old-space-size=8192 npm run build",
     "dev": "cd frontend && npm run dev",
     "start": "cd frontend && npm run start",
     "dev:electron": "cd frontend && npm run dev:electron",
@@ -21,6 +21,9 @@
   "dependencies": {
     "@react-email/components": "^1.0.6",
     "@react-email/render": "^2.0.4",
+    "@upstash/redis": "^1.36.2",
+    "bullmq": "^5.67.2",
+    "ioredis": "^5.9.2",
     "next": "15.5.11",
     "react": "^18.3.0",
     "react-dom": "^18.3.0"

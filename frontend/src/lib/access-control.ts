@@ -143,6 +143,41 @@ export async function checkAnalysisAccess(
       }
     }
 
+    // 3.5. Check lab membership access
+    if (currentUserId) {
+      // Get user's lab membership
+      const { data: userMembership } = await admin
+        .from('lab_members')
+        .select('lab_id, role')
+        .eq('user_id', currentUserId)
+        .maybeSingle();
+
+      if (userMembership) {
+        // Check if analysis owner is in same lab
+        const { data: ownerMembership } = await admin
+          .from('lab_members')
+          .select('lab_id')
+          .eq('user_id', ownerId)
+          .eq('lab_id', userMembership.lab_id)
+          .maybeSingle();
+
+        if (ownerMembership) {
+          // Lab members get view access by default
+          // PIs and Admins get edit access
+          const permission: SharePermission = ['pi', 'admin'].includes(userMembership.role)
+            ? 'edit'
+            : 'view';
+
+          return cacheAndReturn(cacheKey, {
+            hasAccess: true,
+            permission,
+            method: 'lab_member',
+            isOwner: false,
+          });
+        }
+      }
+    }
+
     // 4. Check link share configuration (already fetched above)
 
     if (!linkShare) {

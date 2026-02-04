@@ -47,6 +47,16 @@ export default function AuthButton() {
 
     getUser()
 
+    // Refetch profile when avatar/profile is updated (e.g. from Settings)
+    const onProfileUpdated = () => {
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user) {
+          supabase.from('profiles').select('*').eq('id', user.id).single().then(({ data }) => setProfile(data))
+        }
+      })
+    }
+    window.addEventListener('profile-updated', onProfileUpdated)
+
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -68,6 +78,7 @@ export default function AuthButton() {
 
     return () => {
       subscription.unsubscribe()
+      window.removeEventListener('profile-updated', onProfileUpdated)
     }
   }, [])
 

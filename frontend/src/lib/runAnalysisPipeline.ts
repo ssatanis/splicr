@@ -214,6 +214,9 @@ export async function runAnalysisPipeline(analysisId: string, analysis: any): Pr
         results,
         logs,
         error_message: null,
+        error_traceback: null,
+        worker_id: null,
+        last_heartbeat: null,
         ...(countMatrixR2Key && { count_matrix_r2_key: countMatrixR2Key }),
       })
       .eq('id', analysisId);
@@ -232,7 +235,10 @@ export async function runAnalysisPipeline(analysisId: string, analysis: any): Pr
       .update({
         status: 'failed',
         error_message: errorMessage,
+        error_traceback: error instanceof Error ? error.stack : String(error),
         logs,
+        worker_id: null,
+        last_heartbeat: null,
       })
       .eq('id', analysisId);
   }

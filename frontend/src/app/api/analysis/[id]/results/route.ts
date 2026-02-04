@@ -86,11 +86,25 @@ export async function GET(
     }
 
     if (row) {
-      if (!user || row.user_id !== user.id) {
+      const isOwner = user && row.user_id === user.id;
+      if (!user) {
         return NextResponse.json(
           { message: 'Results not found' },
           { status: 404 }
         );
+      }
+      if (!isOwner) {
+        const { data: published } = await (supabaseAdmin as any)
+          .from('public_analyses')
+          .select('analysis_id')
+          .eq('analysis_id', id)
+          .maybeSingle();
+        if (!published) {
+          return NextResponse.json(
+            { message: 'Results not found' },
+            { status: 404 }
+          );
+        }
       }
       if (row.results != null) {
         const payload = sanitizeResultsForResponse(row.results);

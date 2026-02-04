@@ -5,11 +5,16 @@ import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/Button';
 import { Save, Loader2, CheckCircle2, AlertCircle, Shield } from 'lucide-react';
 
+type ZeroCountHandling = 'none' | 'control' | 'treatment' | 'both' | 'any';
+
 interface QCSettings {
   min_read_depth_per_sample: number;
   max_low_quality_guides_pct: number;
   min_guide_representation: number;
+  min_read_count_per_sgrna: number;
   max_gini_coefficient: number;
+  zero_count_handling: ZeroCountHandling;
+  outlier_removal: boolean;
   auto_flag_low_quality: boolean;
   warn_before_analyzing_flagged: boolean;
   include_qc_report_in_exports: boolean;
@@ -37,7 +42,10 @@ export function QualityControlSettings() {
     min_read_depth_per_sample: 1000000,
     max_low_quality_guides_pct: 10.0,
     min_guide_representation: 100,
+    min_read_count_per_sgrna: 10,
     max_gini_coefficient: 0.2,
+    zero_count_handling: 'control',
+    outlier_removal: true,
     auto_flag_low_quality: true,
     warn_before_analyzing_flagged: true,
     include_qc_report_in_exports: true,
@@ -201,7 +209,21 @@ export function QualityControlSettings() {
           </div>
           <div>
             <label className="block text-sm font-serif text-text-secondary mb-2">
-              Max Gini Coefficient
+              Min read count per sgRNA
+            </label>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={settings.min_read_count_per_sgrna}
+              onChange={(e) => setSettings({ ...settings, min_read_count_per_sgrna: parseInt(e.target.value) || 0 })}
+              className="w-full px-4 py-2 bg-background border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            />
+            <p className="text-xs text-text-tertiary mt-1">Minimum reads required per guide</p>
+          </div>
+          <div>
+            <label className="block text-sm font-serif text-text-secondary mb-2">
+              Gini coefficient threshold (library representation)
             </label>
             <input
               type="number"
@@ -212,7 +234,36 @@ export function QualityControlSettings() {
               onChange={(e) => setSettings({ ...settings, max_gini_coefficient: parseFloat(e.target.value) })}
               className="w-full px-4 py-2 bg-background border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
             />
-            <p className="text-xs text-text-tertiary mt-1">Library skew threshold (0-1)</p>
+            <p className="text-xs text-text-tertiary mt-1">Library skew threshold (0-1). Lower = more uniform.</p>
+          </div>
+          <div>
+            <label className="block text-sm font-serif text-text-secondary mb-2">
+              Zero count handling
+            </label>
+            <select
+              value={settings.zero_count_handling}
+              onChange={(e) => setSettings({ ...settings, zero_count_handling: e.target.value as ZeroCountHandling })}
+              className="w-full px-4 py-2 bg-background border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            >
+              <option value="none">None</option>
+              <option value="control">Control samples only</option>
+              <option value="treatment">Treatment samples only</option>
+              <option value="both">Both control and treatment</option>
+              <option value="any">Any sample (strictest)</option>
+            </select>
+            <p className="text-xs text-text-tertiary mt-1">How to treat guides with zero counts</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="outlier_removal"
+              checked={settings.outlier_removal}
+              onChange={(e) => setSettings({ ...settings, outlier_removal: e.target.checked })}
+              className="w-4 h-4 rounded border-border accent-accent"
+            />
+            <label htmlFor="outlier_removal" className="text-sm text-text-primary cursor-pointer">
+              Outlier removal (exclude extreme replicates before analysis)
+            </label>
           </div>
         </div>
         

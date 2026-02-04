@@ -33,6 +33,7 @@ WORKDIR /analysis
 COPY entrypoint.sh /entrypoint.sh
 COPY run_mageck.py /analysis/run_mageck.py
 COPY progress_reporter.py /analysis/progress_reporter.py
+COPY progress_parser.py /analysis/progress_parser.py
 
 RUN chmod +x /entrypoint.sh && \
     chmod +x /analysis/run_mageck.py

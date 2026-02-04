@@ -9,6 +9,7 @@ import {
   FileText,
   Upload,
   BarChart3,
+  LineChart,
   Settings,
   Box,
   PanelRightOpen,
@@ -23,6 +24,7 @@ const navigation = [
   { name: "My Analyses", href: "/analyses", icon: FileText },
   { name: "Upload New", href: "/upload", icon: Upload },
   { name: "Reports", href: "/reports", icon: BarChart3 },
+  { name: "Analytics", href: "/analytics", icon: LineChart },
   // { name: "Structure Viewer", href: "/structure-viewer", icon: Box }, // Hidden - can be restored by uncommenting
   { name: "Settings", href: "/settings", icon: Settings },
 ];
@@ -39,6 +41,7 @@ export default function Sidebar({ minimized: minimizedProp, onMaximize: onMaximi
   const [displayName, setDisplayName] = useState("Researcher");
   const [email, setEmail] = useState("user@example.com");
   const [hasAuth, setHasAuth] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   // Use context state, but allow prop override for testing
   const minimized = minimizedProp ?? ctx.isMinimized;
@@ -58,17 +61,29 @@ export default function Sidebar({ minimized: minimizedProp, onMaximize: onMaximi
         if (user) {
           setHasAuth(true);
           setEmail(user.email || "user@example.com");
-          // Try to get display name from user metadata
           const fullName = user.user_metadata?.full_name;
           const displayNameMeta = user.user_metadata?.display_name;
           setDisplayName(
             fullName || displayNameMeta || user.email?.split("@")[0] || "Researcher"
           );
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("display_name, full_name, avatar_url")
+            .eq("id", user.id)
+            .single();
+          const profileRow = profile as { display_name?: string | null; full_name?: string | null; avatar_url?: string | null } | null;
+          if (profileRow) {
+            const name = profileRow.display_name || profileRow.full_name || displayName;
+            if (name) setDisplayName(name);
+            setAvatarUrl(profileRow.avatar_url ?? null);
+          }
           return;
         }
+        setAvatarUrl(null);
       } catch (_) {
         // Supabase not configured or error, fall through to localStorage
       }
+      setAvatarUrl(null);
 
       // Fallback to legacy localStorage auth
       setHasAuth(!!localStorage.getItem("splicr_auth_token"));
@@ -93,6 +108,29 @@ export default function Sidebar({ minimized: minimizedProp, onMaximize: onMaximi
     }
 
     loadUserData();
+
+    const onProfileUpdated = () => {
+      const supabase = createClient();
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user) {
+          supabase
+            .from("profiles")
+            .select("display_name, full_name, avatar_url")
+            .eq("id", user.id)
+            .single()
+            .then(({ data: profile }) => {
+              const p = profile as { display_name?: string | null; full_name?: string | null; avatar_url?: string | null } | null;
+              if (p) {
+                const name = p.display_name || p.full_name;
+                if (name) setDisplayName(name);
+                setAvatarUrl(p.avatar_url ?? null);
+              }
+            });
+        }
+      });
+    };
+    window.addEventListener("profile-updated", onProfileUpdated);
+    return () => window.removeEventListener("profile-updated", onProfileUpdated);
   }, [pathname]);
 
   const widthClass = minimized ? "w-sidebar-min" : "w-sidebar-max";
@@ -174,10 +212,19 @@ export default function Sidebar({ minimized: minimizedProp, onMaximize: onMaximi
               minimized ? "justify-center p-3" : "gap-3 px-4 py-3"
             )}
           >
-            <div className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center shrink-0">
-              <span className="text-sm font-serif text-text-primary">
-                {displayName.charAt(0).toUpperCase()}
-              </span>
+            <div className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center shrink-0 overflow-hidden">
+              {avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={avatarUrl}
+                  alt={displayName}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-sm font-serif text-text-primary">
+                  {displayName.charAt(0).toUpperCase()}
+                </span>
+              )}
             </div>
             {!minimized && (
               <div className="flex-1 min-w-0">

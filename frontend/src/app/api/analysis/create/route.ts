@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient, supabaseAdmin } from '@/lib/supabase/server';
 import { normalizeAnalysisMethod } from '@/lib/analysis-method';
+import { enqueueAnalysis, JobPriority } from '@/lib/queue/analysis-queue';
+import { markAnalysisQueued } from '@/lib/queue/db-state';
 
 export const dynamic = 'force-dynamic';
 
@@ -94,14 +96,49 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json(
-      {
-        success: true,
-        analysis,
-        message: 'Analysis created. Open the results page to start the run.',
-      },
-      { status: 201 }
-    );
+    // Enqueue the analysis job (with timeout so we never block if Redis is down)
+    const ENQUEUE_TIMEOUT_MS = 8000;
+    try {
+      const jobId = await Promise.race([
+        enqueueAnalysis(
+          {
+            analysisId: analysis.id,
+            userId: user.id,
+            fileNames: r2Keys,
+            sampleLabels: sampleLabels || [],
+            library: String(library),
+            algorithms: algorithms.map((a: string) => normalizeAnalysisMethod(a)),
+            parameters: params,
+          },
+          { priority: JobPriority.NORMAL }
+        ),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Queue timeout')), ENQUEUE_TIMEOUT_MS)
+        ),
+      ]);
+
+      await markAnalysisQueued(analysis.id, jobId);
+
+      return NextResponse.json(
+        {
+          success: true,
+          analysis,
+          jobId,
+          message: 'Analysis created and queued for processing.',
+        },
+        { status: 201 }
+      );
+    } catch (queueError) {
+      console.warn('Enqueue analysis failed (analysis created):', queueError instanceof Error ? queueError.message : queueError);
+      return NextResponse.json(
+        {
+          success: true,
+          analysis,
+          warning: 'Analysis created but not queued. Start it from the results page.',
+        },
+        { status: 201 }
+      );
+    }
   } catch (error: unknown) {
     const message =
       error instanceof Error ? error.message : 'Internal server error';

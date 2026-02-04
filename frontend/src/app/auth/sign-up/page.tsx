@@ -29,6 +29,13 @@ export default function SignUpPage() {
   const [taglineFading, setTaglineFading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [labCode, setLabCode] = useState('')
+  const [codeValidation, setCodeValidation] = useState<{
+    valid: boolean | null
+    lab?: { name: string; institution: string | null }
+    error?: string
+  }>({ valid: null })
+  const [validatingCode, setValidatingCode] = useState(false)
 
   // Rotate taglines with fade animation
   useEffect(() => {
@@ -42,6 +49,50 @@ export default function SignUpPage() {
 
     return () => clearInterval(interval)
   }, [])
+
+  // Validate lab code with debounce
+  useEffect(() => {
+    if (!labCode.trim()) {
+      setCodeValidation({ valid: null })
+      return
+    }
+
+    const code = labCode.trim().toUpperCase()
+
+    // Basic format validation
+    if (!/^[A-Z0-9]{1,6}$/.test(code)) {
+      setCodeValidation({ valid: false, error: 'Invalid format' })
+      return
+    }
+
+    // Only validate if 6 characters
+    if (code.length !== 6) {
+      setCodeValidation({ valid: null })
+      return
+    }
+
+    // Debounce API call
+    const timer = setTimeout(async () => {
+      setValidatingCode(true)
+      try {
+        const response = await fetch('/api/labs/validate-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ invite_code: code }),
+        })
+
+        const data = await response.json()
+        setCodeValidation(data)
+      } catch (error) {
+        console.error('Code validation error:', error)
+        setCodeValidation({ valid: false, error: 'Validation failed' })
+      } finally {
+        setValidatingCode(false)
+      }
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [labCode])
 
   // Password strength indicator
   const passwordStrength = useMemo(() => {
@@ -106,6 +157,7 @@ export default function SignUpPage() {
           password,
           fullName,
           institution: institution.trim(),
+          lab_invite_code: labCode.trim() || undefined,
         }),
       })
 
@@ -300,6 +352,48 @@ export default function SignUpPage() {
                 placeholder="Search for your college or university…"
                 error={!!(error && error.includes('institution'))}
               />
+            </div>
+
+            {/* Lab Invite Code (Optional) */}
+            <div>
+              <label className="block text-sm font-serif text-text-secondary mb-2">
+                Lab Invite Code <span className="text-text-tertiary">(Optional)</span>
+              </label>
+              <input
+                type="text"
+                value={labCode}
+                onChange={(e) => setLabCode(e.target.value.toUpperCase())}
+                maxLength={6}
+                className={`w-full px-4 py-3 bg-white border rounded-xl font-serif text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all uppercase ${
+                  codeValidation.valid === false
+                    ? 'border-error focus:border-error focus:ring-error/30'
+                    : 'border-border focus:border-accent'
+                }`}
+                placeholder="ABC123"
+              />
+              {validatingCode && (
+                <p className="mt-1.5 text-xs text-text-tertiary flex items-center gap-1">
+                  <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Validating code...
+                </p>
+              )}
+              {codeValidation.valid && codeValidation.lab && (
+                <p className="mt-1.5 text-xs text-success flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  You&apos;ll join: {codeValidation.lab.name}
+                </p>
+              )}
+              {codeValidation.valid === false && codeValidation.error && (
+                <p className="mt-1.5 text-xs text-error">{codeValidation.error}</p>
+              )}
+              <p className="mt-1.5 text-xs text-text-tertiary font-serif">
+                Have a lab code? Join your team instantly upon sign up.
+              </p>
             </div>
 
             <div>

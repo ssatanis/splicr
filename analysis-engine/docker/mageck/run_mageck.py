@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 MAGeCK Analysis Script for SplicR
-Runs MAGeCK count and test on CRISPR screen data
+Runs MAGeCK count and test on CRISPR screen data.
+Uses subprocess.Popen for real-time output streaming and progress parsing.
 """
 
 import argparse
@@ -14,6 +15,7 @@ from pathlib import Path
 import pandas as pd
 import logging
 from progress_reporter import ProgressReporter
+from progress_parser import parse_mageck_line
 
 # Configure logging
 logging.basicConfig(
@@ -21,6 +23,64 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Throttle progress updates (ms)
+PROGRESS_THROTTLE_MS = 2000
+
+
+def run_mageck_streaming(cmd, cwd, progress_callback=None, base_progress=0, progress_span=50):
+    """
+    Run MAGeCK with real-time stdout streaming and progress parsing.
+    Uses Popen + non-blocking read to stream output.
+    """
+    env = os.environ.copy()
+    env['PYTHONUNBUFFERED'] = '1'
+
+    proc = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1,
+        cwd=cwd,
+        env=env,
+    )
+
+    stdout_lines = []
+    state = {}
+    last_report_time = 0
+    current_progress = base_progress
+
+    try:
+        import time
+        while True:
+            line = proc.stdout.readline()
+            if line:
+                stdout_lines.append(line)
+                logger.info(line.rstrip())
+
+                update = parse_mageck_line(line, state)
+                if update and progress_callback:
+                    now_ms = time.time() * 1000
+                    if now_ms - last_report_time >= PROGRESS_THROTTLE_MS:
+                        last_report_time = now_ms
+                        scaled = base_progress + int((update.progress / 100) * progress_span)
+                        current_progress = min(base_progress + progress_span, scaled)
+                        progress_callback(current_progress, update.message)
+            elif proc.poll() is not None:
+                break
+    finally:
+        remaining = proc.stdout.read() if proc.stdout else ''
+        if remaining:
+            stdout_lines.append(remaining)
+        proc.wait()
+        full_output = ''.join(stdout_lines)
+        if proc.returncode != 0:
+            err = subprocess.CalledProcessError(proc.returncode, cmd)
+            err.output = full_output
+            err.stderr = full_output
+            raise err
+    return ''.join(stdout_lines)
 
 
 class MAGeCKAnalysis:
@@ -72,81 +132,68 @@ class MAGeCKAnalysis:
             raise
     
     def run_count(self, fastq_files, library_file, sample_labels):
-        """Run MAGeCK count"""
+        """Run MAGeCK count with real-time progress streaming"""
         logger.info("Running MAGeCK count...")
         self.progress.update(25, "Running MAGeCK count")
-        
+
         cmd = [
             'mageck', 'count',
             '-l', library_file,
             '-n', 'counts',
             '--sample-label', ','.join(sample_labels),
             '--fastq'] + fastq_files + [
-            '--pdf-report',
             '--norm-method', 'median',
             '--output-prefix', str(self.work_dir / 'counts')
         ]
-        
+        # Optional: add --pdf-report if R/pdflatex available
+
         logger.info(f"Command: {' '.join(cmd)}")
-        
+
+        def on_progress(pct, msg):
+            self.progress.update(25 + int(pct * 0.25), msg)
+
         try:
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                cwd=self.work_dir,
-                check=True
-            )
-            
+            run_mageck_streaming(cmd, self.work_dir, on_progress, base_progress=25, progress_span=25)
             logger.info("MAGeCK count completed successfully")
-            logger.debug(f"STDOUT: {result.stdout}")
-            
             self.progress.update(50, "MAGeCK count complete")
             return self.work_dir / 'counts.count.txt'
-            
+
         except subprocess.CalledProcessError as e:
-            logger.error(f"MAGeCK count failed: {e.stderr}")
-            raise Exception(f"MAGeCK count failed: {e.stderr}")
+            logger.error(f"MAGeCK count failed: {e.stderr if hasattr(e, 'stderr') else e.output}")
+            raise Exception(f"MAGeCK count failed: {e.stderr if hasattr(e, 'stderr') else e.output}")
     
     def run_test(self, count_file, treatment_samples, control_samples):
-        """Run MAGeCK test (RRA algorithm)"""
+        """Run MAGeCK test (RRA algorithm) with real-time progress streaming"""
         logger.info("Running MAGeCK test (RRA)...")
         self.progress.update(55, "Running MAGeCK test")
-        
+
         cmd = [
             'mageck', 'test',
             '-k', str(count_file),
             '-t', ','.join(treatment_samples),
             '-c', ','.join(control_samples),
             '-n', str(self.work_dir / 'results'),
-            '--pdf-report',
             '--gene-test-fdr-threshold', '0.05'
         ]
-        
+
         logger.info(f"Command: {' '.join(cmd)}")
-        
+
+        def on_progress(pct, msg):
+            self.progress.update(55 + int(pct * 0.20), msg)
+
         try:
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                cwd=self.work_dir,
-                check=True
-            )
-            
+            run_mageck_streaming(cmd, self.work_dir, on_progress, base_progress=55, progress_span=20)
             logger.info("MAGeCK test completed successfully")
-            logger.debug(f"STDOUT: {result.stdout}")
-            
             self.progress.update(75, "MAGeCK test complete")
-            
+
             return {
                 'gene_summary': self.work_dir / 'results.gene_summary.txt',
                 'sgrna_summary': self.work_dir / 'results.sgrna_summary.txt'
             }
-            
+
         except subprocess.CalledProcessError as e:
-            logger.error(f"MAGeCK test failed: {e.stderr}")
-            raise Exception(f"MAGeCK test failed: {e.stderr}")
+            logger.error(f"MAGeCK test failed: {e.stderr if hasattr(e, 'stderr') else e.output}")
+            raise Exception(f"MAGeCK test failed: {e.stderr if hasattr(e, 'stderr') else e.output}")
     
     def generate_summary_stats(self):
         """Generate summary statistics"""

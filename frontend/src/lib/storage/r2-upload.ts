@@ -130,6 +130,12 @@ async function uploadViaMultipart(
   onProgress?: (progress: UploadProgress) => void,
   signal?: AbortSignal
 ): Promise<string> {
+  onProgress?.({
+    loaded: 0,
+    total: file.size,
+    percent: 0,
+  });
+
   const createRes = await fetch('/api/upload/multipart/create', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -157,27 +163,67 @@ async function uploadViaMultipart(
     const parts: { PartNumber: number; ETag: string }[] = [];
     let uploadedBytes = 0;
 
+    const reportProgress = () => {
+      if (onProgress) {
+        const loaded = Math.min(uploadedBytes, file.size);
+        onProgress({
+          loaded,
+          total: file.size,
+          percent: Math.round((loaded / file.size) * 100),
+        });
+      }
+    };
+
+    const partProgressRef: Record<number, { loaded: number; total: number }> = {};
+    const getTotalLoaded = () => {
+      let total = uploadedBytes;
+      for (const p of Object.keys(partProgressRef).map(Number)) {
+        const { loaded, total: t } = partProgressRef[p];
+        const partStart = (p - 1) * partSize;
+        const partLen = Math.min(partSize, file.size - partStart);
+        if (t > 0) total += (loaded / t) * partLen;
+      }
+      return Math.min(total, file.size);
+    };
+
     for (let i = 0; i < numParts; i += PARALLEL_UPLOADS) {
       if (signal?.aborted) {
         await abortMultipartOnCloudflare(key, uploadId);
         throw new UploadCancelledError();
       }
+      for (const k of Object.keys(partProgressRef)) delete partProgressRef[Number(k)];
       const batch: Promise<{ PartNumber: number; ETag: string; partSize: number }>[] = [];
       for (let j = 0; j < PARALLEL_UPLOADS && i + j < numParts; j++) {
         const partNumber = i + j + 1;
-        batch.push(uploadPartWithRetry(file, key, uploadId, partNumber, partSize, 0, signal));
+        batch.push(
+          uploadPartWithRetry(
+            file,
+            key,
+            uploadId,
+            partNumber,
+            partSize,
+            0,
+            signal,
+            (partLoaded, partTotal) => {
+              partProgressRef[partNumber] = { loaded: partLoaded, total: partTotal };
+              if (onProgress) {
+                const loaded = getTotalLoaded();
+                onProgress({
+                  loaded,
+                  total: file.size,
+                  percent: Math.round((loaded / file.size) * 100),
+                });
+              }
+            }
+          )
+        );
       }
       const batchResults = await Promise.all(batch);
       batchResults.forEach((result) => {
         parts.push({ PartNumber: result.PartNumber, ETag: result.ETag });
         uploadedBytes += result.partSize;
-        if (onProgress) {
-          onProgress({
-            loaded: Math.min(uploadedBytes, file.size),
-            total: file.size,
-            percent: Math.round((Math.min(uploadedBytes, file.size) / file.size) * 100),
-          });
-        }
+        delete partProgressRef[result.PartNumber];
+        reportProgress();
       });
     }
 
@@ -219,7 +265,8 @@ async function uploadPartWithRetry(
   partNumber: number,
   partSize: number,
   retries = 0,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  onPartProgress?: (loaded: number, total: number) => void
 ): Promise<{ PartNumber: number; ETag: string; partSize: number }> {
   try {
     const presignRes = await fetch('/api/upload/multipart/presign-part', {
@@ -234,6 +281,17 @@ async function uploadPartWithRetry(
     const start = (partNumber - 1) * partSize;
     const end = Math.min(start + partSize, file.size);
     const blob = file.slice(start, end);
+
+    if (onPartProgress) {
+      const result = await uploadPartWithXHR(
+        presignedUrl,
+        blob,
+        partNumber,
+        signal,
+        onPartProgress
+      );
+      return result;
+    }
 
     const uploadRes = await fetch(presignedUrl, {
       method: 'PUT',
@@ -258,10 +316,73 @@ async function uploadPartWithRetry(
     if (retries < MAX_RETRIES) {
       const delay = RETRY_DELAY_MS * Math.pow(2, retries);
       await new Promise((r) => setTimeout(r, delay));
-      return uploadPartWithRetry(file, key, uploadId, partNumber, partSize, retries + 1, signal);
+      return uploadPartWithRetry(file, key, uploadId, partNumber, partSize, retries + 1, signal, onPartProgress);
     }
     throw error;
   }
+}
+
+function uploadPartWithXHR(
+  presignedUrl: string,
+  blob: Blob,
+  partNumber: number,
+  signal?: AbortSignal,
+  onProgress?: (loaded: number, total: number) => void
+): Promise<{ PartNumber: number; ETag: string; partSize: number }> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const onAbort = () => {
+      xhr.abort();
+      reject(new UploadCancelledError());
+    };
+    if (signal?.aborted) {
+      onAbort();
+      return;
+    }
+    signal?.addEventListener('abort', onAbort, { once: true });
+
+    xhr.upload.addEventListener('progress', (e) => {
+      if (e.lengthComputable && onProgress) {
+        onProgress(e.loaded, e.total);
+      }
+    });
+
+    xhr.addEventListener('load', () => {
+      signal?.removeEventListener('abort', onAbort);
+      if (xhr.status === 200) {
+        const etag = xhr.getResponseHeader('ETag');
+        if (!etag) {
+          reject(new Error(`Part ${partNumber} missing ETag`));
+          return;
+        }
+        resolve({
+          PartNumber: partNumber,
+          ETag: etag.replace(/"/g, ''),
+          partSize: blob.size,
+        });
+      } else {
+        reject(new Error(`Part ${partNumber} upload failed: ${xhr.statusText}`));
+      }
+    });
+
+    xhr.addEventListener('error', () => {
+      signal?.removeEventListener('abort', onAbort);
+      if (xhr.status === 0 && signal?.aborted) {
+        reject(new UploadCancelledError());
+      } else {
+        reject(new Error('Network error during part upload'));
+      }
+    });
+
+    xhr.addEventListener('abort', () => {
+      signal?.removeEventListener('abort', onAbort);
+      reject(new UploadCancelledError());
+    });
+
+    xhr.open('PUT', presignedUrl);
+    xhr.setRequestHeader('Content-Length', blob.size.toString());
+    xhr.send(blob);
+  });
 }
 
 /**
