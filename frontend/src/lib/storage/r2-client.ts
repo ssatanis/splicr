@@ -3,17 +3,18 @@ import { NodeHttpHandler } from '@smithy/node-http-handler';
 import https from 'https';
 
 /**
- * Optimized R2 Client Configuration
- * Uses connection pooling and keep-alive for better performance
+ * Optimized R2 Client: connection pooling, keep-alive, singleton for serverless.
+ * Reusing one client avoids connection churn and speeds up pipeline + count-matrix.
  */
-
 const httpsAgent = new https.Agent({
   keepAlive: true,
   maxSockets: 50,
   timeout: 60000,
 });
 
-export function createServerR2Client() {
+let cachedClient: S3Client | null = null;
+
+export function createServerR2Client(): S3Client {
   if (
     !process.env.R2_ENDPOINT ||
     !process.env.R2_ACCESS_KEY_ID ||
@@ -23,8 +24,8 @@ export function createServerR2Client() {
       'R2 credentials not configured. Set R2_ENDPOINT, R2_ACCESS_KEY_ID, and R2_SECRET_ACCESS_KEY in .env.local'
     );
   }
-
-  return new S3Client({
+  if (cachedClient) return cachedClient;
+  cachedClient = new S3Client({
     region: 'auto',
     endpoint: process.env.R2_ENDPOINT,
     credentials: {
@@ -35,9 +36,10 @@ export function createServerR2Client() {
     requestHandler: new NodeHttpHandler({
       httpsAgent,
       connectionTimeout: 10000,
-      requestTimeout: 300000, // 5 minutes per request
+      requestTimeout: 300000,
     }),
   });
+  return cachedClient;
 }
 
 export const R2_BUCKET_NAME =

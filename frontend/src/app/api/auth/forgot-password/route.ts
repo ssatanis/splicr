@@ -4,6 +4,17 @@ import { sendResetPasswordEmail } from '@/lib/email/send';
 
 const RESET_REDIRECT_PATH = '/auth/reset-password';
 
+// Redirect URL where Supabase sends the user after they click the email link.
+// Add this exact URL (e.g. https://splicr.org/auth/reset-password) to Supabase Dashboard →
+// Authentication → URL Configuration → Redirect URLs, or the link will redirect to sign-in.
+function getResetRedirectUrl(request: NextRequest): string {
+  const base =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    (typeof request.nextUrl?.origin === 'string' ? request.nextUrl.origin : '') ||
+    'https://splicr.org';
+  return base.replace(/\/$/, '') + RESET_REDIRECT_PATH;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -16,15 +27,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL ||
-      (typeof request.nextUrl?.origin === 'string' ? request.nextUrl.origin : '');
-    const redirectTo = baseUrl ? `${baseUrl}${RESET_REDIRECT_PATH}` : undefined;
+    const redirectTo = getResetRedirectUrl(request);
 
     const { data, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'recovery',
       email,
-      options: redirectTo ? { redirectTo } : undefined,
+      options: { redirectTo },
     });
 
     if (linkError) {

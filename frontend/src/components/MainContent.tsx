@@ -9,7 +9,7 @@ export default function MainContent({ children }: { children: React.ReactNode })
   return (
     <main 
       className={cn(
-        "transition-all duration-200 ease-in-out pt-20",
+        "flex-1 transition-all duration-200 ease-in-out pt-20",
         isMinimized ? "ml-sidebar-min" : "ml-sidebar-max"
       )}
     >

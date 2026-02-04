@@ -139,20 +139,14 @@ BEGIN
   END IF;
 END $$;
 
--- Add composite unique constraint for one link share per analysis
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint WHERE conname = 'analysis_shares_one_link_per_analysis'
-  ) THEN
-    ALTER TABLE public.analysis_shares
-      ADD CONSTRAINT analysis_shares_one_link_per_analysis
-        UNIQUE(analysis_id, is_link_share)
-        DEFERRABLE INITIALLY DEFERRED;
-  END IF;
-EXCEPTION
-  WHEN duplicate_object THEN NULL;
-END $$;
+-- One link-share config per analysis (partial unique index).
+-- We do not use UNIQUE(analysis_id, is_link_share) because that would allow only
+-- one email invite per analysis; we need multiple (analysis_id, is_link_share = false).
+CREATE UNIQUE INDEX IF NOT EXISTS idx_analysis_shares_one_link_per_analysis
+  ON public.analysis_shares(analysis_id)
+  WHERE is_link_share = true;
+
+COMMENT ON INDEX idx_analysis_shares_one_link_per_analysis IS 'Ensures at most one link share config per analysis; email invites are unlimited.';
 
 -- Create indexes for access checks
 CREATE INDEX IF NOT EXISTS idx_analysis_shares_token

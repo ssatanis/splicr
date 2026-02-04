@@ -35,6 +35,7 @@ export async function POST(
       })
       .eq('id', analysisId);
 
+    // Run real pipeline for this analysis only: uses analysis.file_names, parameters.algorithms, sample_labels.
     await runAnalysisPipeline(analysisId, analysis);
 
     return NextResponse.json({

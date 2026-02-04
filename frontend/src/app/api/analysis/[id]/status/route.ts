@@ -13,8 +13,9 @@ export async function GET(
 
     const supabase = await createClient();
 
+    // Do not select results (huge JSONB) — infer hasResults from status
     const { data: analysis, error } = await (supabase.from('analyses') as any)
-      .select('id, status, progress, logs, error_message, results, started_at, completed_at')
+      .select('id, status, progress, logs, error_message, started_at, completed_at')
       .eq('id', id)
       .single();
 
@@ -35,7 +36,7 @@ export async function GET(
       currentStep,
       logs: logs.slice(-20),
       error: analysis.error_message,
-      hasResults: !!analysis.results,
+      hasResults: analysis.status === 'complete',
       startedAt: analysis.started_at,
       completedAt: analysis.completed_at,
     });

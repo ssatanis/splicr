@@ -20,13 +20,15 @@ import DrugGeneFinder, { type DrugGeneFinderProps } from "@/components/DrugGeneF
 import CollaborationSidebar from "@/components/CollaborationSidebar";
 import ReportBuilderModal from "@/components/ReportBuilderModal";
 import FigureCustomizationModal from "@/components/FigureCustomizationModal";
-import QCStatusSummaryCard from "@/components/QCStatusSummaryCard";
 import AdvancedAnalysisPanel from "@/components/AdvancedAnalysisPanel";
 import ShareAnalysisModal from "@/components/ShareAnalysisModal";
 import ScreenIntegrationPanel from "@/components/ScreenIntegrationPanel";
+import QCStatusSummaryCard from "@/components/QCStatusSummaryCard";
 import { useUser } from "@/lib/context/UserContext";
 import { realApi } from "@/lib/realApi";
 import { Analysis, AnalysisResults } from "@/lib/types";
+import type { QCMetrics as ComprehensiveQCMetrics } from "@/lib/analysis/qcMetrics";
+import { assessGiniQuality } from "@/lib/analysis/qcMetrics";
 import { exportAsPDF, exportAsDOCX, exportAsLatex, exportComputationalLog, exportAsZIP } from "@/lib/exportUtils";
 import { generatePDF } from "@/lib/export/pdfGenerator";
 import { createPortal } from "react-dom";
@@ -57,6 +59,7 @@ import {
   Pill,
   ArrowLeft,
   Box,
+  Info,
 } from "lucide-react";
 
 type TabType = "overview" | "volcano" | "heatmap" | "network" | "timecourse" | "advanced" | "top-hits" | "qc" | "rankings" | "raw-data" | "logs" | "drug-finder";
@@ -1034,55 +1037,55 @@ function LoadingState() {
   );
 }
 
+/** Researcher-grade definitions: how each overview metric is computed (from this run's pipeline). */
+const OVERVIEW_METRIC_INFO: Record<string, string> = {
+  totalGenes: 'Number of genes in the reference library that had at least one sgRNA with non-zero counts in your sequencing data. Derived from the count matrix after mapping reads to the chosen sgRNA library.',
+  significantHits: 'Genes that pass the significance thresholds (FDR and log₂ fold change) set for this run. Computed by the analysis method (e.g. MAGeCK RRA) from treatment vs control counts.',
+  enriched: 'Significant genes with positive log₂ fold change (more abundant in treatment than control). Indicates genes whose knockout may confer a growth advantage.',
+  depleted: 'Significant genes with negative log₂ fold change (less abundant in treatment). Indicates genes whose knockout may be detrimental to cell fitness.',
+  readDepth: 'Total number of sequencing reads parsed from the FASTQ files in this run. Sum of reads across all samples before filtering.',
+  mappingRate: 'Percentage of reads that matched at least one sgRNA in the reference library. Computed as (mapped reads ÷ total reads) × 100. Reflects library design and sequencing quality.',
+  zeroCount: 'Percentage of (sgRNA × sample) cells in the count matrix with zero counts. High values may indicate undersampling, PCR dropout, or low sequencing depth.',
+  coverage: 'Percentage of sgRNAs in the reference library that had at least one read in at least one sample. (sgRNAs with count > 0 ÷ library size) × 100.',
+};
+
+function LabelWithInfo({ label, infoKey }: { label: string; infoKey: keyof typeof OVERVIEW_METRIC_INFO }) {
+  const text = OVERVIEW_METRIC_INFO[infoKey];
+  if (!text) return <span className="text-sm font-serif text-text-secondary">{label}</span>;
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className="text-sm font-serif text-text-secondary">{label}</span>
+      <span className="relative group inline-flex flex-shrink-0">
+        <Info className="w-3.5 h-3.5 text-text-tertiary cursor-help hover:text-text-secondary transition-colors" aria-label="How this metric is calculated" />
+        <span
+          className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block z-30 w-64 p-4 text-sm font-sans font-normal text-left text-text-secondary leading-relaxed bg-surface border border-border rounded-xl shadow-elevated normal-case pointer-events-none"
+          role="tooltip"
+        >
+          <span className="block">{text}</span>
+          <span className="absolute left-1/2 -translate-x-1/2 top-full -mt-px w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-surface" aria-hidden />
+        </span>
+      </span>
+    </span>
+  );
+}
+
 function OverviewTab({ results }: { results: AnalysisResults }) {
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <SummaryCard label="Total genes" value={results.summary.totalGenes.toLocaleString()} />
-        <SummaryCard label="Significant hits" value={results.summary.significantHits.toLocaleString()} color="text-accent" />
-        <SummaryCard label="Enriched" value={results.summary.enriched.toLocaleString()} color="text-success" />
-        <SummaryCard label="Depleted" value={results.summary.depleted.toLocaleString()} color="text-error" />
+        <SummaryCard label="Total genes" value={results.summary.totalGenes.toLocaleString()} infoKey="totalGenes" />
+        <SummaryCard label="Significant hits" value={results.summary.significantHits.toLocaleString()} color="text-accent" infoKey="significantHits" />
+        <SummaryCard label="Enriched" value={results.summary.enriched.toLocaleString()} color="text-success" infoKey="enriched" />
+        <SummaryCard label="Depleted" value={results.summary.depleted.toLocaleString()} color="text-error" infoKey="depleted" />
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1">
-          <QCStatusSummaryCard qc={results.qcMetrics} />
-        </div>
-        <div className="lg:col-span-2 bg-surface rounded-2xl p-8 shadow-card border border-border">
-          <h3 className="text-xl font-serif text-text-primary mb-6">Quality metrics</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <QCMetric label="Read depth" value={`${(results.qcMetrics.totalReads / 1e6).toFixed(1)}M`} />
-            <QCMetric label="Mapping rate" value={`${typeof results.qcMetrics.mappingRate === 'number' ? (results.qcMetrics.mappingRate <= 1 ? (results.qcMetrics.mappingRate * 100).toFixed(1) : results.qcMetrics.mappingRate.toFixed(1)) : results.qcMetrics.mappingRate}%`} />
-            <QCMetric label="Zero count" value={`${typeof results.qcMetrics.zeroCounts === 'number' ? results.qcMetrics.zeroCounts.toFixed(1) : results.qcMetrics.zeroCounts}%`} />
-            <QCMetric label="Coverage" value={`${typeof results.qcMetrics.libraryCoverage === 'number' ? (results.qcMetrics.libraryCoverage <= 1 ? (results.qcMetrics.libraryCoverage * 100).toFixed(1) : results.qcMetrics.libraryCoverage.toFixed(1)) : results.qcMetrics.libraryCoverage}%`} />
-          </div>
-          {results.qcAssessment && (
-            <div className="mt-6 pt-6 border-t border-border">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sm font-medium text-text-secondary">QC status:</span>
-                <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    results.qcAssessment.status === 'PASS'
-                      ? 'bg-success/15 text-success'
-                      : results.qcAssessment.status === 'WARNING'
-                        ? 'bg-amber-500/15 text-amber-700'
-                        : 'bg-error/15 text-error'
-                  }`}
-                >
-                  {results.qcAssessment.status}
-                </span>
-              </div>
-              {(results.qcAssessment.issues?.length > 0 || results.qcAssessment.recommendations?.length > 0) && (
-                <ul className="mt-2 text-sm text-text-secondary space-y-1 list-disc list-inside">
-                  {results.qcAssessment.issues?.map((issue, i) => (
-                    <li key={`issue-${i}`}>{issue}</li>
-                  ))}
-                  {results.qcAssessment.recommendations?.map((rec, i) => (
-                    <li key={`rec-${i}`} className="text-accent/90">{rec}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
+      <div className="bg-surface rounded-2xl p-8 shadow-card border border-border">
+        <h3 className="text-xl font-serif text-text-primary mb-6">Quality metrics</h3>
+        <p className="text-sm text-text-secondary mb-6">Metrics computed from this run's FASTQ parsing and count matrix (no mock data).</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <QCMetric label="Read depth" value={`${((results.qcMetrics?.totalReads ?? 0) / 1e6).toFixed(1)}M`} infoKey="readDepth" />
+          <QCMetric label="Mapping rate" value={`${typeof results.qcMetrics?.mappingRate === 'number' ? (results.qcMetrics.mappingRate <= 1 ? (results.qcMetrics.mappingRate * 100).toFixed(1) : results.qcMetrics.mappingRate.toFixed(1)) : results.qcMetrics?.mappingRate ?? '—'}%`} infoKey="mappingRate" />
+          <QCMetric label="Zero count" value={`${typeof results.qcMetrics?.zeroCounts === 'number' ? results.qcMetrics.zeroCounts.toFixed(1) : results.qcMetrics?.zeroCounts ?? '—'}%`} infoKey="zeroCount" />
+          <QCMetric label="Coverage" value={`${typeof results.qcMetrics?.libraryCoverage === 'number' ? (results.qcMetrics.libraryCoverage <= 1 ? (results.qcMetrics.libraryCoverage * 100).toFixed(1) : results.qcMetrics.libraryCoverage.toFixed(1)) : results.qcMetrics?.libraryCoverage ?? '—'}%`} infoKey="coverage" />
         </div>
       </div>
     </div>
@@ -1648,7 +1651,7 @@ function LogsTab({ results }: { results: AnalysisResults }) {
     <div className="bg-surface rounded-2xl shadow-card border border-border overflow-hidden">
       <div className="p-6 border-b border-border">
         <h3 className="text-xl font-serif text-text-primary">Analysis Pipeline Log</h3>
-        <p className="text-sm text-text-secondary mt-2">Complete computational log with timestamps</p>
+        <p className="text-sm text-text-secondary mt-2">Run context (sgRNA library, FASTQ files, tests, settings) and step-by-step pipeline output with timestamps</p>
       </div>
       <div className="max-h-[600px] overflow-y-auto">
         <div className="font-mono text-sm">
@@ -1657,7 +1660,7 @@ function LogsTab({ results }: { results: AnalysisResults }) {
               <div
                 key={index}
                 className={`px-6 py-3 border-b border-border-light hover:bg-background transition-colors ${
-                  log.level === 'error' ? 'bg-error/5' : log.level === 'success' ? 'bg-success/5' : ''
+                  log.level === 'error' ? 'bg-error/5' : log.level === 'success' ? 'bg-success/5' : log.step === 'Context' ? 'bg-background/50' : ''
                 }`}
               >
                 <div className="flex items-start gap-4">
@@ -1667,7 +1670,12 @@ function LogsTab({ results }: { results: AnalysisResults }) {
                   <span className={`${getLevelColor(log.level)} w-4 flex-shrink-0`}>
                     {getLevelIcon(log.level)}
                   </span>
-                  <span className="text-text-primary">{log.message}</span>
+                  <div className="min-w-0 flex-1">
+                    {log.step && log.step !== 'Context' && (
+                      <span className="text-text-tertiary text-xs font-medium uppercase tracking-wide mr-2">{log.step}</span>
+                    )}
+                    <span className="text-text-primary">{log.message}</span>
+                  </div>
                   <span className="text-text-tertiary ml-auto whitespace-nowrap">
                     {log.progress}%
                   </span>
@@ -1685,20 +1693,24 @@ function LogsTab({ results }: { results: AnalysisResults }) {
   );
 }
 
-function SummaryCard({ label, value, color = "text-text-primary" }: { label: string; value: string; color?: string }) {
+function SummaryCard({ label, value, color = "text-text-primary", infoKey }: { label: string; value: string; color?: string; infoKey?: keyof typeof OVERVIEW_METRIC_INFO }) {
   return (
     <div className="bg-surface rounded-2xl p-8 shadow-card border border-border">
       <div className={`text-5xl font-serif ${color} mb-3`}>{value}</div>
-      <div className="text-sm font-serif text-text-secondary">{label}</div>
+      <div className="text-sm font-serif text-text-secondary">
+        {infoKey ? <LabelWithInfo label={label} infoKey={infoKey} /> : label}
+      </div>
     </div>
   );
 }
 
-function QCMetric({ label, value }: { label: string; value: string }) {
+function QCMetric({ label, value, infoKey }: { label: string; value: string; infoKey?: keyof typeof OVERVIEW_METRIC_INFO }) {
   return (
     <div>
       <div className="text-3xl font-serif text-text-primary mb-2">{value}</div>
-      <div className="text-sm text-text-secondary font-serif">{label}</div>
+      <div className="text-sm text-text-secondary font-serif">
+        {infoKey ? <LabelWithInfo label={label} infoKey={infoKey} /> : label}
+      </div>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { getAuthenticatedUser } from '@/lib/supabase/server'
 import AppHeader from '@/components/AppHeader'
+import AppFooter from '@/components/AppFooter'
 import Sidebar from '@/components/Sidebar'
 import { SidebarProvider } from '@/lib/context/SidebarContext'
 import MainContent from '@/components/MainContent'
@@ -16,10 +17,11 @@ export default async function ProtectedLayout({
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background flex flex-col">
         <Sidebar />
         <AppHeader />
         <MainContent>{children}</MainContent>
+        <AppFooter />
       </div>
     </SidebarProvider>
   )

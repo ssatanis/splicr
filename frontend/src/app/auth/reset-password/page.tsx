@@ -20,31 +20,52 @@ export default function ResetPasswordPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
-  // Check if user has a valid session from the reset link
+  // Check if user has a valid session from the reset link (hash is processed client-side)
   useEffect(() => {
-    const checkSession = async () => {
-      const supabase = createClient()
-      const { data: { session } } = await supabase.auth.getSession()
+    const supabase = createClient()
 
-      if (session) {
-        setHasValidSession(true)
-      }
+    const hasRecoveryHash = () => {
+      if (typeof window === 'undefined') return false
+      const hash = window.location.hash || ''
+      return hash.includes('type=recovery') || (hash.includes('access_token=') && hash.includes('refresh_token='))
+    }
+
+    let timeoutId: ReturnType<typeof setTimeout>
+
+    const finishChecking = (valid: boolean) => {
+      setHasValidSession(valid)
       setCheckingSession(false)
+    }
+
+    // Listen for PASSWORD_RECOVERY first (fired when Supabase processes the hash)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        finishChecking(true)
+      }
+    })
+
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        finishChecking(true)
+        return
+      }
+      // If URL has recovery hash, wait for client to process it before showing "Invalid"
+      if (hasRecoveryHash()) {
+        timeoutId = setTimeout(async () => {
+          const { data: { session: retrySession } } = await supabase.auth.getSession()
+          finishChecking(!!retrySession)
+        }, 2800)
+        return
+      }
+      finishChecking(false)
     }
 
     checkSession()
 
-    // Listen for auth state changes (when user clicks the reset link)
-    const supabase = createClient()
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        setHasValidSession(true)
-        setCheckingSession(false)
-      }
-    })
-
     return () => {
       subscription.unsubscribe()
+      if (timeoutId) clearTimeout(timeoutId)
     }
   }, [])
 

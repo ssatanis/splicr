@@ -94,16 +94,24 @@ export async function GET(
       }
       if (row.results != null) {
         const payload = sanitizeResultsForResponse(row.results);
-        return NextResponse.json(payload);
+        const res = NextResponse.json(payload);
+        res.headers.set('Cache-Control', 'private, max-age=60, stale-while-revalidate=120');
+        return res;
       }
-      return NextResponse.json({
+      const pending = NextResponse.json({
         results: null,
         analysis: rowToAnalysis(row),
       });
+      pending.headers.set('Cache-Control', 'private, max-age=0, must-revalidate');
+      return pending;
     }
 
     const results = analysisResultsMemory.get(id);
-    if (results) return NextResponse.json(sanitizeResultsForResponse(results));
+    if (results) {
+      const res = NextResponse.json(sanitizeResultsForResponse(results));
+      res.headers.set('Cache-Control', 'private, max-age=60, stale-while-revalidate=120');
+      return res;
+    }
 
     return NextResponse.json(
       { message: 'Results not found' },

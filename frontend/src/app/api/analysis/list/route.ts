@@ -54,13 +54,13 @@ export async function GET() {
     }
 
     if (!authError && user) {
-      // Fetch only own analyses for now - much faster
+      // Fetch only metadata — do NOT select results (huge JSONB); use status for "has results"
       const { data: ownRows, error: ownError } = await supabaseAdmin
         .from('analyses')
-        .select('id, name, status, created_at, updated_at, started_at, completed_at, progress, current_step, error_message, file_names, sample_labels, parameters, method, library, user_id, results, logs')
+        .select('id, name, status, created_at, updated_at, started_at, completed_at, progress, current_step, error_message, file_names, sample_labels, parameters, method, library, user_id, logs')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(100); // Limit to last 100 analyses for performance
+        .limit(100);
 
       if (ownError) {
         if (isSupabaseUnreachable(ownError)) {
@@ -77,8 +77,9 @@ export async function GET() {
         ownerEmail: user.email,
       }));
 
-      // TODO: Add shared analyses back in a separate endpoint or lazy load them
-      return NextResponse.json(ownAnalyses);
+      const res = NextResponse.json(ownAnalyses);
+      res.headers.set('Cache-Control', 'private, max-age=15, stale-while-revalidate=30');
+      return res;
     }
 
     const analysesList = (Array.from(analysesMemory.values()) as Analysis[])

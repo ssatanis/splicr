@@ -10,6 +10,7 @@ import { getR2FileAsFile } from '@/lib/storage/r2-get';
 import { putR2Json } from '@/lib/storage/r2-put';
 import { AnalysisPipeline } from '@/lib/analysis/pipeline';
 import { assessQCStatus } from '@/lib/analysis/quality-calculator';
+import { getLibraryMetadata } from '@/lib/analysis/sgRNALibraries';
 
 async function updateProgress(admin: any, analysisId: string, progress: number, currentStep: string, logs: any[]) {
   const { error } = await admin
@@ -99,19 +100,52 @@ export async function runAnalysisPipeline(analysisId: string, analysis: any): Pr
       throw new Error('R2 storage is not configured. Set R2_ENDPOINT, R2_ACCESS_KEY_ID, and R2_SECRET_ACCESS_KEY to run analyses.');
     }
 
+    const libraryType = (analysis.library || analysis.library_type || 'brunello') as string;
+    const parameters = {
+      fdrThreshold: analysis.parameters?.fdrThreshold ?? analysis.parameters?.fdr_threshold ?? 0.05,
+      lfcThreshold: analysis.parameters?.lfcThreshold ?? analysis.parameters?.lfc_threshold ?? 1,
+      normalizationMethod: (analysis.parameters?.normalizationMethod ?? analysis.parameters?.normalization ?? 'median') as 'median' | 'total' | 'control' | 'none',
+      minimumReads: analysis.parameters?.minimumReads ?? analysis.parameters?.min_reads ?? 30,
+      removeRibosomal: analysis.parameters?.removeRibosomal ?? true,
+      essentialGenes: analysis.parameters?.essentialGenes ?? analysis.parameters?.essential_genes,
+      nonEssentialGenes: analysis.parameters?.nonEssentialGenes ?? analysis.parameters?.non_essential_genes,
+      bagelPermutations: analysis.parameters?.bagelPermutations ?? analysis.parameters?.bagel_permutations ?? 1000,
+    };
+
+    // Log run context (sgRNA library, FASTQ files, tests, settings) for reproducibility
+    addLog('Context', '--- Run context (this analysis) ---', 0, 'info');
+    try {
+      const libMeta = getLibraryMetadata(libraryType);
+      addLog('Context', `sgRNA library: ${libraryType} (${libMeta.name}, ${libMeta.totalSgRNAs} sgRNAs, ${libMeta.totalGenes} genes)`, 0, 'info');
+    } catch {
+      addLog('Context', `sgRNA library: ${libraryType}`, 0, 'info');
+    }
+    fileNames.forEach((key: string, i: number) => {
+      const fileName = typeof key === 'string' ? key.split('/').pop() ?? key : `sample_${i + 1}.fastq.gz`;
+      const label = sampleLabels[i];
+      const sampleName = label?.sampleName ?? label?.fileName ?? fileName;
+      const condition = label?.condition ?? (i === 0 ? 'control' : 'treatment');
+      addLog('Context', `FASTQ: ${fileName} | sample: ${sampleName} | ${condition}`, 0, 'info');
+    });
+    const algDisplay = algorithms.map((a: string) => (a === 'mageck' ? 'MAGeCK' : a === 'bagel2' ? 'BAGEL2' : a === 'drugz' ? 'DrugZ' : a)).join(', ');
+    addLog('Context', `Tests (algorithms): ${algDisplay}`, 0, 'info');
+    addLog('Context', `Settings: FDR threshold=${parameters.fdrThreshold}, LFC threshold=${parameters.lfcThreshold}, normalization=${parameters.normalizationMethod}, min reads=${parameters.minimumReads}, remove ribosomal=${parameters.removeRibosomal}`, 0, 'info');
+    if (parameters.bagelPermutations != null || algorithms.some((a: string) => String(a).toLowerCase() === 'bagel2')) {
+      addLog('Context', `BAGEL2: permutations=${parameters.bagelPermutations ?? 1000}, essential/non-essential lists ${parameters.essentialGenes ? 'provided' : 'default'}`, 0, 'info');
+    }
+    addLog('Context', '--- End run context ---', 0, 'info');
+
     addLog('Initialization', 'Starting CRISPR screen analysis pipeline', 2, 'info');
     await updateProgress(admin, analysisId, 2, 'Initializing', logs);
 
     addLog('Fetching', `Fetching ${fileNames.length} FASTQ file(s)...`, 5, 'info');
     await updateProgress(admin, analysisId, 5, 'Fetching FASTQ files', logs);
 
-    const files: File[] = [];
-    for (let i = 0; i < fileNames.length; i++) {
-      const key = fileNames[i];
+    const filePromises = fileNames.map((key: string, i: number) => {
       const fileName = typeof key === 'string' ? key.split('/').pop() ?? key : `sample_${i + 1}.fastq.gz`;
-      const file = await getR2FileAsFile(key, fileName);
-      files.push(file);
-    }
+      return getR2FileAsFile(key, fileName);
+    });
+    const files: File[] = await Promise.all(filePromises);
 
     const fileMetadata = fileNames.map((key: string, i: number) => {
       const label = sampleLabels[i];
@@ -123,18 +157,6 @@ export async function runAnalysisPipeline(analysisId: string, analysis: any): Pr
         sampleName: label?.sampleName ?? `Sample_${i + 1}`,
       };
     });
-
-    const libraryType = (analysis.library || 'brunello') as string;
-    const parameters = {
-      fdrThreshold: analysis.parameters?.fdrThreshold ?? analysis.parameters?.fdr_threshold ?? 0.05,
-      lfcThreshold: analysis.parameters?.lfcThreshold ?? analysis.parameters?.lfc_threshold ?? 1,
-      normalizationMethod: (analysis.parameters?.normalizationMethod ?? analysis.parameters?.normalization ?? 'median') as 'median' | 'total' | 'control' | 'none',
-      minimumReads: analysis.parameters?.minimumReads ?? analysis.parameters?.min_reads ?? 30,
-      removeRibosomal: analysis.parameters?.removeRibosomal ?? true,
-      essentialGenes: analysis.parameters?.essentialGenes ?? analysis.parameters?.essential_genes,
-      nonEssentialGenes: analysis.parameters?.nonEssentialGenes ?? analysis.parameters?.non_essential_genes,
-      bagelPermutations: analysis.parameters?.bagelPermutations ?? analysis.parameters?.bagel_permutations ?? 1000,
-    };
 
     const pipeline = new AnalysisPipeline();
     const pipelineResults = await pipeline.runPipeline(
@@ -178,6 +200,9 @@ export async function runAnalysisPipeline(analysisId: string, analysis: any): Pr
     const results = pipelineResultsToDbResults(analysisId, pipelineResults, countMatrixR2Key);
     addLog('Complete', 'Analysis completed successfully', 100, 'success');
     await updateProgress(admin, analysisId, 100, 'Complete', logs);
+
+    // So the Logs tab shows run context (FASTQ, library, algorithms, settings) plus pipeline steps
+    results.logs = logs;
 
     const { error: updateError } = await admin
       .from('analyses')

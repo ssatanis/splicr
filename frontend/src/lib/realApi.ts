@@ -5,20 +5,20 @@ import { Analysis, AnalysisResults } from './types';
  * In Electron desktop build, calls production API (splicr.org).
  */
 
-// Simple cache for API responses to improve performance
+// Production-grade cache: longer TTL for stable data, shorter for lists
 const apiCache = new Map<string, { data: any; timestamp: number }>();
-const CACHE_TTL = 10000; // 10 seconds cache for most requests
+const CACHE_TTL = 10000; // 10s default
+const CACHE_TTL_RESULTS = 300000; // 5 min for completed results (stable)
+const CACHE_TTL_LIST = 20000; // 20s for analysis list (balance freshness vs speed)
 
-function getCachedData<T>(key: string): T | null {
+function getCachedData<T>(key: string, ttlMs: number = CACHE_TTL): T | null {
   const cached = apiCache.get(key);
   if (!cached) return null;
-  
   const age = Date.now() - cached.timestamp;
-  if (age > CACHE_TTL) {
+  if (age > ttlMs) {
     apiCache.delete(key);
     return null;
   }
-  
   return cached.data as T;
 }
 
@@ -87,14 +87,19 @@ export const realApi = {
       const error = await safeJson<{ message?: string }>(response).catch(() => ({} as { message?: string }));
       throw new Error(error.message || 'Failed to create analysis');
     }
-
+    apiCache.delete('analyses:list');
     return safeJson<Analysis>(response);
   },
 
   async getAnalyses(): Promise<Analysis[]> {
+    const cacheKey = 'analyses:list';
+    const cached = getCachedData<Analysis[]>(cacheKey, CACHE_TTL_LIST);
+    if (cached) return cached;
     const response = await fetch(`${API_BASE}/analysis/list`, { credentials: 'include' });
     if (!response.ok) throw new Error('Failed to fetch analyses');
-    return safeJson<Analysis[]>(response);
+    const data = await safeJson<Analysis[]>(response);
+    setCachedData(cacheKey, data);
+    return data;
   },
 
   async getAnalysis(id: string): Promise<Analysis> {
@@ -115,6 +120,7 @@ export const realApi = {
         const data = await res.json().catch(() => ({}));
         throw new Error(data?.error || data?.details || res.statusText || 'Failed to update analysis');
       }
+      apiCache.delete('analyses:list');
     }
     return this.getAnalysis(id);
   },
@@ -124,6 +130,8 @@ export const realApi = {
       method: 'DELETE',
     });
     if (!response.ok) throw new Error('Failed to delete analysis');
+    apiCache.delete('analyses:list');
+    apiCache.delete(`results:${id}`);
   },
 
   async getAnalysisStatus(id: string): Promise<{
@@ -144,18 +152,20 @@ export const realApi = {
       const data = await safeJson<{ error?: string }>(response).catch(() => ({ error: undefined }));
       throw new Error(data.error || 'Failed to start analysis');
     }
+    apiCache.delete(`results:${id}`);
+    apiCache.delete('analyses:list');
     return safeJson<{ success: boolean; analysisId: string }>(response);
   },
 
   /** Returns results, or { results: null, analysis } when analysis exists but results aren't ready yet. */
   async getResults(id: string): Promise<AnalysisResults | { results: null; analysis: Analysis }> {
-    // Check cache first
     const cacheKey = `results:${id}`;
-    const cached = getCachedData<AnalysisResults | { results: null; analysis: Analysis }>(cacheKey);
-    if (cached) {
-      return cached;
-    }
-    
+    const cached = getCachedData<AnalysisResults | { results: null; analysis: Analysis }>(
+      cacheKey,
+      CACHE_TTL_RESULTS
+    );
+    if (cached) return cached;
+
     const response = await fetch(`${API_BASE}/analysis/${id}/results`, { credentials: 'include' });
     if (!response.ok) {
       let message: string;
@@ -173,16 +183,12 @@ export const realApi = {
     }
     const data = await safeJson<AnalysisResults | { results: null; analysis: Analysis }>(response);
     
-    // Cache successful results (but not pending/null results)
     if (data && typeof data === 'object') {
       if ('results' in data && data.results === null && 'analysis' in data && data.analysis) {
-        // Don't cache null results
         return { results: null, analysis: data.analysis };
-      } else {
-        // Cache completed results
-        setCachedData(cacheKey, data);
-        return data as AnalysisResults;
       }
+      setCachedData(cacheKey, data);
+      return data as AnalysisResults;
     }
     
     return data as AnalysisResults;

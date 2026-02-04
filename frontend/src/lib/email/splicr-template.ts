@@ -242,6 +242,7 @@ export function confirmEmailContent(options: { confirmUrl: string }): { subject:
 /** Password reset — clean, modern, rounded, professional */
 export function resetPasswordEmailContent(options: { resetUrl: string }): { subject: string; html: string } {
   const subject = 'Reset your SplicR password';
+  const resetUrl = options.resetUrl.trim();
   const bodyHtml = `
     <p style="margin: 0 0 24px; font-size: 17px; line-height: 1.65; color: ${TEXT_PRIMARY};">
       We received a request to reset the password for your SplicR account.
@@ -264,6 +265,12 @@ export function resetPasswordEmailContent(options: { resetUrl: string }): { subj
         </td>
       </tr>
     </table>
+    <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.6; color: ${TEXT_SECONDARY};">
+      If the button doesn't work, copy and paste this link into your browser:
+    </p>
+    <p style="margin: 0 0 24px; font-size: 14px; line-height: 1.5; word-break: break-all;">
+      <a href="${escapeHtml(resetUrl)}" style="color: ${ACCENT}; text-decoration: underline;">${escapeHtml(resetUrl)}</a>
+    </p>
     <p style="margin: 0; font-size: 15px; line-height: 1.6; color: ${TEXT_SECONDARY};">
       If you didn’t request this, you can safely ignore this email — your password will stay the same.
     </p>
@@ -272,7 +279,7 @@ export function resetPasswordEmailContent(options: { resetUrl: string }): { subj
     title: 'Reset your password',
     bodyHtml,
     ctaLabel: 'Reset password',
-    ctaUrl: options.resetUrl,
+    ctaUrl: resetUrl,
     footerText: "If you didn't request a password reset, you can ignore this email. The link expires in 1 hour.",
   });
   return { subject, html };
