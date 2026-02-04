@@ -1,4 +1,6 @@
 {
+  "rootDirectory": "frontend",
+  "installCommand": "npm ci",
   "headers": [
     {
       "source": "/(.*)",
