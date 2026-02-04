@@ -91,9 +91,24 @@ let metadataCache: LibrariesMetadata | null = null;
 // Path Helpers
 // ============================================================================
 
+const METADATA_FILE = 'libraries.json';
+
 function getLibrariesRoot(): string {
-  // In Next.js API routes, we need to go up from frontend/src/lib to project root
-  return path.join(process.cwd(), '..', 'data', 'libraries');
+  const cwd = process.cwd();
+  const candidates = [
+    path.join(cwd, 'data', 'libraries'),
+    path.join(cwd, '..', 'data', 'libraries'),
+    path.join(cwd, '..', '..', 'data', 'libraries'),
+  ].map(p => path.normalize(p));
+  for (const dir of candidates) {
+    const metadataPath = path.join(dir, METADATA_FILE);
+    if (fs.existsSync(metadataPath)) {
+      return dir;
+    }
+  }
+  throw new Error(
+    `Library metadata not found. Tried: ${candidates.join(', ')}. Set cwd or run from project root.`
+  );
 }
 
 function getLibraryFilePath(filename: string): string {

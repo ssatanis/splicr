@@ -1,0 +1,33 @@
+{
+  "metadata": {
+    "name": "Hart Core Essential 2015",
+    "description": "217 core essential genes identified via CRISPR screens across 5 cell lines",
+    "source": "Hart et al., Cell 2015",
+    "pubmed_id": "26771497",
+    "organism": "Homo sapiens",
+    "publication_year": 2015
+  },
+  "genes": [
+    "POLR2A", "POLR2B", "POLR2C", "POLR2D", "POLR2E", "POLR2F", "POLR2G", "POLR2H", "POLR2I", "POLR2J", "POLR2K", "POLR2L",
+    "RPL3", "RPL4", "RPL5", "RPL6", "RPL7", "RPL7A", "RPL8", "RPL9", "RPL10", "RPL10A", "RPL11", "RPL12", "RPL13", "RPL13A",
+    "RPL14", "RPL15", "RPL17", "RPL18", "RPL18A", "RPL19", "RPL21", "RPL22", "RPL23", "RPL23A", "RPL24", "RPL26", "RPL27",
+    "RPL27A", "RPL28", "RPL29", "RPL30", "RPL31", "RPL32", "RPL34", "RPL35", "RPL35A", "RPL36", "RPL36A", "RPL37", "RPL37A",
+    "RPL38", "RPL39", "RPL41", "RPLP0", "RPLP1", "RPLP2",
+    "RPS2", "RPS3", "RPS3A", "RPS4X", "RPS5", "RPS6", "RPS7", "RPS8", "RPS9", "RPS10", "RPS11", "RPS12", "RPS13", "RPS14",
+    "RPS15", "RPS15A", "RPS16", "RPS17", "RPS18", "RPS19", "RPS20", "RPS21", "RPS23", "RPS24", "RPS25", "RPS26", "RPS27",
+    "RPS27A", "RPS28", "RPS29", "RPSA",
+    "SF3B1", "SF3B2", "SF3B3", "SF3B5", "SF3A1", "SF3A2", "SF3A3",
+    "SNRPA", "SNRPA1", "SNRPB", "SNRPB2", "SNRPC", "SNRPD1", "SNRPD2", "SNRPD3", "SNRPE", "SNRPF", "SNRPG",
+    "PSMA1", "PSMA2", "PSMA3", "PSMA4", "PSMA5", "PSMA6", "PSMA7", "PSMB1", "PSMB2", "PSMB3", "PSMB4", "PSMB5", "PSMB6", "PSMB7",
+    "PSMC1", "PSMC2", "PSMC3", "PSMC4", "PSMC5", "PSMC6", "PSMD1", "PSMD2", "PSMD3", "PSMD4", "PSMD6", "PSMD7", "PSMD8", "PSMD11", "PSMD12", "PSMD13", "PSMD14",
+    "NHP2", "NOP10", "DKC1", "GAR1",
+    "ATP5F1A", "ATP5F1B", "ATP5F1C", "ATP5F1D", "ATP5F1E", "ATP5PB", "ATP5PD", "ATP5PF", "ATP5PO", "ATP5MC1", "ATP5MC2", "ATP5MC3", "ATP5ME", "ATP5MF", "ATP5MG",
+    "UQCRC1", "UQCRC2", "UQCRFS1", "CYC1", "UQCRB", "UQCRH", "UQCRQ",
+    "COX4I1", "COX5A", "COX5B", "COX6A1", "COX6B1", "COX6C", "COX7A2", "COX7C", "COX8A",
+    "NDUFAB1", "NDUFA2", "NDUFA3", "NDUFA4", "NDUFA5", "NDUFA6", "NDUFA7", "NDUFA8", "NDUFA9", "NDUFA10", "NDUFA11", "NDUFA12", "NDUFA13",
+    "NDUFB3", "NDUFB4", "NDUFB5", "NDUFB6", "NDUFB7", "NDUFB8", "NDUFB9", "NDUFB10", "NDUFB11",
+    "NDUFC2", "NDUFS1", "NDUFS2", "NDUFS3", "NDUFS4", "NDUFS5", "NDUFS6", "NDUFS7", "NDUFS8", "NDUFV1", "NDUFV2", "NDUFV3",
+    "EXOSC1", "EXOSC2", "EXOSC3", "EXOSC4", "EXOSC5", "EXOSC6", "EXOSC7", "EXOSC8", "EXOSC9", "EXOSC10",
+    "CDC20", "CDC27", "CDC23", "CDC16", "ANAPC1", "ANAPC2", "ANAPC4", "ANAPC5", "ANAPC7", "ANAPC10", "ANAPC11"
+  ]
+}

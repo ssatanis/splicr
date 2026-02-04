@@ -6,6 +6,18 @@ const globalStore = globalThis as any;
 if (!globalStore.resultsStore) globalStore.resultsStore = new Map();
 const analysisResultsMemory = globalStore.resultsStore;
 
+/** Strip large fields from results so response does not cause JS heap OOM. Count matrix is fetched via /api/analysis/[id]/count-matrix when needed. */
+function sanitizeResultsForResponse(results: unknown): unknown {
+  if (results == null || typeof results !== 'object') return results;
+  const r = results as Record<string, unknown>;
+  const rawData = r.rawData as Record<string, unknown> | undefined;
+  if (rawData && (rawData.countMatrix != null || rawData.normalizedCounts != null)) {
+    const { countMatrix: _cm, normalizedCounts: _nc, ...restRaw } = rawData;
+    return { ...r, rawData: restRaw };
+  }
+  return results;
+}
+
 function rowToAnalysis(row: any): Analysis {
   const fileKeys = row.file_names?.length ? row.file_names : (row.parameters?.r2Keys || []);
   const sampleLabels = row.sample_labels?.length ? row.sample_labels : (row.parameters?.sampleLabels || []);
@@ -81,7 +93,8 @@ export async function GET(
         );
       }
       if (row.results != null) {
-        return NextResponse.json(row.results);
+        const payload = sanitizeResultsForResponse(row.results);
+        return NextResponse.json(payload);
       }
       return NextResponse.json({
         results: null,
@@ -90,7 +103,7 @@ export async function GET(
     }
 
     const results = analysisResultsMemory.get(id);
-    if (results) return NextResponse.json(results);
+    if (results) return NextResponse.json(sanitizeResultsForResponse(results));
 
     return NextResponse.json(
       { message: 'Results not found' },

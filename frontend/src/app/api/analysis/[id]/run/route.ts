@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase/server';
 import { runAnalysisPipeline } from '@/lib/runAnalysisPipeline';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 300; // 5 min for real FASTQ fetch + parse + MAGeCK/BAGEL2/DrugZ
 
 /**
  * Trigger analysis processing (e.g. Retry button).

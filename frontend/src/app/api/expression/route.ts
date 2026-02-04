@@ -29,35 +29,66 @@ function isValidGeneSymbol(s: string): boolean {
   return /^[A-Za-z0-9\-\.]+$/.test(s) && s.length >= 1 && s.length <= 30;
 }
 
-async function fetchTissueExpression(gene: string): Promise<TissueExpression[]> {
+/** Get Ensembl gene ID from gene symbol (MyGene.info) */
+async function getEnsemblId(gene: string): Promise<string | null> {
   try {
-    // Use MyGene.info for tissue expression data from GTEx
-    const url = `https://mygene.info/v3/query?q=symbol:${encodeURIComponent(gene)}&species=human&fields=generif,expression`;
+    const url = `https://mygene.info/v3/query?q=symbol:${encodeURIComponent(gene)}&species=human&fields=ensembl.gene&size=1`;
     const res = await fetch(url);
-    
-    if (!res.ok) return [];
-    
+    if (!res.ok) return null;
     const data = await res.json();
-    const hit = data.hits?.[0];
-    if (!hit) return [];
-    
-    // Process expression data if available
-    const expression = hit.expression || {};
-    const tissues: TissueExpression[] = [];
-    
-    // Note: Real implementation would parse GTEx or other expression databases
-    // This is a simplified version
-    if (expression.gtex) {
-      for (const [tissue, value] of Object.entries(expression.gtex)) {
-        const expValue = typeof value === 'number' ? value : parseFloat(String(value)) || 0;
-        tissues.push({
-          tissue: tissue.replace(/_/g, ' '),
-          expression: expValue,
-          specificity: expValue > 50 ? 'high' : expValue > 10 ? 'medium' : expValue > 1 ? 'low' : 'not detected',
-        });
+    const id = data.hits?.[0]?.ensembl?.gene ?? data.hits?.[0]?.ensembl?.gene_id;
+    return id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchTissueExpression(gene: string): Promise<TissueExpression[]> {
+  const tissues: TissueExpression[] = [];
+
+  try {
+    // 1) GTEx Portal API - median gene expression by tissue (requires versioned GENCODE/Ensembl ID)
+    const ensemblId = await getEnsemblId(gene);
+    if (ensemblId) {
+      // GTEx medianGeneExpression returns median TPM per tissue
+      const gtexUrl = `https://gtexportal.org/api/v2/expression/medianGeneExpression?gencodeId=${encodeURIComponent(ensemblId)}&page=0&itemsPerPage=250`;
+      const gtexRes = await fetch(gtexUrl);
+      if (gtexRes.ok) {
+        const gtexData = await gtexRes.json();
+        const rows = gtexData?.data ?? [];
+        for (const row of rows) {
+          const median = typeof row.median === 'number' ? row.median : parseFloat(String(row.median)) || 0;
+          const tissueName = row.tissueSiteDetail ?? row.tissueSiteDetailId ?? 'Unknown';
+          tissues.push({
+            tissue: String(tissueName).replace(/_/g, ' '),
+            expression: median,
+            specificity: median > 50 ? 'high' : median > 10 ? 'medium' : median > 1 ? 'low' : 'not detected',
+          });
+        }
       }
     }
-    
+
+    // 2) Fallback: MyGene.info expression field (various sources)
+    if (tissues.length === 0) {
+      const url = `https://mygene.info/v3/query?q=symbol:${encodeURIComponent(gene)}&species=human&fields=expression&size=1`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        const hit = data.hits?.[0];
+        const expression = hit?.expression ?? {};
+        if (expression.gtex && typeof expression.gtex === 'object') {
+          for (const [tissue, value] of Object.entries(expression.gtex)) {
+            const expValue = typeof value === 'number' ? value : parseFloat(String(value)) || 0;
+            tissues.push({
+              tissue: String(tissue).replace(/_/g, ' '),
+              expression: expValue,
+              specificity: expValue > 50 ? 'high' : expValue > 10 ? 'medium' : expValue > 1 ? 'low' : 'not detected',
+            });
+          }
+        }
+      }
+    }
+
     return tissues.sort((a, b) => b.expression - a.expression).slice(0, 15);
   } catch (e) {
     console.error('Tissue expression fetch error:', e);
@@ -66,59 +97,44 @@ async function fetchTissueExpression(gene: string): Promise<TissueExpression[]> 
 }
 
 async function fetchDiseaseAssociations(gene: string): Promise<DiseaseAssociation[]> {
+  const results: DiseaseAssociation[] = [];
+
   try {
-    // Use Open Targets for disease associations
-    const query = `
-      query DiseaseAssociations($ensemblId: String!) {
-        target(ensemblId: $ensemblId) {
-          associatedDiseases(page: {size: 15}) {
-            rows {
-              disease {
-                name
-                description
-              }
-              score
-              datasourceScores {
-                id
+    const ensemblId = await getEnsemblId(gene);
+    if (ensemblId) {
+      // Open Targets GraphQL for disease associations
+      const query = `
+        query DiseaseAssociations($ensemblId: String!) {
+          target(ensemblId: $ensemblId) {
+            associatedDiseases(page: { size: 15 }) {
+              rows {
+                disease { name description }
                 score
               }
             }
           }
         }
+      `;
+      const res = await fetch('https://api.platform.opentargets.org/api/v4/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, variables: { ensemblId } }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const rows = data.data?.target?.associatedDiseases?.rows ?? [];
+        for (const row of rows) {
+          results.push({
+            disease: row.disease?.name ?? 'Unknown',
+            score: typeof row.score === 'number' ? row.score : parseFloat(String(row.score)) || 0,
+            source: 'Open Targets',
+            description: row.disease?.description,
+          });
+        }
       }
-    `;
-    
-    // First get Ensembl ID
-    const geneInfoUrl = `https://mygene.info/v3/query?q=symbol:${encodeURIComponent(gene)}&species=human&fields=ensembl.gene`;
-    const geneRes = await fetch(geneInfoUrl);
-    if (!geneRes.ok) return [];
-    
-    const geneData = await geneRes.json();
-    const ensemblId = geneData.hits?.[0]?.ensembl?.gene;
-    
-    if (!ensemblId) return [];
-    
-    // Query Open Targets
-    const res = await fetch('https://api.platform.opentargets.org/api/v4/graphql', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query,
-        variables: { ensemblId },
-      }),
-    });
-    
-    if (!res.ok) return [];
-    
-    const data = await res.json();
-    const diseases = data.data?.target?.associatedDiseases?.rows || [];
-    
-    return diseases.map((row: any) => ({
-      disease: row.disease?.name || 'Unknown',
-      score: row.score || 0,
-      source: 'Open Targets',
-      description: row.disease?.description,
-    })).sort((a: any, b: any) => b.score - a.score);
+    }
+
+    return results.sort((a, b) => b.score - a.score).slice(0, 15);
   } catch (e) {
     console.error('Disease associations fetch error:', e);
     return [];

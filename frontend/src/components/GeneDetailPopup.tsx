@@ -111,6 +111,15 @@ export default function GeneDetailPopup({ gene, log2FC, fdr, degree, position, o
   // Calculate popup position to keep it on screen
   const [popupStyle, setPopupStyle] = useState<React.CSSProperties>({});
 
+  // Reset all fetched data when gene changes so new gene's data is loaded
+  useEffect(() => {
+    setGeneInfo(null);
+    setLiterature(null);
+    setDetails(null);
+    setExpressionData(null);
+    setError(null);
+  }, [gene]);
+
   useEffect(() => {
     const updatePosition = () => {
       const maxWidth = 500;
@@ -651,8 +660,16 @@ export default function GeneDetailPopup({ gene, log2FC, fdr, degree, position, o
 
     if (!details?.interactions || details.interactions.length === 0) {
       return (
-        <div className="text-center py-8 text-text-tertiary text-sm">
-          No protein interaction data found for {gene}
+        <div className="text-center py-8 space-y-2">
+          <p className="text-text-tertiary text-sm">No protein interaction data found for {gene}</p>
+          <a
+            href={`https://string-db.org/cgi/network?identifiers=${gene}&species=9606`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
+          >
+            View on STRING <ExternalLink className="w-3 h-3" />
+          </a>
         </div>
       );
     }
@@ -721,8 +738,16 @@ export default function GeneDetailPopup({ gene, log2FC, fdr, degree, position, o
 
     if (!expressionData?.tissueExpression || expressionData.tissueExpression.length === 0) {
       return (
-        <div className="text-center py-8 text-text-tertiary text-sm">
-          No tissue expression data available for {gene}
+        <div className="text-center py-8 space-y-2">
+          <p className="text-text-tertiary text-sm">No tissue expression data available for {gene}</p>
+          <a
+            href={`https://gtexportal.org/home/gene/${gene}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
+          >
+            View on GTEx Portal <ExternalLink className="w-3 h-3" />
+          </a>
         </div>
       );
     }
@@ -793,8 +818,16 @@ export default function GeneDetailPopup({ gene, log2FC, fdr, degree, position, o
 
     if (!expressionData?.diseases || expressionData.diseases.length === 0) {
       return (
-        <div className="text-center py-8 text-text-tertiary text-sm">
-          No disease associations found for {gene}
+        <div className="text-center py-8 space-y-2">
+          <p className="text-text-tertiary text-sm">No disease associations found for {gene}</p>
+          <a
+            href={`https://platform.opentargets.org/search?q=${encodeURIComponent(gene)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
+          >
+            Search Open Targets <ExternalLink className="w-3 h-3" />
+          </a>
         </div>
       );
     }

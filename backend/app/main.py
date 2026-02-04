@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.config import get_settings
 from app.database import engine, Base
-from app.api import upload, analysis, results, websocket, auth
+from app.api import upload, analysis, results, websocket, auth, reference_sets
 from app.schemas import HealthCheckResponse
 from datetime import datetime
 import logging
@@ -70,6 +70,11 @@ app.include_router(
     websocket.router,
     prefix=f"{settings.API_V1_PREFIX}/ws",
     tags=["WebSocket"]
+)
+app.include_router(
+    reference_sets.router,
+    prefix=f"{settings.API_V1_PREFIX}",
+    tags=["Reference Gene Sets"]
 )
 
 

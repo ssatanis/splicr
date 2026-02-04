@@ -20,6 +20,7 @@ import DrugGeneFinder, { type DrugGeneFinderProps } from "@/components/DrugGeneF
 import CollaborationSidebar from "@/components/CollaborationSidebar";
 import ReportBuilderModal from "@/components/ReportBuilderModal";
 import FigureCustomizationModal from "@/components/FigureCustomizationModal";
+import QCStatusSummaryCard from "@/components/QCStatusSummaryCard";
 import AdvancedAnalysisPanel from "@/components/AdvancedAnalysisPanel";
 import ShareAnalysisModal from "@/components/ShareAnalysisModal";
 import ScreenIntegrationPanel from "@/components/ScreenIntegrationPanel";
@@ -212,6 +213,24 @@ export default function ResultsPage() {
     }, 5000);
     return () => clearInterval(interval);
   }, [analysis, results, refreshAnalyses, loadResults]);
+
+  // Fetch count matrix on demand when results have countMatrixR2Key (matrix stored in R2 to avoid OOM)
+  const [countMatrixLoading, setCountMatrixLoading] = useState(false);
+  useEffect(() => {
+    if (!id || !results?.rawData?.countMatrixR2Key || results.rawData.countMatrix != null) return;
+    let cancelled = false;
+    setCountMatrixLoading(true);
+    realApi.getCountMatrix(id).then((matrix) => {
+      if (cancelled || !matrix) return;
+      setResults((prev) => {
+        if (!prev?.rawData?.countMatrixR2Key || prev.rawData.countMatrix != null) return prev;
+        return { ...prev, rawData: { ...prev.rawData, countMatrix: matrix } };
+      });
+    }).finally(() => {
+      if (!cancelled) setCountMatrixLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [id, results?.rawData?.countMatrixR2Key, results?.rawData?.countMatrix]);
 
   // Portal target for header actions (title + buttons in app header)
   useEffect(() => {
@@ -857,14 +876,14 @@ export default function ResultsPage() {
                         <div className="flex items-center justify-center gap-4 mt-6">
                           <Button variant="outline" onClick={() => { refreshAnalyses(); loadResults(); }} disabled={isRetrying}>Refresh</Button>
                           <Link href="/analyses">
-                            <Button variant="outline">Back to My analyses</Button>
+                            <Button variant="outline">Back to your analyses</Button>
                           </Link>
                         </div>
                       </>
                     ) : (
                       <div className="flex items-center justify-center gap-4 mt-6">
                         <Button variant="outline" onClick={handleRetry} disabled={isRetrying}>{isRetrying ? "Starting…" : "Retry"}</Button>
-                        <Link href="/analyses" className="text-accent font-serif inline-block">Back to My analyses</Link>
+                        <Link href="/analyses" className="text-accent font-serif inline-block">Back to your analyses</Link>
                       </div>
                     )}
                   </>
@@ -873,7 +892,7 @@ export default function ResultsPage() {
                     <p className="text-text-secondary font-serif">Could not load results.</p>
                     <div className="flex items-center justify-center gap-4 mt-6">
                       <Button variant="outline" onClick={handleRetry} disabled={isRetrying}>{isRetrying ? "Starting…" : "Retry"}</Button>
-                      <Link href="/analyses" className="text-accent font-serif inline-block">Back to My analyses</Link>
+                      <Link href="/analyses" className="text-accent font-serif inline-block">Back to your analyses</Link>
                     </div>
                   </>
                 )}
@@ -1024,13 +1043,46 @@ function OverviewTab({ results }: { results: AnalysisResults }) {
         <SummaryCard label="Enriched" value={results.summary.enriched.toLocaleString()} color="text-success" />
         <SummaryCard label="Depleted" value={results.summary.depleted.toLocaleString()} color="text-error" />
       </div>
-      <div className="bg-surface rounded-2xl p-8 shadow-card border border-border">
-        <h3 className="text-xl font-serif text-text-primary mb-6">Quality metrics</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          <QCMetric label="Read depth" value={`${(results.qcMetrics.totalReads / 1e6).toFixed(1)}M`} />
-          <QCMetric label="Mapping rate" value={`${typeof results.qcMetrics.mappingRate === 'number' ? results.qcMetrics.mappingRate.toFixed(1) : results.qcMetrics.mappingRate}%`} />
-          <QCMetric label="Zero count" value={`${typeof results.qcMetrics.zeroCounts === 'number' ? results.qcMetrics.zeroCounts.toFixed(1) : results.qcMetrics.zeroCounts}%`} />
-          <QCMetric label="Coverage" value={`${typeof results.qcMetrics.libraryCoverage === 'number' ? results.qcMetrics.libraryCoverage.toFixed(1) : results.qcMetrics.libraryCoverage}%`} />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1">
+          <QCStatusSummaryCard qc={results.qcMetrics} />
+        </div>
+        <div className="lg:col-span-2 bg-surface rounded-2xl p-8 shadow-card border border-border">
+          <h3 className="text-xl font-serif text-text-primary mb-6">Quality metrics</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <QCMetric label="Read depth" value={`${(results.qcMetrics.totalReads / 1e6).toFixed(1)}M`} />
+            <QCMetric label="Mapping rate" value={`${typeof results.qcMetrics.mappingRate === 'number' ? (results.qcMetrics.mappingRate <= 1 ? (results.qcMetrics.mappingRate * 100).toFixed(1) : results.qcMetrics.mappingRate.toFixed(1)) : results.qcMetrics.mappingRate}%`} />
+            <QCMetric label="Zero count" value={`${typeof results.qcMetrics.zeroCounts === 'number' ? results.qcMetrics.zeroCounts.toFixed(1) : results.qcMetrics.zeroCounts}%`} />
+            <QCMetric label="Coverage" value={`${typeof results.qcMetrics.libraryCoverage === 'number' ? (results.qcMetrics.libraryCoverage <= 1 ? (results.qcMetrics.libraryCoverage * 100).toFixed(1) : results.qcMetrics.libraryCoverage.toFixed(1)) : results.qcMetrics.libraryCoverage}%`} />
+          </div>
+          {results.qcAssessment && (
+            <div className="mt-6 pt-6 border-t border-border">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm font-medium text-text-secondary">QC status:</span>
+                <span
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    results.qcAssessment.status === 'PASS'
+                      ? 'bg-success/15 text-success'
+                      : results.qcAssessment.status === 'WARNING'
+                        ? 'bg-amber-500/15 text-amber-700'
+                        : 'bg-error/15 text-error'
+                  }`}
+                >
+                  {results.qcAssessment.status}
+                </span>
+              </div>
+              {(results.qcAssessment.issues?.length > 0 || results.qcAssessment.recommendations?.length > 0) && (
+                <ul className="mt-2 text-sm text-text-secondary space-y-1 list-disc list-inside">
+                  {results.qcAssessment.issues?.map((issue, i) => (
+                    <li key={`issue-${i}`}>{issue}</li>
+                  ))}
+                  {results.qcAssessment.recommendations?.map((rec, i) => (
+                    <li key={`rec-${i}`} className="text-accent/90">{rec}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

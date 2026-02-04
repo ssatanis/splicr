@@ -188,6 +188,15 @@ export const realApi = {
     return data as AnalysisResults;
   },
 
+  /** Fetch count matrix on demand (used when results.rawData.countMatrixR2Key is set and countMatrix is omitted to avoid OOM). */
+  async getCountMatrix(analysisId: string): Promise<Record<string, Record<string, number>> | null> {
+    const response = await fetch(`${API_BASE}/analysis/${analysisId}/count-matrix`, { credentials: 'include' });
+    if (!response.ok) return null;
+    const data = await response.json().catch(() => null);
+    if (data && typeof data === 'object' && !Array.isArray(data)) return data as Record<string, Record<string, number>>;
+    return null;
+  },
+
   // Notes
   async saveNote(analysisId: string, note: string): Promise<void> {
     const response = await fetch(`${API_BASE}/notes/${analysisId}`, {

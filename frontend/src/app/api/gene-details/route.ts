@@ -183,20 +183,27 @@ async function fetchProteinInteractions(gene: string): Promise<ProteinInteractio
     const seen = new Set<string>();
     
     for (const interaction of data) {
-      // preferredName_B is the partner protein name
-      const partnerName = interaction.preferredName_B || interaction.stringId_B?.split('.')[1];
-      if (!partnerName || seen.has(partnerName) || partnerName.toLowerCase() === gene.toLowerCase()) {
+      // STRING returns preferredName_B or stringId_B for partner
+      const partnerName =
+        interaction.preferredName_B ??
+        interaction.preferred_name_B ??
+        (typeof interaction.stringId_B === 'string' ? interaction.stringId_B.split('.')[1] : null);
+      if (!partnerName || seen.has(partnerName) || String(partnerName).toLowerCase() === gene.toLowerCase()) {
         continue;
       }
       seen.add(partnerName);
-      
-      // STRING scores are 0-999, convert to 0-1
-      const combinedScore = parseFloat(interaction.score) || 0;
-      const experimentalScore = parseFloat(interaction.escore) || 0;
-      
+
+      // STRING score can be 0-1000 (integer) or 0-1 (float); normalize to 0-1
+      const rawScore = interaction.score ?? interaction.combined_score ?? 0;
+      const combinedScore = typeof rawScore === 'number' ? rawScore : parseFloat(String(rawScore)) || 0;
+      const scoreNormalized = combinedScore > 1 ? combinedScore / 1000 : combinedScore;
+
+      const expRaw = interaction.escore ?? interaction.experimental_score ?? 0;
+      const experimentalScore = typeof expRaw === 'number' ? expRaw : parseFloat(String(expRaw)) || 0;
+
       interactions.push({
-        protein: partnerName,
-        score: combinedScore / 1000, // Convert to 0-1 scale
+        protein: String(partnerName),
+        score: Math.min(1, Math.max(0, scoreNormalized)),
         experimentalEvidence: experimentalScore > 0,
       });
     }

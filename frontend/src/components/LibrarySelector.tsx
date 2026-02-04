@@ -38,13 +38,16 @@ export default function LibrarySelector({
   }, []);
 
   async function loadLibraries() {
+    setError(null);
+    setLoading(true);
     try {
-      const response = await fetch('/api/libraries/metadata');
+      const response = await fetch('/api/libraries/metadata', { credentials: 'include' });
+      const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error('Failed to load libraries');
+        const msg = data?.details || data?.error || response.statusText || 'Failed to load libraries';
+        throw new Error(msg);
       }
-      const data = await response.json();
-      setLibraries(data.libraries || []);
+      setLibraries(data.libraries ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load libraries');
       console.error('Error loading libraries:', err);
@@ -98,8 +101,15 @@ export default function LibrarySelector({
         <label className="block text-sm font-medium text-gray-700">
           CRISPR Library
         </label>
-        <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">
-          {error}
+        <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg flex flex-col gap-2">
+          <span>{error}</span>
+          <button
+            type="button"
+            onClick={() => loadLibraries()}
+            className="self-start px-3 py-1.5 bg-red-100 hover:bg-red-200 rounded-lg font-medium transition-colors"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );

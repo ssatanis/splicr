@@ -82,6 +82,13 @@ export interface QCMetrics {
   }>;
 }
 
+/** Real QC assessment from pipeline (PASS / WARNING / FAIL). */
+export interface QCAssessment {
+  status: 'PASS' | 'WARNING' | 'FAIL';
+  issues: string[];
+  recommendations: string[];
+}
+
 export interface GeneResult {
   gene: string;
   sgrnaCount: number;
@@ -105,6 +112,7 @@ export interface AnalysisResults {
     depleted: number;
   };
   qcMetrics: QCMetrics;
+  qcAssessment?: QCAssessment;
   topHits: {
     depleted: GeneResult[];
     enriched: GeneResult[];
@@ -112,7 +120,9 @@ export interface AnalysisResults {
   allGenes: GeneResult[];
   volcanoData?: VolcanoDataPoint[];
   rawData?: {
-    countMatrix: Record<string, Record<string, number>>;
+    countMatrix?: Record<string, Record<string, number>>;
+    /** R2 key for count matrix; when set, client fetches via /api/analysis/[id]/count-matrix to avoid huge payloads. */
+    countMatrixR2Key?: string;
     normalizedCounts?: Record<string, Record<string, number>>;
   };
   logs?: { timestamp: string; step: string; message: string; progress: number; level: string }[];
