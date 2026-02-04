@@ -804,7 +804,7 @@ export default function ResultsPage() {
                   }}
                   onDrugSearch={handleDrugSearch}
                 />}
-                {activeTab === "advanced" && <AdvancedTab results={results} analysisId={id} onResultsUpdate={loadResults} />}
+                {activeTab === "advanced" && <AdvancedTab results={results} analysisId={id} onResultsUpdate={loadResults} onGeneClick={setSelectedGene} />}
                 {activeTab === "top-hits" && <TopHitsTab results={results} onGeneClick={setSelectedGene} />}
                 {activeTab === "qc" && <QCTab results={results} onCustomize={() => setFigureCustomizationOpen(true)} />}
                 {activeTab === "rankings" && <RankingsTab results={results} analysisId={id} onGeneClick={setSelectedGene} />}
@@ -1268,10 +1268,12 @@ function AdvancedTab({
   results,
   analysisId,
   onResultsUpdate,
+  onGeneClick,
 }: {
   results: AnalysisResults;
   analysisId: string;
   onResultsUpdate?: () => void;
+  onGeneClick?: (gene: string) => void;
 }) {
   const significantGenes = (results.allGenes ?? [])
     .filter((g) => g.fdr < 0.05)
@@ -1293,10 +1295,10 @@ function AdvancedTab({
   return (
     <div className="space-y-12">
       <section>
-        <DepMapComparison genes={genesForDepMap} maxGenes={80} height={400} onGeneClick={setSelectedGene} />
+        <DepMapComparison genes={genesForDepMap} maxGenes={80} height={400} onGeneClick={onGeneClick} />
       </section>
       <section>
-        <SyntheticLethalityPredictor genes={genesForSyntheticLethality} minScore={0.4} onGeneClick={setSelectedGene} />
+        <SyntheticLethalityPredictor genes={genesForSyntheticLethality} minScore={0.4} onGeneClick={onGeneClick} />
       </section>
     </div>
   );
