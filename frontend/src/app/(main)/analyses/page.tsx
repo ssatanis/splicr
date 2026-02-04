@@ -1,0 +1,361 @@
+"use client";
+
+import { useState, useEffect, useMemo } from "react";
+import { motion } from "framer-motion";
+import Button from "@/components/Button";
+import { useAnalyses, useUpdateAnalysis } from "@/lib/hooks/useAnalyses";
+import { Analysis } from "@/lib/types";
+import {
+  Search,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+  FileText,
+  Upload,
+  Users,
+  RefreshCw,
+  Edit2,
+  Save,
+  X,
+} from "lucide-react";
+import BatchAnalysisUploader from "@/components/BatchAnalysisUploader";
+import { formatDate } from "@/lib/utils";
+import Link from "next/link";
+
+const IN_PROGRESS_STATUSES = ["running", "queued", "pending"];
+
+export default function MyAnalysesPage() {
+  // ⚡ INSTANT LOADING with TanStack Query
+  const { data: analyses = [], isLoading, refetch: refreshAnalyses } = useAnalyses();
+  const updateAnalysis = useUpdateAnalysis();
+  
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
+
+  // Memoized filtering for performance
+  const filteredAnalyses = useMemo(() => {
+    let filtered = analyses;
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((a) => a.status === statusFilter);
+    }
+    if (searchQuery) {
+      filtered = filtered.filter((a) =>
+        a.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    return filtered;
+  }, [analyses, statusFilter, searchQuery]);
+
+  // Auto-refresh list while any analysis is in progress so progress bars update
+  useEffect(() => {
+    const hasInProgress = analyses.some((a) => IN_PROGRESS_STATUSES.includes(a.status));
+    if (!hasInProgress) return;
+    const interval = setInterval(() => refreshAnalyses(), 4000);
+    return () => clearInterval(interval);
+  }, [analyses, refreshAnalyses]);
+
+  // Track page load time
+  useEffect(() => {
+    console.time('⏱️ Analyses Page Interactive');
+    return () => {
+      console.timeEnd('⏱️ Analyses Page Interactive');
+    };
+  }, []);
+
+  const handleStartEdit = (analysis: any) => {
+    setEditingId(analysis.id);
+    setEditingName(analysis.name);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditingName("");
+  };
+
+  const handleSaveEdit = (analysisId: string) => {
+    const name = editingName.trim();
+    if (!name) return;
+    updateAnalysis.mutate(
+      { id: analysisId, updates: { name } },
+      {
+        onSuccess: () => {
+          setEditingId(null);
+          setEditingName("");
+        },
+        onError: (err) => {
+          console.error("Failed to save analysis name:", err instanceof Error ? err.message : err);
+        },
+      }
+    );
+  };
+
+  return (
+      <div className="min-h-screen">
+        <div className="max-w-[1400px] mx-auto px-8 py-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-12 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6"
+          >
+            <div>
+              <h1 className="text-6xl font-serif text-text-primary mb-2">My Analyses</h1>
+              <p className="text-lg text-text-secondary">
+                All CRISPR screen runs and their status.
+              </p>
+            </div>
+            <Link href="/upload">
+              <Button variant="primary" size="lg">
+                <Upload className="w-5 h-5 mr-2" strokeWidth={1.5} />
+                New analysis
+              </Button>
+            </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="flex flex-wrap items-center gap-4 mb-8"
+          >
+            <div className="relative flex-1 min-w-[200px]">
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary"
+                strokeWidth={1.5}
+              />
+              <input
+                type="text"
+                placeholder="Search by name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-surface border border-border rounded-xl text-sm font-serif focus:outline-none focus:ring-2 focus:ring-text-primary"
+              />
+            </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-4 py-2 bg-surface border border-border rounded-xl text-sm font-serif focus:outline-none focus:ring-2 focus:ring-text-primary"
+            >
+              <option value="all">All status</option>
+              <option value="complete">Complete</option>
+              <option value="running">Running</option>
+              <option value="queued">Queued</option>
+              <option value="pending">Pending</option>
+              <option value="failed">Failed</option>
+              <option value="created">Created</option>
+            </select>
+          </motion.div>
+
+          {filteredAnalyses.length === 0 ? (
+            <div className="bg-surface rounded-2xl p-32 shadow-card border border-border text-center">
+              <FileText className="w-16 h-16 text-text-tertiary mx-auto mb-6" strokeWidth={1} />
+              <h3 className="text-2xl font-serif text-text-primary mb-3">No analyses found</h3>
+              <p className="text-text-secondary font-serif mb-8 max-w-md mx-auto">
+                {analyses.length === 0
+                  ? "Upload sequencing data and start your first screen analysis."
+                  : "No analyses match your filters."}
+              </p>
+              <Link href="/upload">
+                <Button variant="primary" size="lg">Upload dataset</Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="bg-surface rounded-2xl shadow-card border border-border overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border-light">
+                    <th className="text-left px-8 py-4 text-sm font-serif text-text-secondary font-normal">Name</th>
+                    <th className="text-left px-8 py-4 text-sm font-serif text-text-secondary font-normal">Date</th>
+                    <th className="text-left px-8 py-4 text-sm font-serif text-text-secondary font-normal">Status</th>
+                    <th className="text-left px-8 py-4 text-sm font-serif text-text-secondary font-normal">Algorithm</th>
+                    <th className="text-left px-8 py-4 text-sm font-serif text-text-secondary font-normal">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredAnalyses.map((analysis: any) => (
+                    <tr
+                      key={analysis.id}
+                      className="border-b border-border-light hover:bg-background transition-colors duration-200"
+                    >
+                      <td className="px-8 py-5">
+                        {editingId === analysis.id ? (
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <input
+                              type="text"
+                              value={editingName}
+                              onChange={(e) => setEditingName(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  handleSaveEdit(analysis.id);
+                                }
+                                if (e.key === "Escape") handleCancelEdit();
+                              }}
+                              className="flex-1 min-w-[120px] px-3 py-2 bg-background border border-border rounded-lg text-sm font-serif text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                              autoFocus
+                            />
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleSaveEdit(analysis.id);
+                              }}
+                              disabled={updateAnalysis.isPending}
+                              className="inline-flex items-center gap-1.5 shrink-0 px-3 py-2 bg-success/15 text-success hover:bg-success/25 rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed font-serif text-sm"
+                              title="Save"
+                            >
+                              <Save className="w-4 h-4 shrink-0" strokeWidth={1.5} />
+                              <span>Save</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleCancelEdit();
+                              }}
+                              disabled={updateAnalysis.isPending}
+                              className="inline-flex items-center shrink-0 p-2 hover:bg-background rounded-lg transition-colors cursor-pointer disabled:opacity-50 text-text-secondary"
+                              title="Cancel"
+                            >
+                              <X className="w-4 h-4" strokeWidth={1.5} />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="group">
+                            <div className="flex items-center gap-2">
+                              <Link href={`/results/${analysis.id}`} className="flex items-center gap-2 flex-1">
+                                <span className="font-serif text-text-primary hover:text-accent transition-colors">{analysis.name}</span>
+                              </Link>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleStartEdit(analysis);
+                                }}
+                                className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-accent/10 rounded-lg transition-all"
+                                title="Edit name"
+                              >
+                                <Edit2 className="w-4 h-4 text-text-primary" strokeWidth={1.5} />
+                              </button>
+                              {analysis.isShared && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-accent/10 text-accent text-xs rounded-full">
+                                  <Users className="w-3 h-3" />
+                                  Shared
+                                </span>
+                              )}
+                            </div>
+                            <Link href={`/results/${analysis.id}`}>
+                              <div className="text-sm text-text-tertiary mt-1">
+                                {analysis.fileKeys.length} files
+                                {analysis.ownerEmail && (
+                                  <span className="ml-2">
+                                    • Owner: {analysis.isOwner ? analysis.ownerEmail : analysis.ownerEmail}
+                                  </span>
+                                )}
+                              </div>
+                            </Link>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-8 py-5 text-sm font-serif text-text-secondary">
+                        {formatDate(analysis.createdAt)}
+                      </td>
+                      <td className="px-8 py-5">
+                        <div className="flex flex-col gap-2 min-w-[140px]">
+                          <StatusBadge status={analysis.status} />
+                          {(analysis.status === "running" || analysis.status === "queued" || analysis.status === "pending") && (
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1 h-2 bg-background rounded-full overflow-hidden border border-border-light">
+                                <div
+                                  className="h-full bg-accent rounded-full transition-all duration-500 ease-out"
+                                  style={{ width: `${Math.min(100, Math.max(0, analysis.progress ?? 0))}%` }}
+                                />
+                              </div>
+                              <span className="text-xs font-serif text-text-tertiary tabular-nums w-8">
+                                {Math.round(analysis.progress ?? 0)}%
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-8 py-5">
+                        <div className="flex gap-2">
+                          {analysis.algorithm.map((alg: string) => (
+                            <span
+                              key={alg}
+                              className="px-2 py-1 bg-background border border-border-light rounded-lg text-xs font-serif text-text-secondary"
+                            >
+                              {alg.toUpperCase()}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-2">
+                          <Link href={`/results/${analysis.id}`}>
+                            <Button variant="outline" size="sm">View results</Button>
+                          </Link>
+                          {analysis.status === "failed" && (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={async (e) => {
+                                e.preventDefault();
+                                try {
+                                  await fetch(`/api/analysis/${analysis.id}/run`, { method: "POST" });
+                                  refreshAnalyses();
+                                } catch (err) {
+                                  console.error("Retry failed:", err);
+                                }
+                              }}
+                            >
+                              <RefreshCw className="w-3.5 h-3.5 mr-1.5" strokeWidth={1.5} />
+                              Retry
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {filteredAnalyses.length > 0 && (
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="mt-12"
+            >
+              <BatchAnalysisUploader />
+            </motion.section>
+          )}
+        </div>
+      </div>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const config: Record<string, { icon: React.ComponentType<React.SVGProps<SVGSVGElement>>; color: string; bg: string; label: string }> = {
+    complete: { icon: CheckCircle2, color: "text-success", bg: "bg-success/10", label: "Complete" },
+    running: { icon: Clock, color: "text-info", bg: "bg-info/10", label: "Running" },
+    queued: { icon: Clock, color: "text-warning", bg: "bg-warning/10", label: "Queued" },
+    pending: { icon: Clock, color: "text-info", bg: "bg-info/10", label: "In progress" },
+    failed: { icon: AlertCircle, color: "text-error", bg: "bg-error/10", label: "Failed" },
+    created: { icon: Clock, color: "text-text-tertiary", bg: "bg-background", label: "Created" },
+  };
+  const cfg = config[status] || config.created;
+  const Icon = cfg.icon;
+  return (
+    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg ${cfg.bg}`}>
+      <Icon className={`w-4 h-4 ${cfg.color}`} strokeWidth={1.5} />
+      <span className={`text-sm font-serif ${cfg.color}`}>{cfg.label}</span>
+    </div>
+  );
+}

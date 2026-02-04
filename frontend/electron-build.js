@@ -3,7 +3,7 @@ const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const appDir = path.join(__dirname, 'app');
+const appDir = path.join(__dirname, 'src', 'app');
 const apiDir = path.join(appDir, 'api');
 const apiBackupDir = path.join(appDir, '_api_build_skip');
 const authCallbackDir = path.join(appDir, 'auth', 'callback');

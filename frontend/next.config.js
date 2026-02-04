@@ -57,6 +57,8 @@ const nextConfig = {
         destination: '/dashboard',
         permanent: false,
       },
+      { source: '/login', destination: '/auth/sign-in', permanent: true },
+      { source: '/register', destination: '/auth/sign-up', permanent: true },
       { source: '/app', destination: '/upload', permanent: true },
       { source: '/app/dashboard', destination: '/dashboard', permanent: true },
       { source: '/app/analyses', destination: '/analyses', permanent: true },

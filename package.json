@@ -7,6 +7,8 @@
   },
   "scripts": {
     "ensure-share-columns": "node scripts/ensure-analysis-share-columns.mjs",
+    "seed:libraries": "node scripts/seed-libraries.mjs",
+    "seed:all": "node scripts/seed-all-libraries.mjs",
     "build": "cd frontend && npm ci --include=dev && npm run build",
     "dev": "cd frontend && npm run dev",
     "start": "cd frontend && npm run start",
@@ -24,6 +26,7 @@
     "react-dom": "^18.3.0"
   },
   "devDependencies": {
-    "pg": "^8.18.0"
+    "pg": "^8.18.0",
+    "xlsx": "^0.18.5"
   }
 }

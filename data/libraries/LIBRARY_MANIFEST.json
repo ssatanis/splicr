@@ -1,0 +1,103 @@
+{
+  "version": "1.0",
+  "libraries": [
+    {
+      "key": "brunello",
+      "name": "Brunello",
+      "organism": "Human",
+      "library_type": "knockout",
+      "total_sgrnas": 76441,
+      "genes_targeted": 19114,
+      "sgrnas_per_gene": 4,
+      "description": "Human CRISPR Knockout Pooled Library (Brunello)",
+      "addgene_id": "73179",
+      "files": ["brunello-library-contents.txt"],
+      "format": "txt",
+      "parser": "addgene_tsv"
+    },
+    {
+      "key": "brie",
+      "name": "BRIE",
+      "organism": "Mouse",
+      "library_type": "knockout",
+      "total_sgrnas": 78637,
+      "genes_targeted": null,
+      "sgrnas_per_gene": null,
+      "description": "Mouse CRISPR Knockout Pooled Library (BRIE)",
+      "addgene_id": null,
+      "files": ["brie-library-contents.txt"],
+      "format": "txt",
+      "parser": "addgene_tsv"
+    },
+    {
+      "key": "gecko_v2",
+      "name": "GeCKO v2",
+      "organism": "Human",
+      "library_type": "knockout",
+      "total_sgrnas": 123411,
+      "genes_targeted": null,
+      "sgrnas_per_gene": null,
+      "description": "Human GeCKO v2 CRISPR Knockout Library (A + B combined)",
+      "addgene_id": null,
+      "files": ["gecko-v2-library-a.csv", "gecko-v2-library-b.csv"],
+      "format": "csv",
+      "parser": "gecko_csv"
+    },
+    {
+      "key": "tko_v3",
+      "name": "TKO v3",
+      "organism": "Human",
+      "library_type": "knockout",
+      "total_sgrnas": 70948,
+      "genes_targeted": null,
+      "sgrnas_per_gene": null,
+      "description": "Human TKO v3 CRISPR Knockout Library",
+      "addgene_id": null,
+      "files": ["tko-v3-guide-sequences.xlsx"],
+      "format": "xlsx",
+      "parser": "tko_xlsx"
+    },
+    {
+      "key": "calabrese",
+      "name": "Calabrese",
+      "organism": "Human",
+      "library_type": "activation",
+      "total_sgrnas": 113238,
+      "genes_targeted": null,
+      "sgrnas_per_gene": null,
+      "description": "Human CRISPRa Activation Library (Calabrese Set A + B)",
+      "addgene_id": null,
+      "files": ["calabrese-seta-target-genes.txt", "calabrese-setb-target-genes.txt"],
+      "format": "txt",
+      "parser": "barcode_tsv"
+    },
+    {
+      "key": "dolcetto",
+      "name": "Dolcetto",
+      "organism": "Human",
+      "library_type": "inhibition",
+      "total_sgrnas": 114061,
+      "genes_targeted": null,
+      "sgrnas_per_gene": null,
+      "description": "Human CRISPRi Inhibition Library (Dolcetto Set A + B)",
+      "addgene_id": null,
+      "files": ["dolcetto-seta-target-genes.txt", "dolcetto-setb-target-genes.txt"],
+      "format": "txt",
+      "parser": "barcode_tsv"
+    },
+    {
+      "key": "dolomiti",
+      "name": "Dolomiti",
+      "organism": "Mouse",
+      "library_type": "inhibition",
+      "total_sgrnas": 134560,
+      "genes_targeted": null,
+      "sgrnas_per_gene": null,
+      "description": "Mouse CRISPRi Inhibition Library (Dolomiti Set A + B)",
+      "addgene_id": null,
+      "files": ["dolomiti-seta-target-genes.txt", "dolomiti-setb-target-genes.txt"],
+      "format": "txt",
+      "parser": "barcode_tsv"
+    }
+  ]
+}
