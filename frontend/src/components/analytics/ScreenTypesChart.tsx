@@ -76,15 +76,17 @@ export function ScreenTypesChart({ data, className }: ScreenTypesChartProps) {
                 borderRadius: "12px",
                 fontFamily: "var(--font-instrument-serif)",
               }}
-              formatter={(value: number, name: string, props: { payload?: { percentage?: number } }) => [
-                `${value} (${props.payload?.percentage ?? 0}%)`,
-                name,
-              ]}
+              formatter={(value: number | undefined, name: string | undefined, props: { payload?: { percentage?: number } }) => {
+                const v = value ?? 0;
+                const n = name ?? "";
+                const pct = props.payload?.percentage ?? 0;
+                return [`${v} (${pct}%)`, n];
+              }}
             />
             <Legend
-              formatter={(value, entry: { payload?: { value: number; percentage?: number } }) => (
+              formatter={(value, entry) => (
                 <span className="text-sm font-serif text-text-secondary">
-                  {value}: {entry.payload?.value ?? 0} ({entry.payload?.percentage ?? 0}%)
+                  {value}: {(entry?.payload as { value?: number; percentage?: number } | undefined)?.value ?? 0} ({(entry?.payload as { value?: number; percentage?: number } | undefined)?.percentage ?? 0}%)
                 </span>
               )}
             />

@@ -75,10 +75,14 @@ export function FeatureUsageChart({ data, className }: FeatureUsageChartProps) {
                 borderRadius: "12px",
                 fontFamily: "var(--font-instrument-serif)",
               }}
-              formatter={(value: number, name: string, props: { payload?: { avg?: number } }) => [
-                props.payload?.avg ? `${value} uses (avg ${Math.round(props.payload.avg / 60)} min)` : `${value} uses`,
-                name,
-              ]}
+              formatter={(value: number | undefined, name: string | undefined, props: { payload?: { avg?: number } }) => {
+                const v = value ?? 0;
+                const n = name ?? "";
+                const label = props.payload?.avg
+                  ? `${v} uses (avg ${Math.round(props.payload.avg / 60)} min)`
+                  : `${v} uses`;
+                return [label, n];
+              }}
             />
             <Bar dataKey="count" name="Uses" radius={[0, 6, 6, 0]} maxBarSize={32}>
               {chartData.map((entry, index) => (

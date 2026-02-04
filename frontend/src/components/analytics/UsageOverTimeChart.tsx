@@ -90,7 +90,7 @@ export function UsageOverTimeChart({ data, className }: UsageOverTimeChartProps)
                   ? format(parseISO(payload[0].payload.date), "PPP")
                   : label
               }
-              formatter={(value: number) => [value, ""]}
+              formatter={(value: number | undefined) => [value ?? 0, ""]}
             />
             <Legend
               wrapperStyle={{ paddingTop: 8 }}
