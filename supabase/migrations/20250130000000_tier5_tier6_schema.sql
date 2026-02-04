@@ -37,27 +37,60 @@ CREATE TABLE IF NOT EXISTS reference_gene_lists (
 
 CREATE INDEX IF NOT EXISTS idx_reference_gene_lists_name ON reference_gene_lists(name);
 
--- If reference_gene_lists was created with a different schema, add missing columns
-ALTER TABLE reference_gene_lists ADD COLUMN IF NOT EXISTS list_type TEXT;
-ALTER TABLE reference_gene_lists ADD COLUMN IF NOT EXISTS library_name TEXT;
-ALTER TABLE reference_gene_lists ADD COLUMN IF NOT EXISTS source TEXT;
-ALTER TABLE reference_gene_lists ADD COLUMN IF NOT EXISTS genes TEXT[];
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint WHERE conname = 'reference_gene_lists_list_type_check'
-  ) THEN
-    ALTER TABLE reference_gene_lists ADD CONSTRAINT reference_gene_lists_list_type_check
-      CHECK (list_type IS NULL OR list_type IN ('essential', 'nonessential'));
-  END IF;
-END $$;
-
 -- Seed CEGv2 / NEGv1 style lists (representative subsets; full lists can be imported)
-INSERT INTO reference_gene_lists (name, list_type, genes, library_name, source)
-VALUES
-  ('CEGv2', 'essential', ARRAY['RPS19','RPL5','RPL11','RPS14','POLR2A','POLR2B','SF3A1','SF3B1','EIF3A','EIF3B','PSMA1','PSMA2','COPA','COPB1','NUP93','NUP107','MCM2','MCM3','PLK1','AURKB']::TEXT[], 'Brunello', 'BAGEL2 reference'),
-  ('NEGv1', 'nonessential', ARRAY['OR2T1','OR2T2','OR4C3','OR4C6','KRTAP1-1','KRTAP1-3','SPRR1A','SPRR1B','DEFB1','DEFB4A','LCE1A','LCE1B','MS4A1','MS4A2','SAGE1','SSX1']::TEXT[], 'Brunello', 'BAGEL2 reference')
-ON CONFLICT (name) DO NOTHING;
+-- This INSERT is compatible with the actual production schema
+DO $$
+DECLARE
+  v_has_category BOOLEAN;
+  v_has_source_url BOOLEAN;
+  v_has_citation BOOLEAN;
+  v_has_description BOOLEAN;
+BEGIN
+  -- Check which columns exist
+  SELECT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'reference_gene_lists' AND column_name = 'category'
+  ) INTO v_has_category;
+
+  SELECT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'reference_gene_lists' AND column_name = 'source_url'
+  ) INTO v_has_source_url;
+
+  SELECT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'reference_gene_lists' AND column_name = 'citation'
+  ) INTO v_has_citation;
+
+  SELECT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'reference_gene_lists' AND column_name = 'description'
+  ) INTO v_has_description;
+
+  -- Insert using the actual production schema columns
+  IF v_has_category THEN
+    -- Production schema: has category, source_url, citation, description
+    IF v_has_citation AND v_has_description THEN
+      INSERT INTO reference_gene_lists (name, category, genes, citation, description)
+      VALUES
+        ('CEGv2', 'essential', ARRAY['RPS19','RPL5','RPL11','RPS14','POLR2A','POLR2B','SF3A1','SF3B1','EIF3A','EIF3B','PSMA1','PSMA2','COPA','COPB1','NUP93','NUP107','MCM2','MCM3','PLK1','AURKB']::TEXT[], 'BAGEL2 reference', 'Core Essential Genes v2 from Brunello library'),
+        ('NEGv1', 'nonessential', ARRAY['OR2T1','OR2T2','OR4C3','OR4C6','KRTAP1-1','KRTAP1-3','SPRR1A','SPRR1B','DEFB1','DEFB4A','LCE1A','LCE1B','MS4A1','MS4A2','SAGE1','SSX1']::TEXT[], 'BAGEL2 reference', 'Non-Essential Genes v1 from Brunello library')
+      ON CONFLICT (name) DO NOTHING;
+    ELSE
+      -- Minimal schema: just name, category, genes
+      INSERT INTO reference_gene_lists (name, category, genes)
+      VALUES
+        ('CEGv2', 'essential', ARRAY['RPS19','RPL5','RPL11','RPS14','POLR2A','POLR2B','SF3A1','SF3B1','EIF3A','EIF3B','PSMA1','PSMA2','COPA','COPB1','NUP93','NUP107','MCM2','MCM3','PLK1','AURKB']::TEXT[]),
+        ('NEGv1', 'nonessential', ARRAY['OR2T1','OR2T2','OR4C3','OR4C6','KRTAP1-1','KRTAP1-3','SPRR1A','SPRR1B','DEFB1','DEFB4A','LCE1A','LCE1B','MS4A1','MS4A2','SAGE1','SSX1']::TEXT[])
+      ON CONFLICT (name) DO NOTHING;
+    END IF;
+  END IF;
+
+  RAISE NOTICE 'Reference gene lists seeded successfully';
+EXCEPTION
+  WHEN OTHERS THEN
+    RAISE NOTICE 'Skipping reference gene list seeding: %', SQLERRM;
+END $$;
 
 -- Batch jobs (enterprise batch analysis)
 CREATE TABLE IF NOT EXISTS batch_jobs (

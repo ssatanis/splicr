@@ -92,13 +92,13 @@ export const realApi = {
   },
 
   async getAnalyses(): Promise<Analysis[]> {
-    const response = await fetch(`${API_BASE}/analysis/list`);
+    const response = await fetch(`${API_BASE}/analysis/list`, { credentials: 'include' });
     if (!response.ok) throw new Error('Failed to fetch analyses');
     return safeJson<Analysis[]>(response);
   },
 
   async getAnalysis(id: string): Promise<Analysis> {
-    const response = await fetch(`${API_BASE}/analysis/${id}`);
+    const response = await fetch(`${API_BASE}/analysis/${id}`, { credentials: 'include' });
     if (!response.ok) throw new Error('Failed to fetch analysis');
     return safeJson<Analysis>(response);
   },
@@ -145,7 +145,7 @@ export const realApi = {
       return cached;
     }
     
-    const response = await fetch(`${API_BASE}/analysis/${id}/results`);
+    const response = await fetch(`${API_BASE}/analysis/${id}/results`, { credentials: 'include' });
     if (!response.ok) {
       let message: string;
       try {

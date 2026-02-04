@@ -37,6 +37,7 @@ export function useAnalyses() {
       try {
         // Use the API route which has better fallback logic for unauthenticated users
         const response = await fetch('/api/analysis/list', {
+          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
           },
