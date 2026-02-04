@@ -63,7 +63,7 @@ export async function createVersionSnapshot(params: {
   });
 
   // Get next version number
-  const { data: versionNumberData } = await supabase
+  const { data: versionNumberData } = await (supabase as any)
     .rpc('get_next_version_number', { p_analysis_id: params.analysis_id });
 
   const version_number = versionNumberData || 1;
@@ -89,7 +89,7 @@ export async function createVersionSnapshot(params: {
     tags: params.tags || null,
   };
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('analysis_versions')
     .insert(version)
     .select()
@@ -139,7 +139,7 @@ export async function getAnalysisVersions(
 ): Promise<AnalysisVersion[]> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('analysis_versions')
     .select('*')
     .eq('analysis_id', analysis_id)
@@ -161,7 +161,7 @@ export async function getAnalysisVersion(
 ): Promise<AnalysisVersion> {
   const supabase = await createClient();
 
-  let query = supabase.from('analysis_versions').select('*');
+  let query = (supabase as any).from('analysis_versions').select('*');
 
   if (typeof version_identifier === 'number') {
     query = query.eq('analysis_id', analysis_id).eq('version_number', version_identifier);
@@ -184,7 +184,7 @@ export async function getAnalysisVersion(
 export async function getCurrentVersion(analysis_id: string): Promise<AnalysisVersion> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('analysis_versions')
     .select('*')
     .eq('analysis_id', analysis_id)
@@ -297,8 +297,8 @@ function compareResults(
       .map((g: any) => g.gene) || []
   );
 
-  const gained = Array.from(sig2).filter((g) => !sig1.has(g));
-  const lost = Array.from(sig1).filter((g) => !sig2.has(g));
+  const gained = Array.from(sig2).filter((g) => !sig1.has(g)) as string[];
+  const lost = Array.from(sig1).filter((g) => !sig2.has(g)) as string[];
 
   // Compare QC metrics
   const qc_changes: Record<string, { old: number; new: number }> = {};
@@ -402,7 +402,7 @@ function compareInputs(
 export async function setCurrentVersion(version_id: string): Promise<void> {
   const supabase = await createClient();
 
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from('analysis_versions')
     .update({ is_current: true })
     .eq('id', version_id);
@@ -426,7 +426,7 @@ export async function cloneVersionToNewAnalysis(
   const supabase = await createClient();
 
   // Create new analysis with parameters from this version
-  const { data: newAnalysis, error } = await supabase
+  const { data: newAnalysis, error } = await (supabase as any)
     .from('analyses')
     .insert({
       user_id,
@@ -454,7 +454,7 @@ export async function cloneVersionToNewAnalysis(
 export async function publishVersion(version_id: string): Promise<void> {
   const supabase = await createClient();
 
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from('analysis_versions')
     .update({ is_published: true })
     .eq('id', version_id);
@@ -471,7 +471,7 @@ export async function addVersionTags(version_id: string, tags: string[]): Promis
   const supabase = await createClient();
 
   // Get current tags
-  const { data: version } = await supabase
+  const { data: version } = await (supabase as any)
     .from('analysis_versions')
     .select('tags')
     .eq('id', version_id)
@@ -480,7 +480,7 @@ export async function addVersionTags(version_id: string, tags: string[]): Promis
   const currentTags = (version?.tags as string[]) || [];
   const updatedTags = Array.from(new Set([...currentTags, ...tags]));
 
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from('analysis_versions')
     .update({ tags: updatedTags })
     .eq('id', version_id);

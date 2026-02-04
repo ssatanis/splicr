@@ -96,6 +96,7 @@ export type Database = {
           name: string
           library_id?: string
           library_type?: string
+          library?: string
           method?: string
           algorithms?: string[]
           status: string
@@ -118,6 +119,7 @@ export type Database = {
           name: string
           library_id?: string
           library_type?: string
+          library?: string
           method?: string
           algorithms?: string[]
           status?: string
@@ -140,6 +142,7 @@ export type Database = {
           name?: string
           library_id?: string
           library_type?: string
+          library?: string
           method?: string
           algorithms?: string[]
           status?: string
@@ -534,12 +537,24 @@ export type Database = {
           user_id: string
           email_on_analysis_complete: boolean
           email_on_error: boolean
+          email_on_analysis_failure: boolean
           email_weekly_digest: boolean
+          email_daily_digest: boolean
           email_shared_updates: boolean
           email_system_announcements: boolean
           desktop_notifications: boolean
           sound_alerts: boolean
           notification_position: string
+          browser_push_notifications: boolean
+          webhook_url: string
+          webhook_type: string
+          system_feature_announcements: boolean
+          system_maintenance_alerts: boolean
+          system_algorithm_updates: boolean
+          system_security_notifications: boolean
+          collab_team_shares: boolean
+          collab_comments_on_analyses: boolean
+          collab_mentions: boolean
           created_at: string
           updated_at: string
         }
@@ -548,12 +563,24 @@ export type Database = {
           user_id: string
           email_on_analysis_complete?: boolean
           email_on_error?: boolean
+          email_on_analysis_failure?: boolean
           email_weekly_digest?: boolean
+          email_daily_digest?: boolean
           email_shared_updates?: boolean
           email_system_announcements?: boolean
           desktop_notifications?: boolean
           sound_alerts?: boolean
           notification_position?: string
+          browser_push_notifications?: boolean
+          webhook_url?: string
+          webhook_type?: string
+          system_feature_announcements?: boolean
+          system_maintenance_alerts?: boolean
+          system_algorithm_updates?: boolean
+          system_security_notifications?: boolean
+          collab_team_shares?: boolean
+          collab_comments_on_analyses?: boolean
+          collab_mentions?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -562,12 +589,24 @@ export type Database = {
           user_id?: string
           email_on_analysis_complete?: boolean
           email_on_error?: boolean
+          email_on_analysis_failure?: boolean
           email_weekly_digest?: boolean
+          email_daily_digest?: boolean
           email_shared_updates?: boolean
           email_system_announcements?: boolean
           desktop_notifications?: boolean
           sound_alerts?: boolean
           notification_position?: string
+          browser_push_notifications?: boolean
+          webhook_url?: string
+          webhook_type?: string
+          system_feature_announcements?: boolean
+          system_maintenance_alerts?: boolean
+          system_algorithm_updates?: boolean
+          system_security_notifications?: boolean
+          collab_team_shares?: boolean
+          collab_comments_on_analyses?: boolean
+          collab_mentions?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -833,6 +872,61 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
+      }
+      analysis_versions: {
+        Row: Record<string, unknown>
+        Insert: Record<string, unknown>
+        Update: Record<string, unknown>
+      }
+      analysis_methods: {
+        Row: Record<string, unknown>
+        Insert: Record<string, unknown>
+        Update: Record<string, unknown>
+      }
+      prov_entities: {
+        Row: Record<string, unknown>
+        Insert: Record<string, unknown>
+        Update: Record<string, unknown>
+      }
+      prov_activities: {
+        Row: Record<string, unknown>
+        Insert: Record<string, unknown>
+        Update: Record<string, unknown>
+      }
+      prov_agents: {
+        Row: Record<string, unknown>
+        Insert: Record<string, unknown>
+        Update: Record<string, unknown>
+      }
+      prov_relations: {
+        Row: Record<string, unknown>
+        Insert: Record<string, unknown>
+        Update: Record<string, unknown>
+      }
+      reproducibility_scores: {
+        Row: Record<string, unknown>
+        Insert: Record<string, unknown>
+        Update: Record<string, unknown>
+      }
+    }
+    Functions: {
+      calculate_reproducibility_score: {
+        Args: { p_analysis_id: string }
+        Returns: {
+          total_score: number
+          parameters_documented: number
+          software_versions_captured: number
+          provenance_tracked: number
+          data_checksums_recorded: number
+          methods_generated: number
+          package_exported: number
+          published_with_doi: number
+          badge: string | null
+        }[]
+      }
+      get_next_version_number: {
+        Args: { p_analysis_id: string }
+        Returns: number
       }
     }
   }

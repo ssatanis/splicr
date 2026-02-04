@@ -87,7 +87,7 @@ export async function generateMethodsText(
     parent_methods_id: null,
   };
 
-  const { data: methods, error } = await supabase
+  const { data: methods, error } = await (supabase as any)
     .from('analysis_methods')
     .insert(methodsRecord)
     .select()
@@ -486,7 +486,7 @@ export async function updateMethodsText(
 ): Promise<AnalysisMethod> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('analysis_methods')
     .update({
       edited_text,
@@ -514,7 +514,7 @@ export async function getMethodsForAnalysis(
 ): Promise<AnalysisMethod | null> {
   const supabase = await createClient();
 
-  let query = supabase
+  let query = (supabase as any)
     .from('analysis_methods')
     .select('*')
     .eq('analysis_id', analysis_id)
@@ -539,7 +539,7 @@ export async function regenerateMethodsText(
   const supabase = await createClient();
 
   // Get existing methods
-  const { data: existing } = await supabase
+  const { data: existing } = await (supabase as any)
     .from('analysis_methods')
     .select('*')
     .eq('id', methods_id)
@@ -559,7 +559,7 @@ export async function regenerateMethodsText(
   });
 
   // Update existing record with new generated text
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('analysis_methods')
     .update({
       generated_text: result.methods.generated_text,

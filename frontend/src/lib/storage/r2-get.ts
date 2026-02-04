@@ -17,5 +17,5 @@ export async function getR2FileAsFile(r2Key: string, fileName?: string): Promise
   }
   const buffer = await body.transformToByteArray();
   const name = fileName ?? r2Key.split('/').pop() ?? r2Key;
-  return new File([buffer], name);
+  return new File([buffer as BlobPart], name);
 }

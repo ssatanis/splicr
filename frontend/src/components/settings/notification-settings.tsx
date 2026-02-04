@@ -88,7 +88,7 @@ export function NotificationSettings() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { error: err } = await supabase
+      const { error: err } = await (supabase as any)
         .from('user_settings')
         .upsert(
           {

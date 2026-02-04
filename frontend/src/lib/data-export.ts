@@ -111,18 +111,8 @@ export interface DataExportPayload {
   presets: Array<{ id: string; name: string; description: string | null; created_at: string }>;
 }
 
-type SupabaseClient = {
-  auth: { getUser: () => Promise<{ data: { user: { id: string; email?: string; created_at?: string; last_sign_in_at?: string; email_confirmed_at?: string } | null } }> };
-  from: (table: string) => {
-    select: (cols?: string) => {
-      eq: (col: string, val: string) => {
-        order: (col: string, opts: { ascending: boolean }) => Promise<{ data: unknown[] | null; error: unknown }>;
-        maybeSingle: () => Promise<{ data: unknown | null; error: unknown }>;
-        limit: (n: number) => Promise<{ data: unknown[] | null; error: unknown }>;
-      };
-    };
-  };
-};
+// Accept any Supabase client (browser or server, typed or untyped) for data export
+import type { SupabaseClient as SupabaseClientType } from '@supabase/supabase-js';
 
 const RESIDENCY_LABELS: Record<DataResidency, string> = {
   us: 'United States',
@@ -131,7 +121,7 @@ const RESIDENCY_LABELS: Record<DataResidency, string> = {
 };
 
 export async function buildDataExport(
-  supabase: SupabaseClient,
+  supabase: SupabaseClientType,
   residency: DataResidency
 ): Promise<DataExportPayload> {
   const { data: { user } } = await supabase.auth.getUser();

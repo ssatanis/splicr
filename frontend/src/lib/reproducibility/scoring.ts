@@ -27,7 +27,7 @@ export async function calculateAndUpdateScore(
   const supabase = await createClient();
 
   // Use database function to calculate scores
-  const { data: scoreData, error } = await supabase
+  const { data: scoreData, error } = await (supabase as any)
     .rpc('calculate_reproducibility_score', { p_analysis_id: analysis_id })
     .single();
 
@@ -54,7 +54,7 @@ export async function calculateAndUpdateScore(
     updated_at: new Date().toISOString(),
   };
 
-  const { data, error: upsertError } = await supabase
+  const { data, error: upsertError } = await (supabase as any)
     .from('reproducibility_scores')
     .upsert(score, { onConflict: 'analysis_id' })
     .select()
@@ -75,7 +75,7 @@ export async function getReproducibilityScore(
 ): Promise<ReproducibilityScore | null> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('reproducibility_scores')
     .select('*')
     .eq('analysis_id', analysis_id)
@@ -96,17 +96,17 @@ async function calculateChecklist(analysis_id: string): Promise<ReproducibilityC
   const supabase = await createClient();
 
   // Check if input files have checksums
-  const { data: entities } = await supabase
+  const { data: entities } = await (supabase as any)
     .from('prov_entities')
     .select('checksum')
     .eq('analysis_id', analysis_id)
     .eq('is_input', true);
 
   const input_files_checksummed =
-    entities && entities.length > 0 && entities.every((e) => e.checksum !== null);
+    entities && entities.length > 0 && entities.every((e: { checksum: string | null }) => e.checksum !== null);
 
   // Check if parameters are saved
-  const { data: analysis } = await supabase
+  const { data: analysis } = await (supabase as any)
     .from('analyses')
     .select('parameters')
     .eq('id', analysis_id)
@@ -119,7 +119,7 @@ async function calculateChecklist(analysis_id: string): Promise<ReproducibilityC
   const analysis_completed = analysis && (analysis as any).status === 'complete';
 
   // Check if methods have been reviewed
-  const { data: methods } = await supabase
+  const { data: methods } = await (supabase as any)
     .from('analysis_methods')
     .select('is_edited')
     .eq('analysis_id', analysis_id)
@@ -128,7 +128,7 @@ async function calculateChecklist(analysis_id: string): Promise<ReproducibilityC
   const methods_reviewed = methods && methods.length > 0 && methods[0].is_edited;
 
   // Check if package has been exported
-  const { data: packages } = await supabase
+  const { data: packages } = await (supabase as any)
     .from('reproducibility_packages')
     .select('id')
     .eq('analysis_id', analysis_id)
@@ -137,14 +137,14 @@ async function calculateChecklist(analysis_id: string): Promise<ReproducibilityC
   const package_exported = packages && packages.length > 0;
 
   // Check if shared or published
-  const { data: sharedPackages } = await supabase
+  const { data: sharedPackages } = await (supabase as any)
     .from('reproducibility_packages')
     .select('is_public, doi')
     .eq('analysis_id', analysis_id);
 
   const shared_or_published =
     sharedPackages &&
-    sharedPackages.some((pkg) => pkg.is_public === true || pkg.doi !== null);
+    sharedPackages.some((pkg: { is_public?: boolean; doi?: string | null }) => pkg.is_public === true || pkg.doi !== null);
 
   return {
     input_files_checksummed: input_files_checksummed || false,
@@ -418,7 +418,7 @@ export async function getLabLeaderboard(
   const supabase = await createClient();
 
   // Get lab members
-  const { data: members } = await supabase
+  const { data: members } = await (supabase as any)
     .from('lab_members')
     .select('user_id')
     .eq('lab_id', lab_id);
@@ -427,10 +427,10 @@ export async function getLabLeaderboard(
     return [];
   }
 
-  const userIds = members.map((m) => m.user_id);
+  const userIds = members.map((m: { user_id: string }) => m.user_id);
 
   // Get top scores for lab members
-  const { data: scores } = await supabase
+  const { data: scores } = await (supabase as any)
     .from('reproducibility_scores')
     .select('*, analyses!inner(id, name, user_id, created_at)')
     .in('analyses.user_id', userIds)
@@ -461,7 +461,7 @@ export async function getUserReproducibilityStats(user_id: string): Promise<{
   const supabase = await createClient();
 
   // Get all analyses for user
-  const { data: analyses } = await supabase
+  const { data: analyses } = await (supabase as any)
     .from('analyses')
     .select('id')
     .eq('user_id', user_id);
@@ -477,16 +477,16 @@ export async function getUserReproducibilityStats(user_id: string): Promise<{
     };
   }
 
-  const analysisIds = analyses.map((a) => a.id);
+  const analysisIds = analyses.map((a: { id: string }) => a.id);
 
   // Get scores
-  const { data: scores } = await supabase
+  const { data: scores } = await (supabase as any)
     .from('reproducibility_scores')
     .select('*')
     .in('analysis_id', analysisIds);
 
   // Get packages
-  const { data: packages } = await supabase
+  const { data: packages } = await (supabase as any)
     .from('reproducibility_packages')
     .select('doi')
     .in('analysis_id', analysisIds);
@@ -510,7 +510,7 @@ export async function getUserReproducibilityStats(user_id: string): Promise<{
     }
   });
 
-  const total_published = packages?.filter((p) => p.doi !== null).length || 0;
+  const total_published = packages?.filter((p: { doi?: string | null }) => p.doi !== null).length || 0;
 
   return {
     total_analyses: analyses.length,

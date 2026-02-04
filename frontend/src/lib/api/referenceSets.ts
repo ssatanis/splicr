@@ -75,7 +75,7 @@ export interface ReferenceSetStats {
  */
 export async function getCategories(): Promise<CategorySummary[]> {
   const response = await apiClient.get('/reference-sets/categories');
-  return response.data;
+  return response.data as CategorySummary[];
 }
 
 /**
@@ -87,7 +87,7 @@ export async function listGeneSets(params?: {
   active_only?: boolean;
 }): Promise<ReferenceGeneSetSummary[]> {
   const response = await apiClient.get('/reference-sets/gene-sets', { params });
-  return response.data;
+  return response.data as ReferenceGeneSetSummary[];
 }
 
 /**
@@ -104,7 +104,7 @@ export async function getGeneSet(
       limit,
     },
   });
-  return response.data;
+  return response.data as ReferenceGeneSetDetail;
 }
 
 /**
@@ -121,7 +121,7 @@ export async function getGeneSetByName(
       include_genes: includeGenes,
     },
   });
-  return response.data;
+  return response.data as ReferenceGeneSetDetail;
 }
 
 /**
@@ -132,7 +132,7 @@ export async function checkGenesInSet(
   genes: string[]
 ): Promise<GeneSetCheckResult> {
   const response = await apiClient.post(`/reference-sets/gene-sets/${geneSetId}/check`, genes);
-  return response.data;
+  return response.data as GeneSetCheckResult;
 }
 
 /**
@@ -150,7 +150,7 @@ export async function searchGenes(
       limit,
     },
   });
-  return response.data;
+  return response.data as GeneInfo[];
 }
 
 /**
@@ -158,7 +158,7 @@ export async function searchGenes(
  */
 export async function getStats(): Promise<ReferenceSetStats> {
   const response = await apiClient.get('/reference-sets/stats');
-  return response.data;
+  return response.data as ReferenceSetStats;
 }
 
 // ============================================================================
