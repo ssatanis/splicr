@@ -1,0 +1,36 @@
+# Dependencies (reinstalled in Docker)
+node_modules
+frontend/node_modules
+
+# Build outputs
+frontend/.next
+frontend/out
+.next
+out
+build
+dist
+.vercel
+
+# Git and IDE
+.git
+.gitignore
+.vscode
+.idea
+
+# Env files (pass at runtime via -e or --env-file)
+.env
+.env.*
+!.env.example
+
+# Logs and cache
+*.log
+.cache
+.nyc_output
+coverage
+
+# OS and misc
+.DS_Store
+
+# Optional: exclude large data if not needed for worker
+# data/
+# test_data/

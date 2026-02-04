@@ -19,8 +19,8 @@ RUN pip3 install --no-cache-dir --break-system-packages \
     pandas \
     matplotlib
 
-# Verify MAGeCK is on PATH
-RUN mageck -h > /dev/null 2>&1 || (echo "MAGeCK installation failed" && exit 1)
+# Verify MAGeCK is on PATH (help may exit 0 or 1 depending on version)
+RUN which mageck && (mageck -h 2>&1 | head -1 || true)
 
 # Application directory
 WORKDIR /app

@@ -55,15 +55,21 @@ npm install
 
 Copy `.env.example` to `.env.local` and configure.
 
-#### Upstash Redis (recommended for production)
+#### Upstash Redis (recommended for production / Vercel)
 
-1. Create a Redis database at [Upstash Console](https://console.upstash.com/)
-2. Copy your endpoint and token from the Redis details page
-3. Use `rediss://` (double s) for TLS (required by Upstash):
-
-```bash
-REDIS_URL=rediss://default:YOUR_UPSTASH_TOKEN@striking-wallaby-46693.upstash.io:6379
-```
+1. Create a Redis database at [Upstash Console](https://console.upstash.com/) (free tier: 10k commands/day, 256 MB).
+2. Either use **Redis URL** or **REST API** vars:
+   - **Option A – Redis URL:** Copy the Redis URL from the dashboard (TLS). Use `rediss://` (double s):
+     ```bash
+     REDIS_URL=rediss://default:YOUR_UPSTASH_TOKEN@your-database.upstash.io:6379
+     ```
+   - **Option B – REST API (Vercel):** In the dashboard, open the "REST API" section and set:
+     ```bash
+     UPSTASH_REDIS_REST_URL=https://your-database.upstash.io
+     UPSTASH_REDIS_REST_TOKEN=your_token_here
+     ```
+     The queue client derives a `rediss://` URL from these for BullMQ.
+3. In Vercel: Project → Settings → Environment Variables → add the chosen vars → redeploy (`vercel --prod`).
 
 #### Local Redis
 
@@ -237,13 +243,24 @@ pm2 restart splicr-worker
 
 ### Using Docker
 
-```dockerfile
-FROM node:20-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --production
-COPY . .
-CMD ["npm", "run", "worker"]
+From the **project root** (not `frontend/`), build and run the worker image (includes Node 24, Python, and MAGeCK):
+
+```bash
+# Build
+docker build -f Dockerfile.worker -t splicr-worker .
+
+# Run (pass Redis and Supabase env; use -e or --env-file)
+docker run --rm -it \
+  -e REDIS_URL="rediss://default:YOUR_TOKEN@your-redis.upstash.io:6379" \
+  -e NEXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co" \
+  -e SUPABASE_SERVICE_ROLE_KEY="your-service-role-key" \
+  splicr-worker
+```
+
+For R2-backed analyses, also set `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, and optionally `R2_BUCKET_NAME`. Use a file for many vars:
+
+```bash
+docker run --rm -it --env-file frontend/.env.local splicr-worker
 ```
 
 ### Using Kubernetes

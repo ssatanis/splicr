@@ -167,6 +167,7 @@
     "@tiptap/react": "^3.18.0",
     "@tiptap/starter-kit": "^3.18.0",
     "@types/pako": "^2.0.4",
+    "@upstash/redis": "^1.36.2",
     "autoprefixer": "^10",
     "bullmq": "^5.0.0",
     "clsx": "^2.1.0",

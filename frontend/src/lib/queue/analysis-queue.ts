@@ -5,6 +5,10 @@
  * Jobs persist in Redis and survive server restarts.
  * When Redis is unavailable, enqueue fails fast so the API can still create the analysis
  * and the user can start it manually from the results page.
+ *
+ * Supports:
+ * - REDIS_URL (TCP/TLS, e.g. rediss://default:token@host:6379 for Upstash)
+ * - UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN (we derive rediss:// URL for ioredis)
  */
 
 import { Queue, QueueOptions } from 'bullmq';
@@ -21,8 +25,28 @@ let queue: Queue<AnalysisJobData> | null = null;
 let lastRedisErrorLog = 0;
 const REDIS_ERROR_LOG_INTERVAL_MS = 60000;
 
+/**
+ * Resolve Redis URL: REDIS_URL, or derive from Upstash REST env vars for BullMQ/ioredis (TLS).
+ */
+function getRedisUrl(): string {
+  if (process.env.REDIS_URL?.trim()) {
+    return process.env.REDIS_URL.trim();
+  }
+  const restUrl = process.env.UPSTASH_REDIS_REST_URL?.trim();
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
+  if (restUrl && token) {
+    try {
+      const host = new URL(restUrl).hostname;
+      return `rediss://default:${encodeURIComponent(token)}@${host}:6379`;
+    } catch (e) {
+      console.warn('Failed to parse UPSTASH_REDIS_REST_URL, using localhost');
+    }
+  }
+  return 'redis://localhost:6379';
+}
+
 function createRedisConnection(): IORedis {
-  const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+  const redisUrl = getRedisUrl();
   const redisPassword = process.env.REDIS_PASSWORD;
   const redisDb = parseInt(process.env.REDIS_DB || '0', 10);
 
@@ -39,7 +63,7 @@ function createRedisConnection(): IORedis {
       port = parseInt(url.port || '6379', 10);
       password = password || url.password || undefined;
     } catch (e) {
-      console.warn('Failed to parse REDIS_URL, using defaults');
+      console.warn('Failed to parse Redis URL, using defaults');
     }
   }
 
