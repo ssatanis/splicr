@@ -13,26 +13,36 @@ export async function PATCH(
   try {
     const params = await context.params;
     const analysisId = params.id;
-    const supabase = await createClient();
     const admin = supabaseAdmin as any;
+
+    if (!analysisId) {
+      return NextResponse.json({ error: 'Analysis ID is required' }, { status: 400 });
+    }
 
     const { user, error: authError } = await (await import("@/lib/supabase/server")).getApiUser();
     if (authError || !user) {
+      console.error('Auth error in update:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
     const { name } = body;
 
-    if (!name || typeof name !== 'string') {
-      return NextResponse.json({ error: 'Name is required' }, { status: 400 });
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      return NextResponse.json({ error: 'Name is required and must be a non-empty string' }, { status: 400 });
     }
 
-    const { data: analysis } = await admin
+    // Check if analysis exists and get ownership info
+    const { data: analysis, error: fetchError } = await admin
       .from('analyses')
       .select('user_id')
       .eq('id', analysisId)
-      .single();
+      .maybeSingle();
+
+    if (fetchError) {
+      console.error('Error fetching analysis:', fetchError);
+      return NextResponse.json({ error: 'Failed to fetch analysis', details: fetchError.message }, { status: 500 });
+    }
 
     if (!analysis) {
       return NextResponse.json({ error: 'Analysis not found' }, { status: 404 });
@@ -57,19 +67,33 @@ export async function PATCH(
       return NextResponse.json({ error: 'Not authorized to edit this analysis' }, { status: 403 });
     }
 
-    const { error: updateError } = await admin
+    // Update the analysis name
+    const { data: updated, error: updateError } = await admin
       .from('analyses')
-      .update({ name: name.trim() })
-      .eq('id', analysisId);
+      .update({
+        name: name.trim(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', analysisId)
+      .select()
+      .single();
 
     if (updateError) {
       console.error('Update error:', updateError);
-      return NextResponse.json({ error: 'Failed to update analysis' }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to update analysis', details: updateError.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, message: 'Analysis updated' });
+    console.log('Analysis updated successfully:', analysisId, 'New name:', name.trim());
+    return NextResponse.json({
+      success: true,
+      message: 'Analysis updated successfully',
+      data: updated
+    });
   } catch (error) {
     console.error('Update analysis error:', error);
-    return NextResponse.json({ error: 'Failed to update analysis' }, { status: 500 });
+    return NextResponse.json({
+      error: 'Failed to update analysis',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }
