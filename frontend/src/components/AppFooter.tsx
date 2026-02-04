@@ -16,7 +16,10 @@ export default function AppFooter() {
     >
       <div className="mx-auto max-w-6xl px-6 py-6 text-center">
         <p className="text-sm text-text-secondary max-w-xl mx-auto">
-          Your privacy and security are important to us. SplicR is committed to protecting your data and maintaining the highest standards of security.
+          Your privacy and security are important to us.
+        </p>
+        <p className="text-sm text-text-secondary max-w-xl mx-auto mt-1">
+          SplicR is committed to protecting your data and maintaining the highest standards of security.
         </p>
         <nav className="mt-4 flex items-center justify-center gap-2 text-sm text-text-tertiary" aria-label="Legal">
           <Link
