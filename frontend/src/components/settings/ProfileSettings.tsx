@@ -37,18 +37,18 @@ interface ProfileData {
   avatar_url: string | null;
 }
 
-/** Shape of a profile row from DB (select *). Used to type Supabase responses. */
+/** Shape of a profile row from DB (select *). Matches public.profiles: lab_name, role; optional columns from migration. */
 type ProfileRow = {
   id?: string;
   email?: string;
   full_name?: string | null;
   display_name?: string | null;
   institution?: string | null;
-  department_lab?: string | null;
+  lab_name?: string | null;
+  role?: string | null;
   orcid_id?: string | null;
   orcid_verified?: boolean;
   research_areas?: string[] | null;
-  team_role?: string | null;
   profile_visibility?: 'public' | 'team' | 'private' | null;
   timezone?: string | null;
   avatar_url?: string | null;
@@ -173,13 +173,13 @@ export function ProfileSettings() {
       if (data) {
         setProfile({
           full_name: data.full_name || fromAuth || '',
-          display_name: data.display_name || data.full_name || fromAuth || '',
+          display_name: (data.display_name ?? data.full_name ?? fromAuth) || '',
           email: user.email || '',
           institution: data.institution || '',
-          department_lab: data.department_lab || '',
+          department_lab: data.lab_name ?? '',
           orcid_id: data.orcid_id || '',
-          research_areas: data.research_areas || [],
-          team_role: data.team_role || '',
+          research_areas: Array.isArray(data.research_areas) ? data.research_areas : [],
+          team_role: data.role ?? '',
           profile_visibility: (data.profile_visibility as ProfileData['profile_visibility']) || 'private',
           timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
           avatar_url: data.avatar_url || null,
@@ -209,24 +209,34 @@ export function ProfileSettings() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { error } = await (supabase.from('profiles') as any).upsert({
+      const basePayload = {
           id: user.id,
           email: user.email,
           full_name: profile.full_name || null,
-          display_name: profile.display_name || profile.full_name || null,
           institution: profile.institution || null,
-          department_lab: profile.department_lab || null,
-          orcid_id: profile.orcid_id || null,
+          lab_name: profile.department_lab || null,
+          role: profile.team_role || null,
+          avatar_url: profile.avatar_url,
           orcid_verified: orcidVerified,
-          research_areas: profile.research_areas,
-          team_role: profile.team_role || null,
+          updated_at: new Date().toISOString(),
+        };
+      const extendedPayload = {
+          ...basePayload,
+          display_name: profile.display_name || profile.full_name || null,
+          orcid_id: profile.orcid_id || null,
+          research_areas: profile.research_areas?.length ? profile.research_areas : null,
           profile_visibility: profile.profile_visibility,
           timezone: profile.timezone,
-          avatar_url: profile.avatar_url,
-          updated_at: new Date().toISOString(),
-        });
+        };
+      let result = await (supabase.from('profiles') as any).upsert(extendedPayload);
+      if (result.error) {
+        const msg = result.error.message || '';
+        if (msg.includes('column') && msg.includes('does not exist')) {
+          result = await (supabase.from('profiles') as any).upsert(basePayload);
+        }
+        if (result.error) throw result.error;
+      }
 
-      if (error) throw error;
       setSuccess(true);
     } catch (error: any) {
       console.error('Error saving profile:', error);
@@ -292,11 +302,27 @@ export function ProfileSettings() {
 
       setProfile(prev => ({ ...prev, avatar_url: publicUrl }));
 
+      // Use upsert so avatar saves even if the profiles row doesn't exist yet
       const { error: updateError } = await (supabase.from('profiles') as any)
+        .upsert({
+          id: user.id,
+          email: user.email,
+          avatar_url: publicUrl,
+          updated_at: new Date().toISOString(),
+        });
+      if (updateError) {
+        console.error('Failed to save avatar to profile:', updateError);
+        setError('Avatar uploaded but failed to save to profile. Try saving your profile.');
+      }
+
+      // Keep users.avatar_url in sync for any consumers that read from users
+      await (supabase.from('users') as any)
         .update({ avatar_url: publicUrl, updated_at: new Date().toISOString() })
         .eq('id', user.id);
-      if (updateError) console.error('Failed to save avatar to profile:', updateError);
-      else if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('profile-updated'));
+
+      if (!updateError && typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('profile-updated'));
+      }
 
       setSuccess(true);
     } catch (err: unknown) {
@@ -443,7 +469,8 @@ export function ProfileSettings() {
                   setProfile(prev => ({ ...prev, avatar_url: null }));
                   const { data: { user } } = await supabase.auth.getUser();
                   if (user) {
-                    await (supabase.from('profiles') as any).update({ avatar_url: null, updated_at: new Date().toISOString() }).eq('id', user.id);
+                    await (supabase.from('profiles') as any).upsert({ id: user.id, email: user.email, avatar_url: null, updated_at: new Date().toISOString() });
+                    await (supabase.from('users') as any).update({ avatar_url: null, updated_at: new Date().toISOString() }).eq('id', user.id);
                     if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('profile-updated'));
                   }
                 }}

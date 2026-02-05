@@ -11,6 +11,7 @@ import { putR2Json } from '@/lib/storage/r2-put';
 import { AnalysisPipeline } from '@/lib/analysis/pipeline';
 import { assessQCStatus } from '@/lib/analysis/quality-calculator';
 import { getLibraryMetadata } from '@/lib/analysis/sgRNALibraries';
+import { createWorkingDir, cleanupWorkingDir } from '@/lib/analysis/cli-utils';
 
 async function updateProgress(admin: any, analysisId: string, progress: number, currentStep: string, logs: any[]) {
   const { error } = await admin
@@ -158,18 +159,27 @@ export async function runAnalysisPipeline(analysisId: string, analysis: any): Pr
       };
     });
 
-    const pipeline = new AnalysisPipeline();
-    const pipelineResults = await pipeline.runPipeline(
-      files,
-      fileMetadata,
-      libraryType,
-      algorithms,
-      parameters,
-      (progress, step, entry) => {
-        logs.push(entry);
-        updateProgress(admin, analysisId, progress, step, logs);
-      }
-    );
+    // Create a temp working directory for CLI-based algorithm execution
+    const workingDir = createWorkingDir(analysisId);
+
+    let pipelineResults;
+    try {
+      const pipeline = new AnalysisPipeline();
+      pipelineResults = await pipeline.runPipeline(
+        files,
+        fileMetadata,
+        libraryType,
+        algorithms,
+        parameters,
+        (progress, step, entry) => {
+          logs.push(entry);
+          updateProgress(admin, analysisId, progress, step, logs);
+        },
+        workingDir
+      );
+    } finally {
+      cleanupWorkingDir(workingDir);
+    }
 
     // Real processing verification (Part 10: verify it's real)
     const qc = pipelineResults.qcMetrics;

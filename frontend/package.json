@@ -15,6 +15,7 @@
     "predev": "npm run validate-env",
     "dev": "next dev",
     "dev:webpack": "next dev --webpack",
+    "dev:unlock": "sh scripts/dev-unlock.sh",
     "dev:clean": "npm run clean && next dev",
     "prebuild": "npm run validate-env",
     "build": "next build",

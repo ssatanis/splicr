@@ -1,11 +1,15 @@
 // Unified CRISPR Screen Analysis Pipeline
 // Orchestrates MAGeCK, BAGEL2, and DrugZ algorithms with real-time progress tracking
 
+import * as path from 'path';
 import { MAGeCKAnalyzer, MAGeCKGeneResult } from './mageckRRA';
 import { BAGEL2Analyzer, BAGEL2GeneResult } from './bagel2';
 import { DrugZAnalyzer, DrugZGeneResult } from './drugz';
 import { getLibrary, getLibraryMetadata, ESSENTIAL_GENES, NON_ESSENTIAL_GENES } from './sgRNALibraries';
 import { FASTQParser } from '../fastqParser';
+import { isCliAvailable, writeCountTableToDisk } from './cli-utils';
+import { runBagel2Pipeline, bagel2CliToLegacy } from './bagel2/index';
+import { runDrugzPipeline, drugzCliToLegacy } from './drugz/index';
 
 export interface SampleInfo {
   name: string;
@@ -130,7 +134,8 @@ export class AnalysisPipeline {
     libraryType: string,
     algorithms: string[],
     parameters: AnalysisParameters,
-    progressCallback?: ProgressCallback
+    progressCallback?: ProgressCallback,
+    workingDir?: string
   ): Promise<PipelineResults> {
     this.logs = [];
     this.progressCallback = progressCallback;
@@ -245,43 +250,121 @@ export class AnalysisPipeline {
 
       if (algorithms.includes('bagel2')) {
         this.log('bagel2', algorithmProgress.bagel2.start, 'Starting BAGEL2 analysis...', 'info');
-        const bagel2Analyzer = new BAGEL2Analyzer({
-          essentialGenes: parameters.essentialGenes ? parameters.essentialGenes.split(',').map(s => s.trim()) : undefined,
-          nonEssentialGenes: parameters.nonEssentialGenes ? parameters.nonEssentialGenes.split(',').map(s => s.trim()) : undefined,
-          bootstrapIterations: parameters.bagelPermutations || 1000
-        });
 
-        algorithmResults.bagel2 = await bagel2Analyzer.runAnalysis(
-          countMatrix,
-          sgRNAToGene,
-          controlIndices,
-          treatmentIndices,
-          (progress) => {
-            const scaledProgress = algorithmProgress.bagel2.start +
-              (progress.progress / 100) * (algorithmProgress.bagel2.end - algorithmProgress.bagel2.start);
-            this.log('bagel2', scaledProgress, progress.message, 'info');
+        if (isCliAvailable('bagel2') && workingDir) {
+          // CLI path: call real BAGEL2 Python binary
+          this.log('bagel2', algorithmProgress.bagel2.start + 1, 'Using BAGEL2 CLI (Python)', 'info');
+
+          const countTablePath = path.join(workingDir, 'bagel2_counts.txt');
+          writeCountTableToDisk(countMatrix, sgRNAToGene, samples.map(s => s.name), countTablePath);
+
+          const controlCols = samples.filter(s => s.condition === 'control').map(s => s.name);
+          const treatmentCols = samples.filter(s => s.condition === 'treatment').map(s => s.name);
+          const outputPrefix = path.join(workingDir, 'bagel2_out');
+
+          const bagel2Result = await runBagel2Pipeline(
+            { countTablePath, controlColumns: controlCols, treatmentColumns: treatmentCols, outputPrefix: 'bagel2_out' },
+            { workingDir },
+            (p) => {
+              const scaledProgress = algorithmProgress.bagel2.start +
+                (p.progress / 100) * (algorithmProgress.bagel2.end - algorithmProgress.bagel2.start);
+              this.log('bagel2', scaledProgress, p.message, 'info');
+            }
+          );
+
+          if (bagel2Result.success) {
+            algorithmResults.bagel2 = bagel2CliToLegacy(
+              bagel2Result.bfResults,
+              bagel2Result.prResults,
+              bagel2Result.foldchangeResults
+            );
+          } else {
+            this.log('bagel2', algorithmProgress.bagel2.end, `BAGEL2 CLI failed: ${bagel2Result.userMessage || bagel2Result.error}. Falling back to TypeScript.`, 'warning');
+            // Fall through to TypeScript fallback below
           }
-        );
+        }
+
+        if (!algorithmResults.bagel2) {
+          // TypeScript fallback
+          const bagel2Analyzer = new BAGEL2Analyzer({
+            essentialGenes: parameters.essentialGenes ? parameters.essentialGenes.split(',').map(s => s.trim()) : undefined,
+            nonEssentialGenes: parameters.nonEssentialGenes ? parameters.nonEssentialGenes.split(',').map(s => s.trim()) : undefined,
+            bootstrapIterations: parameters.bagelPermutations || 1000
+          });
+
+          algorithmResults.bagel2 = await bagel2Analyzer.runAnalysis(
+            countMatrix,
+            sgRNAToGene,
+            controlIndices,
+            treatmentIndices,
+            (progress) => {
+              const scaledProgress = algorithmProgress.bagel2.start +
+                (progress.progress / 100) * (algorithmProgress.bagel2.end - algorithmProgress.bagel2.start);
+              this.log('bagel2', scaledProgress, progress.message, 'info');
+            }
+          );
+        }
+
         this.log('bagel2', algorithmProgress.bagel2.end, `BAGEL2 complete: ${algorithmResults.bagel2.filter(r => r.bayesFactor > 0).length} putative essential genes`, 'success');
       }
 
       if (algorithms.includes('drugz')) {
         this.log('drugz', algorithmProgress.drugz.start, 'Starting DrugZ analysis...', 'info');
-        const drugzAnalyzer = new DrugZAnalyzer({
-          minSgRNAs: 3
-        });
 
-        algorithmResults.drugz = await drugzAnalyzer.runAnalysis(
-          countMatrix,
-          sgRNAToGene,
-          controlIndices,
-          treatmentIndices,
-          (progress) => {
-            const scaledProgress = algorithmProgress.drugz.start +
-              (progress.progress / 100) * (algorithmProgress.drugz.end - algorithmProgress.drugz.start);
-            this.log('drugz', scaledProgress, progress.message, 'info');
+        if (isCliAvailable('drugz') && workingDir) {
+          // CLI path: call real DrugZ Python binary
+          this.log('drugz', algorithmProgress.drugz.start + 1, 'Using DrugZ CLI (Python)', 'info');
+
+          const countTablePath = path.join(workingDir, 'drugz_counts.txt');
+          writeCountTableToDisk(countMatrix, sgRNAToGene, samples.map(s => s.name), countTablePath);
+
+          const controlCols = samples.filter(s => s.condition === 'control').map(s => s.name);
+          const treatmentCols = samples.filter(s => s.condition === 'treatment').map(s => s.name);
+          const outputPath = path.join(workingDir, 'drugz_output.txt');
+
+          const drugzResult = await runDrugzPipeline(
+            {
+              inputCountTable: countTablePath,
+              outputPath,
+              controlColumns: controlCols,
+              treatmentColumns: treatmentCols,
+              pseudocount: 5,
+            },
+            { workingDir },
+            (p) => {
+              const scaledProgress = algorithmProgress.drugz.start +
+                (p.progress / 100) * (algorithmProgress.drugz.end - algorithmProgress.drugz.start);
+              this.log('drugz', scaledProgress, p.message, 'info');
+            }
+          );
+
+          if (drugzResult.success) {
+            algorithmResults.drugz = drugzCliToLegacy(drugzResult.geneResults);
+          } else {
+            this.log('drugz', algorithmProgress.drugz.end, `DrugZ CLI failed: ${drugzResult.userMessage || drugzResult.error}. Falling back to TypeScript.`, 'warning');
+            // Fall through to TypeScript fallback below
           }
-        );
+        }
+
+        if (!algorithmResults.drugz) {
+          // TypeScript fallback
+          const drugzAnalyzer = new DrugZAnalyzer({
+            minSgRNAs: 3
+          });
+
+          algorithmResults.drugz = await drugzAnalyzer.runAnalysis(
+            countMatrix,
+            sgRNAToGene,
+            controlIndices,
+            treatmentIndices,
+            (progress) => {
+              const scaledProgress = algorithmProgress.drugz.start +
+                (progress.progress / 100) * (algorithmProgress.drugz.end - algorithmProgress.drugz.start);
+              this.log('drugz', scaledProgress, progress.message, 'info');
+            }
+          );
+        }
+
         this.log('drugz', algorithmProgress.drugz.end, `DrugZ complete: ${algorithmResults.drugz.filter(r => r.fdr < parameters.fdrThreshold).length} significant genes`, 'success');
       }
 

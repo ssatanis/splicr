@@ -34,3 +34,15 @@ coverage
 # Optional: exclude large data if not needed for worker
 # data/
 # test_data/
+
+# Analysis engine Docker containers (not needed in worker image)
+analysis-engine/
+backend/
+
+# Documentation and scripts
+docs/
+README.md
+*.md
+
+# Demo files
+demo/

@@ -123,4 +123,49 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error(`[${WORKER_ID}] Unhandled rejection at:`, promise, 'reason:', reason);
 });
 
+// Health check endpoint for Railway
+import express from 'express';
+const app = express();
+
+app.get('/health', (req, res) => {
+  const healthStatus = {
+    status: 'healthy',
+    worker: {
+      id: WORKER_ID,
+      status: worker && !shuttingDown ? 'running' : 'stopped',
+      concurrency: CONCURRENCY,
+      uptime: process.uptime(),
+    },
+    redis: {
+      status: redisConnection.status,
+    },
+    system: {
+      memory: {
+        used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+        total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
+        limit: Math.round(process.memoryUsage().rss / 1024 / 1024),
+      },
+      platform: process.platform,
+      nodeVersion: process.version,
+    },
+    timestamp: new Date().toISOString(),
+  };
+
+  res.json(healthStatus);
+});
+
+app.get('/', (req, res) => {
+  res.json({
+    service: 'SplicR Analysis Worker',
+    version: '1.0.0',
+    algorithms: ['MAGeCK', 'BAGEL2', 'DrugZ'],
+    status: 'operational',
+  });
+});
+
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`[${WORKER_ID}] Health check server listening on port ${PORT}`);
+});
+
 console.log(`[${WORKER_ID}] Worker started and ready to process jobs`);

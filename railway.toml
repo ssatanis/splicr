@@ -1,0 +1,38 @@
+# Railway Deployment Configuration for SplicR Analysis Worker
+# This configuration deploys the CRISPR screening analysis worker on Railway
+# Supports: MAGeCK (RRA + MLE), BAGEL2, DrugZ algorithms
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile.worker"
+
+[deploy]
+# Worker service runs continuously to process jobs from Redis queue
+startCommand = "/app/start-worker.sh"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+# Health check configuration (Railway will ping this endpoint)
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+
+# Resource configuration
+# Railway automatically scales based on usage
+# For CRISPR analysis, we recommend at least 2GB RAM
+[deploy.resources]
+# minMemoryGB = 2
+# maxMemoryGB = 8
+
+[env]
+# Production environment
+NODE_ENV = "production"
+PYTHONUNBUFFERED = "1"
+
+# Worker configuration (can be overridden in Railway dashboard)
+QUEUE_CONCURRENCY = "2"
+QUEUE_MAX_RETRIES = "3"
+QUEUE_JOB_TIMEOUT_MS = "14400000"
+
+# Heartbeat and progress update intervals
+WORKER_HEARTBEAT_INTERVAL_MS = "30000"
+WORKER_PROGRESS_UPDATE_INTERVAL_MS = "5000"

@@ -41,16 +41,16 @@ export type Database = {
           id: string
           email: string
           full_name: string | null
-          display_name: string | null
+          display_name?: string | null
           avatar_url: string | null
           institution: string | null
-          department_lab: string | null
-          orcid_id: string | null
+          lab_name: string | null
+          role: string | null
+          orcid_id?: string | null
           orcid_verified: boolean
-          research_areas: string[]
-          team_role: string | null
-          profile_visibility: 'public' | 'team' | 'private'
-          timezone: string
+          research_areas?: string[] | null
+          profile_visibility?: 'public' | 'team' | 'private' | null
+          timezone?: string | null
           created_at: string
           updated_at: string
         }
@@ -61,13 +61,13 @@ export type Database = {
           display_name?: string | null
           avatar_url?: string | null
           institution?: string | null
-          department_lab?: string | null
+          lab_name?: string | null
+          role?: string | null
           orcid_id?: string | null
           orcid_verified?: boolean
-          research_areas?: string[]
-          team_role?: string | null
-          profile_visibility?: 'public' | 'team' | 'private'
-          timezone?: string
+          research_areas?: string[] | null
+          profile_visibility?: 'public' | 'team' | 'private' | null
+          timezone?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -78,13 +78,13 @@ export type Database = {
           display_name?: string | null
           avatar_url?: string | null
           institution?: string | null
-          department_lab?: string | null
+          lab_name?: string | null
+          role?: string | null
           orcid_id?: string | null
           orcid_verified?: boolean
-          research_areas?: string[]
-          team_role?: string | null
-          profile_visibility?: 'public' | 'team' | 'private'
-          timezone?: string
+          research_areas?: string[] | null
+          profile_visibility?: 'public' | 'team' | 'private' | null
+          timezone?: string | null
           created_at?: string
           updated_at?: string
         }
