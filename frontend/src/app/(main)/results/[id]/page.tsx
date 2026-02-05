@@ -94,6 +94,7 @@ export default function ResultsPage() {
   const [isRetrying, setIsRetrying] = useState(false);
   const runTriggeredRef = useRef<string | null>(null);
   const queuedAtRef = useRef<number | null>(null);
+  const runningStuckRef = useRef<{ progress: number; at: number } | null>(null);
   const [headerRoot, setHeaderRoot] = useState<HTMLElement | null>(null);
 
   // Drug search state - lifted to parent to persist across tab switches
@@ -214,6 +215,19 @@ export default function ResultsPage() {
   if (analysis?.status === "queued" && queuedAtRef.current === null) queuedAtRef.current = Date.now();
   if (analysis?.status !== "queued") queuedAtRef.current = null;
   const queuedStuck = analysis?.status === "queued" && queuedAtRef.current != null && Date.now() - queuedAtRef.current > 90000;
+
+  // Detect stuck "running" (e.g. inline timeout at 5%, or worker hung fetching FASTQ)
+  const runStatus = analysis?.status === "running" || analysis?.status === "processing";
+  const prog = analysis?.progress ?? 0;
+  if (runStatus && prog < 20) {
+    const now = Date.now();
+    if (!runningStuckRef.current || runningStuckRef.current.progress !== prog) {
+      runningStuckRef.current = { progress: prog, at: now };
+    }
+  } else {
+    runningStuckRef.current = null;
+  }
+  const runningStuck = runStatus && prog < 20 && runningStuckRef.current != null && Date.now() - runningStuckRef.current.at > 180000;
 
   useEffect(() => {
     if (!isInProgress) return;
@@ -935,6 +949,21 @@ export default function ResultsPage() {
                               className="bg-accent text-white hover:bg-accent/90"
                             >
                               {isRetrying ? "Starting…" : "Run inline instead"}
+                            </Button>
+                          </div>
+                        )}
+                        {runningStuck && (
+                          <div className="flex flex-col items-center gap-2 mt-4 max-w-md mx-auto">
+                            <p className="text-amber-600 dark:text-amber-400 text-sm text-center">
+                              Progress stalled. Ensure RUN_ANALYSIS_INLINE=false and the worker (Railway) has Redis + R2 credentials. Retry to re-queue.
+                            </p>
+                            <Button
+                              variant="primary"
+                              onClick={() => handleRetry()}
+                              disabled={isRetrying}
+                              className="bg-accent text-white hover:bg-accent/90"
+                            >
+                              {isRetrying ? "Starting…" : "Retry"}
                             </Button>
                           </div>
                         )}

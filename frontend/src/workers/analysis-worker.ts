@@ -26,6 +26,33 @@ const CONCURRENCY = parseInt(process.env.QUEUE_CONCURRENCY || '4', 10);
 console.log(`Starting analysis worker: ${WORKER_ID}`);
 console.log(`Concurrency: ${CONCURRENCY}`);
 
+// Connect and verify Redis at startup (generates activity in Upstash Monitor)
+async function connectRedis() {
+  try {
+    const pong = await redisConnection.ping();
+    console.log(`[${WORKER_ID}] Redis connected: ${pong}`);
+    return true;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[${WORKER_ID}] Redis connection failed:`, msg);
+    throw err;
+  }
+}
+
+// Periodic heartbeat so Upstash Monitor shows activity even when idle
+const HEARTBEAT_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
+let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
+
+function startRedisHeartbeat() {
+  heartbeatTimer = setInterval(async () => {
+    try {
+      await redisConnection.ping();
+    } catch {
+      // Ignore; connection errors are logged elsewhere
+    }
+  }, HEARTBEAT_INTERVAL_MS);
+}
+
 // Worker options
 const workerOptions: WorkerOptions = {
   connection: redisConnection,
@@ -43,6 +70,10 @@ const workerOptions: WorkerOptions = {
     count: 500,
   },
 };
+
+// Initialize Redis, then create worker
+await connectRedis();
+startRedisHeartbeat();
 
 // Create worker instance
 const worker = new Worker<AnalysisJobData, AnalysisJobResult>(
@@ -105,6 +136,10 @@ async function gracefulShutdown(signal: string) {
 
   // Stop all heartbeats
   stopAllHeartbeats();
+  if (heartbeatTimer) {
+    clearInterval(heartbeatTimer);
+    heartbeatTimer = null;
+  }
 
   // Close Redis connection
   await redisConnection.quit();

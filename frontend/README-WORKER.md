@@ -69,7 +69,10 @@ Copy `.env.example` to `.env.local` and configure.
      UPSTASH_REDIS_REST_TOKEN=your_token_here
      ```
      The queue client derives a `rediss://` URL from these for BullMQ.
-3. In Vercel: Project → Settings → Environment Variables → add the chosen vars → redeploy (`vercel --prod`).
+3. **Set on both Vercel and Railway:**
+   - **Vercel** (API): Project → Settings → Environment Variables → add `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` → redeploy.
+   - **Railway** (worker): Add the same vars so the worker connects to the same Redis.
+4. **Upstash Monitor / logs:** A cron job pings Redis every 5 minutes via `/api/cron/redis-ping`. Set `CRON_SECRET` in Vercel (e.g. `openssl rand -hex 32`) so the cron authenticates. This keeps the Upstash Monitor showing activity.
 
 #### Local Redis
 
