@@ -75,12 +75,21 @@ function pipelineResultsToDbResults(
   };
 }
 
+export type RunAnalysisPipelineOptions = {
+  /** Optional callback for progress (e.g. worker heartbeat). Called on each pipeline progress update. */
+  onProgress?: (progress: number, step: string, log: unknown) => void | Promise<void>;
+};
+
 /**
  * Run the analysis pipeline and persist status/results to the database.
  * Fetches FASTQ files from R2, runs real parsing and MAGeCK/BAGEL2/DrugZ, saves real results.
  * Call this directly from create or run API; do not trigger via HTTP self-call.
  */
-export async function runAnalysisPipeline(analysisId: string, analysis: any): Promise<void> {
+export async function runAnalysisPipeline(
+  analysisId: string,
+  analysis: any,
+  options?: RunAnalysisPipelineOptions
+): Promise<void> {
   const admin = supabaseAdmin as any;
   const logs: any[] = [];
   const algorithms = Array.isArray(analysis.parameters?.algorithms)
@@ -140,13 +149,19 @@ export async function runAnalysisPipeline(analysisId: string, analysis: any): Pr
     await updateProgress(admin, analysisId, 2, 'Initializing', logs);
 
     addLog('Fetching', `Fetching ${fileNames.length} FASTQ file(s)...`, 5, 'info');
-    await updateProgress(admin, analysisId, 5, 'Fetching FASTQ files', logs);
+    await updateProgress(admin, analysisId, 5, `Fetching ${fileNames.length} FASTQ file(s)...`, logs);
 
-    const filePromises = fileNames.map((key: string, i: number) => {
+    const filePromises = fileNames.map(async (key: string, i: number) => {
       const fileName = typeof key === 'string' ? key.split('/').pop() ?? key : `sample_${i + 1}.fastq.gz`;
-      return getR2FileAsFile(key, fileName);
+      const file = await getR2FileAsFile(key, fileName);
+      const pct = 5 + Math.round(((i + 1) / fileNames.length) * 8);
+      addLog('Fetching', `Fetched ${fileName}`, pct, 'info');
+      await updateProgress(admin, analysisId, pct, `Fetched ${i + 1}/${fileNames.length} file(s)`, logs);
+      return file;
     });
     const files: File[] = await Promise.all(filePromises);
+    addLog('Fetching', `All ${files.length} file(s) ready`, 13, 'success');
+    await updateProgress(admin, analysisId, 13, `All ${files.length} FASTQ file(s) ready`, logs);
 
     const fileMetadata = fileNames.map((key: string, i: number) => {
       const label = sampleLabels[i];
@@ -160,7 +175,11 @@ export async function runAnalysisPipeline(analysisId: string, analysis: any): Pr
     });
 
     // Create a temp working directory for CLI-based algorithm execution
+    addLog('Initialization', 'Creating working directory for analysis', 14, 'info');
+    await updateProgress(admin, analysisId, 14, 'Preparing pipeline', logs);
     const workingDir = createWorkingDir(analysisId);
+    addLog('Initialization', 'Starting sequence processing and sgRNA counting', 15, 'info');
+    await updateProgress(admin, analysisId, 15, 'Starting sequence processing', logs);
 
     let pipelineResults;
     try {
@@ -174,6 +193,7 @@ export async function runAnalysisPipeline(analysisId: string, analysis: any): Pr
         (progress, step, entry) => {
           logs.push(entry);
           updateProgress(admin, analysisId, progress, step, logs);
+          void options?.onProgress?.(progress, step, entry);
         },
         workingDir
       );

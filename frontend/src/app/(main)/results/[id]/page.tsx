@@ -488,11 +488,11 @@ export default function ResultsPage() {
     }
   };
 
-  const handleRetry = async () => {
+  const handleRetry = async (forceInline = false) => {
     if (!id || isRetrying) return;
     setIsRetrying(true);
     try {
-      await realApi.runAnalysis(id);
+      await realApi.runAnalysis(id, forceInline ? { inline: true } : undefined);
       await refreshAnalyses();
       await loadResults();
     } catch (e) {
@@ -920,9 +920,19 @@ export default function ResultsPage() {
                           </div>
                         )}
                         {queuedStuck && (
-                          <p className="text-amber-600 dark:text-amber-400 text-sm mt-4 max-w-md mx-auto">
-                            Job has been queued for a while. If you use a worker (e.g. Railway), ensure it is running with REDIS_URL (or Upstash) set. Click Retry to try running the analysis inline instead.
-                          </p>
+                          <div className="flex flex-col items-center gap-2 mt-4 max-w-md mx-auto">
+                            <p className="text-amber-600 dark:text-amber-400 text-sm text-center">
+                              Job has been queued for a while. If you use a worker (e.g. Railway), ensure it is running with REDIS_URL (or Upstash) set.
+                            </p>
+                            <Button
+                              variant="default"
+                              onClick={() => handleRetry(true)}
+                              disabled={isRetrying}
+                              className="bg-accent text-white hover:bg-accent/90"
+                            >
+                              {isRetrying ? "Starting…" : "Run inline instead"}
+                            </Button>
+                          </div>
                         )}
                         <div className="flex items-center justify-center gap-4 mt-6">
                           <Button variant="outline" onClick={() => { refreshAnalyses(); loadResults(); }} disabled={isRetrying}>Refresh</Button>

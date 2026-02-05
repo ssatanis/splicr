@@ -145,9 +145,11 @@ export const realApi = {
     return safeJson(response);
   },
 
-  /** Re-run a failed or existing analysis. Resets status to running and starts the pipeline. */
-  async runAnalysis(id: string): Promise<{ success: boolean; analysisId: string }> {
-    const response = await fetch(`${API_BASE}/analysis/${id}/run`, { method: 'POST' });
+  /** Re-run a failed or existing analysis. Resets status to running and starts the pipeline.
+   * Pass { inline: true } to force inline execution (skip queue) when worker is stuck. */
+  async runAnalysis(id: string, options?: { inline?: boolean }): Promise<{ success: boolean; analysisId: string }> {
+    const url = `${API_BASE}/analysis/${id}/run` + (options?.inline ? '?inline=1' : '');
+    const response = await fetch(url, { method: 'POST' });
     if (!response.ok) {
       const data = await safeJson<{ error?: string }>(response).catch(() => ({ error: undefined }));
       throw new Error(data.error || 'Failed to start analysis');

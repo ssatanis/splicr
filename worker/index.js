@@ -17,6 +17,12 @@ const frontendDir = path.join(projectRoot, 'frontend');
 
 function deriveRedisUrl() {
   if (process.env.REDIS_URL?.trim()) return process.env.REDIS_URL.trim();
+  const endpoint = process.env.UPSTASH_REDIS_ENDPOINT?.trim();
+  const password = process.env.UPSTASH_REDIS_PASSWORD?.trim();
+  if (endpoint && password) {
+    const host = endpoint.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    return `rediss://default:${encodeURIComponent(password)}@${host}:6379`;
+  }
   const restUrl = process.env.UPSTASH_REDIS_REST_URL?.trim();
   const token = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
   if (restUrl && token) {

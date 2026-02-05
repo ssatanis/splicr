@@ -269,7 +269,10 @@ function CollaborationSidebarContent({
                 </motion.div>
               ))
             )}
-            {activeTab === 'notifications' && (
+          </div>
+        )}
+
+        {activeTab === 'notifications' && (
               <div className="divide-y divide-border dark:divide-gray-800">
                 {notifications.length === 0 ? (
                   <div className="text-center py-12">

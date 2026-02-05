@@ -26,12 +26,21 @@ let lastRedisErrorLog = 0;
 const REDIS_ERROR_LOG_INTERVAL_MS = 60000;
 
 /**
- * Resolve Redis URL: REDIS_URL, or derive from Upstash REST env vars for BullMQ/ioredis (TLS).
+ * Resolve Redis URL: REDIS_URL, or derive from Upstash env vars for BullMQ/ioredis (TLS).
+ * Supports: REDIS_URL, UPSTASH_REDIS_ENDPOINT+UPSTASH_REDIS_PASSWORD, or REST URL+TOKEN.
  */
 function getRedisUrl(): string {
   if (process.env.REDIS_URL?.trim()) {
     return process.env.REDIS_URL.trim();
   }
+  // Upstash Redis Connect format (from dashboard)
+  const endpoint = process.env.UPSTASH_REDIS_ENDPOINT?.trim();
+  const password = process.env.UPSTASH_REDIS_PASSWORD?.trim();
+  if (endpoint && password) {
+    const host = endpoint.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    return `rediss://default:${encodeURIComponent(password)}@${host}:6379`;
+  }
+  // Derive from REST URL (same host typically works for Redis protocol)
   const restUrl = process.env.UPSTASH_REDIS_REST_URL?.trim();
   const token = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
   if (restUrl && token) {
@@ -81,7 +90,11 @@ function createRedisConnection(): IORedis {
     enableOfflineQueue: false,
     lazyConnect: true,
     connectTimeout: REDIS_CONNECT_TIMEOUT_MS,
-    ...(useTls && { tls: {} }),
+    ...(useTls && {
+      tls: {
+        rejectUnauthorized: true,
+      },
+    }),
   });
 
   conn.on('error', (err) => {

@@ -23,12 +23,19 @@ dotenv.config(); // Also load .env
 if (process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.SUPABASE_URL) {
   process.env.SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 }
-if (!process.env.REDIS_URL?.trim() && process.env.UPSTASH_REDIS_REST_URL?.trim() && process.env.UPSTASH_REDIS_REST_TOKEN?.trim()) {
-  try {
-    const host = new URL(process.env.UPSTASH_REDIS_REST_URL).hostname;
-    process.env.REDIS_URL = `rediss://default:${encodeURIComponent(process.env.UPSTASH_REDIS_REST_TOKEN)}@${host}:6379`;
-  } catch {
-    // ignore
+if (!process.env.REDIS_URL?.trim()) {
+  const endpoint = process.env.UPSTASH_REDIS_ENDPOINT?.trim();
+  const password = process.env.UPSTASH_REDIS_PASSWORD?.trim();
+  if (endpoint && password) {
+    const host = endpoint.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    process.env.REDIS_URL = `rediss://default:${encodeURIComponent(password)}@${host}:6379`;
+  } else if (process.env.UPSTASH_REDIS_REST_URL?.trim() && process.env.UPSTASH_REDIS_REST_TOKEN?.trim()) {
+    try {
+      const host = new URL(process.env.UPSTASH_REDIS_REST_URL).hostname;
+      process.env.REDIS_URL = `rediss://default:${encodeURIComponent(process.env.UPSTASH_REDIS_REST_TOKEN)}@${host}:6379`;
+    } catch {
+      // ignore
+    }
   }
 }
 

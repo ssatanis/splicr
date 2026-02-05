@@ -9,9 +9,7 @@ import { AnalysisJobData, AnalysisJobResult } from '@/lib/queue/job-types';
 import { runAnalysisPipeline } from '@/lib/runAnalysisPipeline';
 import {
   markAnalysisProcessing,
-  markAnalysisComplete,
   markAnalysisFailed,
-  updateAnalysisProgress,
   getAnalysisForProcessing,
 } from '@/lib/queue/db-state';
 import {
@@ -19,11 +17,7 @@ import {
   updateHeartbeatProgress,
   stopHeartbeat,
 } from '../utils/heartbeat';
-import {
-  saveAnalysisCheckpoint,
-  getAnalysisCheckpoint,
-  shouldResumeFromCheckpoint,
-} from '../utils/checkpoint';
+import { getAnalysisCheckpoint, shouldResumeFromCheckpoint } from '../utils/checkpoint';
 
 /**
  * Process an analysis job
@@ -62,42 +56,13 @@ export async function processAnalysisJob(
     // Start heartbeat
     startHeartbeat(analysisId, workerId, analysis.progress || 0, analysis.current_step || 'Starting');
 
-    // Create progress callback
-    let lastProgressUpdate = Date.now();
-    const PROGRESS_UPDATE_INTERVAL_MS = parseInt(
-      process.env.WORKER_PROGRESS_UPDATE_INTERVAL_MS || '5000',
-      10
-    ); // Default: 5 seconds
-
-    const progressCallback = async (
-      progress: number,
-      step: string,
-      logEntry: any
-    ) => {
-      // Update heartbeat with progress
+    // Progress callback: update heartbeat on every pipeline progress event so UI gets real-time updates
+    const onProgress = (progress: number, step: string, _logEntry: unknown) => {
       updateHeartbeatProgress(analysisId, progress, step);
-
-      // Throttle database updates (every 5 seconds)
-      const now = Date.now();
-      if (now - lastProgressUpdate >= PROGRESS_UPDATE_INTERVAL_MS) {
-        await updateAnalysisProgress(analysisId, progress, step, [logEntry]);
-        lastProgressUpdate = now;
-      }
-
-      // Save checkpoint after major steps
-      const majorSteps = [
-        'Quality Control',
-        'Normalization',
-        'Hit Calling',
-        'Visualization',
-      ];
-      if (majorSteps.includes(step)) {
-        await saveAnalysisCheckpoint(analysisId, step, [step], progress);
-      }
     };
 
-    // Run the analysis pipeline
-    await runAnalysisPipeline(analysisId, analysis);
+    // Run the analysis pipeline (onProgress keeps heartbeat current for real-time UI)
+    await runAnalysisPipeline(analysisId, analysis, { onProgress });
 
     // Get final results
     const finalAnalysis = await getAnalysisForProcessing(analysisId);

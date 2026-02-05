@@ -14,14 +14,17 @@ const ENQUEUE_TIMEOUT_MS = 8000;
 
 /**
  * Trigger analysis processing (e.g. Retry button).
- * Tries to enqueue; if Redis/worker unavailable, runs pipeline inline (Vercel-friendly).
+ * Tries to enqueue; if Redis/worker unavailable or ?inline=true, runs pipeline inline (Vercel-friendly).
+ * Use ?inline=true when worker is stuck (e.g. queued for 90+ sec) to run analysis directly in the API.
  */
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   const params = await context.params;
   const analysisId = params.id;
+  const url = new URL(request.url);
+  const forceInline = url.searchParams.get('inline') === 'true' || url.searchParams.get('inline') === '1';
 
   try {
     // Check authentication
@@ -91,10 +94,10 @@ export async function POST(
       parameters: analysis.parameters || {},
     };
 
-    // Try to enqueue when Redis is configured (with timeout)
+    // Try to enqueue when Redis is configured (with timeout), unless force inline
     let enqueued = false;
     let jobId: string | null = null;
-    if (REDIS_AVAILABLE) {
+    if (REDIS_AVAILABLE && !forceInline) {
       try {
         jobId = await Promise.race([
           enqueueAnalysis(jobData, { priority: JobPriority.NORMAL }),
