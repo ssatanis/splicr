@@ -192,8 +192,13 @@ export async function runAnalysisPipeline(
         parameters,
         (progress, step, entry) => {
           logs.push(entry);
-          updateProgress(admin, analysisId, progress, step, logs);
-          void options?.onProgress?.(progress, step, entry);
+          // Use message for current_step when available (more descriptive for UI)
+          const displayStep =
+            entry?.message && typeof entry.message === 'string' && entry.message.length > 0 && entry.message.length < 120
+              ? entry.message
+              : step;
+          updateProgress(admin, analysisId, progress, displayStep, logs);
+          void options?.onProgress?.(progress, displayStep, entry);
         },
         workingDir
       );

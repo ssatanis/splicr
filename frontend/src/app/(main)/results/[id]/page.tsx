@@ -217,13 +217,13 @@ export default function ResultsPage() {
 
   useEffect(() => {
     if (!isInProgress) return;
-    const intervalMs = analysis?.status === "queued" ? 2000 : 4000;
+    // Poll every 2s for real-time progress (queued or running)
     const interval = setInterval(() => {
       refreshAnalyses();
       loadResults();
-    }, intervalMs);
+    }, 2000);
     return () => clearInterval(interval);
-  }, [isInProgress, analysis?.status, refreshAnalyses, loadResults]);
+  }, [isInProgress, refreshAnalyses, loadResults]);
 
   // Realtime: live progress when worker updates the analysis row (polling still runs as fallback)
   useEffect(() => {
@@ -899,11 +899,15 @@ export default function ResultsPage() {
                               className="h-full bg-accent rounded-full"
                               initial={false}
                               animate={{ width: `${Math.min(100, Math.max(0, analysis.progress ?? 0))}%` }}
-                              transition={{ duration: 0.4, ease: "easeOut" }}
+                              transition={{ duration: 0.3, ease: "easeOut" }}
                             />
                           </div>
-                          <p className="text-text-tertiary text-xs mt-2">
-                            {analysis.status === "pending" ? "Starting…" : analysis.status === "queued" ? "Queued — worker will pick up shortly" : (analysis.currentStep ?? "Still being analyzed")}
+                          <p className="text-text-secondary text-sm mt-2 font-medium" title={analysis.currentStep ?? undefined}>
+                            {analysis.status === "pending"
+                              ? "Starting…"
+                              : analysis.status === "queued"
+                                ? "Queued — worker will pick up shortly"
+                                : (analysis.currentStep ?? "Still being analyzed")}
                           </p>
                         </div>
                         {analysis.logs && analysis.logs.length > 0 && (
@@ -925,7 +929,7 @@ export default function ResultsPage() {
                               Job has been queued for a while. If you use a worker (e.g. Railway), ensure it is running with REDIS_URL (or Upstash) set.
                             </p>
                             <Button
-                              variant="default"
+                              variant="primary"
                               onClick={() => handleRetry(true)}
                               disabled={isRetrying}
                               className="bg-accent text-white hover:bg-accent/90"
