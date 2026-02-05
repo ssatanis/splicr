@@ -16,17 +16,21 @@ import {
   Edit2,
   Save,
   X,
+  Ban,
 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
 
+const CANCELLABLE_STATUSES = ["queued", "pending", "running"];
+
 export default function DashboardPage() {
-  const { data: analyses = [], isLoading } = useAnalyses();
+  const { data: analyses = [], isLoading, refetch: refreshAnalyses } = useAnalyses();
   const updateAnalysis = useUpdateAnalysis();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -80,6 +84,27 @@ export default function DashboardPage() {
         },
       }
     );
+  };
+
+  const handleCancelJob = async (analysis: { id: string; name: string }) => {
+    const confirmed = window.confirm(
+      `Cancel "${analysis.name}"? This will remove it from the queue so the next job can run. You can start a new analysis later if needed.`
+    );
+    if (!confirmed) return;
+    setCancellingId(analysis.id);
+    try {
+      const res = await fetch(`/api/analysis/${analysis.id}/cancel`, { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || "Failed to cancel");
+      }
+      await refreshAnalyses();
+    } catch (err) {
+      console.error("Cancel analysis error:", err);
+      alert(err instanceof Error ? err.message : "Failed to cancel analysis");
+    } finally {
+      setCancellingId(null);
+    }
   };
 
   // Track page load time
@@ -165,6 +190,7 @@ export default function DashboardPage() {
                   <option value="running">Running</option>
                   <option value="queued">Queued</option>
                   <option value="failed">Failed</option>
+                  <option value="cancelled">Cancelled</option>
                 </select>
               </div>
             </div>
@@ -195,6 +221,9 @@ export default function DashboardPage() {
                         onCancelEdit={handleCancelEdit}
                         onSaveEdit={handleSaveEdit}
                         isSaving={updateAnalysis.isPending}
+                        onCancelJob={handleCancelJob}
+                        cancellingId={cancellingId}
+                        cancellableStatuses={CANCELLABLE_STATUSES}
                       />
                     ))}
                   </tbody>
@@ -238,6 +267,9 @@ function AnalysisRow({
   onCancelEdit,
   onSaveEdit,
   isSaving,
+  onCancelJob,
+  cancellingId,
+  cancellableStatuses,
 }: {
   analysis: Analysis;
   editingId: string | null;
@@ -247,6 +279,9 @@ function AnalysisRow({
   onCancelEdit: () => void;
   onSaveEdit: (id: string) => void;
   isSaving?: boolean;
+  onCancelJob?: (a: { id: string; name: string }) => void;
+  cancellingId?: string | null;
+  cancellableStatuses?: string[];
 }) {
   const isEditing = editingId === analysis.id;
   return (
@@ -340,9 +375,27 @@ function AnalysisRow({
         </div>
       </td>
       <td className="px-8 py-5">
-        <Link href={`/results/${analysis.id}`}>
-          <Button variant="outline" size="sm">View results</Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href={`/results/${analysis.id}`}>
+            <Button variant="outline" size="sm">View results</Button>
+          </Link>
+          {onCancelJob && cancellableStatuses?.includes(analysis.status) && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onCancelJob(analysis);
+              }}
+              disabled={cancellingId === analysis.id}
+              className="text-error hover:bg-error/10"
+            >
+              <Ban className="w-3.5 h-3.5 mr-1.5" strokeWidth={1.5} />
+              {cancellingId === analysis.id ? "Cancelling…" : "Cancel"}
+            </Button>
+          )}
+        </div>
       </td>
     </tr>
   );
@@ -354,6 +407,7 @@ function StatusBadge({ status }: { status: string }) {
     running: { icon: Clock, color: "text-info", bg: "bg-info/10", label: "Running" },
     queued: { icon: Clock, color: "text-warning", bg: "bg-warning/10", label: "Queued" },
     failed: { icon: AlertCircle, color: "text-error", bg: "bg-error/10", label: "Failed" },
+    cancelled: { icon: Ban, color: "text-text-tertiary", bg: "bg-background", label: "Cancelled" },
     created: { icon: Clock, color: "text-text-tertiary", bg: "bg-background", label: "Created" },
   };
   const cfg = config[status] || config.created;
