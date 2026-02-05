@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { getCollaborationAvailable } from './collaborationAvailable';
 
 export interface Comment {
   id: string;
@@ -31,9 +32,21 @@ export function useComments(analysisId: string, targetType?: string, targetId?: 
   const { user } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [enabled, setEnabled] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    getCollaborationAvailable().then(setEnabled);
+  }, []);
+
+  useEffect(() => {
+    if (enabled === false) {
+      setComments([]);
+      setLoading(false);
+    }
+  }, [enabled]);
 
   const fetchComments = useCallback(async () => {
-    if (!analysisId) return;
+    if (!analysisId || enabled !== true) return;
     setLoading(true);
 
     try {
@@ -111,10 +124,10 @@ export function useComments(analysisId: string, targetType?: string, targetId?: 
       setComments([]);
     }
     setLoading(false);
-  }, [analysisId, targetType, targetId]);
+  }, [analysisId, targetType, targetId, enabled]);
 
   useEffect(() => {
-    if (!analysisId) return;
+    if (!analysisId || enabled !== true) return;
     fetchComments();
 
     let channel: ReturnType<typeof supabase.channel> | null = null;
@@ -139,7 +152,7 @@ export function useComments(analysisId: string, targetType?: string, targetId?: 
     return () => {
       if (channel) supabase.removeChannel(channel);
     };
-  }, [analysisId, targetType, targetId, fetchComments]);
+  }, [analysisId, targetType, targetId, fetchComments, enabled]);
 
   const addComment = useCallback(
     async (
@@ -148,7 +161,7 @@ export function useComments(analysisId: string, targetType?: string, targetId?: 
       targetId?: string,
       parentCommentId?: string
     ) => {
-      if (!user) return null;
+      if (!user || enabled !== true) return null;
 
       try {
         const mentionRegex = /@(\w+)/g;
@@ -189,12 +202,12 @@ export function useComments(analysisId: string, targetType?: string, targetId?: 
         return null;
       }
     },
-    [analysisId, user]
+    [analysisId, user, enabled]
   );
 
   const updateComment = useCallback(
     async (commentId: string, content: string) => {
-      if (!user) return;
+      if (!user || enabled !== true) return;
       try {
         await (supabase.from('analysis_comments') as any)
           .update({ content, edited: true, updated_at: new Date().toISOString() })
@@ -204,24 +217,24 @@ export function useComments(analysisId: string, targetType?: string, targetId?: 
         // Table may not exist
       }
     },
-    [user]
+    [user, enabled]
   );
 
   const deleteComment = useCallback(
     async (commentId: string) => {
-      if (!user) return;
+      if (!user || enabled !== true) return;
       try {
         await (supabase.from('analysis_comments') as any).delete().eq('id', commentId).eq('user_id', user.id);
       } catch {
         // Table may not exist
       }
     },
-    [user]
+    [user, enabled]
   );
 
   const resolveComment = useCallback(
     async (commentId: string) => {
-      if (!user) return;
+      if (!user || enabled !== true) return;
       try {
         await (supabase.from('analysis_comments') as any)
           .update({
@@ -246,12 +259,12 @@ export function useComments(analysisId: string, targetType?: string, targetId?: 
         // Table may not exist
       }
     },
-    [analysisId, user]
+    [analysisId, user, enabled]
   );
 
   const addReaction = useCallback(
     async (commentId: string, reaction: string) => {
-      if (!user) return;
+      if (!user || enabled !== true) return;
       try {
         await (supabase.from('comment_reactions') as any).upsert({
           comment_id: commentId,
@@ -262,12 +275,12 @@ export function useComments(analysisId: string, targetType?: string, targetId?: 
         // Table may not exist
       }
     },
-    [user]
+    [user, enabled]
   );
 
   const removeReaction = useCallback(
     async (commentId: string, reaction: string) => {
-      if (!user) return;
+      if (!user || enabled !== true) return;
       try {
         await supabase
           .from('comment_reactions')
@@ -279,7 +292,7 @@ export function useComments(analysisId: string, targetType?: string, targetId?: 
         // Table may not exist
       }
     },
-    [user]
+    [user, enabled]
   );
 
   return {

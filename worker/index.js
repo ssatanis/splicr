@@ -15,14 +15,32 @@ const frontendDir = path.join(projectRoot, 'frontend');
 
 // Env is provided by Docker (-e, --env-file) or by the child (start-worker.ts loads frontend/.env.local)
 
+function deriveRedisUrl() {
+  if (process.env.REDIS_URL?.trim()) return process.env.REDIS_URL.trim();
+  const restUrl = process.env.UPSTASH_REDIS_REST_URL?.trim();
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
+  if (restUrl && token) {
+    try {
+      const host = new URL(restUrl).hostname;
+      return `rediss://default:${encodeURIComponent(token)}@${host}:6379`;
+    } catch (e) {
+      console.warn('Failed to parse UPSTASH_REDIS_REST_URL');
+    }
+  }
+  return '';
+}
+
 function validateEnv() {
-  const redisUrl = process.env.REDIS_URL;
+  const redisUrl = deriveRedisUrl();
+  if (redisUrl) process.env.REDIS_URL = redisUrl;
+
   const supabaseUrl =
     process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   const missing = [];
-  if (!redisUrl || redisUrl.trim() === '') missing.push('REDIS_URL');
+  if (!redisUrl || redisUrl.trim() === '')
+    missing.push('REDIS_URL or UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN');
   if (!supabaseUrl || supabaseUrl.trim() === '')
     missing.push('NEXT_PUBLIC_SUPABASE_URL or SUPABASE_URL');
   if (!serviceRoleKey || serviceRoleKey.trim() === '')
@@ -34,7 +52,7 @@ function validateEnv() {
       missing.join(', ')
     );
     console.error(
-      'Set them in the container (e.g. -e REDIS_URL=... -e SUPABASE_SERVICE_ROLE_KEY=...) or mount .env.local'
+      'Set them in the container (e.g. REDIS_URL or UPSTASH_*, SUPABASE_SERVICE_ROLE_KEY, NEXT_PUBLIC_SUPABASE_URL) or mount .env.local'
     );
     process.exit(1);
   }

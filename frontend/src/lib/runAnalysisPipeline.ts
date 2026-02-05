@@ -4,7 +4,7 @@
  * Runs real sequencing processing: fetches FASTQ from R2, parses, runs MAGeCK/BAGEL2/DrugZ, saves results.
  * Do not import from client code.
  */
-import { supabaseAdmin } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { isR2Configured } from '@/lib/storage/r2-client';
 import { getR2FileAsFile } from '@/lib/storage/r2-get';
 import { putR2Json } from '@/lib/storage/r2-put';

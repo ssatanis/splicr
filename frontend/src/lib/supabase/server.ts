@@ -1,21 +1,10 @@
 import { createServerClient } from '@supabase/ssr'
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import type { Database } from './client'
 
-// Direct admin client for API routes (backward compatible)
-// This does not use cookies - for use in API routes that don't need user context
-export const supabaseAdmin = createSupabaseClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  }
-)
+// Admin client (no Next.js deps) — safe for API routes and workers
+export { supabaseAdmin } from './admin'
 
 // Server-side Supabase client (for Server Components, Server Actions, Route Handlers)
 export async function createClient() {

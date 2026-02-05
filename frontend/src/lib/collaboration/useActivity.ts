@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase/client';
+import { getCollaborationAvailable } from './collaborationAvailable';
 
 export interface ActivityItem {
   id: string;
@@ -16,9 +17,21 @@ export interface ActivityItem {
 export function useActivity(analysisId: string) {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [enabled, setEnabled] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    getCollaborationAvailable().then(setEnabled);
+  }, []);
+
+  useEffect(() => {
+    if (enabled === false) {
+      setActivities([]);
+      setLoading(false);
+    }
+  }, [enabled]);
 
   const fetchActivities = useCallback(async () => {
-    if (!analysisId) return;
+    if (!analysisId || enabled !== true) return;
     setLoading(true);
 
     try {
@@ -75,10 +88,10 @@ export function useActivity(analysisId: string) {
       setActivities([]);
     }
     setLoading(false);
-  }, [analysisId]);
+  }, [analysisId, enabled]);
 
   useEffect(() => {
-    if (!analysisId) return;
+    if (!analysisId || enabled !== true) return;
     fetchActivities();
 
     let channel: ReturnType<typeof supabase.channel> | null = null;
@@ -103,7 +116,7 @@ export function useActivity(analysisId: string) {
     return () => {
       if (channel) supabase.removeChannel(channel);
     };
-  }, [analysisId, fetchActivities]);
+  }, [analysisId, fetchActivities, enabled]);
 
   return { activities, loading, refetch: fetchActivities };
 }

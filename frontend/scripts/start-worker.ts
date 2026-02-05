@@ -19,13 +19,30 @@ import * as path from 'path';
 dotenv.config({ path: path.join(process.cwd(), '.env.local') });
 dotenv.config(); // Also load .env
 
-// Validate required environment variables
-const requiredEnvVars = ['REDIS_URL', 'SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'];
-const missingVars = requiredEnvVars.filter((varName) => !process.env[varName]);
+// Normalize env for worker: SUPABASE_URL from NEXT_PUBLIC, REDIS_URL from Upstash if needed
+if (process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.SUPABASE_URL) {
+  process.env.SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+}
+if (!process.env.REDIS_URL?.trim() && process.env.UPSTASH_REDIS_REST_URL?.trim() && process.env.UPSTASH_REDIS_REST_TOKEN?.trim()) {
+  try {
+    const host = new URL(process.env.UPSTASH_REDIS_REST_URL).hostname;
+    process.env.REDIS_URL = `rediss://default:${encodeURIComponent(process.env.UPSTASH_REDIS_REST_TOKEN)}@${host}:6379`;
+  } catch {
+    // ignore
+  }
+}
 
-if (missingVars.length > 0) {
-  console.error('Missing required environment variables:', missingVars.join(', '));
-  console.error('Please set these in your .env.local file');
+const hasRedis = !!process.env.REDIS_URL?.trim();
+const hasSupabase = !!process.env.SUPABASE_URL?.trim();
+const hasServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+
+if (!hasRedis || !hasSupabase || !hasServiceKey) {
+  const missing = [];
+  if (!hasRedis) missing.push('REDIS_URL or UPSTASH_REDIS_REST_*');
+  if (!hasSupabase) missing.push('SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL');
+  if (!hasServiceKey) missing.push('SUPABASE_SERVICE_ROLE_KEY');
+  console.error('Missing required environment variables:', missing.join(', '));
+  console.error('Please set these in your .env.local or Railway Variables');
   process.exit(1);
 }
 

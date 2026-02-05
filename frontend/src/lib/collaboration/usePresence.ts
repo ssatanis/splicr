@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { getCollaborationAvailable } from './collaborationAvailable';
 
 export interface PresenceUser {
   id: string;
@@ -16,9 +17,14 @@ export interface PresenceUser {
 export function usePresence(analysisId: string) {
   const { user } = useAuth();
   const [activeUsers, setActiveUsers] = useState<PresenceUser[]>([]);
+  const [enabled, setEnabled] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    getCollaborationAvailable().then(setEnabled);
+  }, []);
 
   const fetchActiveUsers = useCallback(async () => {
-    if (!user?.id) return;
+    if (!user?.id || enabled !== true) return;
     try {
       const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
       const { data } = await supabase
@@ -45,10 +51,10 @@ export function usePresence(analysisId: string) {
     } catch {
       setActiveUsers([]);
     }
-  }, [analysisId, user?.id]);
+  }, [analysisId, user?.id, enabled]);
 
   useEffect(() => {
-    if (!user || !analysisId) return;
+    if (!user || !analysisId || enabled !== true) return;
 
     const updatePresence = async (view: string, cursor?: { x: number; y: number; element?: string }) => {
       try {
@@ -107,11 +113,11 @@ export function usePresence(analysisId: string) {
         }
       })();
     };
-  }, [analysisId, user, fetchActiveUsers]);
+  }, [analysisId, user, fetchActiveUsers, enabled]);
 
   const updateView = useCallback(
     async (view: string) => {
-      if (!user) return;
+      if (!user || enabled !== true) return;
       try {
         await (supabase.from('analysis_presence') as any)
           .upsert({
@@ -126,12 +132,12 @@ export function usePresence(analysisId: string) {
         // Table may not exist
       }
     },
-    [analysisId, user]
+    [analysisId, user, enabled]
   );
 
   const updateCursor = useCallback(
     async (x: number, y: number, element?: string) => {
-      if (!user) return;
+      if (!user || enabled !== true) return;
       try {
         await (supabase.from('analysis_presence') as any)
           .update({
@@ -144,7 +150,7 @@ export function usePresence(analysisId: string) {
         // Table may not exist
       }
     },
-    [analysisId, user]
+    [analysisId, user, enabled]
   );
 
   return {

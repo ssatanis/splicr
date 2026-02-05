@@ -5,7 +5,7 @@
  * to prevent race conditions and ensure data consistency.
  */
 
-import { supabaseAdmin } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 
 const admin = supabaseAdmin as any;
 

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { getCollaborationAvailable } from './collaborationAvailable';
 
 export interface NotificationItem {
   id: string;
@@ -18,9 +19,14 @@ export interface NotificationItem {
 export function useNotifications() {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [enabled, setEnabled] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    getCollaborationAvailable().then(setEnabled);
+  }, []);
 
   const fetchNotifications = useCallback(async () => {
-    if (!user?.id) return;
+    if (!user?.id || enabled !== true) return;
 
     try {
       const { data, error } = await supabase
@@ -53,10 +59,10 @@ export function useNotifications() {
     } catch {
       setNotifications([]);
     }
-  }, [user?.id]);
+  }, [user?.id, enabled]);
 
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id || enabled !== true) return;
     fetchNotifications();
 
     try {
@@ -80,26 +86,27 @@ export function useNotifications() {
     } catch {
       return undefined;
     }
-  }, [user?.id, fetchNotifications]);
+  }, [user?.id, fetchNotifications, enabled]);
 
   const markAsRead = useCallback(async (id: string) => {
+    if (enabled !== true) return;
     try {
       await (supabase.from('user_notifications') as any).update({ read: true }).eq('id', id);
       setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
     } catch {
       // Table may not exist
     }
-  }, []);
+  }, [enabled]);
 
   const markAllAsRead = useCallback(async () => {
-    if (!user?.id) return;
+    if (!user?.id || enabled !== true) return;
     try {
       await (supabase.from('user_notifications') as any).update({ read: true }).eq('user_id', user.id);
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     } catch {
       // Table may not exist
     }
-  }, [user?.id]);
+  }, [user?.id, enabled]);
 
   return {
     notifications,

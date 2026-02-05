@@ -10,6 +10,9 @@
  *   npm run worker
  */
 
+// Must run first so Docker/Railway can use UPSTASH_* and NEXT_PUBLIC_SUPABASE_URL
+import './env';
+
 import { Worker, WorkerOptions } from 'bullmq';
 import { redisConnection } from '@/lib/queue/analysis-queue';
 import { AnalysisJobData, AnalysisJobResult } from '@/lib/queue/job-types';
