@@ -22,9 +22,11 @@ import { useNotifications } from '@/lib/collaboration/useNotifications';
 import { formatDistanceToNow } from 'date-fns';
 import Button from '@/components/Button';
 
+type CommentTargetType = Comment['targetType'];
+
 interface CollaborationSidebarProps {
   analysisId: string;
-  targetType?: 'gene' | 'plot' | 'analysis';
+  targetType?: CommentTargetType;
   targetId?: string;
   isOpen: boolean;
   onClose: () => void;
@@ -54,7 +56,8 @@ function CollaborationSidebarContent({
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
-    await addComment(newComment, targetType, targetId, replyTo ?? undefined);
+    const effectiveTargetType: CommentTargetType = targetType ?? 'analysis';
+    await addComment(newComment, effectiveTargetType, targetId, replyTo ?? undefined);
     setNewComment('');
     setReplyTo(null);
   };
