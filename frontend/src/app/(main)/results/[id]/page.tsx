@@ -27,6 +27,7 @@ import QCStatusSummaryCard from "@/components/QCStatusSummaryCard";
 import { useUser } from "@/lib/context/UserContext";
 import { realApi } from "@/lib/realApi";
 import { Analysis, AnalysisResults } from "@/lib/types";
+import { createClient } from "@/lib/supabase/client";
 import type { QCMetrics as ComprehensiveQCMetrics } from "@/lib/analysis/qcMetrics";
 import { assessGiniQuality } from "@/lib/analysis/qcMetrics";
 import { exportAsPDF, exportAsDOCX, exportAsLatex, exportComputationalLog, exportAsZIP } from "@/lib/exportUtils";
@@ -93,6 +94,7 @@ export default function ResultsPage() {
   const [isRetrying, setIsRetrying] = useState(false);
   const [queueWarning, setQueueWarning] = useState<string | null>(null);
   const runTriggeredRef = useRef<string | null>(null);
+  const queuedAtRef = useRef<number | null>(null);
   const [headerRoot, setHeaderRoot] = useState<HTMLElement | null>(null);
 
   // Drug search state - lifted to parent to persist across tab switches
@@ -206,17 +208,53 @@ export default function ResultsPage() {
     }).catch(console.error);
   }, [id, analysis, results, refreshAnalyses, loadResults]);
 
-  // Poll for progress when analysis is in progress so the progress bar and logs update
-  // Reduced polling frequency for better performance (5s instead of 2s)
+  // Poll for progress when analysis is in progress (worker uses status 'processing', UI treats as running)
+  const inProgressStatuses = ["running", "queued", "pending", "processing"] as const;
+  const isInProgress = analysis && (results == null) && inProgressStatuses.includes(analysis.status as typeof inProgressStatuses[number]);
+
+  if (analysis?.status === "queued" && queuedAtRef.current === null) queuedAtRef.current = Date.now();
+  if (analysis?.status !== "queued") queuedAtRef.current = null;
+  const queuedStuck = analysis?.status === "queued" && queuedAtRef.current != null && Date.now() - queuedAtRef.current > 90000;
+
   useEffect(() => {
-    const inProgress = analysis && (analysis.status === "running" || analysis.status === "queued" || analysis.status === "pending");
-    if (!inProgress || results) return;
+    if (!isInProgress) return;
+    const intervalMs = analysis?.status === "queued" ? 2000 : 4000;
     const interval = setInterval(() => {
       refreshAnalyses();
       loadResults();
-    }, 5000);
+    }, intervalMs);
     return () => clearInterval(interval);
-  }, [analysis, results, refreshAnalyses, loadResults]);
+  }, [isInProgress, analysis?.status, refreshAnalyses, loadResults]);
+
+  // Realtime: live progress when worker updates the analysis row
+  useEffect(() => {
+    if (!id || !isInProgress) return;
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`analysis:${id}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "analyses", filter: `id=eq.${id}` },
+        (payload) => {
+          const row = payload.new as Record<string, unknown>;
+          setAnalysisFromApi((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              status: (row.status as Analysis["status"]) ?? prev.status,
+              progress: typeof row.progress === "number" ? row.progress : prev.progress,
+              currentStep: (row.current_step as string) ?? prev.currentStep,
+              logs: Array.isArray(row.logs) ? row.logs as Analysis["logs"] : prev.logs,
+            };
+          });
+          if (row.results != null) loadResults();
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id, isInProgress, loadResults]);
 
   // Fetch count matrix on demand when results have countMatrixR2Key (matrix stored in R2 to avoid OOM)
   const [countMatrixLoading, setCountMatrixLoading] = useState(false);
@@ -871,28 +909,28 @@ export default function ResultsPage() {
                   <>
                     <p className="text-text-primary font-serif text-lg">{analysis.name ?? "Analysis"}</p>
                     <p className="text-text-tertiary text-sm mt-1">
-                      Status: <span className="capitalize">{analysis.status}</span>
-                      {(analysis.status === "running" || analysis.status === "queued" || analysis.status === "pending") && typeof analysis.progress === "number" && ` · ${Math.round(analysis.progress)}%`}
+                      Status: <span className="capitalize">{analysis.status === "processing" ? "Running" : analysis.status}</span>
+                      {isInProgress && typeof analysis.progress === "number" && ` · ${Math.round(analysis.progress)}%`}
                     </p>
-                    {(analysis.status === "running" || analysis.status === "queued" || analysis.status === "pending") ? (
+                    {isInProgress ? (
                       <>
                         <p className="text-text-secondary font-serif mt-4">Analysis in progress — results will appear when the run finishes.</p>
                         {(analysis.currentStep ?? analysis.status === "pending") && (
                           <p className="text-text-tertiary text-sm mt-2 font-medium">
-                            {analysis.status === "pending" ? "Starting pipeline…" : analysis.currentStep ?? "Running…"}
+                            {analysis.status === "pending" ? "Starting pipeline…" : analysis.status === "queued" ? "Waiting for worker…" : (analysis.currentStep ?? "Running…")}
                           </p>
                         )}
                         <div className="max-w-md mx-auto mt-6">
                           <div className="h-3 bg-background rounded-full overflow-hidden border border-border-light">
                             <motion.div
                               className="h-full bg-accent rounded-full"
-                              initial={{ width: 0 }}
+                              initial={false}
                               animate={{ width: `${Math.min(100, Math.max(0, analysis.progress ?? 0))}%` }}
-                              transition={{ duration: 0.5, ease: "easeOut" }}
+                              transition={{ duration: 0.4, ease: "easeOut" }}
                             />
                           </div>
                           <p className="text-text-tertiary text-xs mt-2">
-                            {analysis.status === "pending" ? "Starting…" : "Still being analyzed"}
+                            {analysis.status === "pending" ? "Starting…" : analysis.status === "queued" ? "Queued — worker will pick up shortly" : (analysis.currentStep ?? "Still being analyzed")}
                           </p>
                         </div>
                         {analysis.logs && analysis.logs.length > 0 && (
@@ -907,6 +945,11 @@ export default function ResultsPage() {
                               ))}
                             </ul>
                           </div>
+                        )}
+                        {queuedStuck && (
+                          <p className="text-amber-600 dark:text-amber-400 text-sm mt-4 max-w-md mx-auto">
+                            Job has been queued for a while. If you use a worker (e.g. Railway), ensure it is running with REDIS_URL (or Upstash) set. Click Retry to try running the analysis inline instead.
+                          </p>
                         )}
                         <div className="flex items-center justify-center gap-4 mt-6">
                           <Button variant="outline" onClick={() => { refreshAnalyses(); loadResults(); }} disabled={isRetrying}>Refresh</Button>

@@ -2,7 +2,7 @@
  * Type definitions for SplicR
  */
 
-export type AnalysisStatus = "created" | "pending" | "queued" | "running" | "complete" | "failed" | "cancelled";
+export type AnalysisStatus = "created" | "pending" | "queued" | "processing" | "running" | "complete" | "failed" | "cancelled";
 
 export type Algorithm = "mageck" | "bagel2" | "drugz";
 

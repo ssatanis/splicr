@@ -17,12 +17,14 @@ import {
   Edit2,
   Save,
   X,
+  Ban,
 } from "lucide-react";
 import BatchAnalysisUploader from "@/components/BatchAnalysisUploader";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
 
 const IN_PROGRESS_STATUSES = ["running", "queued", "pending"];
+const CANCELLABLE_STATUSES = ["queued", "pending", "running"];
 
 export default function MyAnalysesPage() {
   // ⚡ INSTANT LOADING with TanStack Query
@@ -33,6 +35,7 @@ export default function MyAnalysesPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   // Memoized filtering for performance
   const filteredAnalyses = useMemo(() => {
@@ -91,6 +94,27 @@ export default function MyAnalysesPage() {
     );
   };
 
+  const handleCancelJob = async (analysis: { id: string; name: string }) => {
+    const confirmed = window.confirm(
+      `Cancel "${analysis.name}"? This will remove it from the queue so the next job can run. You can start a new analysis later if needed.`
+    );
+    if (!confirmed) return;
+    setCancellingId(analysis.id);
+    try {
+      const res = await fetch(`/api/analysis/${analysis.id}/cancel`, { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || "Failed to cancel");
+      }
+      await refreshAnalyses();
+    } catch (err) {
+      console.error("Cancel analysis error:", err);
+      alert(err instanceof Error ? err.message : "Failed to cancel analysis");
+    } finally {
+      setCancellingId(null);
+    }
+  };
+
   return (
       <div className="min-h-screen">
         <div className="max-w-[1400px] mx-auto px-8 py-12">
@@ -143,6 +167,7 @@ export default function MyAnalysesPage() {
               <option value="queued">Queued</option>
               <option value="pending">Pending</option>
               <option value="failed">Failed</option>
+              <option value="cancelled">Cancelled</option>
               <option value="created">Created</option>
             </select>
           </motion.div>
@@ -299,6 +324,22 @@ export default function MyAnalysesPage() {
                           <Link href={`/results/${analysis.id}`}>
                             <Button variant="outline" size="sm">View results</Button>
                           </Link>
+                          {CANCELLABLE_STATUSES.includes(analysis.status) && (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleCancelJob(analysis);
+                              }}
+                              disabled={cancellingId === analysis.id}
+                              className="text-error hover:bg-error/10"
+                            >
+                              <Ban className="w-3.5 h-3.5 mr-1.5" strokeWidth={1.5} />
+                              {cancellingId === analysis.id ? "Cancelling…" : "Cancel"}
+                            </Button>
+                          )}
                           {analysis.status === "failed" && (
                             <Button
                               variant="secondary"
@@ -348,6 +389,7 @@ function StatusBadge({ status }: { status: string }) {
     queued: { icon: Clock, color: "text-warning", bg: "bg-warning/10", label: "Queued" },
     pending: { icon: Clock, color: "text-info", bg: "bg-info/10", label: "In progress" },
     failed: { icon: AlertCircle, color: "text-error", bg: "bg-error/10", label: "Failed" },
+    cancelled: { icon: Ban, color: "text-text-tertiary", bg: "bg-background", label: "Cancelled" },
     created: { icon: Clock, color: "text-text-tertiary", bg: "bg-background", label: "Created" },
   };
   const cfg = config[status] || config.created;
