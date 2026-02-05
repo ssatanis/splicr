@@ -1,5 +1,6 @@
 {
-  "installCommand": "npm ci",
+  "installCommand": "npm ci --include=dev",
+  "rootDirectory": "frontend",
   "env": {
     "NODE_OPTIONS": "--max-old-space-size=8192"
   },
