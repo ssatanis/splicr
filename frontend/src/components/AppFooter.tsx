@@ -1,6 +1,5 @@
 "use client";
 
-import Link from 'next/link';
 import { useSidebar } from '@/lib/context/SidebarContext';
 import { cn } from '@/lib/utils';
 
@@ -22,19 +21,23 @@ export default function AppFooter() {
           SplicR is committed to protecting your data and maintaining the highest standards of security.
         </p>
         <nav className="mt-4 flex items-center justify-center gap-2 text-sm text-text-tertiary" aria-label="Legal">
-          <Link
-            href="/privacy"
+          <a
+            href="https://splicr.org/privacy-and-security"
+            target="_blank"
+            rel="noopener noreferrer"
             className="hover:text-text-primary transition-colors"
           >
             Privacy & Security
-          </Link>
+          </a>
           <span className="text-border" aria-hidden>•</span>
-          <Link
-            href="/terms"
+          <a
+            href="https://splicr.org/terms-and-conditions"
+            target="_blank"
+            rel="noopener noreferrer"
             className="hover:text-text-primary transition-colors"
           >
             Terms & Conditions
-          </Link>
+          </a>
         </nav>
       </div>
     </footer>

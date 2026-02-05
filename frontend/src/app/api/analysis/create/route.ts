@@ -134,7 +134,6 @@ export async function POST(request: Request) {
         {
           success: true,
           analysis,
-          warning: 'Analysis created but not queued. Start it from the results page.',
         },
         { status: 201 }
       );

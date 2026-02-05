@@ -47,6 +47,8 @@ export function useNotifications() {
             metadata: n.metadata,
           }))
         );
+      } else {
+        setNotifications([]);
       }
     } catch {
       setNotifications([]);
@@ -81,14 +83,22 @@ export function useNotifications() {
   }, [user?.id, fetchNotifications]);
 
   const markAsRead = useCallback(async (id: string) => {
-    await (supabase.from('user_notifications') as any).update({ read: true }).eq('id', id);
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    try {
+      await (supabase.from('user_notifications') as any).update({ read: true }).eq('id', id);
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    } catch {
+      // Table may not exist
+    }
   }, []);
 
   const markAllAsRead = useCallback(async () => {
     if (!user?.id) return;
-    await (supabase.from('user_notifications') as any).update({ read: true }).eq('user_id', user.id);
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    try {
+      await (supabase.from('user_notifications') as any).update({ read: true }).eq('user_id', user.id);
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    } catch {
+      // Table may not exist
+    }
   }, [user?.id]);
 
   return {

@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import Button from "@/components/Button";
-import { useAnalyses, useUpdateAnalysis } from "@/lib/hooks/useAnalyses";
+import ConfirmModal from "@/components/ConfirmModal";
+import { useAnalyses, useUpdateAnalysis, analysisKeys } from "@/lib/hooks/useAnalyses";
 import { Analysis } from "@/lib/types";
 import {
   Search,
@@ -24,6 +26,7 @@ import Link from "next/link";
 const CANCELLABLE_STATUSES = ["queued", "pending", "running"];
 
 export default function DashboardPage() {
+  const queryClient = useQueryClient();
   const { data: analyses = [], isLoading, refetch: refreshAnalyses } = useAnalyses();
   const updateAnalysis = useUpdateAnalysis();
   const [searchQuery, setSearchQuery] = useState("");
@@ -31,6 +34,7 @@ export default function DashboardPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [cancelConfirm, setCancelConfirm] = useState<{ id: string; name: string } | null>(null);
 
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -86,18 +90,21 @@ export default function DashboardPage() {
     );
   };
 
-  const handleCancelJob = async (analysis: { id: string; name: string }) => {
-    const confirmed = window.confirm(
-      `Cancel "${analysis.name}"? This will remove it from the queue so the next job can run. You can start a new analysis later if needed.`
-    );
-    if (!confirmed) return;
-    setCancellingId(analysis.id);
+  const handleRequestCancelJob = (analysis: { id: string; name: string }) => {
+    setCancelConfirm(analysis);
+  };
+
+  const handleConfirmCancelJob = async () => {
+    if (!cancelConfirm) return;
+    setCancellingId(cancelConfirm.id);
     try {
-      const res = await fetch(`/api/analysis/${analysis.id}/cancel`, { method: "POST" });
+      const res = await fetch(`/api/analysis/${cancelConfirm.id}/cancel`, { method: "POST" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data?.error || "Failed to cancel");
       }
+      setCancelConfirm(null);
+      await queryClient.invalidateQueries({ queryKey: analysisKeys.lists() });
       await refreshAnalyses();
     } catch (err) {
       console.error("Cancel analysis error:", err);
@@ -117,6 +124,21 @@ export default function DashboardPage() {
 
   return (
       <div className="min-h-screen">
+        <ConfirmModal
+          open={!!cancelConfirm}
+          onClose={() => setCancelConfirm(null)}
+          onConfirm={handleConfirmCancelJob}
+          title="Cancel analysis?"
+          message={
+            cancelConfirm
+              ? `"${cancelConfirm.name}" will be removed from the queue so the next job can run. You can start a new analysis later if needed.`
+              : ""
+          }
+          confirmLabel="Cancel analysis"
+          cancelLabel="Keep"
+          variant="danger"
+          loading={cancellingId !== null}
+        />
         <div className="max-w-[1400px] mx-auto px-8 py-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -221,7 +243,7 @@ export default function DashboardPage() {
                         onCancelEdit={handleCancelEdit}
                         onSaveEdit={handleSaveEdit}
                         isSaving={updateAnalysis.isPending}
-                        onCancelJob={handleCancelJob}
+                        onCancelJob={handleRequestCancelJob}
                         cancellingId={cancellingId}
                         cancellableStatuses={CANCELLABLE_STATUSES}
                       />

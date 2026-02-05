@@ -142,12 +142,6 @@ export default function UploadPage() {
       }
 
       await refreshAnalyses();
-      if (data.warning) {
-        sessionStorage.setItem(
-          `splicr_analysis_warning_${data.analysis.id}`,
-          data.warning
-        );
-      }
       router.push(`/results/${data.analysis.id}`);
     } catch (error) {
       console.error("Error submitting analysis:", error);

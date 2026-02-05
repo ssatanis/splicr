@@ -81,22 +81,27 @@ export function useActivity(analysisId: string) {
     if (!analysisId) return;
     fetchActivities();
 
-    const channel = supabase
-      .channel(`activity:${analysisId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'analysis_activity',
-          filter: `analysis_id=eq.${analysisId}`,
-        },
-        () => fetchActivities()
-      )
-      .subscribe();
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    try {
+      channel = supabase
+        .channel(`activity:${analysisId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'analysis_activity',
+            filter: `analysis_id=eq.${analysisId}`,
+          },
+          () => fetchActivities()
+        )
+        .subscribe();
+    } catch {
+      // Realtime / table may not exist
+    }
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
     };
   }, [analysisId, fetchActivities]);
 

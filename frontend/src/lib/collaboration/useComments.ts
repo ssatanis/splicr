@@ -36,27 +36,25 @@ export function useComments(analysisId: string, targetType?: string, targetId?: 
     if (!analysisId) return;
     setLoading(true);
 
-    // PERFORMANCE OPTIMIZATION: Fetch all comments in a single query instead of N+1 pattern
-    // Previously: fetched top-level comments, then looped through each to fetch replies
-    // Now: fetch all comments at once and organize them in-memory
-    let query = supabase
-      .from('analysis_comments')
-      .select('*')
-      .eq('analysis_id', analysisId)
-      .order('created_at', { ascending: false }); // Top-level sorted desc, replies will be sorted asc below
+    try {
+      let query = supabase
+        .from('analysis_comments')
+        .select('*')
+        .eq('analysis_id', analysisId)
+        .order('created_at', { ascending: false });
 
-    if (targetType) query = query.eq('target_type', targetType);
-    if (targetId) query = query.eq('target_id', targetId);
+      if (targetType) query = query.eq('target_type', targetType);
+      if (targetId) query = query.eq('target_id', targetId);
 
-    const { data: allComments, error } = await query;
+      const { data: allComments, error } = await query;
 
-    if (error) {
-      setComments([]);
-      setLoading(false);
-      return;
-    }
+      if (error) {
+        setComments([]);
+        setLoading(false);
+        return;
+      }
 
-    const list = allComments ?? [];
+      const list = allComments ?? [];
 
     const mapUserFromRow = (row: any) => ({
       displayName: row?.user?.display_name ?? row?.user?.email ?? 'User',
@@ -108,7 +106,10 @@ export function useComments(analysisId: string, targetType?: string, targetId?: 
       return mapRow(comment, replies);
     });
 
-    setComments(commentsWithReplies);
+      setComments(commentsWithReplies);
+    } catch {
+      setComments([]);
+    }
     setLoading(false);
   }, [analysisId, targetType, targetId]);
 
@@ -116,22 +117,27 @@ export function useComments(analysisId: string, targetType?: string, targetId?: 
     if (!analysisId) return;
     fetchComments();
 
-    const channel = supabase
-      .channel(`comments:${analysisId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'analysis_comments',
-          filter: `analysis_id=eq.${analysisId}`,
-        },
-        () => fetchComments()
-      )
-      .subscribe();
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    try {
+      channel = supabase
+        .channel(`comments:${analysisId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'analysis_comments',
+            filter: `analysis_id=eq.${analysisId}`,
+          },
+          () => fetchComments()
+        )
+        .subscribe();
+    } catch {
+      // Table may not exist or realtime unavailable
+    }
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
     };
   }, [analysisId, targetType, targetId, fetchComments]);
 
@@ -144,40 +150,44 @@ export function useComments(analysisId: string, targetType?: string, targetId?: 
     ) => {
       if (!user) return null;
 
-      const mentionRegex = /@(\w+)/g;
-      const mentions: Array<{ user_id: string; display_name: string }> = [];
-      let match;
-      while ((match = mentionRegex.exec(content)) !== null) {
-        mentions.push({ user_id: '', display_name: match[1] });
-      }
+      try {
+        const mentionRegex = /@(\w+)/g;
+        const mentions: Array<{ user_id: string; display_name: string }> = [];
+        let match;
+        while ((match = mentionRegex.exec(content)) !== null) {
+          mentions.push({ user_id: '', display_name: match[1] });
+        }
 
-      const { data, error } = await (supabase.from('analysis_comments') as any)
-        .insert({
-          analysis_id: analysisId,
-          user_id: user.id,
-          parent_comment_id: parentCommentId ?? null,
-          target_type: targetType,
-          target_id: targetId ?? null,
-          content,
-          mentions,
-        })
-        .select()
-        .single();
+        const { data, error } = await (supabase.from('analysis_comments') as any)
+          .insert({
+            analysis_id: analysisId,
+            user_id: user.id,
+            parent_comment_id: parentCommentId ?? null,
+            target_type: targetType,
+            target_id: targetId ?? null,
+            content,
+            mentions,
+          })
+          .select()
+          .single();
 
-      if (error) {
-        console.error('Error adding comment:', error);
+        if (error) return null;
+
+        try {
+          await (supabase.from('analysis_activity') as any).insert({
+            analysis_id: analysisId,
+            user_id: user.id,
+            activity_type: 'comment_added',
+            description: `Commented on ${targetType}${targetId ? `: ${targetId}` : ''}`,
+            metadata: { comment_id: data.id, target_type: targetType, target_id: targetId },
+          });
+        } catch {
+          // activity table may not exist
+        }
+        return data;
+      } catch {
         return null;
       }
-
-      await (supabase.from('analysis_activity') as any).insert({
-        analysis_id: analysisId,
-        user_id: user.id,
-        activity_type: 'comment_added',
-        description: `Commented on ${targetType}${targetId ? `: ${targetId}` : ''}`,
-        metadata: { comment_id: data.id, target_type: targetType, target_id: targetId },
-      });
-
-      return data;
     },
     [analysisId, user]
   );
@@ -185,10 +195,14 @@ export function useComments(analysisId: string, targetType?: string, targetId?: 
   const updateComment = useCallback(
     async (commentId: string, content: string) => {
       if (!user) return;
-      await (supabase.from('analysis_comments') as any)
-        .update({ content, edited: true, updated_at: new Date().toISOString() })
-        .eq('id', commentId)
-        .eq('user_id', user.id);
+      try {
+        await (supabase.from('analysis_comments') as any)
+          .update({ content, edited: true, updated_at: new Date().toISOString() })
+          .eq('id', commentId)
+          .eq('user_id', user.id);
+      } catch {
+        // Table may not exist
+      }
     },
     [user]
   );
@@ -196,7 +210,11 @@ export function useComments(analysisId: string, targetType?: string, targetId?: 
   const deleteComment = useCallback(
     async (commentId: string) => {
       if (!user) return;
-      await (supabase.from('analysis_comments') as any).delete().eq('id', commentId).eq('user_id', user.id);
+      try {
+        await (supabase.from('analysis_comments') as any).delete().eq('id', commentId).eq('user_id', user.id);
+      } catch {
+        // Table may not exist
+      }
     },
     [user]
   );
@@ -204,21 +222,29 @@ export function useComments(analysisId: string, targetType?: string, targetId?: 
   const resolveComment = useCallback(
     async (commentId: string) => {
       if (!user) return;
-      await (supabase.from('analysis_comments') as any)
-        .update({
-          is_resolved: true,
-          resolved_by: user.id,
-          resolved_at: new Date().toISOString(),
-        })
-        .eq('id', commentId);
+      try {
+        await (supabase.from('analysis_comments') as any)
+          .update({
+            is_resolved: true,
+            resolved_by: user.id,
+            resolved_at: new Date().toISOString(),
+          })
+          .eq('id', commentId);
 
-      await (supabase.from('analysis_activity') as any).insert({
-        analysis_id: analysisId,
-        user_id: user.id,
-        activity_type: 'comment_resolved',
-        description: 'Resolved a comment',
-        metadata: { comment_id: commentId },
-      });
+        try {
+          await (supabase.from('analysis_activity') as any).insert({
+            analysis_id: analysisId,
+            user_id: user.id,
+            activity_type: 'comment_resolved',
+            description: 'Resolved a comment',
+            metadata: { comment_id: commentId },
+          });
+        } catch {
+          // activity table may not exist
+        }
+      } catch {
+        // Table may not exist
+      }
     },
     [analysisId, user]
   );
@@ -226,11 +252,15 @@ export function useComments(analysisId: string, targetType?: string, targetId?: 
   const addReaction = useCallback(
     async (commentId: string, reaction: string) => {
       if (!user) return;
-      await (supabase.from('comment_reactions') as any).upsert({
-        comment_id: commentId,
-        user_id: user.id,
-        reaction,
-      });
+      try {
+        await (supabase.from('comment_reactions') as any).upsert({
+          comment_id: commentId,
+          user_id: user.id,
+          reaction,
+        });
+      } catch {
+        // Table may not exist
+      }
     },
     [user]
   );
@@ -238,12 +268,16 @@ export function useComments(analysisId: string, targetType?: string, targetId?: 
   const removeReaction = useCallback(
     async (commentId: string, reaction: string) => {
       if (!user) return;
-      await supabase
-        .from('comment_reactions')
-        .delete()
-        .eq('comment_id', commentId)
-        .eq('user_id', user.id)
-        .eq('reaction', reaction);
+      try {
+        await supabase
+          .from('comment_reactions')
+          .delete()
+          .eq('comment_id', commentId)
+          .eq('user_id', user.id)
+          .eq('reaction', reaction);
+      } catch {
+        // Table may not exist
+      }
     },
     [user]
   );
