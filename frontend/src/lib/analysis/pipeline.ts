@@ -346,7 +346,7 @@ export class AnalysisPipeline {
           algorithmResults.mageck = mageck.toUnifiedResults(rawResults) as any;
         }
 
-        this.log('mageck', algorithmProgress.mageck.end, `MAGeCK complete: ${algorithmResults.mageck.filter(r => Math.min(r.fdrNeg, r.fdrPos) < parameters.fdrThreshold).length} significant genes`, 'success');
+        this.log('mageck', algorithmProgress.mageck.end, `MAGeCK complete: ${algorithmResults.mageck ? algorithmResults.mageck.filter(r => Math.min(r.fdrNeg, r.fdrPos) < parameters.fdrThreshold).length : 0} significant genes`, 'success');
       }
 
       if (algorithms.includes('bagel2')) {

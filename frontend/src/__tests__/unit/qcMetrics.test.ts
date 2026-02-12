@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateGiniIndex, generateLorenzCurve, assessGiniQuality, assessQCStatus, QualityMetricsInput } from '@/lib/analysis/qcMetrics';
+import { calculateGiniIndex, generateLorenzCurve, assessGiniQuality } from '@/lib/analysis/qcMetrics';
 import { assessQCStatus as assessStatusReal } from '@/lib/analysis/quality-calculator';
 
 describe('QCMetrics', () => {

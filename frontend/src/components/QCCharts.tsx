@@ -129,7 +129,7 @@ export default function QCCharts({
                   tick={{ fontSize: 12 }}
                 />
                 <Tooltip
-                  content={({ active, payload, label }: { active?: boolean; payload?: readonly any[]; label?: string }) => {
+                  content={({ active, payload, label }: { active?: boolean; payload?: readonly any[]; label?: any }) => {
                     if (active && payload && payload.length) {
                       return (
                         <div className="bg-surface p-3 rounded-lg shadow-lg border border-border">
@@ -227,7 +227,7 @@ export default function QCCharts({
                   tick={{ fontSize: 12 }}
                 />
                 <Tooltip
-                  content={({ active, payload, label }: { active?: boolean; payload?: readonly any[]; label?: string }) => {
+                  content={({ active, payload, label }: { active?: boolean; payload?: readonly any[]; label?: any }) => {
                     if (active && payload && payload.length) {
                       return (
                         <div className="bg-surface p-3 rounded-lg shadow-lg border border-border">
@@ -274,8 +274,8 @@ export default function QCCharts({
                 tick={{ fontSize: 12 }}
               />
               <Tooltip
-                formatter={(value: number) => [`${(value * 100).toFixed(1)}%`, 'Cumulative Reads']}
-                labelFormatter={(label: number) => `Top ${(label * 100).toFixed(1)}% sgRNAs`}
+                formatter={(value: any) => [`${(Number(value) * 100).toFixed(1)}%`, 'Cumulative Reads']}
+                labelFormatter={(label: any) => `Top ${(Number(label) * 100).toFixed(1)}% sgRNAs`}
               />
               <ReferenceLine segment={[{ x: 0, y: 0 }, { x: 1, y: 1 }]} stroke="#ccc" strokeDasharray="3 3" label="Perfect Uniformity" />
               <Line type="monotone" dataKey="cumulative_reads" stroke="#6ABF36" dot={false} strokeWidth={2} />
