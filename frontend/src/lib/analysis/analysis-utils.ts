@@ -30,7 +30,29 @@ export async function loadRealLibrary(libraryType: string, projectRoot: string =
         return getSyntheticLibrary(libraryType);
     }
 
-    const fullPath = path.resolve(projectRoot, relativePath);
+    const filename = path.basename(relativePath); // Extract filename from the mapped path
+
+    let fullPath = path.resolve(projectRoot, 'data/libraries/raw', filename);
+    console.log(`[Library] Attempting to load library from: ${fullPath}`);
+
+    // Check if file exists, if not try parent directory (for worker running in frontend/ dir)
+    if (!fs.existsSync(fullPath)) {
+        const parentPath = path.resolve(projectRoot, '..', 'data/libraries/raw', filename);
+        console.log(`[Library] File not found at ${fullPath}. Attempting parent directory: ${parentPath}`);
+        if (fs.existsSync(parentPath)) {
+            console.log(`[Library] Found library file in parent directory: ${parentPath}`);
+            fullPath = parentPath;
+        } else {
+            // Last resort: Check absolute docker path
+            const dockerPath = path.join('/app/data/libraries/raw', filename);
+            if (fs.existsSync(dockerPath)) {
+                console.log(`[Library] Found library file in Docker path: ${dockerPath}`);
+                fullPath = dockerPath;
+            } else {
+                console.warn(`[Library] Library file not found at ${fullPath}, ${parentPath}, or ${dockerPath}`);
+            }
+        }
+    }
 
     if (!fs.existsSync(fullPath)) {
         console.warn(`[Library] Real library file not found at ${fullPath}. Using synthetic library fallback.`);
@@ -104,11 +126,16 @@ export async function loadRealLibrary(libraryType: string, projectRoot: string =
 
         } else if (libraryType === 'brunello' || libraryType === 'brie') {
             // Brunello and Brie are Tab-delimited TXT files from Addgene
-            // Brunello: Target Gene Symbol (1), sgRNA Target Sequence (6) - verified in previous steps?
+            // Brunello: Target Gene Symbol (1), sgRNA Target Sequence (6)
             // Brie: Target Gene Symbol (1), sgRNA Target Sequence (6) - verified in Step 95 (index 1 is gene, index 6 is seq)
 
+            console.log(`[Library] Reading ${libraryType} from ${fullPath}`);
             const content = await fs.promises.readFile(fullPath, 'utf-8');
             const lines = content.split(/\r?\n/).filter(l => l.trim().length > 0);
+
+            if (lines.length === 0) {
+                console.warn(`[Library] File content for ${libraryType} at ${fullPath} is empty.`);
+            }
 
             let geneIdx = 1;
             let seqIdx = 6;
@@ -127,6 +154,7 @@ export async function loadRealLibrary(libraryType: string, projectRoot: string =
                     }
                 }
             }
+            console.log(`[Library] Parsed ${loadedCount} entries for ${libraryType}`);
         } else {
             console.warn(`[Library] Unknown library type '${libraryType}' format. Returning synthetic.`);
             return getSyntheticLibrary(libraryType);

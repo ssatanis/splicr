@@ -209,13 +209,20 @@ export class AnalysisPipeline {
 
           if (typeof file === 'string') {
             // Streaming path
-            const result = await FastqStreamParser.processStream(file, library);
+            const result = await FastqStreamParser.processStreamWithOrientation(file, library);
             sgRNACounts = result.sgRNACounts;
             stats = {
               totalReads: result.totalReads,
               avgQuality: result.avgQuality,
               gcContent: result.gcContent
             };
+
+            if (result.orientation === 'reverse-complement') {
+              this.log('parsing', fileProgress + 1, `Auto-detected Reverse Complement reads in ${fileName}. Corrected automatically.`, 'warning');
+            } else if (result.orientation === 'unknown') {
+              this.log('parsing', fileProgress + 1, `Warning: Could not determine clear read orientation for ${fileName}. Results may be poor.`, 'warning');
+            }
+
             // Mapped reads calculated against library in parser? 
             // Yes, FastqStreamParser now calculates mappedReads against library.
             mappedReads = result.mappedReads;
@@ -250,10 +257,10 @@ export class AnalysisPipeline {
           this.log('parsing', fileProgress + 2, `Extracted ${stats.totalReads.toLocaleString()} reads from ${fileName}`, 'info');
 
           const matchRatePercent = stats.totalReads > 0 ? (mappedReads / stats.totalReads) * 100 : 0;
-          this.log('parsing', fileProgress + 4, `Matched ${mappedReads.toLocaleString()} sgRNAs (${matchRatePercent.toFixed(1)}% of reads) to ${libraryMeta.name} library`, 'info');
+          this.log('parsing', fileProgress + 4, `Matched ${mappedReads.toLocaleString()} sgRNAs (${matchRatePercent.toFixed(1)}% of reads) to ${libraryMeta.name} library (Size: ${library.size})`, 'info');
 
           if (matchRatePercent < 30) {
-            throw new Error(`Critical Error: Only ${matchRatePercent.toFixed(1)}% of reads matched the ${libraryMeta.name} library. Analysis requires >30% match rate. Please verify you selected the correct library and adapter sequence.`);
+            throw new Error(`Critical Error: Only ${matchRatePercent.toFixed(1)}% of reads matched the ${libraryMeta.name} library (Size: ${library.size}). Analysis requires >30% match rate. Please verify you selected the correct library.`);
           }
 
           // Use all extracted sgRNAs so unmapped ones get synthetic genes and analysis runs

@@ -251,13 +251,21 @@ export async function runAnalysisPipeline(
           parameters,
           (progress, step, entry) => {
             logs.push(entry);
+            // Scale pipeline progress (0-100) to remaining job progress (20-95)
+            // Phase 1 (Prep) is 0-20%. Phase 2 (Pipeline) is 20-100%.
+            const adjustedProgress = 20 + Math.round((progress / 100) * 75);
+
             // Use message for current_step when available (more descriptive for UI)
             const displayStep =
               entry?.message && typeof entry.message === 'string' && entry.message.length > 0 && entry.message.length < 120
                 ? entry.message
                 : step;
-            updateProgress(admin, analysisId, progress, displayStep, logs);
-            void options?.onProgress?.(progress, displayStep, entry);
+
+            // Update the entry's progress to match the global progress
+            if (entry) entry.progress = adjustedProgress;
+
+            updateProgress(admin, analysisId, adjustedProgress, displayStep, logs);
+            void options?.onProgress?.(adjustedProgress, displayStep, entry);
           },
           workingDir
         ),

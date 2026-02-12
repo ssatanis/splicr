@@ -42,4 +42,14 @@ describe('Real Library Loading', () => {
         const library = await loadRealLibrary('nonexistent', projectRoot);
         expect(library.size).toBeGreaterThan(0);
     });
+
+    it('should load library when running from frontend subdirectory (simulating worker)', async () => {
+        const frontendRoot = path.join(projectRoot, 'frontend');
+        // The file is at projectRoot/data/libraries/raw/...
+        // The code will try frontendRoot/data/libraries/raw (fail)
+        // Then try frontendRoot/../data/libraries/raw (succeed)
+
+        const library = await loadRealLibrary('brunello', frontendRoot);
+        expect(library.size).toBeGreaterThan(70000);
+    });
 });

@@ -132,15 +132,30 @@ export class FASTQParser {
   /**
    * Extract sgRNA sequences (20bp). Tries adapter-first; falls back to first 20bp if valid DNA.
    */
+  public static getReverseComplement(seq: string): string {
+    const complement: Record<string, string> = {
+      'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C',
+      'N': 'N', 'R': 'Y', 'Y': 'R', 'M': 'K', 'K': 'M', 'S': 'S', 'W': 'W'
+    };
+    return seq.split('').reverse().map(b => complement[b] || b).join('');
+  }
+
+  /**
+   * Extract sgRNA sequences (20bp). Tries adapter-first; falls back to first 20bp if valid DNA.
+   * Auto-detects reverse complement by checking for RC adapter.
+   */
   static extractSgRNAs(reads: FASTQRead[], adapterSequence: string): Map<string, number> {
     const sgRNACounts = new Map<string, number>();
-    const adapter = (adapterSequence || 'TCTTGTGGAAAGGACGAAACACC').trim();
+    const adapter = (adapterSequence || 'TCTTGTGGAAAGGACGAAACACC').trim().toUpperCase();
+    const rcAdapter = this.getReverseComplement(adapter);
     const validDNA = /^[ATCG]+$/;
 
     for (const read of reads) {
       const seq = read.sequence.toUpperCase();
       let sgRNA: string | null = null;
+      let isRC = false;
 
+      // 1. Try Normal Adapter
       if (adapter.length > 0) {
         const adapterIndex = seq.indexOf(adapter);
         if (adapterIndex !== -1) {
@@ -149,11 +164,36 @@ export class FASTQParser {
         }
       }
 
+      // 2. Try RC Adapter if normal failed
+      if (!sgRNA && adapter.length > 0) {
+        const rcAdapterIndex = seq.indexOf(rcAdapter);
+        if (rcAdapterIndex !== -1) {
+          // If we found the RC adapter, the read is likely RC.
+          // The sgRNA should be UPSTREAM of the adapter in the RC read?
+          // No, if the whole read is RC, we should RC the whole read and then look for normal adapter.
+          // Let's just RC the whole sequence and try to extract normally.
+          const rcSeq = this.getReverseComplement(seq);
+          const adapterIndex = rcSeq.indexOf(adapter);
+          if (adapterIndex !== -1) {
+            const sgRNAStart = adapterIndex + adapter.length;
+            sgRNA = rcSeq.substring(sgRNAStart, sgRNAStart + 20);
+            isRC = true;
+          }
+        }
+      }
+
       // Fallback: use first 20bp if valid DNA (e.g. when adapter absent or different)
       if (!sgRNA || sgRNA.length !== 20 || !validDNA.test(sgRNA)) {
         const first20 = seq.length >= 20 ? seq.substring(0, 20) : null;
         if (first20 && validDNA.test(first20)) {
           sgRNA = first20;
+        } else {
+          // Try RC fallback?
+          const rcSeq = this.getReverseComplement(seq);
+          const first20RC = rcSeq.length >= 20 ? rcSeq.substring(0, 20) : null;
+          if (first20RC && validDNA.test(first20RC)) {
+            sgRNA = first20RC;
+          }
         }
       }
 
