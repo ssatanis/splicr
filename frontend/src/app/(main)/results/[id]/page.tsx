@@ -1930,65 +1930,78 @@ function RawDataTab({ results, analysisId }: { results: AnalysisResults; analysi
 
 function LogsTab({ results }: { results: AnalysisResults }) {
   const logs = results.logs || [];
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when logs update
+  useEffect(() => {
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [logs.length]);
 
   const getLevelColor = (level: string) => {
     switch (level) {
-      case 'success': return 'text-success';
-      case 'error': return 'text-error';
-      case 'warning': return 'text-warning';
-      default: return 'text-text-secondary';
-    }
-  };
-
-  const getLevelIcon = (level: string) => {
-    switch (level) {
-      case 'success': return '✓';
-      case 'error': return '✗';
-      case 'warning': return '⚠';
-      default: return '→';
+      case 'success': return 'text-emerald-400';
+      case 'error': return 'text-red-400';
+      case 'warning': return 'text-amber-400';
+      default: return 'text-blue-300';
     }
   };
 
   return (
-    <div className="bg-surface rounded-2xl shadow-card border border-border overflow-hidden">
-      <div className="p-6 border-b border-border">
-        <h3 className="text-xl font-serif text-text-primary">Analysis Pipeline Log</h3>
-        <p className="text-sm text-text-secondary mt-2">Run context (sgRNA library, FASTQ files, tests, settings) and step-by-step pipeline output with timestamps</p>
+    <div className="bg-[#0f172a] rounded-xl shadow-2xl border border-slate-800 overflow-hidden font-mono text-sm ring-1 ring-white/10">
+      {/* Terminal Header */}
+      <div className="bg-slate-900/50 border-b border-slate-800 px-4 py-3 flex items-center justify-between backdrop-blur-sm">
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1.5">
+            <div className="w-3 h-3 rounded-full bg-red-500/80" />
+            <div className="w-3 h-3 rounded-full bg-amber-500/80" />
+            <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
+          </div>
+          <span className="ml-3 text-slate-400 text-xs font-semibold tracking-wider">analysis-worker.log</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="flex h-2 w-2 relative">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span className="text-[10px] text-slate-500 uppercase tracking-widest">Live Stream</span>
+        </div>
       </div>
-      <div className="max-h-[600px] overflow-y-auto">
-        <div className="font-mono text-sm">
-          {logs.length > 0 ? (
-            logs.map((log: { timestamp: string; step: string; message: string; progress: number; level: string }, index: number) => (
-              <div
-                key={index}
-                className={`px-6 py-3 border-b border-border-light hover:bg-background transition-colors ${log.level === 'error' ? 'bg-error/5' : log.level === 'success' ? 'bg-success/5' : log.step === 'Context' ? 'bg-background/50' : ''
-                  }`}
-              >
-                <div className="flex items-start gap-4">
-                  <span className="text-text-tertiary whitespace-nowrap">
-                    {new Date(log.timestamp).toLocaleTimeString()}
+
+      {/* Terminal Body */}
+      <div className="h-[600px] overflow-y-auto p-4 space-y-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+        {logs.length > 0 ? (
+          <>
+            {logs.map((log: { timestamp: string; step: string; message: string; progress: number; level: string }, index: number) => (
+              <div key={index} className="group flex gap-3 hover:bg-white/5 p-1 rounded transition-colors -mx-1 px-2">
+                <span className="text-slate-500 shrink-0 select-none w-20 text-xs pt-0.5 opacity-60">
+                  {new Date(log.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                </span>
+                <div className="flex-1 break-words leading-relaxed text-slate-300">
+                  <span className={`${getLevelColor(log.level)} font-bold mr-2`}>
+                    {log.level === 'error' ? '✖' : log.level === 'success' ? '✔' : '❯'}
                   </span>
-                  <span className={`${getLevelColor(log.level)} w-4 flex-shrink-0`}>
-                    {getLevelIcon(log.level)}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    {log.step && log.step !== 'Context' && (
-                      <span className="text-text-tertiary text-xs font-medium uppercase tracking-wide mr-2">{log.step}</span>
-                    )}
-                    <span className="text-text-primary">{log.message}</span>
-                  </div>
-                  <span className="text-text-tertiary ml-auto whitespace-nowrap">
+                  {log.step && log.step !== 'Context' && (
+                    <span className="text-slate-500 mr-2 text-xs uppercase tracking-wide">[{log.step}]</span>
+                  )}
+                  <span>{log.message}</span>
+                </div>
+                {log.progress > 0 && (
+                  <span className="text-slate-600 text-xs shrink-0 select-none pt-0.5">
                     {log.progress}%
                   </span>
-                </div>
+                )}
               </div>
-            ))
-          ) : (
-            <div className="p-8 text-center text-text-tertiary">
-              No logs available for this analysis
-            </div>
-          )}
-        </div>
+            ))}
+            <div ref={bottomRef} />
+          </>
+        ) : (
+          <div className="h-full flex flex-col items-center justify-center text-slate-600 space-y-4">
+            <Terminal className="w-12 h-12 opacity-20" />
+            <p>Waiting for analysis logs...</p>
+          </div>
+        )}
       </div>
     </div>
   );

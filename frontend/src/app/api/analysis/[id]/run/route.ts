@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/server';
-import { enqueueAnalysis, retryJob, REDIS_AVAILABLE, JobPriority } from '@/lib/queue/client';
+import { enqueueAnalysis, retryJob, isRedisAvailable, JobPriority } from '@/lib/queue/client';
 import { markAnalysisQueued, transitionAnalysisStatus } from '@/lib/queue/db-state';
 import { getApiUser } from '@/lib/supabase/server';
 
@@ -96,7 +96,7 @@ export async function POST(
     let enqueueError: unknown = null;
 
     // Always use worker queue when Redis is available
-    if (REDIS_AVAILABLE) {
+    if (isRedisAvailable()) {
       try {
         jobId = await Promise.race([
           enqueueAnalysis(jobData, { priority: JobPriority.NORMAL }),
@@ -123,7 +123,7 @@ export async function POST(
     }
 
     // If Redis is available but enqueue failed, return error (no inline fallback)
-    if (REDIS_AVAILABLE) {
+    if (isRedisAvailable()) {
       console.error('Redis execution failed. Worker queue is required.');
       return NextResponse.json({
         error: 'Analysis queuing failed. Please check worker status.',
@@ -131,8 +131,15 @@ export async function POST(
       }, { status: 503 });
     }
 
-    // No Redis configured - return error
+    // No Redis configured - return error with debug info
     console.error('Redis is not configured. Worker queue is required.');
+    console.error('Debug Env:', {
+      HAS_REDIS_URL: !!process.env.REDIS_URL,
+      HAS_UPSTASH_REST: !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN),
+      HAS_UPSTASH_TCP: !!(process.env.UPSTASH_REDIS_ENDPOINT && process.env.UPSTASH_REDIS_PASSWORD),
+      RUN_INLINE: process.env.RUN_ANALYSIS_INLINE
+    });
+
     return NextResponse.json({
       error: 'Worker queue is not configured. Please set REDIS_URL environment variable.',
     }, { status: 503 });

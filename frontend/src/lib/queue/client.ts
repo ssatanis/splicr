@@ -33,10 +33,27 @@ export const RUN_ANALYSIS_INLINE =
  * AND we're not forcing inline mode.
  * When false, Run API skips enqueue and runs pipeline inline.
  */
-export const REDIS_AVAILABLE =
-  !RUN_ANALYSIS_INLINE &&
-  !!(process.env.REDIS_URL?.trim() ||
-    (process.env.UPSTASH_REDIS_REST_URL?.trim() && process.env.UPSTASH_REDIS_REST_TOKEN?.trim()));
+/**
+ * Redis is considered available when REDIS_URL or Upstash REST vars are set,
+ * AND we're not forcing inline mode.
+ * When false, Run API skips enqueue and runs pipeline inline.
+ */
+export function isRedisAvailable(): boolean {
+  if (RUN_ANALYSIS_INLINE) return false;
+
+  // Check standard Redis URL
+  if (process.env.REDIS_URL?.trim()) return true;
+
+  // Check Upstash Redis REST vars (for serverless/Edge)
+  if (process.env.UPSTASH_REDIS_REST_URL?.trim() && process.env.UPSTASH_REDIS_REST_TOKEN?.trim()) return true;
+
+  // Check Upstash Redis TCP vars
+  if (process.env.UPSTASH_REDIS_ENDPOINT?.trim() && process.env.UPSTASH_REDIS_PASSWORD?.trim()) return true;
+
+  return false;
+}
+
+export const REDIS_AVAILABLE = isRedisAvailable();
 
 export {
   analysisQueue,
