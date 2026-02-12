@@ -943,7 +943,7 @@ export default function ResultsPage() {
                     <div className="flex flex-col gap-1 mt-1">
                       <div className="flex items-center justify-between">
                         <p className="text-text-primary font-medium text-lg">
-                          Status: <span className="capitalize text-accent">{analysis.status === "processing" ? "Running" : analysis.status === "queued" ? "Queued" : analysis.status}</span>
+                          Status: <span className={`capitalize ${analysis.status === "failed" ? "text-red-500" : "text-accent"}`}>{analysis.status === "processing" ? "Running" : analysis.status === "queued" ? "Queued" : analysis.status}</span>
                         </p>
                         <p className="text-text-primary font-bold font-mono text-lg">{Math.round(analysis.progress ?? 0)}%</p>
                       </div>

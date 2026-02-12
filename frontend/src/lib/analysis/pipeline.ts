@@ -5,6 +5,7 @@ import * as path from 'path';
 import { MAGeCKAnalyzer, MAGeCKGeneResult } from './mageckRRA';
 import { BAGEL2Analyzer, BAGEL2GeneResult } from './bagel2';
 import { DrugZAnalyzer, DrugZGeneResult } from './drugz';
+import { FastqStreamParser } from './fastqStreamParser';
 
 import {
   calculateComprehensiveQC,
@@ -141,8 +142,10 @@ export class AnalysisPipeline {
   private logs: LogEntry[] = [];
   private progressCallback?: ProgressCallback;
 
+
+
   async runPipeline(
-    files: File[],
+    files: (File | string)[],
     fileMetadata: { fileName: string; condition: 'control' | 'treatment'; replicate: number; sampleName: string }[],
     libraryType: string,
     algorithms: string[],
@@ -182,37 +185,63 @@ export class AnalysisPipeline {
         const metadata = fileMetadata[i];
         const fileProgress = 6 + (i / files.length) * 19;
 
-        this.log('parsing', fileProgress, `Parsing ${file.name} (${(file.size / 1e6).toFixed(1)} MB)...`, 'info');
+        const fileName = typeof file === 'string' ? path.basename(file) : file.name;
+        // Approximation for file size if string (or need fs.stat if valid path)
+        const fileSizeMB = typeof file === 'string' ? "unknown" : (file.size / 1e6).toFixed(1);
+
+        this.log('parsing', fileProgress, `Parsing ${fileName} (${fileSizeMB} MB)...`, 'info');
 
         try {
-          const { reads, stats } = await FASTQParser.parseFASTQ(file);
+          let reads: any[] = []; // Only used if File object
+          let stats: any;
+          let sgRNACounts: Map<string, number>;
+          let mappedReads = 0;
+          let uniqueSgRNAs = 0;
+
+          if (typeof file === 'string') {
+            // Streaming path
+            const result = await FastqStreamParser.processStream(file, library);
+            sgRNACounts = result.sgRNACounts;
+            stats = {
+              totalReads: result.totalReads,
+              avgQuality: result.avgQuality,
+              gcContent: result.gcContent
+            };
+            // Mapped reads calculated against library in parser? 
+            // Yes, FastqStreamParser now calculates mappedReads against library.
+            mappedReads = result.mappedReads;
+            uniqueSgRNAs = result.uniqueSgRNAs;
+          } else {
+            // Legacy File object path (loads into RAM)
+            const res = await FASTQParser.parseFASTQ(file);
+            reads = res.reads;
+            stats = res.stats;
+
+            // Extract sgRNAs
+            sgRNACounts = FASTQParser.extractSgRNAs(reads, '');
+            uniqueSgRNAs = sgRNACounts.size;
+            mappedReads = Array.from(sgRNACounts.values()).reduce((sum, count) => sum + count, 0);
+            // Note: FASTQParser.extractSgRNAs didn't filter by library, so mappedReads here is total valid sgRNAs found, not necessarily in library.
+            // We need to re-calculate mappedReads against library to match StreamParser logic?
+            // StreamParser logic: mappedReads = count of sgRNAs that are IN library.
+
+            let totalMatchedReads = 0;
+            for (const [seq, count] of sgRNACounts.entries()) {
+              if (library.has(seq)) {
+                totalMatchedReads += count;
+              }
+            }
+            mappedReads = totalMatchedReads;
+          }
 
           if (stats.totalReads < 1000) {
-            this.log('parsing', fileProgress + 1, `Warning: Low read depth (${stats.totalReads}) in ${file.name}. Results may be unreliable.`, 'warning');
+            this.log('parsing', fileProgress + 1, `Warning: Low read depth (${stats.totalReads}) in ${fileName}. Results may be unreliable.`, 'warning');
           }
 
-          this.log('parsing', fileProgress + 2, `Extracted ${stats.totalReads.toLocaleString()} reads from ${file.name}`, 'info');
+          this.log('parsing', fileProgress + 2, `Extracted ${stats.totalReads.toLocaleString()} reads from ${fileName}`, 'info');
 
-          // Extract sgRNAs
-          const sgRNACounts = FASTQParser.extractSgRNAs(reads, '');
-          const uniqueSgRNAs = sgRNACounts.size;
-          const mappedReads = Array.from(sgRNACounts.values()).reduce((sum, count) => sum + count, 0);
-
-          // Match sgRNAs to library
-          const matchedCounts = new Map<string, number>();
-          let matchedSgRNAs = 0;
-          let totalMatchedReads = 0; // Track total reads matching library
-
-          for (const [seq, count] of sgRNACounts.entries()) {
-            if (library.has(seq)) {
-              matchedCounts.set(seq, count);
-              matchedSgRNAs++;
-              totalMatchedReads += count;
-            }
-          }
-
-          const matchRatePercent = stats.totalReads > 0 ? (totalMatchedReads / stats.totalReads) * 100 : 0;
-          this.log('parsing', fileProgress + 4, `Matched ${matchedSgRNAs.toLocaleString()} sgRNAs (${matchRatePercent.toFixed(1)}% of reads) to ${libraryMeta.name} library`, 'info');
+          const matchRatePercent = stats.totalReads > 0 ? (mappedReads / stats.totalReads) * 100 : 0;
+          this.log('parsing', fileProgress + 4, `Matched ${mappedReads.toLocaleString()} sgRNAs (${matchRatePercent.toFixed(1)}% of reads) to ${libraryMeta.name} library`, 'info');
 
           if (matchRatePercent < 30) {
             throw new Error(`Critical Error: Only ${matchRatePercent.toFixed(1)}% of reads matched the ${libraryMeta.name} library. Analysis requires >30% match rate. Please verify you selected the correct library and adapter sequence.`);
@@ -221,7 +250,7 @@ export class AnalysisPipeline {
           // Use all extracted sgRNAs so unmapped ones get synthetic genes and analysis runs
           samples.push({
             name: metadata.sampleName,
-            fileName: file.name,
+            fileName: fileName,
             condition: metadata.condition,
             replicate: metadata.replicate,
             sgRNACounts,
@@ -233,7 +262,7 @@ export class AnalysisPipeline {
           });
 
         } catch (error) {
-          this.log('parsing', fileProgress, `Error parsing ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+          this.log('parsing', fileProgress, `Error parsing ${fileName}: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
           throw error;
         }
       }

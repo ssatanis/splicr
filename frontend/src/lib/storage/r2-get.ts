@@ -5,6 +5,9 @@
  */
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { createServerR2Client, R2_BUCKET_NAME } from './r2-client';
+import fs from 'fs';
+import { pipeline } from 'stream/promises';
+import { Readable } from 'stream';
 
 const MAX_FETCH_RETRIES = 4;
 const RETRY_DELAYS_MS = [0, 500, 1500, 4000]; // immediate, then backoff so just-uploaded files become visible
@@ -71,7 +74,52 @@ export async function getR2FileAsFile(r2Key: string, fileName?: string, options?
     }
   }
 
+
   const msg = lastError instanceof Error ? lastError.message : String(lastError);
   const code = (lastError as any)?.code || (lastError as any)?.name || 'UnknownError';
   throw new Error(`R2 object not found or failed to fetch after ${MAX_FETCH_RETRIES} attempts: ${r2Key} [Code: ${code}]. ${msg}`);
+}
+
+export async function downloadR2FileToDisk(r2Key: string, destPath: string): Promise<void> {
+  const client = createServerR2Client();
+  const bucketName = R2_BUCKET_NAME;
+
+  const command = new GetObjectCommand({
+    Bucket: bucketName,
+    Key: r2Key,
+  });
+
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < MAX_FETCH_RETRIES; attempt++) {
+    try {
+      if (attempt > 0) {
+        const delay = RETRY_DELAYS_MS[attempt] ?? 4000;
+        await new Promise((r) => setTimeout(r, delay));
+      }
+
+      const response = await client.send(command);
+
+      if (!response.Body) {
+        throw new Error(`R2 object empty or not found (Body missing): ${r2Key}`);
+      }
+
+      // Stream to disk
+      await pipeline(response.Body as Readable, fs.createWriteStream(destPath));
+      return;
+
+    } catch (err) {
+      lastError = err;
+      // Reuse retry logic helper if exported, else simplified check
+      // Using simpler check for now or duplicated logic
+      const retryable = isRetryableFetchError(err);
+      const isLast = attempt === MAX_FETCH_RETRIES - 1;
+
+      if (!retryable || isLast) {
+        const msg = err instanceof Error ? err.message : String(err);
+        const code = (err as any)?.code || (err as any)?.name || 'UnknownError';
+        throw new Error(`R2 download to disk failed: ${r2Key} [Code: ${code}]. ${msg}`);
+      }
+    }
+  }
 }

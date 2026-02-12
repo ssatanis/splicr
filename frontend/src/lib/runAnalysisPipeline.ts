@@ -6,7 +6,9 @@
  */
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { isR2Configured } from '@/lib/storage/r2-client';
-import { getR2FileAsFile } from '@/lib/storage/r2-get';
+import { downloadR2FileToDisk } from '@/lib/storage/r2-get';
+import path from 'path';
+import fs from 'fs';
 import { putR2Json } from '@/lib/storage/r2-put';
 import { AnalysisPipeline } from '@/lib/analysis/pipeline';
 import { assessQCStatus } from '@/lib/analysis/quality-calculator';
@@ -185,21 +187,9 @@ export async function runAnalysisPipeline(
     addLog('Validation', 'All files exist in storage', 4, 'success');
     await updateProgress(admin, analysisId, 4, 'Files validated', logs);
 
-    addLog('Fetching', `Fetching ${fileNames.length} FASTQ file(s)...`, 5, 'info');
-    await updateProgress(admin, analysisId, 5, `Fetching ${fileNames.length} FASTQ file(s)...`, logs);
-
-    const filePromises = fileNames.map(async (key: string, i: number) => {
-      const fileName = typeof key === 'string' ? key.split('/').pop() ?? key : `sample_${i + 1}.fastq.gz`;
-      const maxSizeBytes = 2 * 1024 * 1024 * 1024; // 2 GB limit
-      const file = await getR2FileAsFile(key, fileName, { maxSizeBytes });
-      const pct = 5 + Math.round(((i + 1) / fileNames.length) * 8);
-      addLog('Fetching', `Fetched ${fileName}`, pct, 'info');
-      await updateProgress(admin, analysisId, pct, `Fetched ${i + 1}/${fileNames.length} file(s)`, logs);
-      return file;
-    });
-    const files: File[] = await Promise.all(filePromises);
-    addLog('Fetching', `All ${files.length} file(s) ready`, 13, 'success');
-    await updateProgress(admin, analysisId, 13, `All ${files.length} FASTQ file(s) ready`, logs);
+    // Files are now downloaded later directly to disk
+    addLog('Fetching', `Preparing to fetch ${fileNames.length} FASTQ file(s)...`, 5, 'info');
+    await updateProgress(admin, analysisId, 5, `Preparing to fetch ${fileNames.length} FASTQ file(s)...`, logs);
 
     const fileMetadata = fileNames.map((key: string, i: number) => {
       const label = sampleLabels[i];
@@ -212,12 +202,35 @@ export async function runAnalysisPipeline(
       };
     });
 
-    // Create a temp working directory for CLI-based algorithm execution
+    // Create a temp working directory for analysis
     addLog('Initialization', 'Creating working directory for analysis', 14, 'info');
     await updateProgress(admin, analysisId, 14, 'Preparing pipeline', logs);
     const workingDir = createWorkingDir(analysisId);
-    addLog('Initialization', 'Starting sequence processing and sgRNA counting', 15, 'info');
-    await updateProgress(admin, analysisId, 15, 'Starting sequence processing', logs);
+
+    // Download files to working directory
+    addLog('Fetching', `Downloading ${fileNames.length} FASTQ file(s) to temporary storage...`, 15, 'info');
+    await updateProgress(admin, analysisId, 15, `Downloading ${fileNames.length} file(s)`, logs);
+
+    const filePaths: string[] = [];
+    for (let i = 0; i < fileNames.length; i++) {
+      const key = fileNames[i];
+      const fileName = typeof key === 'string' ? key.split('/').pop() ?? key : `sample_${i + 1}.fastq.gz`;
+      const destPath = path.join(workingDir, fileName);
+
+      const pct = 15 + Math.round(((i + 1) / fileNames.length) * 5); // 15-20%
+      try {
+        await downloadR2FileToDisk(key, destPath);
+        filePaths.push(destPath);
+        addLog('Fetching', `Downloaded ${fileName}`, pct, 'info');
+        await updateProgress(admin, analysisId, pct, `Downloaded ${i + 1}/${fileNames.length} file(s)`, logs);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        throw new Error(`Failed to download ${fileName}: ${msg}`);
+      }
+    }
+
+    addLog('Initialization', 'Starting sequence processing and sgRNA counting', 20, 'info');
+    await updateProgress(admin, analysisId, 20, 'Starting sequence processing', logs);
 
     let pipelineResults;
     try {
@@ -231,7 +244,7 @@ export async function runAnalysisPipeline(
 
       pipelineResults = await Promise.race([
         pipeline.runPipeline(
-          files,
+          filePaths,
           fileMetadata,
           libraryType,
           algorithms,

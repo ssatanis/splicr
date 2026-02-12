@@ -78,7 +78,34 @@ export async function markAnalysisProcessing(
   workerId: string,
   jobId: string
 ): Promise<boolean> {
-  return transitionAnalysisStatus(analysisId, 'queued', 'processing', workerId, jobId);
+  // Try specific transition from queued first (safest)
+  const success = await transitionAnalysisStatus(analysisId, 'queued', 'processing', workerId, jobId);
+  if (success) return true;
+
+  // If that failed, it might be a retry of a stalled job (status stuck in processing)
+  // or a retry from failed state that didn't reset to queued.
+  // Force update the status and worker info.
+  console.log(`[${workerId}] marking analysis ${analysisId} as processing (force transition)`);
+
+  const { error } = await admin
+    .from('analyses')
+    .update({
+      status: 'processing',
+      worker_id: workerId,
+      job_id: jobId,
+      error_message: null,
+      error_traceback: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', analysisId)
+    .in('status', ['processing', 'failed', 'pending']);
+
+  if (error) {
+    console.error(`[${workerId}] Failed to force mark analysis processing:`, error);
+    return false;
+  }
+
+  return true;
 }
 
 /**
