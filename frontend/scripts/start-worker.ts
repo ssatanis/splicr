@@ -54,4 +54,8 @@ if (!hasRedis || !hasSupabase || !hasServiceKey) {
 }
 
 // Import and start worker
-import '../src/workers/analysis-worker';
+// Import and start worker (dynamic import to ensure env vars are loaded first)
+import('../src/workers/analysis-worker').catch((err) => {
+  console.error('Failed to load worker module:', err);
+  process.exit(1);
+});

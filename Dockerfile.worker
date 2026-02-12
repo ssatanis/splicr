@@ -24,9 +24,12 @@ RUN pip3 install --no-cache-dir --break-system-packages \
     matplotlib==3.7.2 \
     seaborn==0.12.2
 
-# Install MAGeCK (includes both RRA and MLE algorithms)
-RUN pip3 install --no-cache-dir --break-system-packages \
-    mageck==0.5.9.5
+# Install MAGeCK (includes both RRA and MLE algorithms) - Build from source
+# Using version 0.5.9.5 via Bitbucket mirror or GitHub
+RUN git clone https://bitbucket.org/liulab/mageck.git /opt/mageck && \
+    cd /opt/mageck && \
+    git checkout v0.5.9.5 && \
+    python3 setup.py install
 
 # Install BAGEL2 (Bayesian Analysis of Gene Essentiality)
 RUN git clone https://github.com/hart-lab/bagel.git /opt/bagel2 && \

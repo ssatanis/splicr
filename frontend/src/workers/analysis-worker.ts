@@ -28,6 +28,30 @@ console.log(`Concurrency: ${CONCURRENCY}`);
 
 // Connect and verify Redis at startup (generates activity in Upstash Monitor)
 async function connectRedis() {
+  if (redisConnection.status !== 'ready') {
+    console.log(`[${WORKER_ID}] Waiting for Redis connection...`);
+    await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('Redis connection timed out waiting for ready state'));
+      }, 10000);
+
+      const onReady = () => {
+        clearTimeout(timeout);
+        redisConnection.removeListener('error', onError);
+        resolve(true);
+      };
+
+      const onError = (err: Error) => {
+        clearTimeout(timeout);
+        redisConnection.removeListener('ready', onReady);
+        reject(err);
+      };
+
+      redisConnection.once('ready', onReady);
+      redisConnection.once('error', onError);
+    });
+  }
+
   try {
     const pong = await redisConnection.ping();
     console.log(`[${WORKER_ID}] Redis connected: ${pong}`);

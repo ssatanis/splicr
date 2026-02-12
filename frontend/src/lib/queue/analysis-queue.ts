@@ -81,14 +81,14 @@ function createRedisConnection(): IORedis {
     port,
     password,
     db: redisDb,
-    maxRetriesPerRequest: REDIS_MAX_RETRIES,
+    maxRetriesPerRequest: null,
     retryStrategy: (times) => {
       if (times > REDIS_MAX_RETRIES) return null;
       return Math.min(times * 200, 1500);
     },
     enableReadyCheck: true,
     enableOfflineQueue: false,
-    lazyConnect: true,
+    lazyConnect: false,
     connectTimeout: REDIS_CONNECT_TIMEOUT_MS,
     ...(useTls && {
       tls: {
@@ -316,6 +316,11 @@ export async function closeQueue() {
 /** For worker and health checks; lazily creates connection on first use */
 export const redisConnection = new Proxy({} as IORedis, {
   get(_, prop) {
-    return (getConnection() as any)[prop];
+    const target = getConnection();
+    const value = (target as any)[prop];
+    if (typeof value === 'function') {
+      return value.bind(target);
+    }
+    return value;
   },
 });
