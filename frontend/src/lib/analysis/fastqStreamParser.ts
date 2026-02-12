@@ -115,14 +115,14 @@ export class FastqStreamParser {
                     // Unified map key: uppercase
                     const key = sgRNA; // already uppercased
 
-                    // We store ALL valid sgRNAs regardless of library match?
-                    // The original implementation stored ALL sgRNAs in `extractSgRNAs`.
-                    // `runPipeline` then filtered against library and calculated mappedReads.
-
-                    // Wait, `extractSgRNAs` returns Map<string, number>.
-                    // `runPipeline` iterates map items, checks against library to calc totalMappedReads.
+                    // IMPORTANT: Only count if it's in the library?
+                    // Original pipeline filtered later. But stream parser calc logic does:
+                    // mappedReads += count if library.has(seq)
+                    // So we can still store all valid sgRNAs here, but maybe warn if many are invalid?
 
                     sgRNACounts.set(key, (sgRNACounts.get(key) || 0) + 1);
+                } else if (totalReads < 5) {
+                    console.log(`[Parser Debug] Read ${totalReads} failed valid sgRNA extraction. Seq: ${currentSeq.substring(0, 30)}... Adapter index: ${currentSeq.indexOf(adapter)}`);
                 }
             }
 

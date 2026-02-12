@@ -172,9 +172,18 @@ export class AnalysisPipeline {
 
       // Phase 2: Load sgRNA Library (5%)
       this.log('library', 2, `Loading ${libraryType} sgRNA library...`, 'info');
-      const library = getLibrary(libraryType);
+
+      // Dynamic import to avoid bundling fs in client
+      const { loadRealLibrary } = await import('./analysis-utils'); // Ensure this file exists
+      const library = await loadRealLibrary(libraryType, process.cwd());
+      // const library = getLibrary(libraryType); // OLD
+
       const libraryMeta = getLibraryMetadata(libraryType);
-      this.log('library', 5, `Loaded ${libraryMeta.name} library: ${library.size} sgRNAs targeting ${libraryMeta.totalGenes} genes`, 'success');
+
+      // Override meta stats with real loaded stats
+      const loadedGenes = new Set(library.values()).size;
+
+      this.log('library', 5, `Loaded ${libraryMeta.name} library: ${library.size} sgRNAs targeting ${loadedGenes} genes`, 'success');
 
       // Phase 3: Parse FASTQ Files (5-25%)
       this.log('parsing', 6, 'Beginning FASTQ file parsing...', 'info');
