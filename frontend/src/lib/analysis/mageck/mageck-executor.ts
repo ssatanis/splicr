@@ -146,48 +146,58 @@ export function executeMageckCommand(
  * Writes library file to workingDir if needed. Expects FASTQ and library paths to exist.
  */
 export async function runMageckPipeline(
-  countParams: MageckCountParams,
+  countParams: MageckCountParams | null,
   testParams: Omit<MageckTestParams, 'countTablePath'>,
   options: MageckExecutorOptions,
   onProgress?: (p: MageckExecutorProgress) => void
 ): Promise<MageckExecutorResult> {
   const workingDir = options.workingDir;
-  const prefix = countParams.outputPrefix;
-  const countTablePath = path.join(workingDir, `${prefix}.count.txt`);
-
   const commandLog: string[] = [];
 
+  // Determine count table path: either from countParams output or explicitly provided in test context
+  let countTablePath = '';
+  if (countParams) {
+    countTablePath = path.join(workingDir, `${countParams.outputPrefix}.count.txt`);
+  } else {
+    // If skipping count, we expect countTablePath to be passed or derived elsewhere.
+    // However, the pipeline usually passes it as part of testParams if bypassing count.
+    // For simplicity, let's assume if countParams is null, the caller provided it.
+    countTablePath = (testParams as any).countTablePath || path.join(workingDir, 'mageck_counts.txt');
+  }
+
   try {
-    // Step 1: mageck count
-    const countArgs = buildMageckCountCommand(countParams);
-    commandLog.push(formatCommandForLog(options.mageckBinary ?? 'mageck', countArgs));
+    // Step 1: mageck count (only if countParams provided)
+    if (countParams) {
+      const countArgs = buildMageckCountCommand(countParams);
+      commandLog.push(formatCommandForLog(options.mageckBinary ?? 'mageck', countArgs));
 
-    onProgress?.({ step: 'initializing', progress: 2, message: 'Starting MAGeCK count' });
+      onProgress?.({ step: 'initializing', progress: 2, message: 'Starting MAGeCK count' });
 
-    const countResult = await executeMageckCommand(countArgs, options, (p) => {
-      onProgress?.({ ...p, progress: Math.min(45, p.progress * 0.45) });
-    });
+      const countResult = await executeMageckCommand(countArgs, options, (p) => {
+        onProgress?.({ ...p, progress: Math.min(45, p.progress * 0.45) });
+      });
 
-    if (countResult.exitCode !== 0) {
-      const err = detectMageckError(countResult.stderr || countResult.stdout);
-      return {
-        success: false,
-        geneSummary: [],
-        error: err.technicalMessage,
-        userMessage: err.userMessage,
-        suggestedAction: err.suggestedAction,
-        commandLog: commandLog.join('\n'),
-      };
-    }
+      if (countResult.exitCode !== 0) {
+        const err = detectMageckError(countResult.stderr || countResult.stdout);
+        return {
+          success: false,
+          geneSummary: [],
+          error: err.technicalMessage,
+          userMessage: err.userMessage,
+          suggestedAction: err.suggestedAction,
+          commandLog: commandLog.join('\n'),
+        };
+      }
 
-    if (!fs.existsSync(countTablePath)) {
-      return {
-        success: false,
-        geneSummary: [],
-        error: 'MAGeCK count did not produce count table',
-        userMessage: 'Count step completed but output file was not found.',
-        commandLog: commandLog.join('\n'),
-      };
+      if (!fs.existsSync(countTablePath)) {
+        return {
+          success: false,
+          geneSummary: [],
+          error: 'MAGeCK count did not produce count table',
+          userMessage: 'Count step completed but output file was not found.',
+          commandLog: commandLog.join('\n'),
+        };
+      }
     }
 
     onProgress?.({ step: 'normalizing', progress: 50, message: 'Count complete, starting statistical test' });

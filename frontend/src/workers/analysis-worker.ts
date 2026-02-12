@@ -71,53 +71,66 @@ const workerOptions: WorkerOptions = {
   },
 };
 
-// Initialize Redis, then create worker
-await connectRedis();
-startRedisHeartbeat();
+// Global worker reference
+let worker: Worker<AnalysisJobData, AnalysisJobResult> | undefined;
 
-// Create worker instance
-const worker = new Worker<AnalysisJobData, AnalysisJobResult>(
-  'analysis-jobs',
-  async (job) => {
-    const { data } = job;
-    const jobId = job.id!;
+async function startWorker() {
+  // Initialize Redis
+  await connectRedis();
+  startRedisHeartbeat();
 
-    console.log(`[${WORKER_ID}] Processing job ${jobId} for analysis ${data.analysisId}`);
+  // Create worker instance
+  worker = new Worker<AnalysisJobData, AnalysisJobResult>(
+    'analysis-jobs',
+    async (job) => {
+      const { data } = job;
+      const jobId = job.id!;
 
-    try {
-      // Process the analysis
-      const result = await processAnalysisJob(data, WORKER_ID, jobId);
+      console.log(`[${WORKER_ID}] Processing job ${jobId} for analysis ${data.analysisId}`);
 
-      if (!result.success) {
-        throw new Error(result.error || 'Analysis processing failed');
+      try {
+        // Process the analysis
+        const result = await processAnalysisJob(data, WORKER_ID, jobId);
+
+        if (!result.success) {
+          throw new Error(result.error || 'Analysis processing failed');
+        }
+
+        console.log(`[${WORKER_ID}] Job ${jobId} completed successfully`);
+        return result;
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error(`[${WORKER_ID}] Job ${jobId} failed:`, errorMessage);
+        throw error; // Re-throw to trigger BullMQ retry logic
       }
+    },
+    workerOptions
+  );
 
-      console.log(`[${WORKER_ID}] Job ${jobId} completed successfully`);
-      return result;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`[${WORKER_ID}] Job ${jobId} failed:`, errorMessage);
-      throw error; // Re-throw to trigger BullMQ retry logic
-    }
-  },
-  workerOptions
-);
+  // Worker event handlers
+  worker.on('completed', (job) => {
+    console.log(`[${WORKER_ID}] Job ${job.id} completed`);
+  });
 
-// Worker event handlers
-worker.on('completed', (job) => {
-  console.log(`[${WORKER_ID}] Job ${job.id} completed`);
-});
+  worker.on('failed', (job, err) => {
+    console.error(`[${WORKER_ID}] Job ${job?.id} failed:`, err.message);
+  });
 
-worker.on('failed', (job, err) => {
-  console.error(`[${WORKER_ID}] Job ${job?.id} failed:`, err.message);
-});
+  worker.on('error', (err) => {
+    console.error(`[${WORKER_ID}] Worker error:`, err);
+  });
 
-worker.on('error', (err) => {
-  console.error(`[${WORKER_ID}] Worker error:`, err);
-});
+  worker.on('stalled', (jobId) => {
+    console.warn(`[${WORKER_ID}] Job ${jobId} stalled`);
+  });
 
-worker.on('stalled', (jobId) => {
-  console.warn(`[${WORKER_ID}] Job ${jobId} stalled`);
+  console.log(`[${WORKER_ID}] Worker started and ready to process jobs`);
+}
+
+// Start the worker
+startWorker().catch((error) => {
+  console.error(`[${WORKER_ID}] Fatal error starting worker:`, error);
+  process.exit(1);
 });
 
 // Graceful shutdown handler
@@ -132,7 +145,9 @@ async function gracefulShutdown(signal: string) {
   console.log(`[${WORKER_ID}] Received ${signal}, shutting down gracefully...`);
 
   // Stop accepting new jobs
-  await worker.close();
+  if (worker) {
+    await worker.close();
+  }
 
   // Stop all heartbeats
   stopAllHeartbeats();
@@ -206,4 +221,4 @@ app.listen(PORT, () => {
   console.log(`[${WORKER_ID}] Health check server listening on port ${PORT}`);
 });
 
-console.log(`[${WORKER_ID}] Worker started and ready to process jobs`);
+

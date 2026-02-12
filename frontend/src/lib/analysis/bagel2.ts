@@ -37,17 +37,23 @@ export class BAGEL2Analyzer {
   private nonEssentialGenes: Set<string>;
   private kernelBandwidth: number;
   private bootstrapIterations: number;
+  private normalizationMethod: 'median' | 'total' | 'control' | 'none';
 
   constructor(options: {
     essentialGenes?: string[];      // Custom essential gene list
     nonEssentialGenes?: string[];   // Custom non-essential gene list
     kernelBandwidth?: number;       // KDE bandwidth (default auto)
     bootstrapIterations?: number;   // Bootstrap iterations (default 1000)
+    normalizationMethod?: 'median' | 'total' | 'control' | 'none';
   } = {}) {
-    this.essentialGenes = new Set(options.essentialGenes || ESSENTIAL_GENES);
-    this.nonEssentialGenes = new Set(options.nonEssentialGenes || NON_ESSENTIAL_GENES);
+    // Use built-in defaults if provided lists are empty
+    const essentials = options.essentialGenes?.filter(g => g.length > 0);
+    const nonEssentials = options.nonEssentialGenes?.filter(g => g.length > 0);
+    this.essentialGenes = new Set(essentials?.length ? essentials : ESSENTIAL_GENES);
+    this.nonEssentialGenes = new Set(nonEssentials?.length ? nonEssentials : NON_ESSENTIAL_GENES);
     this.kernelBandwidth = options.kernelBandwidth || 0;  // 0 = auto
     this.bootstrapIterations = options.bootstrapIterations || 1000;
+    this.normalizationMethod = options.normalizationMethod ?? 'median';
   }
 
   async runAnalysis(
@@ -126,8 +132,12 @@ export class BAGEL2Analyzer {
   ): BAGEL2SgRNAStats[] {
     const stats: BAGEL2SgRNAStats[] = [];
 
-    // First, normalize counts
-    const normalized = this.medianNormalization(countMatrix);
+    // Normalize counts using selected method
+    const normalized = this.normalizationMethod === 'none'
+      ? new Map(countMatrix)
+      : this.normalizationMethod === 'total'
+        ? this.totalNormalization(countMatrix)
+        : this.medianNormalization(countMatrix); // 'median' and 'control' use median
 
     for (const [sgRNA, counts] of normalized.entries()) {
       const gene = sgRNAToGene.get(sgRNA);
@@ -171,6 +181,30 @@ export class BAGEL2Analyzer {
       const normalizedCounts = countsArray.map((count, i) => {
         if (medians[i] === 0) return count;
         return count * (targetMedian / medians[i]);
+      });
+      normalized.set(sgRNA, normalizedCounts);
+    }
+
+    return normalized;
+  }
+
+  private totalNormalization(counts: Map<string, number[]>): Map<string, number[]> {
+    const numSamples = Array.from(counts.values())[0]?.length || 0;
+    if (numSamples === 0) return new Map();
+
+    const totals: number[] = Array(numSamples).fill(0);
+    for (const countsArray of counts.values()) {
+      countsArray.forEach((count, i) => {
+        totals[i] += count;
+      });
+    }
+
+    const targetTotal = totals.reduce((a, b) => a + b, 0) / totals.length || 1;
+
+    const normalized = new Map<string, number[]>();
+    for (const [sgRNA, countsArray] of counts.entries()) {
+      const normalizedCounts = countsArray.map((count, i) => {
+        return totals[i] > 0 ? count * (targetTotal / totals[i]) : count;
       });
       normalized.set(sgRNA, normalizedCounts);
     }

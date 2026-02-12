@@ -35,13 +35,19 @@ export type DrugZProgressCallback = (progress: DrugZProgress) => void;
 export class DrugZAnalyzer {
   private minSgRNAs: number;
   private unpaired: boolean;
+  private normalizationMethod: 'median' | 'total' | 'control' | 'none';
+  private pseudocount: number;
 
   constructor(options: {
     minSgRNAs?: number;  // Minimum sgRNAs per gene (default 3)
     unpaired?: boolean;  // Use unpaired analysis (default false)
+    normalizationMethod?: 'median' | 'total' | 'control' | 'none';
+    pseudocount?: number; // Pseudocount for fold change (default 0.5)
   } = {}) {
     this.minSgRNAs = options.minSgRNAs ?? 3;
     this.unpaired = options.unpaired ?? false;
+    this.normalizationMethod = options.normalizationMethod ?? 'total';
+    this.pseudocount = options.pseudocount ?? 0.5;
   }
 
   async runAnalysis(
@@ -61,8 +67,12 @@ export class DrugZAnalyzer {
     };
 
     // Step 1: Normalize counts
-    log('normalization', 5, 'Normalizing read counts...');
-    const normalized = this.normalizeReadCounts(countMatrix);
+    log('normalization', 5, `Normalizing read counts (${this.normalizationMethod})...`);
+    const normalized = this.normalizationMethod === 'none'
+      ? new Map(countMatrix)
+      : this.normalizationMethod === 'median'
+        ? this.medianNormalization(countMatrix)
+        : this.normalizeReadCounts(countMatrix); // 'total' and 'control' use RPM
     log('normalization', 10, `Normalized ${normalized.size} sgRNAs`);
 
     // Step 2: Calculate fold changes
@@ -145,6 +155,32 @@ export class DrugZAnalyzer {
     return normalized;
   }
 
+  private medianNormalization(counts: Map<string, number[]>): Map<string, number[]> {
+    const numSamples = Array.from(counts.values())[0]?.length || 0;
+    if (numSamples === 0) return new Map();
+
+    const medians: number[] = [];
+    for (let i = 0; i < numSamples; i++) {
+      const columnValues = Array.from(counts.values())
+        .map(row => row[i])
+        .filter(v => v > 0);
+      medians.push(this.median(columnValues));
+    }
+
+    const targetMedian = this.median(medians.filter(m => m > 0)) || 1000;
+
+    const normalized = new Map<string, number[]>();
+    for (const [sgRNA, countsArray] of counts.entries()) {
+      const normalizedCounts = countsArray.map((count, i) => {
+        if (medians[i] === 0) return count;
+        return count * (targetMedian / medians[i]);
+      });
+      normalized.set(sgRNA, normalizedCounts);
+    }
+
+    return normalized;
+  }
+
   private calculateFoldChanges(
     normalized: Map<string, number[]>,
     sgRNAToGene: Map<string, string>,
@@ -161,8 +197,7 @@ export class DrugZAnalyzer {
       const treatmentMean = this.mean(treatmentIdx.map(i => counts[i]));
 
       // Fold change with pseudocount
-      const pseudocount = 0.5;
-      const foldChange = (treatmentMean + pseudocount) / (controlMean + pseudocount);
+      const foldChange = (treatmentMean + this.pseudocount) / (controlMean + this.pseudocount);
       const log2FC = Math.log2(foldChange);
 
       stats.push({
@@ -318,6 +353,15 @@ export class DrugZAnalyzer {
   }
 
   // Statistical utility functions
+  private median(values: number[]): number {
+    if (values.length === 0) return 0;
+    const sorted = [...values].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 === 0
+      ? (sorted[mid - 1] + sorted[mid]) / 2
+      : sorted[mid];
+  }
+
   private mean(values: number[]): number {
     if (values.length === 0) return 0;
     return values.reduce((sum, v) => sum + v, 0) / values.length;
@@ -384,19 +428,19 @@ export class DrugZAnalyzer {
     if (p < pLow) {
       // Lower region
       q = Math.sqrt(-2 * Math.log(p));
-      return (((((c[0]*q + c[1])*q + c[2])*q + c[3])*q + c[4])*q + c[5]) /
-             ((((d[0]*q + d[1])*q + d[2])*q + d[3])*q + 1);
+      return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) /
+        ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
     } else if (p <= pHigh) {
       // Central region
       q = p - 0.5;
       r = q * q;
-      return (((((a[0]*r + a[1])*r + a[2])*r + a[3])*r + a[4])*r + a[5])*q /
-             (((((b[0]*r + b[1])*r + b[2])*r + b[3])*r + b[4])*r + 1);
+      return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q /
+        (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1);
     } else {
       // Upper region
       q = Math.sqrt(-2 * Math.log(1 - p));
-      return -(((((c[0]*q + c[1])*q + c[2])*q + c[3])*q + c[4])*q + c[5]) /
-              ((((d[0]*q + d[1])*q + d[2])*q + d[3])*q + 1);
+      return -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) /
+        ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
     }
   }
 

@@ -513,3 +513,75 @@ export function calculateComprehensiveQC(
     },
   };
 }
+
+// ============================================================================
+// DATA CONVERSION HELPERS
+// ============================================================================
+
+/**
+ * Convert pipeline count matrix to SGRNACount array for QC calculation
+ */
+export function buildSGRNACountsFromMatrix(
+  countMatrix: Map<string, number[]>,
+  sgRNAToGene: Map<string, string>,
+  library: Map<string, string>
+): SGRNACount[] {
+  const sgrnacounts: SGRNACount[] = [];
+
+  // Create entries for every sgRNA in the library (even if not in count matrix)
+  // This ensures zero-counts are properly tracked relative to the full library
+  const librarySgRNAs = new Set(library.keys());
+  const matrixSgRNAs = new Set(countMatrix.keys());
+
+  // First add all sgRNAs from the library
+  for (const [sgrna, gene] of library.entries()) {
+    const counts = countMatrix.get(sgrna);
+    const totalCount = counts ? counts.reduce((sum, val) => sum + val, 0) : 0;
+
+    sgrnacounts.push({
+      sgrna_id: sgrna,
+      gene: gene,
+      sequence: sgrna, // In this pipeline, ID is sequence
+      counts: totalCount
+    });
+  }
+
+  // Add any sgRNAs in matrix but not in library (shouldn't happen with proper mapping, but good for safety)
+  for (const sgrna of matrixSgRNAs) {
+    if (!librarySgRNAs.has(sgrna)) {
+      const counts = countMatrix.get(sgrna);
+      const totalCount = counts ? counts.reduce((sum, val) => sum + val, 0) : 0;
+      const gene = sgRNAToGene.get(sgrna);
+
+      if (gene) {
+        sgrnacounts.push({
+          sgrna_id: sgrna,
+          gene: gene,
+          sequence: sgrna,
+          counts: totalCount
+        });
+      }
+    }
+  }
+
+  return sgrnacounts;
+}
+
+/**
+ * Extract replicate data for correlation analysis
+ */
+export function extractReplicateData(
+  samples: { name: string; sgRNACounts: Map<string, number> }[]
+): ReplicateData[] {
+  return samples.map(sample => {
+    const counts: Record<string, number> = {};
+    for (const [sgrna, count] of sample.sgRNACounts.entries()) {
+      counts[sgrna] = count;
+    }
+
+    return {
+      name: sample.name,
+      counts
+    };
+  });
+}

@@ -29,6 +29,8 @@ interface ProfileData {
   email: string;
   institution: string;
   department_lab: string;
+  pi_name: string;
+  department: string;
   orcid_id: string;
   research_areas: string[];
   team_role: string;
@@ -45,6 +47,8 @@ type ProfileRow = {
   display_name?: string | null;
   institution?: string | null;
   lab_name?: string | null;
+  pi_name?: string | null;
+  department?: string | null;
   role?: string | null;
   orcid_id?: string | null;
   orcid_verified?: boolean;
@@ -79,13 +83,15 @@ const RESEARCH_AREAS = [
 
 const TEAM_ROLES = [
   'Principal Investigator',
-  'Post-doctoral Researcher',
-  'Graduate Student',
+  'Postdoc',
+  'Graduate Student (PhD)',
+  'Graduate Student (Master\'s)',
+  'Core Facility Staff',
   'Research Associate',
-  'Core Facility Manager',
   'Lab Technician',
   'Undergraduate Researcher',
-  'Research Assistant',
+  'Visiting Scholar',
+  'Bioinformatician',
 ];
 
 const TIMEZONES = [
@@ -124,6 +130,8 @@ export function ProfileSettings() {
     email: '',
     institution: '',
     department_lab: '',
+    pi_name: '',
+    department: '',
     orcid_id: '',
     research_areas: [],
     team_role: '',
@@ -177,6 +185,8 @@ export function ProfileSettings() {
           email: user.email || '',
           institution: data.institution || '',
           department_lab: data.lab_name ?? '',
+          pi_name: data.pi_name ?? '',
+          department: data.department ?? '',
           orcid_id: data.orcid_id || '',
           research_areas: Array.isArray(data.research_areas) ? data.research_areas : [],
           team_role: data.role ?? '',
@@ -192,6 +202,8 @@ export function ProfileSettings() {
           full_name: fromAuth,
           display_name: fromAuth,
           email: user.email || '',
+          pi_name: '',
+          department: '',
           timezone: autoDetectedTimezone,
         }));
       }
@@ -210,24 +222,26 @@ export function ProfileSettings() {
       if (!user) throw new Error('Not authenticated');
 
       const basePayload = {
-          id: user.id,
-          email: user.email,
-          full_name: profile.full_name || null,
-          institution: profile.institution || null,
-          lab_name: profile.department_lab || null,
-          role: profile.team_role || null,
-          avatar_url: profile.avatar_url,
-          orcid_verified: orcidVerified,
-          updated_at: new Date().toISOString(),
-        };
+        id: user.id,
+        email: user.email,
+        full_name: profile.full_name || null,
+        institution: profile.institution || null,
+        lab_name: profile.department_lab || null,
+        role: profile.team_role || null,
+        avatar_url: profile.avatar_url,
+        orcid_verified: orcidVerified,
+        updated_at: new Date().toISOString(),
+      };
       const extendedPayload = {
-          ...basePayload,
-          display_name: profile.display_name || profile.full_name || null,
-          orcid_id: profile.orcid_id || null,
-          research_areas: profile.research_areas?.length ? profile.research_areas : null,
-          profile_visibility: profile.profile_visibility,
-          timezone: profile.timezone,
-        };
+        ...basePayload,
+        display_name: profile.display_name || profile.full_name || null,
+        pi_name: profile.pi_name || null,
+        department: profile.department || null,
+        orcid_id: profile.orcid_id || null,
+        research_areas: profile.research_areas?.length ? profile.research_areas : null,
+        profile_visibility: profile.profile_visibility,
+        timezone: profile.timezone,
+      };
       let result = await (supabase.from('profiles') as any).upsert(extendedPayload);
       if (result.error) {
         const msg = result.error.message || '';
@@ -401,10 +415,10 @@ export function ProfileSettings() {
       <div>
         <h2 className="text-2xl font-serif text-text-primary mb-2 flex items-center gap-2">
           <User className="w-6 h-6" />
-          Profile & Account
+          Researcher Profile
         </h2>
         <p className="text-sm text-text-secondary">
-          Manage your personal information and research profile
+          Your identity across SplicR — used in reports, shared analyses, and collaboration
         </p>
       </div>
 
@@ -496,20 +510,21 @@ export function ProfileSettings() {
           <div className="flex-1 space-y-4">
             <div>
               <label className="block text-sm font-serif text-text-secondary mb-2">
-                Full Name
+                Full name
               </label>
               <input
                 type="text"
                 value={profile.full_name}
                 onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
                 className="w-full px-4 py-2 bg-background border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
-                placeholder="Your full name"
+                placeholder="As it appears on publications"
               />
+              <p className="text-xs text-text-tertiary mt-1">Used in reports and grant-related exports</p>
             </div>
             <div>
               <label className="block text-sm font-serif text-text-secondary mb-2">
-                Display Name
-                <span className="text-xs text-text-tertiary ml-2">(shown to others)</span>
+                Display name
+                <span className="text-xs text-text-tertiary ml-2">(visible to collaborators)</span>
               </label>
               <input
                 type="text"
@@ -517,17 +532,17 @@ export function ProfileSettings() {
                 onChange={(e) => setProfile({ ...profile, display_name: e.target.value })}
                 maxLength={50}
                 className="w-full px-4 py-2 bg-background border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
-                placeholder={profile.full_name || 'Your display name'}
+                placeholder={profile.full_name || 'How lab members will see you'}
               />
               <p className="text-xs text-text-tertiary mt-1">
-                {profile.display_name.length}/50 characters
+                {profile.display_name.length}/50 characters — shown across SplicR to collaborators
               </p>
             </div>
 
             <div>
               <label className="block text-sm font-serif text-text-secondary mb-2 flex items-center gap-2">
                 <Mail className="w-4 h-4" />
-                Email
+                Institutional email
               </label>
               <input
                 type="email"
@@ -535,7 +550,7 @@ export function ProfileSettings() {
                 readOnly
                 className="w-full px-4 py-2 bg-background border border-border rounded-lg text-text-primary opacity-60 cursor-not-allowed"
               />
-              <p className="text-xs text-text-tertiary mt-1">Email is managed by your account</p>
+              <p className="text-xs text-text-tertiary mt-1">Managed by your authentication provider — contact your admin to change</p>
             </div>
           </div>
         </div>
@@ -550,20 +565,19 @@ export function ProfileSettings() {
               <button
                 key={visibility}
                 onClick={() => setProfile({ ...profile, profile_visibility: visibility })}
-                className={`px-4 py-2 rounded-lg text-sm font-serif transition-colors ${
-                  profile.profile_visibility === visibility
-                    ? 'bg-accent text-text-primary'
-                    : 'bg-background border border-border text-text-secondary hover:bg-surface'
-                }`}
+                className={`px-4 py-2 rounded-lg text-sm font-serif transition-colors ${profile.profile_visibility === visibility
+                  ? 'bg-accent text-text-primary'
+                  : 'bg-background border border-border text-text-secondary hover:bg-surface'
+                  }`}
               >
                 {visibility.charAt(0).toUpperCase() + visibility.slice(1)}
               </button>
             ))}
           </div>
           <p className="text-xs text-text-tertiary mt-2">
-            {profile.profile_visibility === 'public' && 'Your profile is visible to everyone'}
-            {profile.profile_visibility === 'team' && 'Only your team members can see your profile'}
-            {profile.profile_visibility === 'private' && 'Your profile is only visible to you'}
+            {profile.profile_visibility === 'public' && 'Anyone on SplicR can view your profile, published analyses, and results'}
+            {profile.profile_visibility === 'team' && 'Only members of your lab or team can see your profile'}
+            {profile.profile_visibility === 'private' && 'Your profile is visible only to you — collaborators see your display name only'}
           </p>
         </div>
 
@@ -641,46 +655,73 @@ export function ProfileSettings() {
       <div className="bg-surface rounded-xl p-6 border border-border">
         <h3 className="text-lg font-serif text-text-primary mb-4 flex items-center gap-2">
           <Building2 className="w-5 h-5" />
-          Institution & Team
+          Institution & Lab
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-serif text-text-secondary mb-2">
-              Institution
+              Institution or organization
             </label>
             <InstitutionAutocomplete
               value={profile.institution}
               onChange={(value) => setProfile({ ...profile, institution: value })}
               required={false}
-              placeholder="Search for your institution..."
+              placeholder="e.g. Broad Institute, UCSF, Novartis"
             />
           </div>
 
           <div>
             <label className="block text-sm font-serif text-text-secondary mb-2">
-              Department / Lab Name
+              Department
+            </label>
+            <input
+              type="text"
+              value={profile.department}
+              onChange={(e) => setProfile({ ...profile, department: e.target.value })}
+              className="w-full px-4 py-2 bg-background border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+              placeholder="e.g. Department of Genetics"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-serif text-text-secondary mb-2">
+              Lab or group name
             </label>
             <input
               type="text"
               value={profile.department_lab}
               onChange={(e) => setProfile({ ...profile, department_lab: e.target.value })}
               className="w-full px-4 py-2 bg-background border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
-              placeholder="e.g., Cancer Biology Lab"
+              placeholder="e.g. Zhang Lab, Functional Genomics Core"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-serif text-text-secondary mb-2">
+              PI / Supervisor name
+            </label>
+            <input
+              type="text"
+              value={profile.pi_name}
+              onChange={(e) => setProfile({ ...profile, pi_name: e.target.value })}
+              className="w-full px-4 py-2 bg-background border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+              placeholder="e.g. Dr. Feng Zhang"
+            />
+            <p className="text-xs text-text-tertiary mt-1">Included in shared analyses and collaboration invites</p>
           </div>
 
           <div>
             <label className="block text-sm font-serif text-text-secondary mb-2 flex items-center gap-2">
               <Briefcase className="w-4 h-4" />
-              Team Role
+              Role
             </label>
             <select
               value={profile.team_role}
               onChange={(e) => setProfile({ ...profile, team_role: e.target.value })}
               className="w-full px-4 py-2 bg-background border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
             >
-              <option value="">Select role...</option>
+              <option value="">Select your role…</option>
               {TEAM_ROLES.map((role) => (
                 <option key={role} value={role}>
                   {role}
@@ -725,8 +766,9 @@ export function ProfileSettings() {
       <div className="bg-surface rounded-xl p-6 border border-border">
         <h3 className="text-lg font-serif text-text-primary mb-4 flex items-center gap-2">
           <GraduationCap className="w-5 h-5" />
-          ORCID Integration
+          ORCID iD
         </h3>
+        <p className="text-xs text-text-secondary mb-3">Links your SplicR analyses to your publication record and enables cross-platform researcher identification.</p>
 
         <div className="space-y-4">
           <div>
@@ -763,7 +805,7 @@ export function ProfileSettings() {
               )}
             </div>
             <p className="text-xs text-text-tertiary mt-1.5">
-              Connect your ORCID to sync publications and enhance discoverability
+              Format: 0000-0000-0000-0000. Verified IDs are displayed on shared analyses and exported reports.
             </p>
           </div>
         </div>
@@ -773,7 +815,7 @@ export function ProfileSettings() {
       <div className="bg-surface rounded-xl p-6 border border-border">
         <h3 className="text-lg font-serif text-text-primary mb-4">Research Areas</h3>
         <p className="text-sm text-text-secondary mb-4">
-          Select all areas relevant to your research (multi-select)
+          Select areas relevant to your CRISPR screen work — used for smart defaults and community discoverability
         </p>
 
         <div className="flex flex-wrap gap-2">
@@ -781,11 +823,10 @@ export function ProfileSettings() {
             <button
               key={area}
               onClick={() => toggleResearchArea(area)}
-              className={`px-4 py-2 rounded-lg text-sm font-serif transition-colors ${
-                profile.research_areas.includes(area)
-                  ? 'bg-accent text-text-primary'
-                  : 'bg-background border border-border text-text-secondary hover:bg-surface'
-              }`}
+              className={`px-4 py-2 rounded-lg text-sm font-serif transition-colors ${profile.research_areas.includes(area)
+                ? 'bg-accent text-text-primary'
+                : 'bg-background border border-border text-text-secondary hover:bg-surface'
+                }`}
             >
               {area}
             </button>

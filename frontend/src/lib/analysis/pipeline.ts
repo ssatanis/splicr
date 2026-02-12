@@ -5,11 +5,20 @@ import * as path from 'path';
 import { MAGeCKAnalyzer, MAGeCKGeneResult } from './mageckRRA';
 import { BAGEL2Analyzer, BAGEL2GeneResult } from './bagel2';
 import { DrugZAnalyzer, DrugZGeneResult } from './drugz';
+
+import {
+  calculateComprehensiveQC,
+  buildSGRNACountsFromMatrix,
+  extractReplicateData,
+  type QCMetrics as ComprehensiveQCMetrics
+} from './qcMetrics';
 import { getLibrary, getLibraryMetadata, ESSENTIAL_GENES, NON_ESSENTIAL_GENES } from './sgRNALibraries';
 import { FASTQParser } from '../fastqParser';
 import { isCliAvailable, writeCountTableToDisk } from './cli-utils';
 import { runBagel2Pipeline, bagel2CliToLegacy } from './bagel2/index';
 import { runDrugzPipeline, drugzCliToLegacy } from './drugz/index';
+import { runMageckPipeline } from './mageck/mageck-executor';
+import { mageckGeneToUnified } from './mageck/mageck-result-parser';
 
 export interface SampleInfo {
   name: string;
@@ -23,6 +32,8 @@ export interface SampleInfo {
   avgQuality?: number;
   gcContent?: number;
 }
+
+import { filterCountMatrix } from '@/lib/analysis/matrixUtils';
 
 export interface AnalysisParameters {
   fdrThreshold: number;
@@ -49,6 +60,7 @@ export interface QCMetrics {
   mappingRate: number;
   zeroCounts: number;
   libraryCoverage: number;
+  librarySize: number;
   giniCoefficient: number;
   correlations: number[][];
   sampleStats: {
@@ -60,6 +72,7 @@ export interface QCMetrics {
     avgQuality?: string;
     gcContent?: string;
   }[];
+  comprehensiveQC?: ComprehensiveQCMetrics;
 }
 
 export interface GeneResultUnified {
@@ -143,13 +156,24 @@ export class AnalysisPipeline {
     const analysisId = `analysis_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
     try {
-      // Phase 1: Load sgRNA Library (5%)
+      // Phase 1: Validate Inputs
+      const controlCount = fileMetadata.filter(m => m.condition === 'control').length;
+      const treatmentCount = fileMetadata.filter(m => m.condition === 'treatment').length;
+
+      if (controlCount < 1) {
+        throw new Error('Analysis requires at least one control sample. Please label at least one file as "Control".');
+      }
+      if (treatmentCount < 1) {
+        throw new Error('Analysis requires at least one treatment sample. Please label at least one file as "Treatment".');
+      }
+
+      // Phase 2: Load sgRNA Library (5%)
       this.log('library', 2, `Loading ${libraryType} sgRNA library...`, 'info');
       const library = getLibrary(libraryType);
       const libraryMeta = getLibraryMetadata(libraryType);
       this.log('library', 5, `Loaded ${libraryMeta.name} library: ${library.size} sgRNAs targeting ${libraryMeta.totalGenes} genes`, 'success');
 
-      // Phase 2: Parse FASTQ Files (5-25%)
+      // Phase 3: Parse FASTQ Files (5-25%)
       this.log('parsing', 6, 'Beginning FASTQ file parsing...', 'info');
       const samples: SampleInfo[] = [];
 
@@ -162,6 +186,11 @@ export class AnalysisPipeline {
 
         try {
           const { reads, stats } = await FASTQParser.parseFASTQ(file);
+
+          if (stats.totalReads < 1000) {
+            this.log('parsing', fileProgress + 1, `Warning: Low read depth (${stats.totalReads}) in ${file.name}. Results may be unreliable.`, 'warning');
+          }
+
           this.log('parsing', fileProgress + 2, `Extracted ${stats.totalReads.toLocaleString()} reads from ${file.name}`, 'info');
 
           // Extract sgRNAs
@@ -172,15 +201,22 @@ export class AnalysisPipeline {
           // Match sgRNAs to library
           const matchedCounts = new Map<string, number>();
           let matchedSgRNAs = 0;
+          let totalMatchedReads = 0; // Track total reads matching library
 
           for (const [seq, count] of sgRNACounts.entries()) {
             if (library.has(seq)) {
               matchedCounts.set(seq, count);
               matchedSgRNAs++;
+              totalMatchedReads += count;
             }
           }
 
-          this.log('parsing', fileProgress + 4, `Matched ${matchedSgRNAs.toLocaleString()} sgRNAs (${uniqueSgRNAs ? ((matchedSgRNAs / uniqueSgRNAs) * 100).toFixed(1) : 0}%) to ${libraryMeta.name} library`, 'info');
+          const matchRatePercent = stats.totalReads > 0 ? (totalMatchedReads / stats.totalReads) * 100 : 0;
+          this.log('parsing', fileProgress + 4, `Matched ${matchedSgRNAs.toLocaleString()} sgRNAs (${matchRatePercent.toFixed(1)}% of reads) to ${libraryMeta.name} library`, 'info');
+
+          if (matchRatePercent < 30) {
+            throw new Error(`Critical Error: Only ${matchRatePercent.toFixed(1)}% of reads matched the ${libraryMeta.name} library. Analysis requires >30% match rate. Please verify you selected the correct library and adapter sequence.`);
+          }
 
           // Use all extracted sgRNAs so unmapped ones get synthetic genes and analysis runs
           samples.push({
@@ -206,13 +242,28 @@ export class AnalysisPipeline {
 
       // Phase 3: Build Count Matrix (25-30%)
       this.log('matrix', 26, 'Building sgRNA count matrix...', 'info');
-      const { countMatrix, sgRNAToGene, controlIndices, treatmentIndices } = this.buildCountMatrix(samples, library);
+      let { countMatrix, sgRNAToGene, controlIndices, treatmentIndices } = this.buildCountMatrix(samples, library);
       this.log('matrix', 30, `Count matrix: ${countMatrix.size} sgRNAs × ${samples.length} samples`, 'success');
 
       // Phase 4: Calculate QC Metrics (30-35%)
       this.log('qc', 31, 'Calculating quality control metrics...', 'info');
       const qcMetrics = this.calculateQCMetrics(samples, countMatrix, library);
       this.log('qc', 35, `QC complete: ${(qcMetrics.mappingRate * 100).toFixed(1)}% mapping rate, ${(qcMetrics.libraryCoverage * 100).toFixed(1)}% library coverage`, 'success');
+
+      // Filter Count Matrix (after QC, before analysis)
+      if (parameters.minimumReads > 0 || parameters.removeRibosomal) {
+        this.log('filtering', 34, 'Filtering count matrix (min reads / ribosomal)...', 'info');
+        const { filteredMatrix, stats } = filterCountMatrix(countMatrix, sgRNAToGene, {
+          minimumReads: parameters.minimumReads,
+          removeRibosomal: parameters.removeRibosomal
+        });
+        countMatrix = filteredMatrix;
+        this.log('filtering', 35, `Filtering retained ${stats.retained} sgRNAs (${stats.filtered} removed)`, 'info');
+
+        if (stats.retained === 0) {
+          throw new Error('All sgRNAs were filtered out! Check your minimum reads setting.');
+        }
+      }
 
       // Phase 5: Run Selected Algorithms (35-90%)
       const algorithmResults: {
@@ -228,23 +279,73 @@ export class AnalysisPipeline {
       };
 
       if (algorithms.includes('mageck')) {
-        this.log('mageck', 35, 'Starting MAGeCK RRA analysis...', 'info');
-        const mageckAnalyzer = new MAGeCKAnalyzer({
-          alpha: parameters.fdrThreshold,
-          minSgRNAs: 3
-        });
+        this.log('mageck', 35, 'Starting MAGeCK analysis...', 'info');
 
-        algorithmResults.mageck = await mageckAnalyzer.runAnalysis(
-          countMatrix,
-          sgRNAToGene,
-          controlIndices,
-          treatmentIndices,
-          (progress) => {
-            const scaledProgress = algorithmProgress.mageck.start +
-              (progress.progress / 100) * (algorithmProgress.mageck.end - algorithmProgress.mageck.start);
-            this.log('mageck', scaledProgress, progress.message, 'info');
+        if (isCliAvailable('mageck') && workingDir) {
+          this.log('mageck', 36, 'Using MAGeCK CLI (Python binary)', 'info');
+
+          // Write count table to disk for CLI
+          const countTablePath = path.join(workingDir, 'mageck_counts.txt');
+          writeCountTableToDisk(countMatrix, sgRNAToGene, samples.map(s => s.name), countTablePath);
+
+          const controlCols = samples.filter(s => s.condition === 'control').map(s => s.name);
+          const treatmentCols = samples.filter(s => s.condition === 'treatment').map(s => s.name);
+
+          const mageckResult = await runMageckPipeline(
+            {
+              // Library path isn't used if inputCountTable is provided, but required by type
+              libraryPath: libraryType,
+              fastqPaths: [],
+              sampleLabels: [],
+              inputCountTable: countTablePath,
+              outputPrefix: 'mageck_out',
+              normMethod: parameters.normalizationMethod === 'none' ? 'none' : parameters.normalizationMethod === 'total' ? 'total' : 'median',
+            },
+            {
+              controlColumns: controlCols.join(','),
+              treatmentColumns: treatmentCols.join(','),
+              outputPrefix: 'mageck_out',
+              normMethod: parameters.normalizationMethod === 'none' ? 'none' : parameters.normalizationMethod === 'total' ? 'total' : 'median',
+            },
+            { workingDir },
+            (p) => {
+              const scaledProgress = algorithmProgress.mageck.start +
+                (p.progress / 100) * (algorithmProgress.mageck.end - algorithmProgress.mageck.start);
+              this.log('mageck', scaledProgress, p.message, 'info');
+            }
+          );
+
+          if (mageckResult.success) {
+            algorithmResults.mageck = mageckResult.geneSummary.map(r => mageckGeneToUnified(r, parameters.fdrThreshold)) as any;
+          } else {
+            this.log('mageck', algorithmProgress.mageck.end, `MAGeCK CLI failed: ${mageckResult.userMessage || mageckResult.error}. Falling back to TypeScript.`, 'warning');
+            // Fall through to TypeScript fallback
           }
-        );
+        }
+
+        if (!algorithmResults.mageck) {
+          this.log('mageck', 36, 'Using MAGeCK TypeScript implementation (fallback)', 'info');
+          const mageck = new MAGeCKAnalyzer({
+            normalizationMethod: parameters.normalizationMethod,
+          });
+
+          const ctrlIdx = samples.filter(s => s.condition === 'control').map(s => samples.indexOf(s));
+          const treatIdx = samples.filter(s => s.condition === 'treatment').map(s => samples.indexOf(s));
+
+          const rawResults = await mageck.runAnalysis(
+            countMatrix,
+            sgRNAToGene,
+            ctrlIdx,
+            treatIdx,
+            (p) => {
+              const scaledProgress = algorithmProgress.mageck.start +
+                (p.progress / 100) * (algorithmProgress.mageck.end - algorithmProgress.mageck.start);
+              this.log('mageck', scaledProgress, p.message, 'info');
+            }
+          );
+          algorithmResults.mageck = mageck.toUnifiedResults(rawResults) as any;
+        }
+
         this.log('mageck', algorithmProgress.mageck.end, `MAGeCK complete: ${algorithmResults.mageck.filter(r => Math.min(r.fdrNeg, r.fdrPos) < parameters.fdrThreshold).length} significant genes`, 'success');
       }
 
@@ -289,7 +390,8 @@ export class AnalysisPipeline {
           const bagel2Analyzer = new BAGEL2Analyzer({
             essentialGenes: parameters.essentialGenes ? parameters.essentialGenes.split(',').map(s => s.trim()) : undefined,
             nonEssentialGenes: parameters.nonEssentialGenes ? parameters.nonEssentialGenes.split(',').map(s => s.trim()) : undefined,
-            bootstrapIterations: parameters.bagelPermutations || 1000
+            bootstrapIterations: parameters.bagelPermutations || 1000,
+            normalizationMethod: parameters.normalizationMethod
           });
 
           algorithmResults.bagel2 = await bagel2Analyzer.runAnalysis(
@@ -349,7 +451,9 @@ export class AnalysisPipeline {
         if (!algorithmResults.drugz) {
           // TypeScript fallback
           const drugzAnalyzer = new DrugZAnalyzer({
-            minSgRNAs: 3
+            minSgRNAs: 3,
+            pseudocount: 5,
+            normalizationMethod: parameters.normalizationMethod
           });
 
           algorithmResults.drugz = await drugzAnalyzer.runAnalysis(
@@ -537,15 +641,31 @@ export class AnalysisPipeline {
       gcContent: s.gcContent?.toFixed(1)
     }));
 
+    // Comprehensive QC
+    const sgrnaCounts = buildSGRNACountsFromMatrix(countMatrix, new Map(), library);
+    const replicates = extractReplicateData(samples);
+
+    // Get total genes
+    const uniqueGenes = new Set(library.values()).size;
+
+    const comprehensiveQC = calculateComprehensiveQC(
+      sgrnaCounts,
+      library.size,
+      uniqueGenes,
+      replicates
+    );
+
     return {
       totalReads,
       mappedReads,
       mappingRate,
       zeroCounts,
       libraryCoverage,
+      librarySize: library.size,
       giniCoefficient,
       correlations,
-      sampleStats
+      sampleStats,
+      comprehensiveQC
     };
   }
 
@@ -723,6 +843,7 @@ export class AnalysisPipeline {
 
     return results;
   }
+
 }
 
 export default AnalysisPipeline;

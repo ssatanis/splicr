@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas import AnalysisResultsResponse
 from app.services.analysis_service import AnalysisService
-from app.models import AnalysisStatus
+from app.models import AnalysisStatus, User
+from app.dependencies import get_current_user
 from uuid import UUID
 import logging
 
@@ -15,6 +16,7 @@ router = APIRouter()
 @router.get("/{analysis_id}", response_model=AnalysisResultsResponse)
 async def get_analysis_results(
     analysis_id: UUID,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -32,6 +34,13 @@ async def get_analysis_results(
             raise HTTPException(
                 status_code=404,
                 detail=f"Analysis {analysis_id} not found"
+            )
+            
+        # Check ownership
+        if analysis.user_id and analysis.user_id != str(current_user.id):
+            raise HTTPException(
+                status_code=403,
+                detail="Not authorized to access this analysis"
             )
         
         # Check if analysis is complete
@@ -67,6 +76,7 @@ async def get_analysis_results(
 async def download_result_file(
     analysis_id: UUID,
     result_type: str,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -82,6 +92,13 @@ async def download_result_file(
             raise HTTPException(
                 status_code=404,
                 detail=f"Analysis {analysis_id} not found"
+            )
+
+        # Check ownership
+        if analysis.user_id and analysis.user_id != str(current_user.id):
+            raise HTTPException(
+                status_code=403,
+                detail="Not authorized to access this analysis"
             )
         
         if analysis.status != AnalysisStatus.SUCCEEDED.value:
@@ -138,6 +155,7 @@ async def download_result_file(
 @router.get("/{analysis_id}/qc-metrics")
 async def get_qc_metrics(
     analysis_id: UUID,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """

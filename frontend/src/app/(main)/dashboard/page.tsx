@@ -123,138 +123,138 @@ export default function DashboardPage() {
   }, []);
 
   return (
-      <div className="min-h-screen">
-        <ConfirmModal
-          open={!!cancelConfirm}
-          onClose={() => setCancelConfirm(null)}
-          onConfirm={handleConfirmCancelJob}
-          title="Cancel analysis?"
-          message={
-            cancelConfirm
-              ? `"${cancelConfirm.name}" will be removed from the queue so the next job can run. You can start a new analysis later if needed.`
-              : ""
-          }
-          confirmLabel="Cancel analysis"
-          cancelLabel="Keep"
-          variant="danger"
-          loading={cancellingId !== null}
-        />
-        <div className="max-w-[1400px] mx-auto px-8 py-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-16"
-          >
-            <h1 className="text-6xl font-serif text-text-primary mb-2">Dashboard</h1>
-            <p className="text-lg text-text-secondary">{today}</p>
-          </motion.div>
+    <div className="min-h-screen">
+      <ConfirmModal
+        open={!!cancelConfirm}
+        onClose={() => setCancelConfirm(null)}
+        onConfirm={handleConfirmCancelJob}
+        title="Cancel analysis?"
+        message={
+          cancelConfirm
+            ? `"${cancelConfirm.name}" will be removed from the queue so the next job can run. You can start a new analysis later if needed.`
+            : ""
+        }
+        confirmLabel="Cancel analysis"
+        cancelLabel="Keep"
+        variant="danger"
+        loading={cancellingId !== null}
+      />
+      <div className="max-w-[1400px] mx-auto px-8 py-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-16"
+        >
+          <h1 className="text-6xl font-serif text-text-primary mb-2">Dashboard</h1>
+          <p className="text-lg text-text-secondary">{today}</p>
+        </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16"
-          >
-            <StatsCard
-              icon={FileText}
-              label="Total screen analyses"
-              value={stats.total}
-              color="text-text-primary"
-            />
-            <StatsCard
-              icon={CheckCircle2}
-              label="Completed"
-              value={stats.completed}
-              color="text-success"
-            />
-            <StatsCard
-              icon={Activity}
-              label="In progress"
-              value={stats.running}
-              color="text-info"
-            />
-            <StatsCard
-              icon={XCircle}
-              label="Failed"
-              value={stats.failed}
-              color="text-error"
-            />
-          </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16"
+        >
+          <StatsCard
+            icon={FileText}
+            label="Total screen analyses"
+            value={stats.total}
+            color="text-text-primary"
+          />
+          <StatsCard
+            icon={CheckCircle2}
+            label="Completed"
+            value={stats.completed}
+            color="text-success"
+          />
+          <StatsCard
+            icon={Activity}
+            label="In progress"
+            value={stats.running}
+            color="text-info"
+          />
+          <StatsCard
+            icon={XCircle}
+            label="Failed"
+            value={stats.failed}
+            color="text-error"
+          />
+        </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-4xl font-serif text-text-primary">Recent analyses</h2>
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <Search
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary"
-                    strokeWidth={1.5}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Search analyses..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 pr-4 py-2 bg-surface border border-border rounded-xl text-sm font-serif focus:outline-none focus:ring-2 focus:ring-text-primary w-64"
-                  />
-                </div>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-4 py-2 bg-surface border border-border rounded-xl text-sm font-serif focus:outline-none focus:ring-2 focus:ring-text-primary"
-                >
-                  <option value="all">All status</option>
-                  <option value="complete">Complete</option>
-                  <option value="running">Running</option>
-                  <option value="queued">Queued</option>
-                  <option value="failed">Failed</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-4xl font-serif text-text-primary">Recent analyses</h2>
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <Search
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary"
+                  strokeWidth={1.5}
+                />
+                <input
+                  type="text"
+                  placeholder="Search analyses..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 py-2 bg-surface border border-border rounded-xl text-sm font-serif focus:outline-none focus:ring-2 focus:ring-text-primary w-64"
+                />
               </div>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-4 py-2 bg-surface border border-border rounded-xl text-sm font-serif focus:outline-none focus:ring-2 focus:ring-text-primary"
+              >
+                <option value="all">All status</option>
+                <option value="complete">Complete</option>
+                <option value="running">Running</option>
+                <option value="queued">Initializing</option>
+                <option value="failed">Failed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
             </div>
+          </div>
 
-            {filteredAnalyses.length === 0 ? (
-              <EmptyState />
-            ) : (
-              <div className="bg-surface rounded-2xl shadow-card border border-border overflow-hidden">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border-light">
-                      <th className="text-left px-8 py-4 text-sm font-serif text-text-secondary font-normal">Name</th>
-                      <th className="text-left px-8 py-4 text-sm font-serif text-text-secondary font-normal">Date</th>
-                      <th className="text-left px-8 py-4 text-sm font-serif text-text-secondary font-normal">Status</th>
-                      <th className="text-left px-8 py-4 text-sm font-serif text-text-secondary font-normal">Algorithm</th>
-                      <th className="text-left px-8 py-4 text-sm font-serif text-text-secondary font-normal">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredAnalyses.map((analysis) => (
-                      <AnalysisRow
-                        key={analysis.id}
-                        analysis={analysis}
-                        editingId={editingId}
-                        editingName={editingName}
-                        setEditingName={setEditingName}
-                        onStartEdit={handleStartEdit}
-                        onCancelEdit={handleCancelEdit}
-                        onSaveEdit={handleSaveEdit}
-                        isSaving={updateAnalysis.isPending}
-                        onCancelJob={handleRequestCancelJob}
-                        cancellingId={cancellingId}
-                        cancellableStatuses={CANCELLABLE_STATUSES}
-                      />
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </motion.div>
-        </div>
+          {filteredAnalyses.length === 0 ? (
+            <EmptyState />
+          ) : (
+            <div className="bg-surface rounded-2xl shadow-card border border-border overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border-light">
+                    <th className="text-left px-8 py-4 text-sm font-serif text-text-secondary font-normal">Name</th>
+                    <th className="text-left px-8 py-4 text-sm font-serif text-text-secondary font-normal">Date</th>
+                    <th className="text-left px-8 py-4 text-sm font-serif text-text-secondary font-normal">Status</th>
+                    <th className="text-left px-8 py-4 text-sm font-serif text-text-secondary font-normal">Algorithm</th>
+                    <th className="text-left px-8 py-4 text-sm font-serif text-text-secondary font-normal">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredAnalyses.map((analysis) => (
+                    <AnalysisRow
+                      key={analysis.id}
+                      analysis={analysis}
+                      editingId={editingId}
+                      editingName={editingName}
+                      setEditingName={setEditingName}
+                      onStartEdit={handleStartEdit}
+                      onCancelEdit={handleCancelEdit}
+                      onSaveEdit={handleSaveEdit}
+                      isSaving={updateAnalysis.isPending}
+                      onCancelJob={handleRequestCancelJob}
+                      cancellingId={cancellingId}
+                      cancellableStatuses={CANCELLABLE_STATUSES}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </motion.div>
       </div>
+    </div>
   );
 }
 
@@ -427,7 +427,7 @@ function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { icon: React.ComponentType<React.SVGProps<SVGSVGElement>>; color: string; bg: string; label: string }> = {
     complete: { icon: CheckCircle2, color: "text-success", bg: "bg-success/10", label: "Complete" },
     running: { icon: Clock, color: "text-info", bg: "bg-info/10", label: "Running" },
-    queued: { icon: Clock, color: "text-warning", bg: "bg-warning/10", label: "Queued" },
+    queued: { icon: Clock, color: "text-info", bg: "bg-info/10", label: "Initializing" },
     failed: { icon: AlertCircle, color: "text-error", bg: "bg-error/10", label: "Failed" },
     cancelled: { icon: Ban, color: "text-text-tertiary", bg: "bg-background", label: "Cancelled" },
     created: { icon: Clock, color: "text-text-tertiary", bg: "bg-background", label: "Created" },

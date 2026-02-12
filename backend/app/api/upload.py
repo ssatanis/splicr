@@ -2,6 +2,8 @@
 from fastapi import APIRouter, HTTPException, Depends
 from app.schemas import PresignedURLRequest, PresignedURLResponse
 from app.services.s3_service import S3Service
+from app.dependencies import get_current_user
+from app.models import User
 import logging
 
 logger = logging.getLogger(__name__)
@@ -9,7 +11,10 @@ router = APIRouter()
 
 
 @router.post("/presigned-url", response_model=PresignedURLResponse)
-async def get_presigned_upload_url(request: PresignedURLRequest):
+async def get_presigned_upload_url(
+    request: PresignedURLRequest,
+    current_user: User = Depends(get_current_user)
+):
     """
     Generate presigned URL for direct browser-to-S3 upload
     
@@ -22,7 +27,7 @@ async def get_presigned_upload_url(request: PresignedURLRequest):
     Returns presigned upload URL with required fields.
     """
     try:
-        logger.info(f"Generating presigned URL for: {request.filename}")
+        logger.info(f"User {current_user.id} generating presigned URL for: {request.filename}")
         
         result = S3Service.generate_presigned_upload_url(
             filename=request.filename,
@@ -40,7 +45,10 @@ async def get_presigned_upload_url(request: PresignedURLRequest):
 
 
 @router.post("/validate")
-async def validate_upload(file_key: str):
+async def validate_upload(
+    file_key: str,
+    current_user: User = Depends(get_current_user)
+):
     """
     Validate that a file was successfully uploaded to S3
     

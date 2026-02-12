@@ -32,3 +32,16 @@ def decode_token(token: str) -> Optional[str]:
         return payload.get("sub")
     except JWTError:
         return None
+
+
+import secrets
+import hashlib
+
+def generate_api_key() -> str:
+    """Generate secure random API key (sk_live_...)"""
+    return f"sk_live_{secrets.token_hex(24)}"
+
+
+def get_api_key_hash(key: str) -> str:
+    """Hash API key for storage"""
+    return hashlib.sha256(key.encode()).hexdigest()

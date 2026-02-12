@@ -17,12 +17,13 @@ export interface MageckCountParams {
   sgrnaLen?: number;
   pdfReport?: boolean;
   day0Label?: string;
+  inputCountTable?: string; // Opt out of counting by providing table
 }
 
 export interface MageckTestParams {
   countTablePath: string;
-  treatmentId: string; // comma-separated sample labels or indices
-  controlId: string;
+  treatmentColumns: string; // comma-separated sample labels or indices
+  controlColumns: string;
   outputPrefix: string;
   normMethod?: 'none' | 'median' | 'total' | 'control';
   geneTestFdrThreshold?: number;
@@ -82,8 +83,8 @@ export function buildMageckTestCommand(params: MageckTestParams): string[] {
   const args: string[] = [
     'test',
     '-k', params.countTablePath,
-    '-t', params.treatmentId,
-    '-c', params.controlId,
+    '-t', params.treatmentColumns,
+    '-c', params.controlColumns,
     '-n', params.outputPrefix,
   ];
 

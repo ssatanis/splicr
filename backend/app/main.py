@@ -4,52 +4,25 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.config import get_settings
 from app.database import engine, Base
-from app.api import upload, analysis, results, websocket, auth, reference_sets
+from app.api import upload, analysis, results, websocket, auth, reference_sets, api_keys
 from app.schemas import HealthCheckResponse
 from datetime import datetime
 import logging
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# ... (logging config)
 
-settings = get_settings()
-
-# Create database tables
-try:
-    Base.metadata.create_all(bind=engine)
-    logger.info("Database tables created successfully")
-except Exception as e:
-    logger.error(f"Error creating database tables: {str(e)}")
-
-# Initialize FastAPI app
-app = FastAPI(
-    title=settings.APP_NAME,
-    version="1.0.0",
-    description="Production-ready CRISPR screen analysis API with AWS integration",
-    docs_url="/api/docs",
-    redoc_url="/api/redoc",
-    openapi_url="/api/openapi.json"
-)
-
-# CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.get_cors_origins(),
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["*"]
-)
+# ... (app init)
 
 # Include API routers
 app.include_router(
     auth.router,
     prefix=f"{settings.API_V1_PREFIX}/auth",
     tags=["Auth"]
+)
+app.include_router(
+    api_keys.router,
+    prefix=f"{settings.API_V1_PREFIX}/api-keys",
+    tags=["API Keys"]
 )
 app.include_router(
     upload.router,

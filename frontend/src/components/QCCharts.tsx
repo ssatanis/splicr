@@ -1,6 +1,8 @@
 'use client';
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Legend
+} from 'recharts';
 
 interface SampleStat {
   name: string;
@@ -17,6 +19,7 @@ interface QCChartsProps {
   coverage?: { sample: string; coverage: number }[];
   giniCoefficient?: number;
   sampleStats?: SampleStat[];
+  lorenzCurve?: { cumulative_population: number; cumulative_reads: number }[];
   /** When 'demo', show notice that metrics are from demo data; run with sequencing data for real QC. */
   resultsSource?: 'demo' | 'pipeline';
 }
@@ -34,6 +37,7 @@ export default function QCCharts({
   coverage,
   giniCoefficient,
   sampleStats,
+  lorenzCurve,
   resultsSource,
 }: QCChartsProps) {
   const hasReadCounts = readCounts && readCounts.length > 0;
@@ -41,12 +45,13 @@ export default function QCCharts({
   const hasCoverage = coverage && coverage.length > 0;
   const hasGini = typeof giniCoefficient === 'number';
   const hasSampleStats = sampleStats && sampleStats.length > 0;
+  const hasLorenz = lorenzCurve && lorenzCurve.length > 0;
   const isDemo = resultsSource === 'demo';
 
   const sampleNames = sampleStats?.map(s => s.name) ||
     (hasReadCounts ? readCounts!.map(d => d.sample) : []);
 
-  const hasAnyData = hasReadCounts || hasCorrelation || hasCoverage || hasGini || hasSampleStats;
+  const hasAnyData = hasReadCounts || hasCorrelation || hasCoverage || hasGini || hasSampleStats || hasLorenz;
 
   if (!hasAnyData) {
     return (
@@ -124,7 +129,7 @@ export default function QCCharts({
                   tick={{ fontSize: 12 }}
                 />
                 <Tooltip
-                  content={({ active, payload, label }) => {
+                  content={({ active, payload, label }: { active?: boolean; payload?: readonly any[]; label?: string }) => {
                     if (active && payload && payload.length) {
                       return (
                         <div className="bg-surface p-3 rounded-lg shadow-lg border border-border">
@@ -222,7 +227,7 @@ export default function QCCharts({
                   tick={{ fontSize: 12 }}
                 />
                 <Tooltip
-                  content={({ active, payload, label }) => {
+                  content={({ active, payload, label }: { active?: boolean; payload?: readonly any[]; label?: string }) => {
                     if (active && payload && payload.length) {
                       return (
                         <div className="bg-surface p-3 rounded-lg shadow-lg border border-border">
@@ -245,27 +250,92 @@ export default function QCCharts({
         </div>
 
         {/* Gini Coefficient — only when real value */}
-        <div className="bg-surface rounded-xl p-6 flex flex-col items-center justify-center shadow-card border border-border">
-          <h3 className="text-xl font-serif mb-4 text-text-primary">Gini coefficient</h3>
-          {hasGini ? (
-            <>
-              <div className="text-7xl font-serif text-text-primary">{giniCoefficient!.toFixed(2)}</div>
-              <p className="text-sm text-text-secondary mt-4">Distribution uniformity</p>
-              <div className="mt-6 w-full max-w-xs">
-                <div className="h-2 bg-gradient-to-r from-success via-accent to-warning rounded-full" />
-                <div className="flex justify-between mt-1 text-xs text-text-tertiary">
-                  <span>0 (Uniform)</span>
-                  <span>1 (Skewed)</span>
-                </div>
+      </div>
+
+      {/* Lorenz Curve - New Visualization */}
+      <div className="bg-surface rounded-xl p-6 shadow-card border border-border">
+        <h3 className="text-xl font-serif mb-4 text-text-primary">Lorenz Curve</h3>
+        {hasLorenz ? (
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={lorenzCurve}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E8E6E3" />
+              <XAxis
+                dataKey="cumulative_population"
+                type="number"
+                domain={[0, 1]}
+                tickFormatter={(val) => `${(val * 100).toFixed(0)}%`}
+                label={{ value: 'Culm. % of sgRNAs', position: 'insideBottom', offset: -5, style: { fontFamily: 'Instrument Serif' } }}
+                tick={{ fontSize: 12, fontFamily: 'Instrument Serif' }}
+              />
+              <YAxis
+                domain={[0, 1]}
+                tickFormatter={(val: number) => `${(val * 100).toFixed(0)}%`}
+                label={{ value: 'Culm. % of Reads', angle: -90, position: 'insideLeft', style: { fontFamily: 'Instrument Serif' } }}
+                tick={{ fontSize: 12 }}
+              />
+              <Tooltip
+                formatter={(value: number) => [`${(value * 100).toFixed(1)}%`, 'Cumulative Reads']}
+                labelFormatter={(label: number) => `Top ${(label * 100).toFixed(1)}% sgRNAs`}
+              />
+              <ReferenceLine segment={[{ x: 0, y: 0 }, { x: 1, y: 1 }]} stroke="#ccc" strokeDasharray="3 3" label="Perfect Uniformity" />
+              <Line type="monotone" dataKey="cumulative_reads" stroke="#6ABF36" dot={false} strokeWidth={2} />
+            </LineChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="h-full flex flex-col items-center justify-center text-center p-8">
+            <p className="text-text-secondary">Lorenz curve data not available.</p>
+            <p className="text-xs text-text-tertiary mt-2">Requires comprehensive QC calculation.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Gini Coefficient - Enhanced Display within Grid */}
+      <div className="bg-surface rounded-xl p-6 flex flex-col items-center justify-center shadow-card border border-border">
+        <h3 className="text-xl font-serif mb-4 text-text-primary">Gini Coefficient</h3>
+        {hasGini ? (
+          <>
+            <div
+              className="text-7xl font-serif"
+              style={{
+                color: giniCoefficient! < 0.2 ? '#6ABF36' : // Excellent (Green)
+                  giniCoefficient! < 0.4 ? '#8FD14F' : // Good (Light Green)
+                    giniCoefficient! < 0.6 ? '#F2C94C' : // Acceptable (Yellow)
+                      '#EB5757'                            // Poor (Red)
+              }}
+            >
+              {giniCoefficient!.toFixed(2)}
+            </div>
+            <p className="text-sm text-text-secondary mt-1 font-medium">
+              {giniCoefficient! < 0.2 ? 'Excellent Uniformity' :
+                giniCoefficient! < 0.4 ? 'Good Uniformity' :
+                  giniCoefficient! < 0.6 ? 'Acceptable' : 'Poor Uniformity (Skewed)'}
+            </p>
+
+            <div className="mt-8 w-full max-w-xs relative pt-4">
+              <div className="h-3 bg-gradient-to-r from-success via-warning to-error rounded-full w-full" />
+
+              {/* Marker */}
+              <div
+                className="absolute top-2 w-0.5 h-7 bg-text-primary transform -translate-x-1/2 transition-all duration-500"
+                style={{ left: `${Math.min(giniCoefficient! * 100, 100)}%` }}
+              />
+
+              <div className="flex justify-between mt-2 text-xs text-text-tertiary">
+                <span>0 (Uniform)</span>
+                <span>0.5</span>
+                <span>1 (Skewed)</span>
               </div>
-              <p className="text-xs text-text-tertiary mt-4 text-center max-w-xs">
-                Lower values indicate more uniform sgRNA distribution across the library.
-              </p>
-            </>
-          ) : (
-            <EmptyQC />
-          )}
-        </div>
+            </div>
+
+            <p className="text-xs text-text-tertiary mt-6 text-center max-w-xs px-4">
+              Gini coefficient measures inequality in read distribution.
+              Values &lt; 0.2 are ideal for CRISPR screens.
+              Values &gt; 0.4 suggest potential library imbalance or PCR bias.
+            </p>
+          </>
+        ) : (
+          <EmptyQC />
+        )}
       </div>
     </div>
   );

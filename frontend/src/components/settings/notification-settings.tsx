@@ -126,7 +126,7 @@ export function NotificationSettings() {
           Notifications
         </h2>
         <p className="text-sm text-text-secondary">
-          Manage how you receive updates about your analyses
+          Control how and when SplicR alerts you about pipeline events, collaboration, and platform updates
         </p>
       </div>
 
@@ -146,12 +146,13 @@ export function NotificationSettings() {
 
       {/* Email Notifications */}
       <div className="bg-surface border border-border rounded-xl p-6">
-        <h3 className="text-lg font-serif text-text-primary mb-4">Email Notifications</h3>
+        <h3 className="text-lg font-serif text-text-primary mb-1">Analysis & Pipeline Alerts</h3>
+        <p className="text-xs text-text-secondary mb-4">All notifications sent to your account email</p>
         <div className="space-y-4">
           <SettingItem
             id="analysis-complete"
-            label="Analysis completion"
-            description="Receive an email when a screen run finishes"
+            label="Run completed"
+            description="Email when a CRISPR screen analysis finishes successfully"
             checked={settings.email_on_analysis_complete}
             onChange={(checked) =>
               setSettings({ ...settings, email_on_analysis_complete: checked })
@@ -160,8 +161,8 @@ export function NotificationSettings() {
 
           <SettingItem
             id="error-notifications"
-            label="Error notifications"
-            description="Get notified when an analysis fails (general errors)"
+            label="Pipeline errors"
+            description="Email on unexpected pipeline failures (timeouts, resource limits, internal errors)"
             checked={settings.email_on_error}
             onChange={(checked) =>
               setSettings({ ...settings, email_on_error: checked })
@@ -170,8 +171,8 @@ export function NotificationSettings() {
 
           <SettingItem
             id="analysis-failure"
-            label="Email on analysis failure"
-            description="Receive an email when a screen run fails"
+            label="Analysis failure"
+            description="Email when a screen fails QC or a selected algorithm cannot produce results"
             checked={settings.email_on_analysis_failure}
             onChange={(checked) =>
               setSettings({ ...settings, email_on_analysis_failure: checked })
@@ -180,8 +181,8 @@ export function NotificationSettings() {
 
           <SettingItem
             id="daily-digest"
-            label="Daily digest"
-            description="Summary of all completed analyses each day"
+            label="Daily run summary"
+            description="A morning digest of all analyses completed, failed, or queued in the last 24 hours"
             checked={settings.email_daily_digest}
             onChange={(checked) =>
               setSettings({ ...settings, email_daily_digest: checked })
@@ -190,8 +191,8 @@ export function NotificationSettings() {
 
           <SettingItem
             id="weekly-digest"
-            label="Weekly summary digest"
-            description="Receive a weekly summary of your activity"
+            label="Weekly lab digest"
+            description="End-of-week summary including total screens run, storage usage, and new shared results"
             checked={settings.email_weekly_digest}
             onChange={(checked) =>
               setSettings({ ...settings, email_weekly_digest: checked })
@@ -200,8 +201,8 @@ export function NotificationSettings() {
 
           <SettingItem
             id="shared-updates"
-            label="Shared analysis updates"
-            description="Notifications about changes to shared work"
+            label="Shared screen updates"
+            description="When a collaborator re-runs or annotates a screen shared with you"
             checked={settings.email_shared_updates}
             onChange={(checked) =>
               setSettings({ ...settings, email_shared_updates: checked })
@@ -210,8 +211,8 @@ export function NotificationSettings() {
 
           <SettingItem
             id="system-announcements"
-            label="System announcements"
-            description="Important updates about SplicR"
+            label="Platform announcements"
+            description="Important notices about SplicR — rarely sent, always relevant"
             checked={settings.email_system_announcements}
             onChange={(checked) =>
               setSettings({ ...settings, email_system_announcements: checked })
@@ -222,7 +223,8 @@ export function NotificationSettings() {
 
       {/* In-App & Browser */}
       <div className="bg-surface border border-border rounded-xl p-6">
-        <h3 className="text-lg font-serif text-text-primary mb-4">In-App & Browser</h3>
+        <h3 className="text-lg font-serif text-text-primary mb-1">Desktop & Browser Alerts</h3>
+        <p className="text-xs text-text-secondary mb-4">Real-time notifications while you work</p>
         <div className="space-y-4">
           <SettingItem
             id="desktop-notifications"
@@ -314,65 +316,79 @@ export function NotificationSettings() {
 
       {/* System Updates */}
       <div className="bg-surface border border-border rounded-xl p-6">
-        <h3 className="text-lg font-serif text-text-primary mb-4">System Updates</h3>
+        <h3 className="text-lg font-serif text-text-primary mb-1">Platform & Algorithm Updates</h3>
+        <p className="text-xs text-text-secondary mb-4">Stay informed about SplicR releases, algorithm version bumps, and scheduled maintenance</p>
         <div className="space-y-4">
           <SettingItem
             id="feature-announcements"
-            label="New feature announcements"
+            label="New feature releases"
             checked={settings.system_feature_announcements}
             onChange={(checked) => setSettings({ ...settings, system_feature_announcements: checked })}
-            description="Notify me about new SplicR features"
+            description="When new analysis tools, visualizations, or platform capabilities launch"
           />
           <SettingItem
             id="maintenance-alerts"
-            label="Scheduled maintenance alerts"
+            label="Maintenance windows"
             checked={settings.system_maintenance_alerts}
             onChange={(checked) => setSettings({ ...settings, system_maintenance_alerts: checked })}
-            description="Get notified before planned maintenance"
+            description="Advance notice before planned downtime or infrastructure changes"
           />
           <SettingItem
             id="algorithm-updates"
             label="Algorithm version updates"
             checked={settings.system_algorithm_updates}
             onChange={(checked) => setSettings({ ...settings, system_algorithm_updates: checked })}
-            description="MAGeCK, BAGEL2 and pipeline updates"
+            description="MAGeCK, BAGEL2, DrugZ, and pipeline version bumps that may affect reproducibility"
           />
           <SettingItem
             id="security-notifications"
-            label="Security notifications"
+            label="Security & compliance"
             checked={settings.system_security_notifications}
             onChange={(checked) => setSettings({ ...settings, system_security_notifications: checked })}
-            description="Critical security and policy updates"
+            description="Critical security patches, policy changes, and compliance updates"
           />
         </div>
       </div>
 
       {/* Collaboration Alerts */}
       <div className="bg-surface border border-border rounded-xl p-6">
-        <h3 className="text-lg font-serif text-text-primary mb-4">Collaboration Alerts</h3>
+        <h3 className="text-lg font-serif text-text-primary mb-1">Collaboration & Team Activity</h3>
+        <p className="text-xs text-text-secondary mb-4">Notifications about shared screens, comments, and mentions from collaborators</p>
         <div className="space-y-4">
           <SettingItem
             id="collab-team-shares"
-            label="Team member shares screen"
+            label="Screen shared with you"
             checked={settings.collab_team_shares}
             onChange={(checked) => setSettings({ ...settings, collab_team_shares: checked })}
-            description="When someone shares an analysis with you"
+            description="When a lab member or collaborator shares an analysis for your review"
           />
           <SettingItem
             id="collab-comments"
             label="Comments on your analyses"
             checked={settings.collab_comments_on_analyses}
             onChange={(checked) => setSettings({ ...settings, collab_comments_on_analyses: checked })}
-            description="When someone comments on your work"
+            description="When someone adds notes or questions to your published results"
           />
           <SettingItem
             id="collab-mentions"
-            label="Mention notifications"
+            label="@Mentions"
             checked={settings.collab_mentions}
             onChange={(checked) => setSettings({ ...settings, collab_mentions: checked })}
-            description="When you are @mentioned in a comment"
+            description="When you are mentioned by name in a comment or annotation"
           />
         </div>
+      </div>
+
+      {/* Per-project defaults callout */}
+      <div className="bg-surface border border-border rounded-xl p-6">
+        <h3 className="text-lg font-serif text-text-primary mb-2">Per-project notification defaults</h3>
+        <p className="text-sm text-text-secondary">
+          Override these global preferences for individual projects or labs.
+          Per-project notification settings will be configurable from each project’s settings panel.
+        </p>
+        <span className="inline-block mt-3 px-3 py-1 text-xs font-medium bg-accent/15 text-accent rounded-full">
+          Coming soon
+        </span>
       </div>
 
       {/* Save Button */}
@@ -396,17 +412,17 @@ export function NotificationSettings() {
 }
 
 // Simple Switch Component
-function SettingItem({ 
-  id, 
-  label, 
-  description, 
-  checked, 
-  onChange 
-}: { 
-  id: string; 
-  label: string; 
-  description: string; 
-  checked: boolean; 
+function SettingItem({
+  id,
+  label,
+  description,
+  checked,
+  onChange
+}: {
+  id: string;
+  label: string;
+  description: string;
+  checked: boolean;
   onChange: (checked: boolean) => void;
 }) {
   return (

@@ -18,36 +18,15 @@ export function APIIntegrationsSettings() {
       <div>
         <h2 className="text-2xl font-serif text-text-primary mb-2 flex items-center gap-2">
           <Key className="w-6 h-6" />
-          API & Integrations
+          Developer & Integrations
         </h2>
         <p className="text-sm text-text-secondary">
-          API keys, rate limits, and external tools (Python, R, Jupyter, Galaxy)
+          Manage API keys, check rate limits, and configure external tool connections
         </p>
       </div>
 
-      {/* API Access - existing component */}
+      {/* API Key Manager (includes rate limits) */}
       <APIKeyManager />
-
-      {/* Rate limit display */}
-      <div className="bg-surface rounded-xl p-6 border border-border">
-        <h3 className="text-lg font-serif text-text-primary mb-2">Rate limits</h3>
-        <p className="text-sm text-text-secondary mb-3">Current plan limits (requests per minute).</p>
-        <div className="flex flex-wrap gap-4">
-          {Object.entries(RATE_LIMITS).map(([plan, limit]) => (
-            <span key={plan} className="px-3 py-1.5 bg-background border border-border rounded-lg text-sm">
-              <span className="text-text-primary font-medium">{plan}</span>
-              <span className="text-text-tertiary ml-2">{limit}</span>
-            </span>
-          ))}
-        </div>
-        <a
-          href="/docs/api"
-          className="inline-flex items-center gap-2 mt-4 text-sm text-accent hover:underline"
-        >
-          <ExternalLink className="w-4 h-4" />
-          API documentation
-        </a>
-      </div>
 
       {/* External Tools */}
       <div className="bg-surface rounded-xl border border-border overflow-hidden">
@@ -58,17 +37,17 @@ export function APIIntegrationsSettings() {
         >
           {externalOpen ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
           <Code className="w-5 h-5 text-text-secondary" />
-          <span className="font-serif text-text-primary">External Tools</span>
+          <span className="font-serif text-text-primary">Integrations & SDKs</span>
         </button>
         {externalOpen && (
           <div className="px-6 pb-6 pt-0 border-t border-border space-y-6">
-            <div>
+            <div className="mt-6">
               <h4 className="text-sm font-serif text-text-primary mb-2 flex items-center gap-2">
                 <BookOpen className="w-4 h-4" />
-                Python SDK
+                Python Client
               </h4>
               <pre className="p-4 bg-background border border-border rounded-lg text-sm text-text-primary overflow-x-auto">
-{`pip install splicr
+                {`pip install splicr
 # or: pip install splicr-sdk`}
               </pre>
               <p className="text-xs text-text-tertiary mt-1">Use your API key in scripts or environment.</p>
@@ -76,7 +55,7 @@ export function APIIntegrationsSettings() {
             <div>
               <h4 className="text-sm font-serif text-text-primary mb-2">R package</h4>
               <pre className="p-4 bg-background border border-border rounded-lg text-sm text-text-primary overflow-x-auto">
-{`# Install from GitHub or CRAN
+                {`# Install from GitHub or CRAN
 install.packages("splicr")
 # Or: remotes::install_github("splicr/splicr-r")`}
               </pre>

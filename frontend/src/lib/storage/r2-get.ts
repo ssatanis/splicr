@@ -22,10 +22,17 @@ function isRetryableFetchError(err: unknown): boolean {
   return false;
 }
 
-export async function getR2FileAsFile(r2Key: string, fileName?: string): Promise<File> {
+export async function getR2FileAsFile(r2Key: string, fileName?: string, options?: { maxSizeBytes?: number }): Promise<File> {
   const client = createServerR2Client();
+  const bucketName = R2_BUCKET_NAME;
+
+  // Log fetch attempt (without secrets) to help debug R2_ENDPOINT/BUCKET issues
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[R2 Fetch] Key: ${r2Key}, Bucket: ${bucketName}`);
+  }
+
   const command = new GetObjectCommand({
-    Bucket: R2_BUCKET_NAME,
+    Bucket: bucketName,
     Key: r2Key,
   });
 
@@ -38,8 +45,13 @@ export async function getR2FileAsFile(r2Key: string, fileName?: string): Promise
       }
       const response = await client.send(command);
       const body = response.Body;
+
+      if (options?.maxSizeBytes && response.ContentLength && response.ContentLength > options.maxSizeBytes) {
+        throw new Error(`File size (${(response.ContentLength / 1024 / 1024).toFixed(2)} MB) exceeds maximum allowed size (${(options.maxSizeBytes / 1024 / 1024).toFixed(2)} MB)`);
+      }
+
       if (!body) {
-        throw new Error(`R2 object empty or not found: ${r2Key}`);
+        throw new Error(`R2 object empty or not found (Body missing): ${r2Key}`);
       }
       const buffer = await body.transformToByteArray();
       const name = fileName ?? r2Key.split('/').pop() ?? r2Key;
@@ -48,13 +60,18 @@ export async function getR2FileAsFile(r2Key: string, fileName?: string): Promise
       lastError = err;
       const retryable = isRetryableFetchError(err);
       const isLast = attempt === MAX_FETCH_RETRIES - 1;
-      if (!retryable || isLast) {
+      // Don't retry if it's a file size error
+      const isSizeError = err instanceof Error && err.message.includes('exceeds maximum allowed size');
+
+      if (!retryable || isLast || isSizeError) {
         const msg = err instanceof Error ? err.message : String(err);
-        throw new Error(`R2 object not found or failed to fetch: ${r2Key}. ${msg}`);
+        const code = (err as any)?.code || (err as any)?.name || 'UnknownError';
+        throw new Error(`R2 object not found or failed to fetch: ${r2Key} [Code: ${code}]. ${msg}`);
       }
     }
   }
 
   const msg = lastError instanceof Error ? lastError.message : String(lastError);
-  throw new Error(`R2 object not found or failed to fetch after ${MAX_FETCH_RETRIES} attempts: ${r2Key}. ${msg}`);
+  const code = (lastError as any)?.code || (lastError as any)?.name || 'UnknownError';
+  throw new Error(`R2 object not found or failed to fetch after ${MAX_FETCH_RETRIES} attempts: ${r2Key} [Code: ${code}]. ${msg}`);
 }

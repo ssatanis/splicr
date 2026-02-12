@@ -324,10 +324,17 @@ export function PrivacySecuritySettings() {
     setSaving(true);
     setError(null);
     try {
-      // Mock account deletion - in production, this would delete all user data
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      const response = await fetch('/api/auth/delete-account', {
+        method: 'POST',
+      });
 
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to delete account');
+      }
+
+      // Account deleted successfully. Sign out client-side to clear session.
+      await supabase.auth.signOut();
       window.location.href = '/';
     } catch (error: any) {
       console.error('Error deleting account:', error);
@@ -546,11 +553,10 @@ export function PrivacySecuritySettings() {
                 <button
                   key={option.id}
                   onClick={() => setSettings({ ...settings, data_residency: option.id as any })}
-                  className={`p-4 rounded-lg border-2 transition-all ${
-                    settings.data_residency === option.id
+                  className={`p-4 rounded-lg border-2 transition-all ${settings.data_residency === option.id
                       ? 'border-accent bg-accent/5'
                       : 'border-border hover:border-accent/50'
-                  }`}
+                    }`}
                 >
                   <div className="text-3xl mb-2">{option.flag}</div>
                   <h4 className="text-sm font-medium text-text-primary mb-1">{option.name}</h4>

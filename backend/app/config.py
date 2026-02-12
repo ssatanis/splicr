@@ -23,13 +23,17 @@ class Settings(BaseSettings):
     CELERY_BROKER_URL: str = "redis://redis:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://redis:6379/0"
     
-    # AWS
+    # AWS / R2 Storage
     AWS_REGION: str = "us-east-1"
     AWS_ACCESS_KEY_ID: str = ""
     AWS_SECRET_ACCESS_KEY: str = ""
     S3_BUCKET_NAME: str
     AWS_BATCH_JOB_QUEUE: str
     AWS_BATCH_JOB_DEFINITION: str
+    
+    # Cloudflare R2 (optional - for S3-compatible storage)
+    R2_ENDPOINT_URL: str = ""  # e.g., https://{account_id}.r2.cloudflarestorage.com
+    R2_PUBLIC_URL: str = ""    # Optional: Custom domain for public access
     
     # Security
     SECRET_KEY: str

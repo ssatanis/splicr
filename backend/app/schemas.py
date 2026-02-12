@@ -148,3 +148,32 @@ class HealthCheckResponse(BaseModel):
     service: str
     version: str
     timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+
+class ApiKeyCreate(BaseModel):
+    """API Key creation request"""
+    name: str = "API Key"
+    scopes: List[str] = ["*"]
+
+
+class ApiKeyResponse(BaseModel):
+    """API Key response (with full key)"""
+    id: UUID
+    name: str
+    prefix: str
+    scopes: List[str]
+    created_at: datetime
+    key: str  # Only returned once
+
+
+class ApiKeyListResponse(BaseModel):
+    """API Key list item (no full key)"""
+    id: UUID
+    name: str
+    prefix: str
+    scopes: List[str]
+    created_at: datetime
+    last_used_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True

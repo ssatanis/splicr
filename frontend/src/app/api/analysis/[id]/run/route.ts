@@ -3,7 +3,6 @@ import { supabaseAdmin } from '@/lib/supabase/server';
 import { enqueueAnalysis, retryJob, REDIS_AVAILABLE, JobPriority } from '@/lib/queue/client';
 import { markAnalysisQueued, transitionAnalysisStatus } from '@/lib/queue/db-state';
 import { getApiUser } from '@/lib/supabase/server';
-import { runAnalysisPipeline } from '@/lib/runAnalysisPipeline';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,8 +13,7 @@ const ENQUEUE_TIMEOUT_MS = 8000;
 
 /**
  * Trigger analysis processing (e.g. Retry button).
- * Tries to enqueue; if Redis/worker unavailable or ?inline=true, runs pipeline inline (Vercel-friendly).
- * Use ?inline=true when worker is stuck (e.g. queued for 90+ sec) to run analysis directly in the API.
+ * Always enqueues to worker queue. Returns error if Redis/worker unavailable.
  */
 export async function POST(
   request: NextRequest,
@@ -23,8 +21,6 @@ export async function POST(
 ) {
   const params = await context.params;
   const analysisId = params.id;
-  const url = new URL(request.url);
-  const forceInline = url.searchParams.get('inline') === 'true' || url.searchParams.get('inline') === '1';
 
   try {
     // Check authentication
@@ -97,7 +93,10 @@ export async function POST(
     // Try to enqueue when Redis is configured (with timeout), unless force inline
     let enqueued = false;
     let jobId: string | null = null;
-    if (REDIS_AVAILABLE && !forceInline) {
+    let enqueueError: unknown = null;
+
+    // Always use worker queue when Redis is available
+    if (REDIS_AVAILABLE) {
       try {
         jobId = await Promise.race([
           enqueueAnalysis(jobData, { priority: JobPriority.NORMAL }),
@@ -107,7 +106,8 @@ export async function POST(
         ]);
         enqueued = true;
       } catch (queueErr) {
-        console.warn('Enqueue failed, running pipeline inline:', queueErr instanceof Error ? queueErr.message : queueErr);
+        enqueueError = queueErr;
+        console.warn('Enqueue failed:', queueErr instanceof Error ? queueErr.message : queueErr);
       }
     }
 
@@ -122,20 +122,20 @@ export async function POST(
       });
     }
 
-    // Fallback: run pipeline inline (Vercel / no Redis / no worker)
-    await (supabaseAdmin as any)
-      .from('analyses')
-      .update({ status: 'running', current_step: 'Starting' })
-      .eq('id', analysisId);
+    // If Redis is available but enqueue failed, return error (no inline fallback)
+    if (REDIS_AVAILABLE) {
+      console.error('Redis execution failed. Worker queue is required.');
+      return NextResponse.json({
+        error: 'Analysis queuing failed. Please check worker status.',
+        details: enqueueError instanceof Error ? enqueueError.message : String(enqueueError)
+      }, { status: 503 });
+    }
 
-    await runAnalysisPipeline(analysisId, analysis);
-
+    // No Redis configured - return error
+    console.error('Redis is not configured. Worker queue is required.');
     return NextResponse.json({
-      success: true,
-      message: 'Analysis completed inline',
-      analysisId,
-      mode: 'inline',
-    });
+      error: 'Worker queue is not configured. Please set REDIS_URL environment variable.',
+    }, { status: 503 });
   } catch (error) {
     console.error('Run analysis error:', error);
     return NextResponse.json(

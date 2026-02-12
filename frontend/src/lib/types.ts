@@ -2,6 +2,7 @@
  * Type definitions for SplicR
  */
 
+import type { QCMetrics as ComprehensiveQCMetrics } from './analysis/qcMetrics';
 export type AnalysisStatus = "created" | "pending" | "queued" | "processing" | "running" | "complete" | "failed" | "cancelled";
 
 export type Algorithm = "mageck" | "bagel2" | "drugz";
@@ -70,6 +71,7 @@ export interface QCMetrics {
   mappingRate: number;
   zeroCounts: number;
   libraryCoverage: number;
+  librarySize?: number;
   giniCoefficient?: number;
   correlations?: number[][];
   sampleStats?: Array<{
@@ -80,6 +82,7 @@ export interface QCMetrics {
     avgQuality?: string;
     gcContent?: string;
   }>;
+  comprehensiveQC?: ComprehensiveQCMetrics;
 }
 
 /** Real QC assessment from pipeline (PASS / WARNING / FAIL). */
@@ -96,6 +99,29 @@ export interface GeneResult {
   pValue: number;
   fdr: number;
   rank: number;
+}
+
+// Specific Algorithm Results
+export interface MAGeCKGeneResult {
+  gene: string;
+  fdrNeg: number;
+  fdrPos: number;
+  log2FC: number;
+  pValNeg: number;
+  pValPos: number;
+}
+
+export interface BAGEL2GeneResult {
+  gene: string;
+  bayesFactor: number;
+  essentialProbability?: number;
+}
+
+export interface DrugZGeneResult {
+  gene: string;
+  fdr: number;
+  normZ: number;
+  syntheticScore?: number;
 }
 
 /** When results are from the demo/mock pipeline vs real sequencing pipeline. */
@@ -136,6 +162,11 @@ export interface AnalysisResults {
     counts: string;
     geneSummary: string;
     sgrnaSummary: string;
+  };
+  algorithms?: {
+    mageck?: MAGeCKGeneResult[];
+    bagel2?: BAGEL2GeneResult[];
+    drugz?: DrugZGeneResult[];
   };
 }
 

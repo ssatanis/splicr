@@ -44,7 +44,7 @@ export function DataManagementSettings() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  
+
   const [settings, setSettings] = useState<DataManagementSettings>({
     auto_save_enabled: true,
     auto_save_interval_minutes: 5,
@@ -259,10 +259,23 @@ export function DataManagementSettings() {
       <div>
         <h2 className="text-2xl font-serif text-text-primary mb-2 flex items-center gap-2">
           <Database className="w-6 h-6" />
-          Data Management
+          Data & Storage
         </h2>
         <p className="text-sm text-text-secondary">
-          Auto-save, retention, and export preferences
+          Manage data retention policies, exports, and storage usage for your lab
+        </p>
+      </div>
+
+      {/* What We Store Explainer */}
+      <div className="bg-accent/5 border border-accent/10 rounded-xl p-6">
+        <h3 className="text-sm font-medium text-accent mb-2 flex items-center gap-2">
+          <HardDrive className="w-4 h-4" />
+          What SplicR Stores
+        </h3>
+        <p className="text-sm text-text-secondary leading-relaxed">
+          Uploaded FASTQ files, sgRNA library definitions, count matrices, MAGeCK/BAGEL2/DrugZ analysis outputs, QC metrics, annotations, experiment notes, and your personal settings.
+          <br />
+          <span className="opacity-80 mt-1 block">All data is encrypted at rest and stored in your region.</span>
         </p>
       </div>
 
@@ -291,7 +304,7 @@ export function DataManagementSettings() {
               onChange={(e) => setSettings({ ...settings, auto_save_enabled: e.target.checked })}
               className="w-4 h-4 rounded border-border accent-accent"
             />
-            <span className="text-sm text-text-primary">Auto-save analysis every</span>
+            <span className="text-sm text-text-primary">Auto-save analysis state every</span>
             <input
               type="number"
               min="1"
@@ -303,7 +316,7 @@ export function DataManagementSettings() {
             />
             <span className="text-sm text-text-primary">minutes</span>
           </label>
-          
+
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
@@ -313,7 +326,7 @@ export function DataManagementSettings() {
             />
             <span className="text-sm text-text-primary">Save intermediate results</span>
           </label>
-          
+
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
@@ -328,7 +341,7 @@ export function DataManagementSettings() {
 
       {/* Data Retention */}
       <div className="bg-surface rounded-xl p-6 border border-border">
-        <h3 className="text-lg font-serif text-text-primary mb-4">Data Retention</h3>
+        <h3 className="text-lg font-serif text-text-primary mb-4">Retention Policies</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-serif text-text-secondary mb-2">
@@ -346,7 +359,7 @@ export function DataManagementSettings() {
               <option value="90">90 days</option>
             </select>
           </div>
-          
+
           <div>
             <label className="block text-sm font-serif text-text-secondary mb-2">
               Archive old analyses after
@@ -363,7 +376,7 @@ export function DataManagementSettings() {
               <option value="365">1 year</option>
             </select>
           </div>
-          
+
           <div>
             <label className="block text-sm font-serif text-text-secondary mb-2">
               Auto-delete screens after (days)
@@ -383,20 +396,25 @@ export function DataManagementSettings() {
           </div>
           <div>
             <label className="block text-sm font-serif text-text-secondary mb-2">
-              Auto-delete archived after
+              Auto-delete archived data after
             </label>
             <select
               value={settings.auto_delete_archived_days || 0}
               onChange={(e) => setSettings({ ...settings, auto_delete_archived_days: parseInt(e.target.value) || null })}
               className="w-full px-4 py-2 bg-background border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
             >
-              <option value="0">Never</option>
+              <option value="0">Never (keep indefinitely)</option>
               <option value="365">1 year</option>
               <option value="730">2 years</option>
               <option value="1825">5 years</option>
               <option value="3650">10 years</option>
             </select>
           </div>
+        </div>
+        <div className="mt-4 p-3 bg-background rounded-lg border border-border">
+          <p className="text-xs text-text-secondary leading-relaxed">
+            <span className="font-medium text-text-primary">Note:</span> Archiving moves completed analyses to cold storage — they remain accessible but load more slowly. Auto-delete <span className="text-red-400">permanently removes</span> all associated files (FASTQ, counts, results) after the specified period. Exported summaries and reports are not affected.
+          </p>
         </div>
       </div>
 
@@ -479,6 +497,23 @@ export function DataManagementSettings() {
             />
             <span className="text-sm text-text-primary">Auto-generate analysis report (PDF)</span>
           </label>
+
+          <div className="pt-4 mt-4 border-t border-border">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-medium text-text-primary">Export metadata summary</h4>
+                <p className="text-xs text-text-secondary mt-1 max-w-md">
+                  Download a structured JSON/CSV bundle of all your analysis metadata, parameters, QC metrics, and result summaries — without raw sequence data.
+                  <br />
+                  <span className="opacity-80">Ideal for supplementary tables, meta-analyses, and data management plans.</span>
+                </p>
+              </div>
+              <Button variant="secondary" disabled className="opacity-70">
+                Export metadata
+                <span className="ml-2 text-[10px] bg-accent/20 text-accent px-1.5 py-0.5 rounded-full">Coming soon</span>
+              </Button>
+            </div>
+          </div>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
@@ -523,6 +558,7 @@ export function DataManagementSettings() {
             />
             <span className="text-sm text-text-primary">Auto-backup completed analyses</span>
           </label>
+          <p className="text-xs text-text-tertiary ml-6 mb-2">Creates a local compressed copy of results upon completion</p>
           {settings.backup_enabled && (
             <div>
               <label className="block text-sm font-serif text-text-secondary mb-2">Export frequency</label>
@@ -539,9 +575,9 @@ export function DataManagementSettings() {
           )}
           <Button variant="secondary" className="mt-2" onClick={downloadAllDataZip} disabled={downloadingZip}>
             {downloadingZip ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
-            {downloadingZip ? 'Creating ZIP…' : 'Download all data (ZIP)'}
+            {downloadingZip ? 'Creating archive…' : 'Download full data archive (ZIP)'}
           </Button>
-          <p className="text-xs text-text-tertiary">Generates a ZIP of all your analyses and exports.</p>
+          <p className="text-xs text-text-tertiary">Generates a ZIP containing all your FASTQ files, analyses, and exports. This may take a while for large datasets.</p>
         </div>
       </div>
 

@@ -8,7 +8,8 @@ from app.schemas import (
     AnalysisStatusResponse
 )
 from app.services.analysis_service import AnalysisService
-from app.models import AnalysisStatus
+from app.models import AnalysisStatus, User
+from app.dependencies import get_current_user
 from uuid import UUID
 import logging
 
@@ -20,6 +21,7 @@ router = APIRouter()
 async def submit_analysis(
     request: AnalysisSubmitRequest,
     background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -36,7 +38,7 @@ async def submit_analysis(
     Returns created analysis with unique ID.
     """
     try:
-        logger.info(f"Submitting analysis with {len(request.file_keys)} files")
+        logger.info(f"User {current_user.id} submitting analysis with {len(request.file_keys)} files")
         
         # Validate files exist in S3
         if not AnalysisService.validate_files(request.file_keys):
@@ -45,14 +47,15 @@ async def submit_analysis(
                 detail="One or more files not found in S3. Please upload files first."
             )
         
-        # Create analysis record
+        # Create analysis record associated with user
         analysis = AnalysisService.create_analysis(
             db=db,
             file_keys=request.file_keys,
             library_type=request.library_type,
             sample_names=request.sample_names,
             algorithm=request.algorithm,
-            parameters=request.parameters
+            parameters=request.parameters,
+            user_id=str(current_user.id)
         )
         
         # Queue analysis task (import here to avoid circular dependency)
@@ -82,6 +85,7 @@ async def submit_analysis(
 @router.get("/{analysis_id}/status", response_model=AnalysisStatusResponse)
 async def get_analysis_status(
     analysis_id: UUID,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -98,6 +102,13 @@ async def get_analysis_status(
             raise HTTPException(
                 status_code=404,
                 detail=f"Analysis {analysis_id} not found"
+            )
+            
+        # Check ownership
+        if analysis.user_id and analysis.user_id != str(current_user.id):
+            raise HTTPException(
+                status_code=403,
+                detail="Not authorized to access this analysis"
             )
         
         return AnalysisStatusResponse(
@@ -124,6 +135,7 @@ async def get_analysis_status(
 @router.get("/{analysis_id}", response_model=AnalysisResponse)
 async def get_analysis(
     analysis_id: UUID,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -140,6 +152,13 @@ async def get_analysis(
             raise HTTPException(
                 status_code=404,
                 detail=f"Analysis {analysis_id} not found"
+            )
+
+        # Check ownership
+        if analysis.user_id and analysis.user_id != str(current_user.id):
+            raise HTTPException(
+                status_code=403,
+                detail="Not authorized to access this analysis"
             )
         
         return AnalysisResponse.model_validate(analysis)
@@ -159,12 +178,13 @@ async def list_analyses(
     status: str = None,
     limit: int = 50,
     offset: int = 0,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     List analyses with optional filtering
     
-    Returns paginated list of analyses.
+    Returns paginated list of analyses for the current user.
     
     - **status**: Optional status filter (CREATED, RUNNING, SUCCEEDED, FAILED)
     - **limit**: Maximum number of results (default: 50)
@@ -173,6 +193,7 @@ async def list_analyses(
     try:
         analyses = AnalysisService.list_analyses(
             db=db,
+            user_id=str(current_user.id),
             status=status,
             limit=min(limit, 100),  # Cap at 100
             offset=offset
@@ -191,6 +212,7 @@ async def list_analyses(
 @router.delete("/{analysis_id}")
 async def delete_analysis(
     analysis_id: UUID,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -207,6 +229,13 @@ async def delete_analysis(
             raise HTTPException(
                 status_code=404,
                 detail=f"Analysis {analysis_id} not found"
+            )
+            
+        # Check ownership
+        if analysis.user_id and analysis.user_id != str(current_user.id):
+            raise HTTPException(
+                status_code=403,
+                detail="Not authorized to access this analysis"
             )
         
         # If running, cancel the Batch job

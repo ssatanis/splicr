@@ -61,6 +61,9 @@ import {
   ArrowLeft,
   Box,
   Info,
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
 } from "lucide-react";
 
 type TabType = "overview" | "volcano" | "heatmap" | "network" | "timecourse" | "advanced" | "top-hits" | "qc" | "rankings" | "raw-data" | "logs" | "drug-finder";
@@ -105,6 +108,9 @@ export default function ResultsPage() {
   const [drugSearchProgressMessage, setDrugSearchProgressMessage] = useState('');
   const drugSearchAbortController = useRef<AbortController | null>(null);
 
+  // Time tracking state
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
   const analysisFromList = analyses.find((a) => a.id === id);
   const analysis = analysisFromApi ?? analysisFromList;
 
@@ -133,7 +139,7 @@ export default function ResultsPage() {
     if (isInitialLoad) {
       setIsLoading(true);
     }
-    
+
     try {
       const data = await realApi.getResults(id);
       if (data && typeof data === 'object' && 'analysis' in data && data.results === null) {
@@ -159,7 +165,7 @@ export default function ResultsPage() {
           if (!prev || !newResults) return newResults;
           // Simple check - in production you might want a deep comparison
           if (prev.summary?.totalGenes !== newResults.summary?.totalGenes ||
-              prev.summary?.significantHits !== newResults.summary?.significantHits) {
+            prev.summary?.significantHits !== newResults.summary?.significantHits) {
             return newResults;
           }
           return prev;
@@ -250,7 +256,7 @@ export default function ResultsPage() {
         .on(
           "postgres_changes",
           { event: "UPDATE", schema: "public", table: "analyses", filter: `id=eq.${id}` },
-          (payload) => {
+          (payload: any) => {
             const row = payload.new as Record<string, unknown>;
             setAnalysisFromApi((prev) => {
               if (!prev) return prev;
@@ -272,7 +278,47 @@ export default function ResultsPage() {
     return () => {
       if (channel) supabase.removeChannel(channel);
     };
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
   }, [id, isInProgress, loadResults]);
+
+  // Time tracking timer
+  useEffect(() => {
+    // If not running or no start time, don't tick
+    if (!isInProgress || !analysis?.startedAt) {
+      if (!isInProgress) setElapsedSeconds(0);
+      return;
+    }
+
+    const startTime = new Date(analysis.startedAt).getTime();
+
+    // Update immediately
+    setElapsedSeconds(Math.max(0, Math.floor((Date.now() - startTime) / 1000)));
+
+    const interval = setInterval(() => {
+      const seconds = Math.max(0, Math.floor((Date.now() - startTime) / 1000));
+      setElapsedSeconds(seconds);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isInProgress, analysis?.startedAt]);
+
+  const formatTime = (seconds: number) => {
+    if (seconds < 0) return "0:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Estimate remaining time
+  const progressPercent = analysis?.progress ?? 0;
+  const estimatedTotalSeconds = progressPercent > 5 && elapsedSeconds > 0
+    ? (elapsedSeconds / (progressPercent / 100))
+    : 0;
+  const estimatedRemaining = estimatedTotalSeconds > 0
+    ? Math.max(0, Math.floor(estimatedTotalSeconds - elapsedSeconds))
+    : null;
 
   // Fetch count matrix on demand when results have countMatrixR2Key (matrix stored in R2 to avoid OOM)
   const [countMatrixLoading, setCountMatrixLoading] = useState(false);
@@ -382,22 +428,22 @@ export default function ResultsPage() {
         const chunk = searchGenes.slice(i, i + BATCH_SIZE);
         const chunkParam = chunk.join(',');
         const pct = Math.round((batchIndex / totalBatches) * 70);
-        
+
         setDrugSearchProgress(pct);
         setDrugSearchProgressMessage(`Fetching drug interactions (${batchIndex}/${totalBatches} batches, ${chunk.length} genes)...`);
 
         const getRes = await fetch(`/api/drug-gene?genes=${encodeURIComponent(chunkParam)}&force=true`, {
           signal: abortController.signal
         });
-        
+
         if (!getRes.ok) {
           const errBody = await getRes.json().catch(() => ({}));
           throw new Error(errBody?.error ?? errBody?.details ?? 'Failed to fetch drug-gene data');
         }
-        
+
         const getData = await getRes.json();
         const list = getData.results ?? [];
-        
+
         for (const row of list) {
           resultsByGene.set(row.gene?.toUpperCase() ?? row.gene, {
             gene: row.gene,
@@ -438,14 +484,14 @@ export default function ResultsPage() {
       // Fetch combinations if we have enough genes
       if (searchGenes.length >= 2 && !abortController.signal.aborted) {
         setDrugSearchProgressMessage('Computing drug combinations...');
-        
+
         const postRes = await fetch('/api/drug-gene', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ genes: searchGenes.slice(0, 50) }),
           signal: abortController.signal
         });
-        
+
         if (postRes?.ok) {
           const postData = await postRes.json();
           results.combinations = postData.combinations ?? [];
@@ -840,9 +886,8 @@ export default function ResultsPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as TabType)}
-                  className={`flex items-center gap-2 px-6 py-4 font-serif transition-all duration-200 relative whitespace-nowrap ${
-                    activeTab === tab.id ? "text-text-primary" : "text-text-secondary hover:text-text-primary"
-                  }`}
+                  className={`flex items-center gap-2 px-6 py-4 font-serif transition-all duration-200 relative whitespace-nowrap ${activeTab === tab.id ? "text-text-primary" : "text-text-secondary hover:text-text-primary"
+                    }`}
                 >
                   <Icon className="w-5 h-5" strokeWidth={1.5} />
                   <span>{tab.label}</span>
@@ -870,9 +915,9 @@ export default function ResultsPage() {
                 {activeTab === "heatmap" && <HeatmapTab results={results} onCustomize={() => setFigureCustomizationOpen(true)} />}
                 {activeTab === "network" && <NetworkTab results={results} analysisName={analysisName || analysis?.name} onCustomize={() => setFigureCustomizationOpen(true)} />}
                 {activeTab === "timecourse" && <TimeCourseTab results={results} analysis={analysis ?? undefined} analysisName={analysisName || analysis?.name} />}
-                {activeTab === "drug-finder" && <DrugFinderTab 
-                  results={results} 
-                  analysisName={analysisName || analysis?.name} 
+                {activeTab === "drug-finder" && <DrugFinderTab
+                  results={results}
+                  analysisName={analysisName || analysis?.name}
                   onGeneClick={setSelectedGene}
                   drugSearchState={{
                     loading: drugSearchLoading,
@@ -895,80 +940,136 @@ export default function ResultsPage() {
                 {analysis ? (
                   <>
                     <p className="text-text-primary font-serif text-lg">{analysis.name ?? "Analysis"}</p>
-                    <p className="text-text-tertiary text-sm mt-1">
-                      Status: <span className="capitalize">{analysis.status === "processing" ? "Running" : analysis.status}</span>
-                      {isInProgress && typeof analysis.progress === "number" && ` · ${Math.round(analysis.progress)}%`}
-                    </p>
+                    <div className="flex flex-col gap-1 mt-1">
+                      <div className="flex items-center justify-between">
+                        <p className="text-text-primary font-medium text-lg">
+                          Status: <span className="capitalize text-accent">{analysis.status === "processing" ? "Running" : analysis.status === "queued" ? "Queued" : analysis.status}</span>
+                        </p>
+                        <p className="text-text-primary font-bold font-mono text-lg">{Math.round(analysis.progress ?? 0)}%</p>
+                      </div>
+
+                      {/* Detailed Step Info */}
+                      {(analysis.currentStep || analysis.status === "processing") && (
+                        <p className="text-text-secondary text-sm font-medium flex items-center gap-2">
+                          {analysis.status === "pending" ? "Starting pipeline..." :
+                            analysis.status === "queued" ? "Waiting for worker..." :
+                              (analysis.currentStep ?? "Processing...")}
+                        </p>
+                      )}
+                    </div>
+
                     {isInProgress ? (
                       <>
-                        <p className="text-text-secondary font-serif mt-4">Analysis in progress — results will appear when the run finishes.</p>
-                        {(analysis.currentStep ?? analysis.status === "pending") && (
-                          <p className="text-text-tertiary text-sm mt-2 font-medium">
-                            {analysis.status === "pending" ? "Starting pipeline…" : analysis.status === "queued" ? "Waiting for worker…" : (analysis.currentStep ?? "Running…")}
-                          </p>
-                        )}
-                        <div className="max-w-md mx-auto mt-6">
-                          <div className="h-3 bg-background rounded-full overflow-hidden border border-border-light">
+                        <div className="max-w-xl mx-auto mt-6">
+                          {/* Progress Bar */}
+                          <div className="relative h-4 bg-accent/10 rounded-full overflow-hidden border border-accent/20">
                             <motion.div
-                              className="h-full bg-accent rounded-full"
+                              className="absolute top-0 left-0 h-full bg-accent relative"
                               initial={false}
                               animate={{ width: `${Math.min(100, Math.max(0, analysis.progress ?? 0))}%` }}
                               transition={{ duration: 0.3, ease: "easeOut" }}
-                            />
+                            >
+                              <div className="absolute inset-0 bg-white/20 animate-[shimmer_2s_infinite] skew-x-[-20deg]"
+                                style={{ backgroundImage: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)' }}
+                              />
+                            </motion.div>
                           </div>
-                          <p className="text-text-secondary text-sm mt-2 font-medium" title={analysis.currentStep ?? undefined}>
-                            {analysis.status === "pending"
-                              ? "Starting…"
-                              : analysis.status === "queued"
-                                ? "Queued — worker will pick up shortly"
-                                : (analysis.currentStep ?? "Still being analyzed")}
-                          </p>
+
+                          {/* Time Stats */}
+                          <div className="flex items-center justify-between mt-3 text-xs font-mono text-text-tertiary px-1">
+                            <div className="flex items-center gap-1.5" title="Time elapsed since start">
+                              <Clock className="w-3.5 h-3.5" />
+                              <span>Elapsed: {formatTime(elapsedSeconds)}</span>
+                            </div>
+                            {estimatedRemaining !== null && estimatedRemaining > 0 && (
+                              <div className="flex items-center gap-1.5" title="Estimated time remaining">
+                                <div className="w-3.5 h-3.5 flex items-center justify-center">
+                                  <div className="w-2 h-2 rounded-full bg-text-tertiary/50" />
+                                </div>
+                                <span>Est. remaining: {formatTime(estimatedRemaining)}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
+
+                        {/* Recent Log Stream */}
                         {analysis.logs && analysis.logs.length > 0 && (
-                          <div className="max-w-lg mx-auto mt-6 text-left bg-background/50 rounded-lg border border-border p-4 max-h-32 overflow-y-auto">
-                            <p className="text-text-tertiary text-xs font-medium mb-2">Recent steps</p>
-                            <ul className="space-y-1 text-xs text-text-secondary">
-                              {analysis.logs.slice(-5).map((log: { progress: number; message: string }, i: number) => (
-                                <li key={i} className="flex items-center gap-2">
-                                  <span className="text-text-tertiary shrink-0">{Math.round(log.progress)}%</span>
-                                  <span>{log.message}</span>
+                          <div className="max-w-xl mx-auto mt-6 text-left bg-surface/50 rounded-lg border border-border p-0 overflow-hidden shadow-sm">
+                            <div className="px-4 py-2 bg-surface border-b border-border flex items-center justify-between">
+                              <p className="text-text-secondary text-xs font-semibold uppercase tracking-wider">Analysis Log</p>
+                              <span className="flex h-2 w-2 relative">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                              </span>
+                            </div>
+                            <ul className="max-h-40 overflow-y-auto p-2 space-y-0.5 font-mono text-xs">
+                              {analysis.logs.slice().reverse().slice(0, 10).map((log: any, i: number) => (
+                                <li key={i} className={`flex gap-3 px-2 py-1.5 rounded-md ${i === 0 ? 'bg-accent/5 text-text-primary' : 'text-text-tertiary'}`}>
+                                  <span className="shrink-0 w-8 text-right opacity-70">{Math.round(log.progress)}%</span>
+                                  <span className="break-words flex-1">
+                                    {log.message}
+                                    {log.level === 'error' && <span className="ml-2 text-red-500 font-bold">ERROR</span>}
+                                  </span>
+                                  <span className="shrink-0 opacity-50 text-[10px] pt-0.5">
+                                    {log.timestamp ? new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : ''}
+                                  </span>
                                 </li>
                               ))}
                             </ul>
                           </div>
                         )}
+
                         {queuedStuck && (
-                          <div className="flex flex-col items-center gap-2 mt-4 max-w-md mx-auto">
+                          <div className="flex flex-col items-center gap-2 mt-6 max-w-md mx-auto bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                            <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-medium">
+                              <AlertTriangle className="w-5 h-5" />
+                              <span>Queue Warning</span>
+                            </div>
                             <p className="text-amber-600 dark:text-amber-400 text-sm text-center">
-                              Job has been queued for a while. If you use a worker (e.g. Railway), ensure it is running with REDIS_URL (or Upstash) set.
+                              Analysis has been queued for over 90s. If using Railway, ensure the <b>Worker</b> service is running.
                             </p>
                             <Button
-                              variant="primary"
+                              variant="outline"
                               onClick={() => handleRetry(true)}
                               disabled={isRetrying}
-                              className="bg-accent text-white hover:bg-accent/90"
+                              className="mt-2 text-amber-700 hover:bg-amber-100 border-amber-200"
                             >
-                              {isRetrying ? "Starting…" : "Run inline instead"}
+                              {isRetrying ? "Starting..." : "Try running inline (slower)"}
                             </Button>
                           </div>
                         )}
+
                         {runningStuck && (
-                          <div className="flex flex-col items-center gap-2 mt-4 max-w-md mx-auto">
-                            <p className="text-amber-600 dark:text-amber-400 text-sm text-center">
-                              Progress stalled. Ensure RUN_ANALYSIS_INLINE=false and the worker (Railway) has Redis + R2 credentials. Retry to re-queue.
+                          <div className="flex flex-col items-center gap-2 mt-6 max-w-md mx-auto bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                            <div className="flex items-center gap-2 text-red-700 dark:text-red-400 font-medium">
+                              <XCircle className="w-5 h-5" />
+                              <span>Stalled</span>
+                            </div>
+                            <p className="text-red-600 dark:text-red-400 text-sm text-center">
+                              Progress stalled for &gt;3 mins. The worker process may have crashed or timed out.
                             </p>
                             <Button
-                              variant="primary"
+                              variant="outline"
                               onClick={() => handleRetry()}
                               disabled={isRetrying}
-                              className="bg-accent text-white hover:bg-accent/90"
+                              className="mt-2 text-red-700 hover:bg-red-100 border-red-200"
                             >
-                              {isRetrying ? "Starting…" : "Retry"}
+                              {isRetrying ? "Retrying..." : "Restart Analysis"}
                             </Button>
                           </div>
                         )}
-                        <div className="flex items-center justify-center gap-4 mt-6">
-                          <Button variant="outline" onClick={() => { refreshAnalyses(); loadResults(); }} disabled={isRetrying}>Refresh</Button>
+
+                        <div className="flex items-center justify-center gap-4 mt-8 pt-4 border-t border-border/50 w-full max-w-md mx-auto">
+                          <Button variant="ghost" onClick={() => {
+                            // Force cache invalidation before refreshing
+                            if (typeof sessionStorage !== 'undefined') {
+                              sessionStorage.removeItem('splicr_analyses_cache');
+                            }
+                            refreshAnalyses();
+                            loadResults();
+                          }} disabled={isRetrying} className="text-text-tertiary hover:text-text-primary">
+                            Refresh Status
+                          </Button>
                           <Link href="/analyses">
                             <Button variant="outline">Back to your analyses</Button>
                           </Link>
@@ -976,7 +1077,7 @@ export default function ResultsPage() {
                       </>
                     ) : (
                       <div className="flex items-center justify-center gap-4 mt-6">
-                        <Button variant="outline" onClick={handleRetry} disabled={isRetrying}>{isRetrying ? "Starting…" : "Retry"}</Button>
+                        <Button variant="outline" onClick={() => handleRetry()} disabled={isRetrying}>{isRetrying ? "Starting..." : "Retry"}</Button>
                         <Link href="/analyses" className="text-accent font-serif inline-block">Back to your analyses</Link>
                       </div>
                     )}
@@ -985,7 +1086,7 @@ export default function ResultsPage() {
                   <>
                     <p className="text-text-secondary font-serif">Could not load results.</p>
                     <div className="flex items-center justify-center gap-4 mt-6">
-                      <Button variant="outline" onClick={handleRetry} disabled={isRetrying}>{isRetrying ? "Starting…" : "Retry"}</Button>
+                      <Button variant="outline" onClick={() => handleRetry()} disabled={isRetrying}>{isRetrying ? "Starting…" : "Retry"}</Button>
                       <Link href="/analyses" className="text-accent font-serif inline-block">Back to your analyses</Link>
                     </div>
                   </>
@@ -1035,41 +1136,41 @@ export default function ResultsPage() {
         analysisContext={
           results && analysis
             ? {
-                analysisName: analysis.name ?? "Screen Analysis",
-                libraryName: analysis.libraryType ?? "Brunello",
-                method: (analysis.algorithm ?? ["MAGeCK"]).join(", "),
-                totalGenes: results.summary?.totalGenes ?? 0,
-                significantHits: results.summary?.significantHits ?? 0,
-                enriched: results.summary?.enriched ?? 0,
-                depleted: results.summary?.depleted ?? 0,
-                fdrThreshold: analysis.parameters?.fdrThreshold ?? 0.05,
-                lfcThreshold: analysis.parameters?.lfcThreshold ?? 1,
-                topDepleted: results.topHits?.depleted?.slice(0, 20).map((g) => ({
-                  gene: g.gene,
-                  logFoldChange: g.logFoldChange,
-                  fdr: g.fdr,
-                })),
-                topEnriched: results.topHits?.enriched?.slice(0, 20).map((g) => ({
-                  gene: g.gene,
-                  logFoldChange: g.logFoldChange,
-                  fdr: g.fdr,
-                })),
-                // Additional comprehensive data
-                createdDate: analysis.createdAt ? new Date(analysis.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A',
-                completedDate: analysis.completedAt ? new Date(analysis.completedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A',
-                sampleCount: analysis.sampleLabels?.length ?? 0,
-                sampleNames: analysis.sampleLabels?.map((s) => s.sampleName || s.fileName).join(', ') ?? 'N/A',
-                controlSamples: analysis.sampleLabels?.filter((s) => s.condition === 'control').map((s) => s.sampleName || s.fileName).join(', ') || 'N/A',
-                treatmentSamples: analysis.sampleLabels?.filter((s) => s.condition === 'treatment').map((s) => s.sampleName || s.fileName).join(', ') || 'N/A',
-                totalReads: results.qcMetrics?.totalReads ? `${(results.qcMetrics.totalReads / 1e6).toFixed(2)}M` : 'N/A',
-                mappingRate: typeof results.qcMetrics?.mappingRate === 'number' ? `${results.qcMetrics.mappingRate.toFixed(1)}%` : 'N/A',
-                libraryCoverage: typeof results.qcMetrics?.libraryCoverage === 'number' ? `${results.qcMetrics.libraryCoverage.toFixed(1)}%` : 'N/A',
-                zeroCounts: typeof results.qcMetrics?.zeroCounts === 'number' ? `${results.qcMetrics.zeroCounts.toFixed(1)}%` : 'N/A',
-                giniCoefficient: typeof results.qcMetrics?.giniCoefficient === 'number' ? results.qcMetrics.giniCoefficient.toFixed(3) : 'N/A',
-                normalizationMethod: analysis.parameters?.normalizationMethod ?? 'median',
-                minimumReads: analysis.parameters?.minimumReads ?? 30,
-                resultsSource: results.resultsSource ?? 'pipeline',
-              }
+              analysisName: analysis.name ?? "Screen Analysis",
+              libraryName: analysis.libraryType ?? "Brunello",
+              method: (analysis.algorithm ?? ["MAGeCK"]).join(", "),
+              totalGenes: results.summary?.totalGenes ?? 0,
+              significantHits: results.summary?.significantHits ?? 0,
+              enriched: results.summary?.enriched ?? 0,
+              depleted: results.summary?.depleted ?? 0,
+              fdrThreshold: analysis.parameters?.fdrThreshold ?? 0.05,
+              lfcThreshold: analysis.parameters?.lfcThreshold ?? 1,
+              topDepleted: results.topHits?.depleted?.slice(0, 20).map((g) => ({
+                gene: g.gene,
+                logFoldChange: g.logFoldChange,
+                fdr: g.fdr,
+              })),
+              topEnriched: results.topHits?.enriched?.slice(0, 20).map((g) => ({
+                gene: g.gene,
+                logFoldChange: g.logFoldChange,
+                fdr: g.fdr,
+              })),
+              // Additional comprehensive data
+              createdDate: analysis.createdAt ? new Date(analysis.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A',
+              completedDate: analysis.completedAt ? new Date(analysis.completedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A',
+              sampleCount: analysis.sampleLabels?.length ?? 0,
+              sampleNames: analysis.sampleLabels?.map((s) => s.sampleName || s.fileName).join(', ') ?? 'N/A',
+              controlSamples: analysis.sampleLabels?.filter((s) => s.condition === 'control').map((s) => s.sampleName || s.fileName).join(', ') || 'N/A',
+              treatmentSamples: analysis.sampleLabels?.filter((s) => s.condition === 'treatment').map((s) => s.sampleName || s.fileName).join(', ') || 'N/A',
+              totalReads: results.qcMetrics?.totalReads ? `${(results.qcMetrics.totalReads / 1e6).toFixed(2)}M` : 'N/A',
+              mappingRate: typeof results.qcMetrics?.mappingRate === 'number' ? `${results.qcMetrics.mappingRate.toFixed(1)}%` : 'N/A',
+              libraryCoverage: typeof results.qcMetrics?.libraryCoverage === 'number' ? `${results.qcMetrics.libraryCoverage.toFixed(1)}%` : 'N/A',
+              zeroCounts: typeof results.qcMetrics?.zeroCounts === 'number' ? `${results.qcMetrics.zeroCounts.toFixed(1)}%` : 'N/A',
+              giniCoefficient: typeof results.qcMetrics?.giniCoefficient === 'number' ? results.qcMetrics.giniCoefficient.toFixed(3) : 'N/A',
+              normalizationMethod: analysis.parameters?.normalizationMethod ?? 'median',
+              minimumReads: analysis.parameters?.minimumReads ?? 30,
+              resultsSource: results.resultsSource ?? 'pipeline',
+            }
             : undefined
         }
       />
@@ -1138,6 +1239,15 @@ const OVERVIEW_METRIC_INFO: Record<string, string> = {
   mappingRate: 'Percentage of reads that matched at least one sgRNA in the reference library. Computed as (mapped reads ÷ total reads) × 100. Reflects library design and sequencing quality.',
   zeroCount: 'Percentage of (sgRNA × sample) cells in the count matrix with zero counts. High values may indicate undersampling, PCR dropout, or low sequencing depth.',
   coverage: 'Percentage of sgRNAs in the reference library that had at least one read in at least one sample. (sgRNAs with count > 0 ÷ library size) × 100.',
+  mageck_sig: 'Genes identified as significantly enriched or depleted by MAGeCK RRA analysis (FDR < 0.05). Represents potential hits based on robust rank aggregation.',
+  bagel_ess: 'Genes classified as essential by BAGEL2 (Bayes Factor > 0). Positive BF indicates likelihood of essentiality compared to reference sets.',
+  drugz_syn: 'Genes identified as significant by DrugZ (FDR < 0.05). Includes synthetic lethal interactions (depleted) and suppressors (enriched).',
+  sgrnaDetectionRate: 'Fraction of sgRNAs in the library that were detected (count > 0) in at least one sample. Low values (<80%) suggest poor sequencing depth or library quality.',
+  geneDetectionRate: 'Fraction of genes in the library with at least one sgRNA detected. Values <90% may indicate bottlenecks.',
+  readsPerSgrnaAvg: 'Mean reads per sgRNA across all samples. Industry standard: ≥200 reads/sgRNA for reliable depletion calls.',
+  readsPerSgrnaMedian: 'Median reads per sgRNA. More robust to outliers than mean. Publication-quality screens typically maintain median >200 reads/sgRNA.',
+  genesWithAllGuides: 'Genes where all designed sgRNAs were detected. Essential for robust gene-level statistics.',
+  giniQuality: 'Distribution uniformity. 0-0.2: excellent, 0.2-0.4: good, 0.4-0.6: acceptable, >0.6: poor. High Gini indicates PCR jackpotting or bottlenecks.',
 };
 
 function LabelWithInfo({ label, infoKey }: { label: string; infoKey: keyof typeof OVERVIEW_METRIC_INFO }) {
@@ -1169,14 +1279,113 @@ function OverviewTab({ results }: { results: AnalysisResults }) {
         <SummaryCard label="Enriched" value={results.summary.enriched.toLocaleString()} color="text-success" infoKey="enriched" />
         <SummaryCard label="Depleted" value={results.summary.depleted.toLocaleString()} color="text-error" infoKey="depleted" />
       </div>
+
+      {results.algorithms && (
+        <div className="bg-surface rounded-2xl p-8 shadow-card border border-border">
+          <h3 className="text-xl font-serif text-text-primary mb-6">Algorithm Results</h3>
+          <p className="text-sm text-text-secondary mb-6">Specific findings from each method run in this analysis.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {results.algorithms.mageck && results.algorithms.mageck.length > 0 && (
+              <SummaryCard
+                label="MAGeCK Hits (FDR < 0.05)"
+                value={results.algorithms.mageck.filter(g => Math.min(g.fdrNeg, g.fdrPos) < 0.05).length.toLocaleString()}
+                color="text-accent"
+                infoKey="mageck_sig"
+              />
+            )}
+            {results.algorithms.bagel2 && results.algorithms.bagel2.length > 0 && (
+              <SummaryCard
+                label="BAGEL2 Essential (BF > 0)"
+                value={results.algorithms.bagel2.filter(g => g.bayesFactor > 0).length.toLocaleString()}
+                color="text-accent"
+                infoKey="bagel_ess"
+              />
+            )}
+            {results.algorithms.drugz && results.algorithms.drugz.length > 0 && (
+              <SummaryCard
+                label="DrugZ Significant (FDR < 0.05)"
+                value={results.algorithms.drugz.filter(g => g.fdr < 0.05).length.toLocaleString()}
+                color="text-accent"
+                infoKey="drugz_syn"
+              />
+            )}
+          </div>
+        </div>
+      )}
       <div className="bg-surface rounded-2xl p-8 shadow-card border border-border">
-        <h3 className="text-xl font-serif text-text-primary mb-6">Quality metrics</h3>
-        <p className="text-sm text-text-secondary mb-6">Metrics computed from this run's FASTQ parsing and count matrix (no mock data).</p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          <QCMetric label="Read depth" value={`${((results.qcMetrics?.totalReads ?? 0) / 1e6).toFixed(1)}M`} infoKey="readDepth" />
-          <QCMetric label="Mapping rate" value={`${typeof results.qcMetrics?.mappingRate === 'number' ? (results.qcMetrics.mappingRate <= 1 ? (results.qcMetrics.mappingRate * 100).toFixed(1) : results.qcMetrics.mappingRate.toFixed(1)) : results.qcMetrics?.mappingRate ?? '—'}%`} infoKey="mappingRate" />
-          <QCMetric label="Zero count" value={`${typeof results.qcMetrics?.zeroCounts === 'number' ? results.qcMetrics.zeroCounts.toFixed(1) : results.qcMetrics?.zeroCounts ?? '—'}%`} infoKey="zeroCount" />
-          <QCMetric label="Coverage" value={`${typeof results.qcMetrics?.libraryCoverage === 'number' ? (results.qcMetrics.libraryCoverage <= 1 ? (results.qcMetrics.libraryCoverage * 100).toFixed(1) : results.qcMetrics.libraryCoverage.toFixed(1)) : results.qcMetrics?.libraryCoverage ?? '—'}%`} infoKey="coverage" />
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-xl font-serif text-text-primary">Quality metrics</h3>
+            <p className="text-sm text-text-secondary">Metrics computed from this run's FASTQ parsing and count matrix.</p>
+          </div>
+          {results.qcMetrics?.comprehensiveQC?.overall_quality && (
+            <div className={`px-4 py-2 rounded-lg border flex items-center gap-2 ${results.qcMetrics.comprehensiveQC.overall_quality.status === 'pass' ? 'bg-success/10 border-success/20 text-success' :
+              results.qcMetrics.comprehensiveQC.overall_quality.status === 'warning' ? 'bg-warning/10 border-warning/20 text-warning' :
+                'bg-error/10 border-error/20 text-error'
+              }`}>
+              <span className="font-bold uppercase tracking-wide text-sm">
+                QC STATUS: {results.qcMetrics.comprehensiveQC.overall_quality.status}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <QCStatusSummaryCard qc={results.qcMetrics?.comprehensiveQC as any} />
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-8">
+          {/* Row 1: Basic Coverage & Depth */}
+          <QCMetric
+            label="Read depth"
+            value={`${((results.qcMetrics?.totalReads ?? 0) / 1e6).toFixed(1)}M`}
+            infoKey="readDepth"
+            status={results.qcMetrics?.comprehensiveQC?.sequencing_depth?.meets_minimum === false ? 'warning' : 'pass'}
+          />
+          <QCMetric
+            label="Mapping rate"
+            value={`${typeof results.qcMetrics?.mappingRate === 'number' ? (results.qcMetrics.mappingRate <= 1 ? (results.qcMetrics.mappingRate * 100).toFixed(1) : results.qcMetrics.mappingRate.toFixed(1)) : '—'}%`}
+            infoKey="mappingRate"
+            status={results.qcMetrics?.mappingRate < 0.7 ? 'warning' : 'pass'}
+          />
+          <QCMetric
+            label="Zero count"
+            value={`${typeof results.qcMetrics?.zeroCounts === 'number' ? results.qcMetrics.zeroCounts.toFixed(1) : '—'}%`}
+            infoKey="zeroCount"
+            status={results.qcMetrics?.zeroCounts > 20 ? 'warning' : 'pass'}
+          />
+          <QCMetric
+            label="Coverage"
+            value={`${results.qcMetrics?.comprehensiveQC?.library_representation?.detection_rate.toFixed(1) ?? '—'}%`}
+            infoKey="coverage"
+            status={(results.qcMetrics?.comprehensiveQC?.library_representation?.detection_rate ?? 100) < 80 ? 'warning' : 'pass'}
+          />
+
+          {/* Row 2: Detailed Distribution & Counts */}
+          <QCMetric
+            label="Mean reads/sgRNA"
+            value={`${results.qcMetrics?.comprehensiveQC?.distribution?.mean_reads_per_sgrna.toFixed(0) ?? '—'}`}
+            infoKey="readsPerSgrnaAvg"
+          />
+          <QCMetric
+            label="Median reads/sgRNA"
+            value={`${results.qcMetrics?.comprehensiveQC?.sequencing_depth?.reads_per_sgrna_median.toFixed(0) ?? '—'}`}
+            infoKey="readsPerSgrnaMedian"
+            status={results.qcMetrics?.comprehensiveQC?.sequencing_depth?.meets_minimum === false ? 'fail' : 'pass'}
+          />
+          <QCMetric
+            label="Genes Detected"
+            value={`${results.qcMetrics?.comprehensiveQC?.library_representation?.gene_detection_rate.toFixed(1) ?? '—'}%`}
+            infoKey="geneDetectionRate"
+          />
+          <QCMetric
+            label="Gini Quality"
+            value={results.qcMetrics?.comprehensiveQC?.distribution?.gini_quality ? results.qcMetrics.comprehensiveQC.distribution.gini_quality.charAt(0).toUpperCase() + results.qcMetrics.comprehensiveQC.distribution.gini_quality.slice(1) : '—'}
+            infoKey="giniQuality"
+            status={
+              results.qcMetrics?.comprehensiveQC?.distribution?.gini_quality === 'excellent' ? 'pass' :
+                results.qcMetrics?.comprehensiveQC?.distribution?.gini_quality === 'good' ? 'pass' :
+                  results.qcMetrics?.comprehensiveQC?.distribution?.gini_quality === 'acceptable' ? 'warning' : 'fail'
+            }
+          />
         </div>
       </div>
     </div>
@@ -1526,9 +1735,10 @@ function QCTab({ results, onCustomize }: { results: AnalysisResults; onCustomize
     reads: s.totalReads / 1e6
   })) || [];
 
+  const librarySize = results.qcMetrics?.librarySize || results.summary?.totalGenes || 77000;
   const coverageData = results.qcMetrics.sampleStats?.map((s: any) => ({
     sample: s.name,
-    coverage: (s.uniqueSgRNAs / 77000) * 100 // Approximate library coverage
+    coverage: (s.uniqueSgRNAs / librarySize) * 100
   })) || [];
 
   return (
@@ -1547,6 +1757,7 @@ function QCTab({ results, onCustomize }: { results: AnalysisResults; onCustomize
         coverage={coverageData}
         giniCoefficient={results.qcMetrics.giniCoefficient}
         sampleStats={results.qcMetrics.sampleStats}
+        lorenzCurve={results.qcMetrics.comprehensiveQC?.distribution?.lorenz_curve_data}
         resultsSource={results.resultsSource}
       />
     </div>
@@ -1676,31 +1887,31 @@ function RawDataTab({ results, analysisId }: { results: AnalysisResults; analysi
                   <strong className="text-text-secondary">FDR (False Discovery Rate)</strong>: expected proportion of false positives among genes called significant. We use Benjamini–Hochberg correction. Lower FDR = more confidence (e.g. FDR &lt; 0.05 is standard).
                 </p>
                 <table className="w-full">
-                <thead className="bg-background sticky top-0 z-10">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-sm font-serif text-text-secondary">Rank</th>
-                    <th className="px-4 py-3 text-left text-sm font-serif text-text-secondary">Gene</th>
-                    <th className="px-4 py-3 text-left text-sm font-serif text-text-secondary">sgRNAs</th>
-                    <th className="px-4 py-3 text-left text-sm font-serif text-text-secondary">Log₂ FC</th>
-                    <th className="px-4 py-3 text-left text-sm font-serif text-text-secondary">P-value</th>
-                    <th className="px-4 py-3 text-left text-sm font-serif text-text-secondary">FDR</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dataContent.map((gene: any) => (
-                    <tr key={gene.gene} className="border-b border-border-light hover:bg-background">
-                      <td className="px-4 py-3 text-sm font-mono">{gene.rank}</td>
-                      <td className="px-4 py-3 text-sm font-mono font-medium text-accent">{gene.gene}</td>
-                      <td className="px-4 py-3 text-sm font-mono">{gene.sgrnaCount}</td>
-                      <td className={`px-4 py-3 text-sm font-mono ${gene.logFoldChange < 0 ? 'text-error' : 'text-success'}`}>
-                        {gene.logFoldChange.toFixed(3)}
-                      </td>
-                      <td className="px-4 py-3 text-sm font-mono">{gene.pValue.toExponential(2)}</td>
-                      <td className="px-4 py-3 text-sm font-mono">{gene.fdr.toFixed(4)}</td>
+                  <thead className="bg-background sticky top-0 z-10">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-sm font-serif text-text-secondary">Rank</th>
+                      <th className="px-4 py-3 text-left text-sm font-serif text-text-secondary">Gene</th>
+                      <th className="px-4 py-3 text-left text-sm font-serif text-text-secondary">sgRNAs</th>
+                      <th className="px-4 py-3 text-left text-sm font-serif text-text-secondary">Log₂ FC</th>
+                      <th className="px-4 py-3 text-left text-sm font-serif text-text-secondary">P-value</th>
+                      <th className="px-4 py-3 text-left text-sm font-serif text-text-secondary">FDR</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {dataContent.map((gene: any) => (
+                      <tr key={gene.gene} className="border-b border-border-light hover:bg-background">
+                        <td className="px-4 py-3 text-sm font-mono">{gene.rank}</td>
+                        <td className="px-4 py-3 text-sm font-mono font-medium text-accent">{gene.gene}</td>
+                        <td className="px-4 py-3 text-sm font-mono">{gene.sgrnaCount}</td>
+                        <td className={`px-4 py-3 text-sm font-mono ${gene.logFoldChange < 0 ? 'text-error' : 'text-success'}`}>
+                          {gene.logFoldChange.toFixed(3)}
+                        </td>
+                        <td className="px-4 py-3 text-sm font-mono">{gene.pValue.toExponential(2)}</td>
+                        <td className="px-4 py-3 text-sm font-mono">{gene.fdr.toFixed(4)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </>
             ) : (
               <div className="text-sm text-text-secondary font-mono">
@@ -1750,9 +1961,8 @@ function LogsTab({ results }: { results: AnalysisResults }) {
             logs.map((log: { timestamp: string; step: string; message: string; progress: number; level: string }, index: number) => (
               <div
                 key={index}
-                className={`px-6 py-3 border-b border-border-light hover:bg-background transition-colors ${
-                  log.level === 'error' ? 'bg-error/5' : log.level === 'success' ? 'bg-success/5' : log.step === 'Context' ? 'bg-background/50' : ''
-                }`}
+                className={`px-6 py-3 border-b border-border-light hover:bg-background transition-colors ${log.level === 'error' ? 'bg-error/5' : log.level === 'success' ? 'bg-success/5' : log.step === 'Context' ? 'bg-background/50' : ''
+                  }`}
               >
                 <div className="flex items-start gap-4">
                   <span className="text-text-tertiary whitespace-nowrap">
@@ -1795,10 +2005,20 @@ function SummaryCard({ label, value, color = "text-text-primary", infoKey }: { l
   );
 }
 
-function QCMetric({ label, value, infoKey }: { label: string; value: string; infoKey?: keyof typeof OVERVIEW_METRIC_INFO }) {
+function QCMetric({ label, value, infoKey, status }: { label: string; value: string; infoKey?: keyof typeof OVERVIEW_METRIC_INFO; status?: 'pass' | 'warning' | 'fail' }) {
+  const statusColor =
+    status === 'pass' ? 'text-success bg-success/5' :
+      status === 'warning' ? 'text-warning bg-warning/5' :
+        status === 'fail' ? 'text-error bg-error/5' : '';
+
   return (
-    <div>
-      <div className="text-3xl font-serif text-text-primary mb-2">{value}</div>
+    <div className={`rounded-xl p-4 transition-colors ${statusColor ? statusColor : 'hover:bg-background'}`}>
+      <div className="text-3xl font-serif mb-2 flex items-center gap-2">
+        {value}
+        {status === 'pass' && <CheckCircle2 className="w-5 h-5 text-success" />}
+        {status === 'warning' && <AlertTriangle className="w-5 h-5 text-warning" />}
+        {status === 'fail' && <XCircle className="w-5 h-5 text-error" />}
+      </div>
       <div className="text-sm text-text-secondary font-serif">
         {infoKey ? <LabelWithInfo label={label} infoKey={infoKey} /> : label}
       </div>

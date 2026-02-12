@@ -19,9 +19,10 @@ config = Config(
     read_timeout=60
 )
 
-# Initialize S3 client
+# Initialize S3 client (supports both AWS S3 and Cloudflare R2)
 s3_client = boto3.client(
     's3',
+    endpoint_url=settings.R2_ENDPOINT_URL or None,  # Use R2 endpoint if configured
     config=config,
     aws_access_key_id=settings.AWS_ACCESS_KEY_ID or None,
     aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY or None

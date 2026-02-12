@@ -26,9 +26,9 @@ export class FASTQParser {
 
     // Check if file is gzipped by extension or magic number
     const isGzipped = file.name.endsWith('.gz') ||
-                      (new Uint8Array(arrayBuffer).length > 2 &&
-                       new Uint8Array(arrayBuffer)[0] === 0x1f &&
-                       new Uint8Array(arrayBuffer)[1] === 0x8b);
+      (new Uint8Array(arrayBuffer).length > 2 &&
+        new Uint8Array(arrayBuffer)[0] === 0x1f &&
+        new Uint8Array(arrayBuffer)[1] === 0x8b);
 
     if (isGzipped) {
       // Decompress gzipped file
@@ -39,23 +39,52 @@ export class FASTQParser {
       content = decoder.decode(arrayBuffer);
     }
 
+    if (content.trim().length === 0) {
+      throw new Error('FASTQ file is empty');
+    }
+
     const lines = content.split('\n').filter(line => line.trim());
+
+    if (lines.length === 0) {
+      throw new Error('FASTQ file contains no valid lines');
+    }
+
+    // Basic format validation
+    if (lines.length > 0 && !lines[0].startsWith('@')) {
+      throw new Error('Invalid FASTQ format: File does not start with @ header');
+    }
+
     const reads: FASTQRead[] = [];
 
     // FASTQ format: 4 lines per read
     for (let i = 0; i < lines.length; i += 4) {
-      if (i + 3 >= lines.length) break;
+      // Allow trailing empty lines, but if we have partial record, throw error
+      if (i + 3 >= lines.length) {
+        if (i < lines.length) {
+          console.warn(`FASTQ file has truncated record at line ${i + 1}. Ignoring incomplete read.`);
+        }
+        break;
+      }
 
       const id = lines[i].substring(1);
       const sequence = lines[i + 1];
       const quality = lines[i + 3];
 
+      if (!lines[i].startsWith('@')) {
+        // Try to recover or strict fail? Strict fail for now.
+        throw new Error(`Invalid FASTQ format at line ${i + 1}: Expected @ header`);
+      }
+
       if (sequence && quality) {
+        if (sequence.length !== quality.length) {
+          console.warn(`Quality score length mismatch for read ${id}. Seq: ${sequence.length}, Qual: ${quality.length}`);
+        }
         reads.push({ id, sequence, quality });
       }
     }
 
     const stats = this.calculateStats(reads);
+    console.log(`Parsed ${reads.length} reads from ${file.name} (${formatBytes(file.size)})`);
     return { reads, stats };
   }
 
@@ -135,4 +164,13 @@ export class FASTQParser {
 
     return sgRNACounts;
   }
+}
+
+function formatBytes(bytes: number, decimals = 2) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }

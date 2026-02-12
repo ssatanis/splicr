@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient, supabaseAdmin } from '@/lib/supabase/server';
 import { normalizeAnalysisMethod } from '@/lib/analysis-method';
-import { RUN_ANALYSIS_INLINE } from '@/lib/queue/client';
 import { enqueueAnalysis, JobPriority } from '@/lib/queue/analysis-queue';
 import { markAnalysisQueued } from '@/lib/queue/db-state';
 
@@ -10,8 +9,7 @@ export const dynamic = 'force-dynamic';
 /**
  * Create analysis record with R2 FASTQ paths.
  * Expects JSON body: { name, library, method?, algorithms?, r2Keys, parameters?, sampleLabels? }
- * When RUN_ANALYSIS_INLINE=true, does not enqueue; analysis stays "pending" and results page
- * triggers run API which executes pipeline inline.
+ * Always attempts to enqueue analysis to worker queue.
  */
 export async function POST(request: Request) {
   try {
@@ -96,18 +94,6 @@ export async function POST(request: Request) {
           error: `Failed to create analysis: ${insertError.message}`,
         },
         { status: 500 }
-      );
-    }
-
-    // When RUN_ANALYSIS_INLINE=true, skip queue; analysis stays "pending" and results page triggers run.
-    if (RUN_ANALYSIS_INLINE) {
-      return NextResponse.json(
-        {
-          success: true,
-          analysis,
-          message: 'Analysis created. Pipeline will run when you view results.',
-        },
-        { status: 201 }
       );
     }
 

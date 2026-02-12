@@ -12,6 +12,7 @@ import { AnalysisPipeline } from '@/lib/analysis/pipeline';
 import { assessQCStatus } from '@/lib/analysis/quality-calculator';
 import { getLibraryMetadata } from '@/lib/analysis/sgRNALibraries';
 import { createWorkingDir, cleanupWorkingDir } from '@/lib/analysis/cli-utils';
+import crypto from 'crypto';
 
 async function updateProgress(admin: any, analysisId: string, progress: number, currentStep: string, logs: any[]) {
   const { error } = await admin
@@ -148,12 +149,49 @@ export async function runAnalysisPipeline(
     addLog('Initialization', 'Starting CRISPR screen analysis pipeline', 2, 'info');
     await updateProgress(admin, analysisId, 2, 'Initializing', logs);
 
+    // Validate that all files exist in R2 before attempting to fetch
+    addLog('Validation', 'Validating file availability in storage...', 3, 'info');
+    await updateProgress(admin, analysisId, 3, 'Validating files...', logs);
+
+    const { HeadObjectCommand } = await import('@aws-sdk/client-s3');
+    const { createServerR2Client, R2_BUCKET_NAME } = await import('@/lib/storage/r2-client');
+    const r2Client = createServerR2Client();
+    const missingFiles: { key: string; fileName: string }[] = [];
+
+    for (const key of fileNames) {
+      const fileName = typeof key === 'string' ? key.split('/').pop() ?? key : 'unknown';
+      try {
+        await r2Client.send(new HeadObjectCommand({
+          Bucket: R2_BUCKET_NAME,
+          Key: key,
+        }));
+      } catch (err: any) {
+        if (err?.name === 'NoSuchKey' || err?.name === 'NotFound' || err?.$metadata?.httpStatusCode === 404) {
+          missingFiles.push({ key, fileName });
+        } else {
+          // Other errors (network, auth, etc.) - rethrow
+          throw err;
+        }
+      }
+    }
+
+    if (missingFiles.length > 0) {
+      const errorDetails = missingFiles.map(f => `  - ${f.fileName} (key: ${f.key})`).join('\n');
+      const errorMsg = `Files not found in storage:\n${errorDetails}\n\nFiles must be uploaded before starting analysis.`;
+      addLog('Error', errorMsg, 3, 'error');
+      throw new Error(errorMsg);
+    }
+
+    addLog('Validation', 'All files exist in storage', 4, 'success');
+    await updateProgress(admin, analysisId, 4, 'Files validated', logs);
+
     addLog('Fetching', `Fetching ${fileNames.length} FASTQ file(s)...`, 5, 'info');
     await updateProgress(admin, analysisId, 5, `Fetching ${fileNames.length} FASTQ file(s)...`, logs);
 
     const filePromises = fileNames.map(async (key: string, i: number) => {
       const fileName = typeof key === 'string' ? key.split('/').pop() ?? key : `sample_${i + 1}.fastq.gz`;
-      const file = await getR2FileAsFile(key, fileName);
+      const maxSizeBytes = 2 * 1024 * 1024 * 1024; // 2 GB limit
+      const file = await getR2FileAsFile(key, fileName, { maxSizeBytes });
       const pct = 5 + Math.round(((i + 1) / fileNames.length) * 8);
       addLog('Fetching', `Fetched ${fileName}`, pct, 'info');
       await updateProgress(admin, analysisId, pct, `Fetched ${i + 1}/${fileNames.length} file(s)`, logs);
@@ -184,24 +222,34 @@ export async function runAnalysisPipeline(
     let pipelineResults;
     try {
       const pipeline = new AnalysisPipeline();
-      pipelineResults = await pipeline.runPipeline(
-        files,
-        fileMetadata,
-        libraryType,
-        algorithms,
-        parameters,
-        (progress, step, entry) => {
-          logs.push(entry);
-          // Use message for current_step when available (more descriptive for UI)
-          const displayStep =
-            entry?.message && typeof entry.message === 'string' && entry.message.length > 0 && entry.message.length < 120
-              ? entry.message
-              : step;
-          updateProgress(admin, analysisId, progress, displayStep, logs);
-          void options?.onProgress?.(progress, displayStep, entry);
-        },
-        workingDir
-      );
+
+      // Enforce 30-minute timeout for the entire analysis
+      const TIMEOUT_MS = 30 * 60 * 1000;
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Analysis timed out after 30 minutes')), TIMEOUT_MS);
+      });
+
+      pipelineResults = await Promise.race([
+        pipeline.runPipeline(
+          files,
+          fileMetadata,
+          libraryType,
+          algorithms,
+          parameters,
+          (progress, step, entry) => {
+            logs.push(entry);
+            // Use message for current_step when available (more descriptive for UI)
+            const displayStep =
+              entry?.message && typeof entry.message === 'string' && entry.message.length > 0 && entry.message.length < 120
+                ? entry.message
+                : step;
+            updateProgress(admin, analysisId, progress, displayStep, logs);
+            void options?.onProgress?.(progress, displayStep, entry);
+          },
+          workingDir
+        ),
+        timeoutPromise
+      ]);
     } finally {
       cleanupWorkingDir(workingDir);
     }
@@ -219,6 +267,17 @@ export async function runAnalysisPipeline(
     console.log('Coverage:', coveragePct + '%');
     console.log('Gini coefficient:', qc.giniCoefficient?.toFixed(3) ?? 'N/A');
     console.log('Summary: totalGenes=', pipelineResults.summary.totalGenes, 'significantHits=', pipelineResults.summary.significantHits);
+
+    // Add verification signature to prove results differ by input
+    const signatureContent = JSON.stringify({
+      totalReads: qc.totalReads,
+      mappedReads: qc.mappedReads,
+      significantHits: pipelineResults.summary.significantHits,
+      topGene: pipelineResults.topHits.depleted[0]?.gene || 'none'
+    });
+    const signature = crypto.createHash('sha256').update(signatureContent).digest('hex').substring(0, 16);
+    console.log(`Verification Signature: ${signature}`);
+
     console.log('=== PROCESSING COMPLETE ===');
 
     let countMatrixR2Key: string | null = null;

@@ -12,6 +12,23 @@ export interface SgRNAStats {
   rank: number;
 }
 
+export interface UnifiedGeneResult {
+  gene: string;
+  numSgRNAs: number;
+  log2FC: number;
+  pValue: number;
+  fdr: number;
+  rank: number;
+  mageck?: {
+    rhoNeg: number;
+    rhoPos: number;
+    pValueNeg: number;
+    pValuePos: number;
+    fdrNeg: number;
+    fdrPos: number;
+  };
+}
+
 export interface MAGeCKGeneResult {
   gene: string;
   numSgRNAs: number;
@@ -41,15 +58,18 @@ export class MAGeCKAnalyzer {
   private alpha: number;
   private minSgRNAs: number;
   private permutations: number;
+  private normalizationMethod: 'median' | 'total' | 'control' | 'none';
 
   constructor(options: {
     alpha?: number;          // Significance threshold for alpha-RRA (default 0.05)
     minSgRNAs?: number;      // Minimum sgRNAs per gene (default 3)
     permutations?: number;   // Number of permutations for p-value (default 10000)
+    normalizationMethod?: 'median' | 'total' | 'control' | 'none';
   } = {}) {
     this.alpha = options.alpha ?? 0.05;
     this.minSgRNAs = options.minSgRNAs ?? 3;
     this.permutations = options.permutations ?? 10000;
+    this.normalizationMethod = options.normalizationMethod ?? 'median';
   }
 
   async runAnalysis(
@@ -68,9 +88,13 @@ export class MAGeCKAnalyzer {
       });
     };
 
-    // Step 1: Median Normalization
-    log('normalization', 5, 'Starting median normalization of read counts...');
-    const normalized = this.medianNormalization(countMatrix);
+    // Step 1: Normalization
+    log('normalization', 5, `Starting ${this.normalizationMethod} normalization of read counts...`);
+    const normalized = this.normalizationMethod === 'none'
+      ? new Map(countMatrix)
+      : this.normalizationMethod === 'total'
+        ? this.totalNormalization(countMatrix)
+        : this.medianNormalization(countMatrix); // 'median' and 'control' use median
     log('normalization', 10, `Normalized ${normalized.size} sgRNAs across ${controlIndices.length + treatmentIndices.length} samples`);
 
     // Step 2: Calculate sgRNA-level statistics
@@ -160,6 +184,32 @@ export class MAGeCKAnalyzer {
       const normalizedCounts = countsArray.map((count, i) => {
         if (medians[i] === 0) return count;
         return count * (targetMedian / medians[i]);
+      });
+      normalized.set(sgRNA, normalizedCounts);
+    }
+
+    return normalized;
+  }
+
+  private totalNormalization(counts: Map<string, number[]>): Map<string, number[]> {
+    const numSamples = Array.from(counts.values())[0]?.length || 0;
+    if (numSamples === 0) return new Map();
+
+    // Calculate total reads per sample
+    const totals: number[] = Array(numSamples).fill(0);
+    for (const countsArray of counts.values()) {
+      countsArray.forEach((count, i) => {
+        totals[i] += count;
+      });
+    }
+
+    // Target total (use mean total across samples)
+    const targetTotal = totals.reduce((a, b) => a + b, 0) / totals.length || 1;
+
+    const normalized = new Map<string, number[]>();
+    for (const [sgRNA, countsArray] of counts.entries()) {
+      const normalizedCounts = countsArray.map((count, i) => {
+        return totals[i] > 0 ? count * (targetTotal / totals[i]) : count;
       });
       normalized.set(sgRNA, normalizedCounts);
     }
@@ -528,6 +578,25 @@ export class MAGeCKAnalyzer {
     // Student's t-distribution CDF
     const x = df / (df + t * t);
     return 1 - 0.5 * this.betaCDF(x, df / 2, 0.5);
+  }
+
+  public toUnifiedResults(results: MAGeCKGeneResult[]): UnifiedGeneResult[] {
+    return results.map((r) => ({
+      gene: r.gene,
+      numSgRNAs: r.numSgRNAs,
+      log2FC: r.log2FC,
+      pValue: Math.min(r.pValueNeg, r.pValuePos),
+      fdr: Math.min(r.fdrNeg, r.fdrPos),
+      rank: r.rank,
+      mageck: {
+        rhoNeg: r.rhoNeg,
+        rhoPos: r.rhoPos,
+        pValueNeg: r.pValueNeg,
+        pValuePos: r.pValuePos,
+        fdrNeg: r.fdrNeg,
+        fdrPos: r.fdrPos,
+      },
+    }));
   }
 }
 

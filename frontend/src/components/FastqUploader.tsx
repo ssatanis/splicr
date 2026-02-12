@@ -200,11 +200,10 @@ export default function FastqUploader({
     <div className="space-y-4">
       {/* Upload Drop Zone */}
       <div
-        className={`border-2 border-dashed rounded-2xl p-12 text-center transition-colors ${
-          uploading
+        className={`border-2 border-dashed rounded-2xl p-12 text-center transition-colors ${uploading
             ? 'border-border bg-background'
             : 'border-border hover:border-accent hover:bg-background'
-        }`}
+          }`}
       >
         <input
           type="file"
@@ -217,9 +216,8 @@ export default function FastqUploader({
         />
         <label
           htmlFor="fastq-upload"
-          className={`flex flex-col items-center space-y-3 ${
-            uploading ? 'cursor-not-allowed' : 'cursor-pointer'
-          }`}
+          className={`flex flex-col items-center space-y-3 ${uploading ? 'cursor-not-allowed' : 'cursor-pointer'
+            }`}
         >
           {uploading ? (
             <Loader2 className="w-12 h-12 text-accent animate-spin" />

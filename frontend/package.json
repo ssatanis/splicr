@@ -1,7 +1,7 @@
 {
   "name": "splicr-frontend",
   "version": "1.0.0",
-  "description": "SplicR - CRISPR Screen Analysis Platform (web and desktop)",
+  "description": "SplicR - CRISPR Screen Analysis Platform",
   "homepage": "https://splicr.org",
   "author": "SplicR <team@splicr.org>",
   "private": true,
@@ -25,13 +25,16 @@
     "lint": "next lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "dev:electron": "concurrently -k \"npm run dev\" \"wait-on http://localhost:3000 -t 60000 && node electron.js\"",
+    "dev:all": "concurrently -k -n \"NEXT,WORKER\" -c \"cyan.bold,magenta.bold\" \"npm run dev\" \"npm run worker:dev\"",
+    "start:all": "concurrently -k -n \"NEXT,WORKER\" -c \"cyan.bold,magenta.bold\" \"npm run start\" \"npm run worker\"",
     "build:electron": "node electron-build.js --mac --win --linux",
     "build:electron:mac": "node electron-build.js --mac",
     "build:electron:win": "node electron-build.js --win",
     "build:electron:linux": "node electron-build.js --linux",
     "worker": "tsx scripts/start-worker.ts",
     "worker:dev": "tsx watch scripts/start-worker.ts",
-    "monitor:stuck-jobs": "tsx scripts/monitor-stuck-jobs.ts"
+    "monitor:stuck-jobs": "tsx scripts/monitor-stuck-jobs.ts",
+    "test": "vitest run"
   },
   "build": {
     "appId": "com.splicr.app",
@@ -226,9 +229,11 @@
     "electron-serve": "^3.0.1",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "jsdom": "^24.0.0",
     "prettier": "^3.2.0",
     "tsx": "^4.7.0",
     "typescript": "^5",
+    "vitest": "^4.0.18",
     "wait-on": "^9.0.3"
   }
 }

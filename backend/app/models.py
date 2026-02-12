@@ -7,6 +7,9 @@ from app.database import Base
 import enum
 
 
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import relationship
+
 class User(Base):
     """User model for authentication and profile"""
     __tablename__ = "users"
@@ -17,10 +20,32 @@ class User(Base):
     display_name = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    api_keys = relationship("ApiKey", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<User {self.email}>"
 
+
+class ApiKey(Base):
+    """API Key model for programmatic access"""
+    __tablename__ = "api_keys"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False, default="API Key")
+    prefix = Column(String(32), nullable=False)  # sk_live_...
+    hashed_key = Column(String(255), nullable=False, unique=True, index=True)
+    scopes = Column(JSON, nullable=False, default=list)  # ["*"]
+    last_used_at = Column(DateTime, nullable=True)
+    expires_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    revoked_at = Column(DateTime, nullable=True)
+
+    user = relationship("User", back_populates="api_keys")
+
+    def __repr__(self):
+        return f"<ApiKey {self.prefix}...>"
 
 class AnalysisStatus(str, enum.Enum):
     """Analysis status enum"""

@@ -44,8 +44,8 @@ async function safeJson<T = unknown>(response: Response): Promise<T> {
 
 const API_BASE =
   typeof process !== 'undefined' &&
-  process.env.NEXT_PUBLIC_IS_ELECTRON === 'true' &&
-  process.env.NEXT_PUBLIC_APP_URL
+    process.env.NEXT_PUBLIC_IS_ELECTRON === 'true' &&
+    process.env.NEXT_PUBLIC_APP_URL
     ? `${String(process.env.NEXT_PUBLIC_APP_URL).replace(/\/$/, '')}/api`
     : '/api';
 
@@ -161,13 +161,6 @@ export const realApi = {
 
   /** Returns results, or { results: null, analysis } when analysis exists but results aren't ready yet. */
   async getResults(id: string): Promise<AnalysisResults | { results: null; analysis: Analysis }> {
-    const cacheKey = `results:${id}`;
-    const cached = getCachedData<AnalysisResults | { results: null; analysis: Analysis }>(
-      cacheKey,
-      CACHE_TTL_RESULTS
-    );
-    if (cached) return cached;
-
     const response = await fetch(`${API_BASE}/analysis/${id}/results`, { credentials: 'include' });
     if (!response.ok) {
       let message: string;
@@ -184,15 +177,18 @@ export const realApi = {
       throw new Error(message);
     }
     const data = await safeJson<AnalysisResults | { results: null; analysis: Analysis }>(response);
-    
+
     if (data && typeof data === 'object') {
+      // Don't cache in-progress analyses - always fetch fresh status
       if ('results' in data && data.results === null && 'analysis' in data && data.analysis) {
         return { results: null, analysis: data.analysis };
       }
+      // Only cache completed results
+      const cacheKey = `results:${id}`;
       setCachedData(cacheKey, data);
       return data as AnalysisResults;
     }
-    
+
     return data as AnalysisResults;
   },
 
@@ -213,7 +209,7 @@ export const realApi = {
       body: JSON.stringify({ note }),
     });
     if (!response.ok) throw new Error('Failed to save note');
-    
+
     // Invalidate note cache after save
     apiCache.delete(`note:${analysisId}`);
   },
@@ -225,12 +221,12 @@ export const realApi = {
     if (cached !== null) {
       return cached;
     }
-    
+
     const response = await fetch(`${API_BASE}/notes/${analysisId}`);
     if (!response.ok) return '';
     const data = await safeJson<{ note?: string }>(response).catch(() => ({} as { note?: string }));
     const note = data.note || '';
-    
+
     // Cache the note
     setCachedData(cacheKey, note);
     return note;
