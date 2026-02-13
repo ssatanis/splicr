@@ -4,28 +4,28 @@
  */
 
 const ACCENT = '#6ABF36';
-const BG_PAGE = '#FAF8F5';
+const BG_PAGE = '#F3F4F1'; // Slightly warmer, more premium background
 const BG_CARD = '#FFFFFF';
 const TEXT_PRIMARY = '#1A1A1A';
-const TEXT_SECONDARY = '#6B6B6B';
-const TEXT_TERTIARY = '#9B9B9B';
-const BORDER = '#E8E6E3';
+const TEXT_SECONDARY = '#4B4B4B'; // Slightly darker for better readability
+const TEXT_TERTIARY = '#717171'; // More distinct
+const BORDER = '#E5E7EB';
 
 const BRAND_NAME = 'SplicR';
-const SLOGAN = 'CRISPR Screen Analysis';
-const CLOSING = '— The SplicR Team';
+const SLOGAN = 'CRISPR Screen Analysis & Discovery';
+const CLOSING = 'Best regards,<br>The SplicR Team';
 
 function getAppUrl(): string {
   return process.env.NEXT_PUBLIC_APP_URL || 'https://splicr.org';
 }
 
 function getLogoUrl(): string {
-  const base = getAppUrl();
+  const base = getAppUrl().replace(/\/$/, '');
   return `${base}/logo.png`;
 }
 
 /**
- * Wraps content in the SplicR layout: logo, name + slogan, card, CTA, closing, footer.
+ * Wraps content in the SplicR layout: logo, card, CTA, closing, footer.
  */
 export function splicrEmailLayout(options: {
   title: string;
@@ -46,24 +46,25 @@ export function splicrEmailLayout(options: {
   const fontCss =
     'https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap';
 
+  const logoUrl = getLogoUrl();
+
   const ctaSection =
     ctaLabel && ctaUrl
       ? `
-    <tr><td style="padding: 28px 0 12px;"></td></tr>
     <tr>
-      <td align="center">
+      <td align="center" style="padding: 32px 0 12px;">
         <a href="${ctaUrl}" style="
           display: inline-block;
           background: ${ACCENT};
-          color: ${BG_CARD} !important;
+          color: #FFFFFF !important;
           font-family: 'Instrument Serif', Georgia, serif;
-          font-size: 16px;
-          font-weight: 600;
+          font-size: 17px;
+          font-weight: 500;
           text-decoration: none;
-          padding: 16px 32px;
-          border-radius: 14px;
-          letter-spacing: 0.02em;
-          box-shadow: 0 2px 8px rgba(106, 191, 54, 0.25);
+          padding: 16px 40px;
+          border-radius: 16px;
+          letter-spacing: 0.01em;
+          box-shadow: 0 4px 12px rgba(106, 191, 54, 0.2);
         ">${ctaLabel}</a>
       </td>
     </tr>
@@ -73,9 +74,9 @@ export function splicrEmailLayout(options: {
   const footer =
     footerText !== undefined
       ? `
-    <tr><td style="padding: 28px 0 0; border-top: 1px solid ${BORDER};"></td></tr>
+    <tr><td style="padding: 32px 0 0; border-top: 1px solid ${BORDER};"></td></tr>
     <tr>
-      <td style="font-family: 'Instrument Serif', Georgia, serif; font-size: 12px; color: ${TEXT_TERTIARY}; line-height: 1.5; text-align: center;">
+      <td style="font-family: 'Instrument Serif', Georgia, serif; font-size: 12px; color: ${TEXT_TERTIARY}; line-height: 1.6; text-align: center;">
         ${footerText}
       </td>
     </tr>
@@ -84,48 +85,67 @@ export function splicrEmailLayout(options: {
 
   return `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
   <title>${title}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="${fontCss}" rel="stylesheet">
 </head>
-<body style="margin: 0; padding: 0; background: ${BG_PAGE}; font-family: 'Instrument Serif', Georgia, serif;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: ${BG_PAGE};">
+<body style="margin: 0; padding: 0; background: ${BG_PAGE}; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: ${BG_PAGE}; padding: 48px 24px;">
     <tr>
-      <td align="center" style="padding: 48px 24px;">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 520px; margin: 0 auto;">
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 560px; margin: 0 auto;">
+          <!-- Header / Logo -->
+          <tr>
+            <td align="center" style="padding-bottom: 32px;">
+              <a href="${getAppUrl()}" target="_blank" style="text-decoration: none;">
+                <img src="${logoUrl}" alt="SplicR Logo" width="128" style="display: block; border: 0; margin: 0 auto;" />
+              </a>
+            </td>
+          </tr>
+          
+          <!-- Main Content Card -->
           <tr>
             <td style="
               background: ${BG_CARD};
-              border-radius: 20px;
-              box-shadow: 0 4px 24px rgba(0,0,0,0.06);
-              padding: 40px 44px;
+              border-radius: 32px;
+              box-shadow: 0 8px 32px rgba(0,0,0,0.04);
+              padding: 48px 52px;
               border: 1px solid ${BORDER};
             ">
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td style="font-family: 'Instrument Serif', Georgia, serif; font-size: 20px; color: ${TEXT_PRIMARY}; font-weight: 600; text-align: center; padding-bottom: 20px; letter-spacing: 0.01em;">
+                  <td style="font-family: 'Instrument Serif', Georgia, serif; font-size: 26px; color: ${TEXT_PRIMARY}; font-weight: 500; text-align: center; padding-bottom: 24px; letter-spacing: -0.01em; line-height: 1.2;">
                     ${title}
                   </td>
                 </tr>
                 <tr>
-                  <td style="font-family: 'Instrument Serif', Georgia, serif; font-size: 16px; line-height: 1.65; color: ${TEXT_SECONDARY}; text-align: center;">
+                  <td style="font-family: 'Instrument Serif', Georgia, serif; font-size: 17px; line-height: 1.6; color: ${TEXT_SECONDARY}; text-align: center;">
                     ${bodyHtml}
                   </td>
                 </tr>
                 ${ctaSection}
-                <tr><td style="padding-top: 24px;"></td></tr>
+                <tr><td style="padding-top: 32px;"></td></tr>
                 <tr>
-                  <td style="font-family: 'Instrument Serif', Georgia, serif; font-size: 14px; color: ${TEXT_SECONDARY}; text-align: center;">
+                  <td style="font-family: 'Instrument Serif', Georgia, serif; font-size: 15px; color: ${TEXT_SECONDARY}; text-align: center; line-height: 1.5;">
                     ${closing}
                   </td>
                 </tr>
                 ${footer}
               </table>
+            </td>
+          </tr>
+          
+          <!-- Bottom Watermark -->
+          <tr>
+            <td align="center" style="padding-top: 32px; font-family: 'Instrument Serif', Georgia, serif; font-size: 12px; color: ${TEXT_TERTIARY}; text-transform: uppercase; letter-spacing: 0.1em;">
+              Built for scientific discovery
             </td>
           </tr>
         </table>
@@ -158,7 +178,7 @@ export function shareInviteEmailContent(options: {
   } = options;
 
   const inviterName = inviterDisplayName?.trim() || inviterNameOrEmail;
-  const greeting = 'Hi,';
+  const greeting = `Hi there,`;
 
   const isEdit = permission === 'edit' || permission === 'admin';
   const permissionLabel = isEdit ? 'Can edit' : 'View only';
@@ -227,7 +247,7 @@ function escapeHtml(text: string): string {
 export function confirmEmailContent(options: { confirmUrl: string }): { subject: string; html: string } {
   const subject = 'Confirm your SplicR account';
   const bodyHtml = `
-    Please confirm your email address by clicking the button below.
+    Welcome to SplicR! We're excited to have you join our research community. To get started, please confirm your email address by clicking the button below.
   `;
   const html = splicrEmailLayout({
     title: 'Confirm your email',
@@ -280,7 +300,7 @@ export function resetPasswordEmailContent(options: { resetUrl: string }): { subj
     bodyHtml,
     ctaLabel: 'Reset password',
     ctaUrl: resetUrl,
-    footerText: "If you didn't request a password reset, you can ignore this email. The link expires in 1 hour.",
+    footerText: "If you didn't request a password reset, you can safely ignore this email. The link will automatically expire in 1 hour for your security.",
   });
   return { subject, html };
 }

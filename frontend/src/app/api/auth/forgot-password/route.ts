@@ -8,10 +8,15 @@ const RESET_REDIRECT_PATH = '/auth/reset-password';
 // Add this exact URL (e.g. https://splicr.org/auth/reset-password) to Supabase Dashboard →
 // Authentication → URL Configuration → Redirect URLs, or the link will redirect to sign-in.
 function getResetRedirectUrl(request: NextRequest): string {
-  const base =
-    process.env.NEXT_PUBLIC_APP_URL ||
-    (typeof request.nextUrl?.origin === 'string' ? request.nextUrl.origin : '') ||
-    'https://splicr.org';
+  let base = process.env.NEXT_PUBLIC_APP_URL || '';
+
+  if (!base && typeof window === 'undefined') {
+    // Fallback for Vercel or local env
+    const host = request.headers.get('host');
+    const protocol = host?.includes('localhost') ? 'http' : 'https';
+    base = host ? `${protocol}://${host}` : 'https://splicr.org';
+  }
+
   return base.replace(/\/$/, '') + RESET_REDIRECT_PATH;
 }
 

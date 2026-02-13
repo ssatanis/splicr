@@ -175,7 +175,7 @@ export default function InstitutionAutocomplete({
         <ul
           id="institution-listbox"
           role="listbox"
-          className="absolute z-[100] w-full mt-1 py-1 bg-surface border border-border rounded-xl shadow-elevated max-h-64 overflow-y-auto focus:outline-none"
+          className="absolute left-0 right-0 z-[9999] mt-1 py-1 bg-surface border border-border rounded-xl shadow-elevated max-h-64 overflow-y-auto focus:outline-none"
           style={{ willChange: 'opacity' }}
           onMouseDown={(e) => {
             e.preventDefault();
@@ -205,6 +205,24 @@ export default function InstitutionAutocomplete({
                 )}
               </li>
             ))
+          )}
+          {!loading && query.trim().length >= MIN_QUERY_LENGTH && !options.some(opt => opt.display_name.toLowerCase() === query.trim().toLowerCase()) && (
+            <li
+              role="option"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const manualValue = query.trim();
+                lastValueRef.current = manualValue;
+                setQuery(manualValue);
+                onChange(manualValue);
+                setOpen(false);
+              }}
+              className="flex flex-col gap-0.5 px-4 py-3 cursor-pointer font-serif text-text-primary hover:bg-background focus:bg-background focus:outline-none"
+            >
+              <span className="font-medium">Use "{query.trim()}"</span>
+              <span className="text-sm text-text-tertiary">Select to use this name exactly</span>
+            </li>
           )}
         </ul>
       )}

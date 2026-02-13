@@ -33,11 +33,15 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await res.json();
-    const items = Array.isArray(data.items)
-      ? data.items
-      : Array.isArray(data._embedded?.organizations)
-        ? data._embedded.organizations
-        : Array.isArray(data) ? data : [];
+    let items = [];
+    if (Array.isArray(data.items)) {
+      items = data.items;
+    } else if (data._embedded && Array.isArray(data._embedded.organizations)) {
+      items = data._embedded.organizations;
+    } else if (Array.isArray(data)) {
+      items = data;
+    }
+
     const results: InstitutionOption[] = items.slice(0, MAX_RESULTS).map((org: any) => {
       const names = org.names ?? [];
       const displayNameObj = names.find((n: any) => n.type === 'ror_display' || n.type === 'label') || names[0];

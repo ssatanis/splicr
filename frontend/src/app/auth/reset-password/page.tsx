@@ -45,17 +45,27 @@ export default function ResetPasswordPage() {
     })
 
     const checkSession = async () => {
+      // First check if we already have a session
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
         finishChecking(true)
         return
       }
-      // If URL has recovery hash, wait for client to process it before showing "Invalid"
+
+      // If we don't have a session, but we have a recovery hash in the URL,
+      // Supabase's client-side listener should pick it up and emit an event.
+      // We'll wait a bit longer or rely on the onAuthStateChange above.
       if (hasRecoveryHash()) {
         timeoutId = setTimeout(async () => {
           const { data: { session: retrySession } } = await supabase.auth.getSession()
-          finishChecking(!!retrySession)
-        }, 2800)
+          if (retrySession) {
+            finishChecking(true)
+          } else {
+            // Check if we are in a password recovery state even without session
+            // (sometimes Supabase handles the hash but doesn't immediately create a session)
+            finishChecking(false)
+          }
+        }, 3000)
         return
       }
       finishChecking(false)
@@ -342,11 +352,10 @@ export default function ResetPasswordPage() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   autoComplete="new-password"
-                  className={`w-full px-4 py-3 pr-11 bg-white border rounded-xl font-serif text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all ${
-                    confirmPassword && password !== confirmPassword
+                  className={`w-full px-4 py-3 pr-11 bg-white border rounded-xl font-serif text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all ${confirmPassword && password !== confirmPassword
                       ? 'border-error focus:border-error focus:ring-error/30'
                       : 'border-border focus:border-accent'
-                  }`}
+                    }`}
                   placeholder="Confirm your new password"
                 />
                 <button
