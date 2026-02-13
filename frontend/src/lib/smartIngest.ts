@@ -152,6 +152,7 @@ async function ingestFastq(
         lineNum++;
         if (lineNum % 4 === 2) {
             const seq = line.trim().toUpperCase();
+            if (!seq) continue; // Skip empty/partial
 
             if (library) {
                 // Heuristic: Extract 20bp. 

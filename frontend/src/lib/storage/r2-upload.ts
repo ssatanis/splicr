@@ -51,21 +51,32 @@ async function checkExistingFile(
   return data.exists === true && data.key ? data.key : null;
 }
 
-async function uploadViaProxy(
+async function uploadViaPresignedPut(
   file: File,
   userId: string,
   fileHash: string,
   onProgress?: (progress: UploadProgress) => void,
   signal?: AbortSignal
 ): Promise<string> {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('userId', userId);
-  formData.append('hash', fileHash);
+  const presignRes = await fetch('/api/upload/presign', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      filename: file.name,
+      contentType: file.type || 'application/octet-stream',
+      fileHash,
+    }),
+    signal,
+  });
 
-  const xhr = new XMLHttpRequest();
+  if (!presignRes.ok) {
+    throw new Error('Failed to get presigned upload URL');
+  }
+
+  const { presignedUrl, key } = await presignRes.json();
 
   return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
     const onAbort = () => {
       xhr.abort();
       reject(new UploadCancelledError());
@@ -88,9 +99,21 @@ async function uploadViaProxy(
 
     xhr.addEventListener('load', () => {
       signal?.removeEventListener('abort', onAbort);
-      if (xhr.status === 200) {
-        const response = JSON.parse(xhr.responseText);
-        resolve(response.key);
+      if (xhr.status === 200 || xhr.status === 201) {
+        // Record metadata in background (best effort)
+        fetch('/api/upload/complete-single', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            key,
+            hash: fileHash,
+            fileName: file.name,
+            size: file.size,
+            contentType: file.type || 'application/octet-stream',
+          }),
+        }).catch(() => { });
+
+        resolve(key);
       } else {
         reject(new Error(`Upload failed: ${xhr.statusText}`));
       }
@@ -110,8 +133,9 @@ async function uploadViaProxy(
       reject(new UploadCancelledError());
     });
 
-    xhr.open('POST', '/api/upload/proxy');
-    xhr.send(formData);
+    xhr.open('PUT', presignedUrl);
+    xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+    xhr.send(file);
   });
 }
 
@@ -428,7 +452,7 @@ export async function uploadFileToR2(
 
   const key =
     file.size < SMALL_FILE_THRESHOLD
-      ? await uploadViaProxy(file, userId, hash, onProgress, signal)
+      ? await uploadViaPresignedPut(file, userId, hash, onProgress, signal)
       : await uploadViaMultipart(file, userId, hash, onProgress, signal);
 
   return { r2Key: key, reused: false };

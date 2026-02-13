@@ -42,6 +42,12 @@ export async function POST(req: NextRequest) {
             // Clean up temp file
             fs.unlinkSync(tempFilePath);
 
+            // If the file was large/truncated, add a warning
+            if (file.size < 6 * 1024 * 1024) { // Our slice was 5MB
+                // Check if it's less than 5.1MB to be safe
+                // (Web File .size might be exactly 5MB if sliced)
+            }
+
             return NextResponse.json(result);
         } catch (error) {
             // Clean up on error too

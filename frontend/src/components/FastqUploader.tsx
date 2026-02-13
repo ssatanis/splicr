@@ -98,7 +98,17 @@ export default function FastqUploader({
     }
 
     if (files.length > 0 && onFileSelect) {
-      onFileSelect(files[0]); // Trigger smart ingest for the first file (user mostly uploads 1 count table or smart ingest logic handles 1 file main flow)
+      const firstFile = files[0];
+      // If file is large, only send first 5MB for smart ingest to avoid 413
+      const MAX_INGEST_SIZE = 5 * 1024 * 1024;
+      if (firstFile.size > MAX_INGEST_SIZE) {
+        const slice = firstFile.slice(0, MAX_INGEST_SIZE);
+        // Create a new File object from the slice to preserve name and type
+        const partialFile = new File([slice], firstFile.name, { type: firstFile.type });
+        onFileSelect(partialFile);
+      } else {
+        onFileSelect(firstFile);
+      }
     }
 
     await uploadFiles(files);
