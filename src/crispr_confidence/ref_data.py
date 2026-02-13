@@ -60,11 +60,37 @@ class ReferenceDataLoader:
         if "string" in self._cache:
             return self._cache["string"]
             
-        path = self._get_file_path("string_processed")
-        print(f"Loading STRING network from {path}...")
-        
-        df = pd.read_parquet(path)
-        
+        # Try to load processed file
+        try:
+            path = self._get_file_path("string_processed", check_exists=True)
+            print(f"Loading STRING network from {path}...")
+            df = pd.read_parquet(path)
+            
+        except (FileNotFoundError, KeyError):
+            print("Processed STRING data not found. Attempting to generate from raw...")
+            
+            # Fetch raw file (downloads if missing)
+            raw_path = self._get_file_path("string_raw", check_exists=True)
+            
+            # Define output path
+            processed_filename = self.config["resources"]["string_processed"]
+            processed_path = self.config["paths"]["processed"] / processed_filename
+            
+            # Process
+            print(f"Parsing raw STRING data from {raw_path}...")
+            # Simple parsing logic for STRING v12
+            # Columns: protein1, protein2, combined_score
+            # Space delimited
+            df = pd.read_csv(raw_path, sep=" ", usecols=["protein1", "protein2", "combined_score"])
+            
+            # Filter for human (9606) - usually file is already species specific but good to be safe if mixed
+            # STRING files usually have "9606.ENSP..."
+            
+            # Save to parquet
+            print(f"Saving processed STRING data to {processed_path}...")
+            processed_path.parent.mkdir(parents=True, exist_ok=True)
+            df.to_parquet(processed_path)
+            
         # Validation
         if df.empty:
             raise ValueError("STRING dataset is empty!")
