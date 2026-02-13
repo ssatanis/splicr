@@ -21,6 +21,10 @@ if %ERRORLEVEL% NEQ 0 (
 echo Prerequisites checked
 echo.
 
+REM Set script var
+set SCRIPT_DIR=%~dp0
+cd /d %SCRIPT_DIR%..
+
 REM Setup Frontend
 echo Setting up frontend...
 cd frontend

@@ -4,14 +4,38 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.config import get_settings
 from app.database import engine, Base
+from app.api.endpoints import ccs 
 from app.api import upload, analysis, results, websocket, auth, reference_sets, api_keys
 from app.schemas import HealthCheckResponse
 from datetime import datetime
 import logging
 
-# ... (logging config)
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
 
-# ... (app init)
+settings = get_settings()
+
+app = FastAPI(
+    title=settings.APP_NAME,
+    debug=settings.DEBUG,
+    openapi_url=f"{settings.API_V1_PREFIX}/openapi.json",
+    docs_url="/api/docs", # Custom docs URL as per root endpoint response
+    redoc_url="/api/redoc",
+)
+
+# Set all CORS enabled origins
+if settings.CORS_ORIGINS:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.get_cors_origins(),
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 # Include API routers
 app.include_router(
@@ -38,6 +62,11 @@ app.include_router(
     results.router,
     prefix=f"{settings.API_V1_PREFIX}/results",
     tags=["Results"]
+)
+app.include_router(
+    ccs.router,
+    prefix=f"{settings.API_V1_PREFIX}/ccs",
+    tags=["CCS"]
 )
 app.include_router(
     websocket.router,

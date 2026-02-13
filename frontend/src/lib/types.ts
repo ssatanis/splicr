@@ -168,6 +168,22 @@ export interface AnalysisResults {
     bagel2?: BAGEL2GeneResult[];
     drugz?: DrugZGeneResult[];
   };
+  batchCorrection?: {
+    metrics: {
+      silhouetteBefore: number;
+      silhouetteAfter: number;
+      pcaR2Before: number;
+      pcaR2After: number;
+    };
+    pcaCoordinates?: { x: number; y: number; batch: string; stage: string }[];
+    library?: {
+      name: string;
+      confidence: number;
+      matchStats: Record<string, number>;
+    };
+    r2Key?: string;
+    timestamp?: string;
+  };
 }
 
 export interface UserData {

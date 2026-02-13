@@ -1,0 +1,14 @@
+{
+  "R-HSA-1640170": {
+    "name": "Cell Cycle",
+    "genes": [
+      "P04637"
+    ]
+  },
+  "R-HSA-69278": {
+    "name": "Cell Cycle, Mitotic",
+    "genes": [
+      "P04637"
+    ]
+  }
+}

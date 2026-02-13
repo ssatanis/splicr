@@ -22,6 +22,7 @@ export default function UploadPage() {
   const router = useRouter();
   const { refreshAnalyses } = useUser();
   const [fastqFiles, setFastqFiles] = useState<R2UploadedFile[]>([]);
+  const [inferredMetadata, setInferredMetadata] = useState<Record<string, any[]>>({});
   const [libraryType, setLibraryType] = useState<LibraryType | "">("");
   const [selectedAlgorithms, setSelectedAlgorithms] = useState<Algorithm[]>(["mageck"]);
   const [showSampleLabelModal, setShowSampleLabelModal] = useState(false);
@@ -48,17 +49,50 @@ export default function UploadPage() {
       const byName = new Map(prev.map((l) => [l.fileName, l]));
       const next: SampleLabel[] = fastqFiles.map((f) => {
         const existing = byName.get(f.name);
+
+        // Check if we have inferred metadata for this file
+        const inferred = inferredMetadata[f.name];
+        let inferredCondition: "control" | "treatment" | "other" = "control";
+        let inferredReplicate = 1;
+
+        if (inferred && inferred.length > 0) {
+          // For now, assume 1-to-1 mapping if FASTQ (one sample per file)
+          // If count table, we might have multiple, but this UI expects 1 label per file? 
+          // Wait, existing UI maps 1 file -> 1 SampleLabel.
+          // If `ingestCountTable` returns multiple samples for one file, 
+          // we might need to change how `sampleLabels` works or split the file?
+          // Actually, for count tables, `SplicR` probably treats it as a single "file" 
+          // but the analysis pipeline handles the columns.
+          // The SampleLabel interface has `condition` and `replicate`.
+          // Only relevant for FASTQ files where 1 file = 1 sample.
+          // If Count Table, the file itself is just a "Library" or "Counts".
+          // If the user uploads a Count Table, `FastqUploader` treats it as a file.
+
+          // If we have a Count Table, `inferred` array has > 1 entries.
+          // But we act as if 1 file = 1 sample in this loop.
+          // If Count Table support is full, we need to hide the "Condition/Replicate" selectors for it 
+          // OR ignore them and let pipeline handle it.
+
+          // For now, let's assume if it's FASTQ, inferred has 1 entry.
+          if (inferred.length === 1) {
+            inferredCondition = inferred[0].conditionLabel === 'control' || inferred[0].conditionLabel === 'treatment'
+              ? inferred[0].conditionLabel
+              : 'control'; // default
+            inferredReplicate = inferred[0].replicateId;
+          }
+        }
+
         return existing ?? {
           fileName: f.name,
           fileId: f.r2Key,
-          sampleName: f.name.replace(/\.(fastq|fq)(\.gz)?$/, ""),
-          condition: "control",
-          replicate: 1,
+          sampleName: inferred && inferred.length === 1 ? inferred[0].sampleId : f.name.replace(/\.(fastq|fq)(\.gz)?$/, ""),
+          condition: inferredCondition as "control" | "treatment",
+          replicate: inferredReplicate,
         };
       });
       return next;
     });
-  }, [fastqFiles]);
+  }, [fastqFiles, inferredMetadata]);
 
   // Load draft from localStorage (run once on mount)
   useEffect(() => {
@@ -94,7 +128,77 @@ export default function UploadPage() {
   };
 
   const [analyzing, setAnalyzing] = useState(false);
+  const [ingesting, setIngesting] = useState(false);
+  const [ingestWarnings, setIngestWarnings] = useState<string[]>([]);
+  const [ingestDesign, setIngestDesign] = useState<string | null>(null);
+
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const handleSmartIngest = async (file: File) => {
+    if (!libraryType) return; // Can't ingest without library to map against (for FASTQ) or at least context
+
+    setIngesting(true);
+    setIngestWarnings([]);
+    setIngestDesign(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('libraryId', libraryType);
+
+      const response = await fetch('/api/ingest', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Smart ingest failed');
+      }
+
+      const result = await response.json();
+
+      // Update Sample Labels with inferred metadata
+      if (result.sampleMetadata && result.sampleMetadata.length > 0) {
+        setSampleLabels(prev => {
+          // Merge: For each new sample, add if not exists. 
+          // Since FastqUploader adds files to list, we might have them there. 
+          // But ingest happens *before* or *during* upload. 
+
+          // We mostly want to use the labels for the file we just uploaded.
+          // The sampleMetadata contains { sampleId, conditionLabel, replicateId, originalName }.
+          // We need to map this to SampleLabel { fileName, fileId (r2Key - wait, we don't have r2Key yet!), ... }
+
+          // Issue: sampleLabels in this component are tied to R2 files by `fileId` (r2Key).
+          // FastqUploader uploads -> gets R2 key -> calls onFilesUploaded -> adds to fastqFiles -> useEffect updates sampleLabels.
+
+          // If we run smart ingest *parallel*, we get metadata but maybe not the R2 key yet.
+          // However, we can use the `fileName` to match. 
+          // When `fastqFiles` updates, the useEffect runs. We should modify that useEffect to *start* with our inferred labels if available.
+
+          // Let's store the inferred labels in a map: fileName -> Metadata
+          // And update the useEffect to use it.
+          return prev; // We will handle this via a new state + useEffect modification
+        });
+
+        // Save inferred data to a ref or state to be used when the file upload completes
+        setInferredMetadata(prev => ({
+          ...prev,
+          [file.name]: result.sampleMetadata
+        }));
+
+        setIngestDesign(result.inferredDesign);
+        if (result.warnings) setIngestWarnings(result.warnings);
+      }
+
+    } catch (error) {
+      console.error("Smart ingest error:", error);
+      // Don't block upload, just fail silently or warn
+    } finally {
+      setIngesting(false);
+    }
+  };
+
+
 
   const handleAnalyze = async () => {
     if (!libraryType) {
@@ -191,9 +295,68 @@ export default function UploadPage() {
             <FastqUploader
               onFilesUploaded={(files) => setFastqFiles((prev) => [...prev, ...files])}
               onFilesChange={setFastqFiles}
+              onFileSelect={handleSmartIngest}
               maxFiles={10}
             />
           </motion.div>
+
+          {/* Smart Ingest Feedback */}
+          {(ingesting || ingestDesign) && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-12"
+            >
+              <div className={`p-6 rounded-xl border ${ingestDesign ? 'bg-success/5 border-success/20' : 'bg-surface border-border'}`}>
+                <div className="flex items-start gap-4">
+                  {ingesting ? (
+                    <div className="p-2 bg-accent/10 rounded-lg">
+                      <ArrowRight className="w-6 h-6 text-accent animate-pulse" />
+                    </div>
+                  ) : (
+                    <div className="p-2 bg-success/10 rounded-lg">
+                      <Info className="w-6 h-6 text-success" />
+                    </div>
+                  )}
+
+                  <div className="flex-1">
+                    <h3 className="text-lg font-serif text-text-primary mb-1">
+                      {ingesting ? 'Analyzing file structure...' : 'Smart Ingest Complete'}
+                    </h3>
+
+                    {ingesting && (
+                      <p className="text-text-secondary">
+                        Auto-detecting experimental design and conditions...
+                      </p>
+                    )}
+
+                    {!ingesting && ingestDesign && (
+                      <div className="space-y-2">
+                        <p className="text-text-primary font-medium">
+                          Inferred Design: <span className="capitalize">{ingestDesign.replace(/_/g, ' ')}</span>
+                        </p>
+                        <p className="text-text-secondary text-sm">
+                          We automatically labeled your samples based on the file contents.
+                          Please review the labels below to ensure they are correct.
+                        </p>
+
+                        {ingestWarnings.length > 0 && (
+                          <div className="mt-3 p-3 bg-warning/10 border border-warning/20 rounded-lg">
+                            <p className="text-warning font-medium text-sm mb-1">Pass with warnings:</p>
+                            <ul className="list-disc list-inside text-xs text-warning/90 space-y-1">
+                              {ingestWarnings.map((w, i) => (
+                                <li key={i}>{w}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
 
           {/* Sample Labeling (for uploaded R2 files) - labels always visible */}
           {fastqFiles.length > 0 && (

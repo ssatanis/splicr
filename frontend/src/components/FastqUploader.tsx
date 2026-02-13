@@ -22,12 +22,14 @@ import {
 interface Props {
   onFilesUploaded: (files: UploadedFile[]) => void;
   onFilesChange?: (files: UploadedFile[]) => void;
+  onFileSelect?: (file: File) => void;
   maxFiles?: number;
 }
 
 export default function FastqUploader({
   onFilesUploaded,
   onFilesChange,
+  onFileSelect,
   maxFiles = 10,
 }: Props) {
   const [uploading, setUploading] = useState(false);
@@ -93,6 +95,10 @@ export default function FastqUploader({
         `Unsupported file type: ${invalidFiles.map((f) => f.name).join(', ')}. Allowed: ${SUPPORTED_FORMATS_UI}.`
       );
       return;
+    }
+
+    if (files.length > 0 && onFileSelect) {
+      onFileSelect(files[0]); // Trigger smart ingest for the first file (user mostly uploads 1 count table or smart ingest logic handles 1 file main flow)
     }
 
     await uploadFiles(files);
@@ -201,8 +207,8 @@ export default function FastqUploader({
       {/* Upload Drop Zone */}
       <div
         className={`border-2 border-dashed rounded-2xl p-12 text-center transition-colors ${uploading
-            ? 'border-border bg-background'
-            : 'border-border hover:border-accent hover:bg-background'
+          ? 'border-border bg-background'
+          : 'border-border hover:border-accent hover:bg-background'
           }`}
       >
         <input

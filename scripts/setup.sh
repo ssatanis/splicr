@@ -13,7 +13,10 @@ GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Check prerequisites
+# Determine script directory and project root
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+PROJECT_ROOT="$SCRIPT_DIR/.."
+
 echo "${BLUE}Checking prerequisites...${NC}"
 
 if ! command -v node &> /dev/null; then
@@ -31,7 +34,7 @@ echo ""
 
 # Setup Frontend
 echo "${BLUE}Setting up frontend...${NC}"
-cd frontend
+cd "$PROJECT_ROOT/frontend"
 
 if [ ! -f ".env.local" ]; then
     echo "Creating .env.local..."
@@ -46,7 +49,7 @@ echo ""
 
 # Setup Backend
 echo "${BLUE}Setting up backend...${NC}"
-cd ../backend
+cd "$PROJECT_ROOT/backend"
 
 if [ ! -d "venv" ]; then
     echo "Creating Python virtual environment..."

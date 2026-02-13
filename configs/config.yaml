@@ -1,0 +1,35 @@
+# CRISPR Confidence Score Configuration
+
+# Paths (relative to project root)
+paths:
+  data_root: "data"
+  raw: "data/raw"
+  processed: "data/processed"
+  external: "data/external"
+  models: "models"
+
+# Storage Configuration
+storage:
+  backend: "cloudflare" # Options: cloudflare, supabase
+  bucket_name: "splicr-data" # Override with env var S3_BUCKET_NAME if needed
+  region: "auto" # Override with env var AWS_REGION
+  prefix: "crispr_ccs/" # Prefix for all remote files
+
+# Resources / Datasets (filenames expected in paths.raw or paths.processed)
+resources:
+  # Raw Inputs
+  string_raw: "string/9606.protein.links.v12.0.txt"
+  reactome_raw: "UniProt2Reactome.txt"
+  bagel_essentials_raw: "CEG2_essentials.txt"
+  depmap_gene_effect_raw: "Achilles_gene_effect.csv"
+  depmap_sample_info_raw: "sample_info.csv"
+  genome_raw: "hg38.fa"
+  brunello_raw: "brunello/broadgpp-brunello-library-contents.txt"
+
+  # Processed Outputs
+  brunello_processed: "brunello/brunello_library.parquet"
+  string_processed: "string/protein_links.parquet"
+  kegg_processed: "kegg/pathways.json"
+  reactome_processed: "reactome/pathways.json"
+  depmap_processed: "depmap/gene_effect.parquet"
+  bagel_processed: "bagel/essentials.json"

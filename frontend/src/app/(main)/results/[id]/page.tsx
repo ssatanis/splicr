@@ -64,9 +64,12 @@ import {
   CheckCircle2,
   AlertTriangle,
   XCircle,
+  Scale,
 } from "lucide-react";
 
-type TabType = "overview" | "volcano" | "heatmap" | "network" | "timecourse" | "advanced" | "top-hits" | "qc" | "rankings" | "raw-data" | "logs" | "drug-finder";
+import { BatchCorrectionDashboard } from "@/components/analysis/BatchCorrectionDashboard";
+
+type TabType = "overview" | "volcano" | "heatmap" | "network" | "timecourse" | "advanced" | "top-hits" | "qc" | "rankings" | "raw-data" | "logs" | "drug-finder" | "batch-correction";
 
 interface LogEntry {
   timestamp: string;
@@ -678,6 +681,7 @@ export default function ResultsPage() {
   // Memoize tabs array to prevent re-creation
   const tabs = useMemo(() => [
     { id: "overview", label: "Overview", icon: Activity },
+    { id: "batch-correction", label: "Batch Correction", icon: Scale },
     { id: "volcano", label: "Volcano Plot", icon: TrendingUp },
     { id: "heatmap", label: "Heatmap", icon: Grid3X3 },
     { id: "network", label: "Gene Network", icon: Network },
@@ -911,6 +915,7 @@ export default function ResultsPage() {
                 transition={{ duration: 0.2 }}
               >
                 {activeTab === "overview" && <OverviewTab results={results} />}
+                {activeTab === "batch-correction" && <BatchCorrectionDashboard analysisId={id} initialMetrics={results.batchCorrection?.metrics} />}
                 {activeTab === "volcano" && <VolcanoTab results={results} onCustomize={() => setFigureCustomizationOpen(true)} />}
                 {activeTab === "heatmap" && <HeatmapTab results={results} onCustomize={() => setFigureCustomizationOpen(true)} />}
                 {activeTab === "network" && <NetworkTab results={results} analysisName={analysisName || analysis?.name} onCustomize={() => setFigureCustomizationOpen(true)} />}

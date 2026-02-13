@@ -15,7 +15,7 @@ console.log('='.repeat(80));
 // Test 1: Read metadata
 console.log('\n[Test 1] Reading libraries.json metadata...');
 try {
-  const metadataPath = path.join(__dirname, 'data', 'libraries', 'libraries.json');
+  const metadataPath = path.join(__dirname, '..', 'data', 'libraries', 'libraries.json');
   const content = fs.readFileSync(metadataPath, 'utf-8');
   const metadata = JSON.parse(content);
 
@@ -31,7 +31,7 @@ try {
 // Test 2: Parse Brunello library (TSV)
 console.log('\n[Test 2] Parsing Brunello library (TSV format)...');
 try {
-  const filePath = path.join(__dirname, 'data', 'libraries', 'raw', 'brunello-library-contents.txt');
+  const filePath = path.join(__dirname, '..', 'data', 'libraries', 'raw', 'brunello-library-contents.txt');
   const content = fs.readFileSync(filePath, 'utf-8');
   const lines = content.split(/\r\n|\r|\n/).filter(l => l.trim());
 
@@ -63,7 +63,7 @@ try {
 // Test 3: Parse BRIE library (TSV)
 console.log('\n[Test 3] Parsing BRIE library (TSV format)...');
 try {
-  const filePath = path.join(__dirname, 'data', 'libraries', 'raw', 'brie-library-contents.txt');
+  const filePath = path.join(__dirname, '..', 'data', 'libraries', 'raw', 'brie-library-contents.txt');
   const content = fs.readFileSync(filePath, 'utf-8');
   const lines = content.split(/\r\n|\r|\n/).filter(l => l.trim());
 
@@ -91,7 +91,7 @@ try {
 // Test 4: Parse Calabrese library (TSV with different columns)
 console.log('\n[Test 4] Parsing Calabrese library (TSV format)...');
 try {
-  const filePath = path.join(__dirname, 'data', 'libraries', 'raw', 'calabrese-seta-target-genes.txt');
+  const filePath = path.join(__dirname, '..', 'data', 'libraries', 'raw', 'calabrese-seta-target-genes.txt');
   const content = fs.readFileSync(filePath, 'utf-8');
   const lines = content.split(/\r\n|\r|\n/).filter(l => l.trim());
 
@@ -123,7 +123,7 @@ try {
 // Test 5: Check GeCKO v2 CSV format
 console.log('\n[Test 5] Parsing GeCKO v2 library B (CSV format)...');
 try {
-  const filePath = path.join(__dirname, 'data', 'libraries', 'raw', 'gecko-v2-library-b.csv');
+  const filePath = path.join(__dirname, '..', 'data', 'libraries', 'raw', 'gecko-v2-library-b.csv');
   const content = fs.readFileSync(filePath, 'utf-8');
   // Handle CR, LF, and CRLF line terminators
   const lines = content.split(/\r\n|\r|\n/).filter(l => l.trim());

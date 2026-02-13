@@ -22,6 +22,7 @@
     "@react-email/components": "^1.0.6",
     "@react-email/render": "^2.0.4",
     "@upstash/redis": "^1.36.2",
+    "ai": "^6.0.85",
     "bullmq": "^5.67.2",
     "ioredis": "^5.9.2",
     "next": "15.5.11",
