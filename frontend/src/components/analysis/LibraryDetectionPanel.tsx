@@ -2,7 +2,7 @@
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone'; // Use or implement simple dropzone
 import Papa from 'papaparse';
-import { FileUp, BookOpen, CheckCircle, AlertCircle, Loader2, Dna } from 'lucide-react';
+import { FileUp, BookOpen, CheckCircle, AlertCircle, Loader2, Dna, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 // import { Button } from '@/components/ui/button'; // Assuming shadcn or similar
 

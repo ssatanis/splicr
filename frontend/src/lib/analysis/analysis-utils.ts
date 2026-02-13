@@ -5,7 +5,7 @@ import { getLibrary as getSyntheticLibrary } from './sgRNALibraries';
 
 // Map library types to their real file paths (relative to project root)
 const LIBRARY_FILES: Record<string, string> = {
-    'brunello': 'data/raw/brunello/broadgpp-brunello-library-contents.txt',
+    'brunello': 'data/libraries/raw/brunello-library-contents.txt',
     'gecko': 'data/libraries/raw/gecko-v2-library-b.csv',
     'tko': 'data/libraries/raw/tko-v3-guide-sequences.xlsx',
     'brie': 'data/libraries/raw/brie-library-contents.txt',
@@ -31,33 +31,40 @@ export async function loadRealLibrary(libraryType: string, projectRoot: string =
     }
 
     const filename = path.basename(relativePath); // Extract filename from the mapped path
+    let fullPath = '';
 
-    // First try: specific path defined in config
-    let fullPath = path.resolve(projectRoot, relativePath);
-    console.log(`[Library] Attempting to load library from: ${fullPath}`);
+    // Discovery logic: Try to find project root by looking for 'data' directory
+    let currentDir = projectRoot;
+    let foundPath: string | null = null;
 
-    // Check if file exists, if not try standard locations (backwards compatibility / docker)
-    if (!fs.existsSync(fullPath)) {
-        // Try data/libraries/raw default location
-        const secondaryPath = path.resolve(projectRoot, 'data/libraries/raw', filename);
-        if (fs.existsSync(secondaryPath)) {
-            fullPath = secondaryPath;
+    // Search up to 3 levels up for the data directory
+    for (let i = 0; i < 3; i++) {
+        const checkPath = path.resolve(currentDir, relativePath);
+        if (fs.existsSync(checkPath)) {
+            foundPath = checkPath;
+            break;
+        }
+        currentDir = path.resolve(currentDir, '..');
+    }
+
+    if (!foundPath) {
+        // Try standard data/libraries/raw fallback if specific relativePath check failed
+        const secondaryParent = path.resolve(projectRoot, '..', 'data/libraries/raw', filename);
+        if (fs.existsSync(secondaryParent)) {
+            foundPath = secondaryParent;
+        }
+    }
+
+    if (foundPath) {
+        fullPath = foundPath;
+    } else {
+        // Last resort: Check absolute docker path
+        const dockerPath = path.join('/app/data/libraries/raw', filename);
+        if (fs.existsSync(dockerPath)) {
+            console.log(`[Library] Found library file in Docker path: ${dockerPath}`);
+            fullPath = dockerPath;
         } else {
-            const parentPath = path.resolve(projectRoot, '..', 'data/libraries/raw', filename);
-            console.log(`[Library] File not found at ${fullPath}. Attempting parent directory: ${parentPath}`);
-            if (fs.existsSync(parentPath)) {
-                console.log(`[Library] Found library file in parent directory: ${parentPath}`);
-                fullPath = parentPath;
-            } else {
-                // Last resort: Check absolute docker path
-                const dockerPath = path.join('/app/data/libraries/raw', filename);
-                if (fs.existsSync(dockerPath)) {
-                    console.log(`[Library] Found library file in Docker path: ${dockerPath}`);
-                    fullPath = dockerPath;
-                } else {
-                    console.warn(`[Library] Library file not found at ${fullPath}, ${parentPath}, or ${dockerPath}`);
-                }
-            }
+            console.warn(`[Library] Library file '${filename}' not found in expected locations.`);
         }
     }
 

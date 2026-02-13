@@ -135,8 +135,14 @@ export default function TimeCourseVisualization({
   }, [playing, isComplete, totalFrames, speed]);
 
   const handlePlayPause = useCallback(() => {
-    if (isComplete) setCurrentFrame(0);
-    setPlaying((p) => !p);
+    setPlaying((p) => {
+      // If we are at the last frame and pressing play, restart from 0
+      if (!p && isComplete) {
+        setCurrentFrame(0);
+        return true;
+      }
+      return !p;
+    });
   }, [isComplete]);
 
   const handleReset = useCallback(() => {

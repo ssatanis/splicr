@@ -52,12 +52,11 @@ import {
   Terminal,
   Eye,
   Table,
-  Grid3X3,
-  Network,
-  Clock,
-  FlaskConical,
-  MessageSquare,
-  Pill,
+  Search,
+  Upload,
+  Zap,
+  Check,
+  Copy,
   ArrowLeft,
   Box,
   Info,
@@ -65,6 +64,12 @@ import {
   AlertTriangle,
   XCircle,
   Scale,
+  Grid3X3,
+  Network,
+  Clock,
+  FlaskConical,
+  MessageSquare,
+  Pill,
 } from "lucide-react";
 
 import { BatchCorrectionDashboard } from "@/components/analysis/BatchCorrectionDashboard";
@@ -938,7 +943,23 @@ export default function ResultsPage() {
                 {activeTab === "qc" && <QCTab results={results} onCustomize={() => setFigureCustomizationOpen(true)} />}
                 {activeTab === "rankings" && <RankingsTab results={results} analysisId={id} onGeneClick={setSelectedGene} />}
                 {activeTab === "raw-data" && <RawDataTab results={results} analysisId={id} />}
-                {activeTab === "logs" && <LogsTab results={results} />}
+                {activeTab === "logs" && <LogsTab logs={results.logs || analysis?.logs || []} />}
+              </motion.div>
+            ) : analysis && activeTab === "logs" ? (
+              <motion.div
+                key="logs-failure-view"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.2 }}
+              >
+                <LogsTab logs={analysis.logs || []} />
+                <div className="mt-8 flex justify-center">
+                  <Button variant="outline" onClick={() => setActiveTab("overview")}>
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Back to Status
+                  </Button>
+                </div>
               </motion.div>
             ) : (
               <div key="error" className="bg-surface rounded-2xl p-12 border border-border text-center">
@@ -963,67 +984,82 @@ export default function ResultsPage() {
                       )}
                     </div>
 
-                    {isInProgress ? (
-                      <>
-                        <div className="max-w-xl mx-auto mt-6">
-                          {/* Progress Bar */}
-                          <div className="relative h-4 bg-accent/10 rounded-full overflow-hidden border border-accent/20">
-                            <motion.div
-                              className="absolute top-0 left-0 h-full bg-accent relative"
-                              initial={false}
-                              animate={{ width: `${Math.min(100, Math.max(0, analysis.progress ?? 0))}%` }}
-                              transition={{ duration: 0.3, ease: "easeOut" }}
-                            >
-                              <div className="absolute inset-0 bg-white/20 animate-[shimmer_2s_infinite] skew-x-[-20deg]"
-                                style={{ backgroundImage: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)' }}
-                              />
-                            </motion.div>
-                          </div>
-
-                          {/* Time Stats */}
-                          <div className="flex items-center justify-between mt-3 text-xs font-mono text-text-tertiary px-1">
-                            <div className="flex items-center gap-1.5" title="Time elapsed since start">
-                              <Clock className="w-3.5 h-3.5" />
-                              <span>Elapsed: {formatTime(elapsedSeconds)}</span>
-                            </div>
-                            {estimatedRemaining !== null && estimatedRemaining > 0 && (
-                              <div className="flex items-center gap-1.5" title="Estimated time remaining">
-                                <div className="w-3.5 h-3.5 flex items-center justify-center">
-                                  <div className="w-2 h-2 rounded-full bg-text-tertiary/50" />
-                                </div>
-                                <span>Est. remaining: {formatTime(estimatedRemaining)}</span>
-                              </div>
-                            )}
-                          </div>
+                    {isInProgress && (
+                      <div className="max-w-xl mx-auto mt-6">
+                        {/* Progress Bar */}
+                        <div className="relative h-4 bg-accent/10 rounded-full overflow-hidden border border-accent/20">
+                          <motion.div
+                            className="absolute top-0 left-0 h-full bg-accent relative"
+                            initial={false}
+                            animate={{ width: `${Math.min(100, Math.max(0, analysis.progress ?? 0))}%` }}
+                            transition={{ duration: 0.3, ease: "easeOut" }}
+                          >
+                            <div className="absolute inset-0 bg-white/20 animate-[shimmer_2s_infinite] skew-x-[-20deg]"
+                              style={{ backgroundImage: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)' }}
+                            />
+                          </motion.div>
                         </div>
 
-                        {/* Recent Log Stream */}
-                        {analysis.logs && analysis.logs.length > 0 && (
-                          <div className="max-w-xl mx-auto mt-6 text-left bg-surface/50 rounded-lg border border-border p-0 overflow-hidden shadow-sm">
-                            <div className="px-4 py-2 bg-surface border-b border-border flex items-center justify-between">
-                              <p className="text-text-secondary text-xs font-semibold uppercase tracking-wider">Analysis Log</p>
-                              <span className="flex h-2 w-2 relative">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                              </span>
+                        {/* Time Stats */}
+                        <div className="flex items-center justify-between mt-3 text-xs font-mono text-text-tertiary px-1">
+                          <div className="flex items-center gap-1.5" title="Time elapsed since start">
+                            <Clock className="w-3.5 h-3.5" />
+                            <span>Elapsed: {formatTime(elapsedSeconds)}</span>
+                          </div>
+                          {estimatedRemaining !== null && estimatedRemaining > 0 && (
+                            <div className="flex items-center gap-1.5" title="Estimated time remaining">
+                              <div className="w-3.5 h-3.5 flex items-center justify-center">
+                                <div className="w-2 h-2 rounded-full bg-text-tertiary/50" />
+                              </div>
+                              <span>Est. remaining: {formatTime(estimatedRemaining)}</span>
                             </div>
-                            <ul className="max-h-40 overflow-y-auto p-2 space-y-0.5 font-mono text-xs">
-                              {analysis.logs.slice().reverse().slice(0, 10).map((log: any, i: number) => (
-                                <li key={i} className={`flex gap-3 px-2 py-1.5 rounded-md ${i === 0 ? 'bg-accent/5 text-text-primary' : 'text-text-tertiary'}`}>
-                                  <span className="shrink-0 w-8 text-right opacity-70">{Math.round(log.progress)}%</span>
-                                  <span className="break-words flex-1">
-                                    {log.message}
-                                    {log.level === 'error' && <span className="ml-2 text-red-500 font-bold">ERROR</span>}
-                                  </span>
-                                  <span className="shrink-0 opacity-50 text-[10px] pt-0.5">
-                                    {log.timestamp ? new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : ''}
-                                  </span>
-                                </li>
-                              ))}
-                            </ul>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Recent Log Stream - Always visible if logs exist, even if failed */}
+                    {analysis.logs && analysis.logs.length > 0 && (
+                      <div className="max-w-xl mx-auto mt-6 text-left bg-surface/50 rounded-lg border border-border p-0 overflow-hidden shadow-sm">
+                        <div className="px-4 py-2 bg-surface border-b border-border flex items-center justify-between">
+                          <p className="text-text-secondary text-xs font-semibold uppercase tracking-wider">Analysis Log</p>
+                          {isInProgress && (
+                            <span className="flex h-2 w-2 relative">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                            </span>
+                          )}
+                        </div>
+                        <ul className="max-h-40 overflow-y-auto p-2 space-y-0.5 font-mono text-xs">
+                          {analysis.logs.slice().reverse().slice(0, 10).map((log: any, i: number) => (
+                            <li key={i} className={`flex gap-3 px-2 py-1.5 rounded-md ${i === 0 ? 'bg-accent/5 text-text-primary' : 'text-text-tertiary'}`}>
+                              <span className="shrink-0 w-8 text-right opacity-70">{Math.round(log.progress)}%</span>
+                              <span className="break-words flex-1">
+                                {log.message}
+                                {log.level === 'error' && <span className="ml-2 text-red-500 font-bold">ERROR</span>}
+                              </span>
+                              <span className="shrink-0 opacity-50 text-[10px] pt-0.5">
+                                {log.timestamp ? new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : ''}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                        {analysis.status === 'failed' && (
+                          <div className="px-4 py-3 bg-red-50/50 border-t border-red-100 dark:border-red-900/10 flex justify-center">
+                            <button
+                              onClick={() => setActiveTab('logs')}
+                              className="text-red-600 hover:text-red-700 text-xs font-semibold flex items-center gap-1.5"
+                            >
+                              <Terminal className="w-3.5 h-3.5" />
+                              View Full Error Logs
+                            </button>
                           </div>
                         )}
+                      </div>
+                    )}
 
+                    {isInProgress ? (
+                      <>
                         {queuedStuck && (
                           <div className="flex flex-col items-center gap-2 mt-6 max-w-md mx-auto bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
                             <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-medium">
@@ -1081,9 +1117,11 @@ export default function ResultsPage() {
                         </div>
                       </>
                     ) : (
-                      <div className="flex items-center justify-center gap-4 mt-6">
-                        <Button variant="outline" onClick={() => handleRetry()} disabled={isRetrying}>{isRetrying ? "Starting..." : "Retry"}</Button>
-                        <Link href="/analyses" className="text-accent font-serif inline-block">Back to your analyses</Link>
+                      <div className="flex items-center justify-center gap-4 mt-8 pt-4 border-t border-border/50 w-full max-w-md mx-auto">
+                        <Button variant="outline" onClick={() => handleRetry()} disabled={isRetrying}>{isRetrying ? "Starting..." : "Retry Analysis"}</Button>
+                        <Link href="/analyses">
+                          <Button variant="secondary">Back to your analyses</Button>
+                        </Link>
                       </div>
                     )}
                   </>
@@ -1117,15 +1155,16 @@ export default function ResultsPage() {
               />
             </div>
           </motion.div>
-        </div>
-      </div>
+        </div >
+      </div >
 
       {selectedGene && (
         <GeneInfoPopup
           geneSymbol={selectedGene}
           onClose={() => setSelectedGene(null)}
         />
-      )}
+      )
+      }
 
       <CollaborationSidebar
         analysisId={id}
@@ -1202,23 +1241,25 @@ export default function ResultsPage() {
         onClose={() => setShareModalOpen(false)}
       />
 
-      {integrationPanelOpen && results && analysis && (
-        <aside className="fixed top-0 right-0 bottom-0 w-[360px] z-30 flex flex-col bg-surface border-l border-border shadow-lg">
-          <ScreenIntegrationPanel
-            analysisId={id}
-            analysisName={(analysisName || analysis?.name) ?? "Analysis"}
-            completedDate={analysis.completedAt ?? analysis.createdAt ?? new Date().toISOString()}
-            totalGenes={results.summary?.totalGenes ?? 0}
-            significantHits={results.summary?.significantHits ?? 0}
-            cellLine=""
-            condition=""
-            screenType="knockout"
-            hitGenes={hitGenesForStructure}
-            width={360}
-            onClose={() => setIntegrationPanelOpen(false)}
-          />
-        </aside>
-      )}
+      {
+        integrationPanelOpen && results && analysis && (
+          <aside className="fixed top-0 right-0 bottom-0 w-[360px] z-30 flex flex-col bg-surface border-l border-border shadow-lg">
+            <ScreenIntegrationPanel
+              analysisId={id}
+              analysisName={(analysisName || analysis?.name) ?? "Analysis"}
+              completedDate={analysis.completedAt ?? analysis.createdAt ?? new Date().toISOString()}
+              totalGenes={results.summary?.totalGenes ?? 0}
+              significantHits={results.summary?.significantHits ?? 0}
+              cellLine=""
+              condition=""
+              screenType="knockout"
+              hitGenes={hitGenesForStructure}
+              width={360}
+              onClose={() => setIntegrationPanelOpen(false)}
+            />
+          </aside>
+        )
+      }
     </>
   );
 }
@@ -1933,8 +1974,7 @@ function RawDataTab({ results, analysisId }: { results: AnalysisResults; analysi
   );
 }
 
-function LogsTab({ results }: { results: AnalysisResults }) {
-  const logs = results.logs || [];
+function LogsTab({ logs = [] }: { logs?: any[] }) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when logs update
@@ -1953,6 +1993,15 @@ function LogsTab({ results }: { results: AnalysisResults }) {
     }
   };
 
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    const text = logs.map(l => `[${new Date(l.timestamp).toLocaleTimeString()}] ${l.level.toUpperCase()}: ${l.message}`).join('\n');
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div className="bg-[#0f172a] rounded-xl shadow-2xl border border-slate-800 overflow-hidden font-mono text-sm ring-1 ring-white/10">
       {/* Terminal Header */}
@@ -1965,12 +2014,31 @@ function LogsTab({ results }: { results: AnalysisResults }) {
           </div>
           <span className="ml-3 text-slate-400 text-xs font-semibold tracking-wider">analysis-worker.log</span>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="flex h-2 w-2 relative">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
-          <span className="text-[10px] text-slate-500 uppercase tracking-widest">Live Stream</span>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={handleCopy}
+            className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+          >
+            {copied ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-emerald-400">Copied!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-3.5 h-3.5" />
+                <span>Copy All</span>
+              </>
+            )}
+          </button>
+          <div className="h-4 w-px bg-slate-700" />
+          <div className="flex items-center gap-3">
+            <span className="flex h-2 w-2 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="text-[10px] text-slate-500 uppercase tracking-widest">Live Stream</span>
+          </div>
         </div>
       </div>
 

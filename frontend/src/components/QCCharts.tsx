@@ -3,6 +3,7 @@
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Legend
 } from 'recharts';
+import { Info } from 'lucide-react';
 
 interface SampleStat {
   name: string;
@@ -114,7 +115,12 @@ export default function QCCharts({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Read Count Distribution */}
         <div className="bg-surface rounded-xl p-6 shadow-card border border-border">
-          <h3 className="text-xl font-serif mb-4 text-text-primary">Read count per sample</h3>
+          <h3 className="text-xl font-serif mb-4 text-text-primary flex items-center gap-2">
+            Read count per sample
+            <span title="Total number of successfully mapped reads for each sample. Benchmarking suggests 10M+ for genome-scale screens.">
+              <Info className="w-4 h-4 text-text-tertiary cursor-help" />
+            </span>
+          </h3>
           {hasReadCounts ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={readCounts}>
@@ -153,7 +159,12 @@ export default function QCCharts({
 
         {/* Sample Correlation Heatmap */}
         <div className="bg-surface rounded-xl p-6 shadow-card border border-border">
-          <h3 className="text-xl font-serif mb-4 text-text-primary">Sample correlation matrix</h3>
+          <h3 className="text-xl font-serif mb-4 text-text-primary flex items-center gap-2">
+            Sample correlation matrix
+            <span title="Pearson correlation of sgRNA counts between samples. High correlation (>0.8) between replicates is expected.">
+              <Info className="w-4 h-4 text-text-tertiary cursor-help" />
+            </span>
+          </h3>
           {hasCorrelation ? (
             <div className="flex items-start gap-4">
               <div className="flex-1">
@@ -211,7 +222,12 @@ export default function QCCharts({
 
         {/* Library Coverage */}
         <div className="bg-surface rounded-xl p-6 shadow-card border border-border">
-          <h3 className="text-xl font-serif mb-4 text-text-primary">Library coverage</h3>
+          <h3 className="text-xl font-serif mb-4 text-text-primary flex items-center gap-2">
+            Library coverage
+            <span title="Percentage of the total library sgRNAs detected in each sample. Low coverage indicates loss of library representation.">
+              <Info className="w-4 h-4 text-text-tertiary cursor-help" />
+            </span>
+          </h3>
           {hasCoverage ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={coverage}>

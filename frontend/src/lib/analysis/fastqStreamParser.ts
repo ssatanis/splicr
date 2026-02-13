@@ -159,47 +159,47 @@ export class FastqStreamParser {
     }
 
     private static extractSgRNA(seq: string, adapter: string, validDNA: RegExp): string | null {
-        let sgRNA: string | null = null;
-
+        // 1. Try primary adapter
         if (adapter.length > 0) {
             const adapterIndex = seq.indexOf(adapter);
             if (adapterIndex !== -1) {
                 const sgRNAStart = adapterIndex + adapter.length;
-                sgRNA = seq.substring(sgRNAStart, sgRNAStart + 20);
+                const candidate = seq.substring(sgRNAStart, sgRNAStart + 20);
+                if (candidate.length === 20 && validDNA.test(candidate)) return candidate;
             }
         }
 
-        if (!sgRNA || sgRNA.length !== 20 || !validDNA.test(sgRNA)) {
-            const first20 = seq.length >= 20 ? seq.substring(0, 20) : null;
-            if (first20 && validDNA.test(first20)) {
-                sgRNA = first20;
+        // 2. Try common sgRNA scaffolds (GTTTTAGAGCTA...) if adapter fail or not provided
+        const scaffolds = ['GTTTTAGAGCTA', 'GUUUUAGAGCUA', 'GTTTTAGAGC'];
+        for (const scaffold of scaffolds) {
+            const idx = seq.indexOf(scaffold);
+            if (idx >= 20) { // Scaffold usually follows the 20bp sgRNA
+                const candidate = seq.substring(idx - 20, idx);
+                if (candidate.length === 20 && validDNA.test(candidate)) return candidate;
             }
         }
 
-        if (sgRNA && sgRNA.length === 20 && validDNA.test(sgRNA)) {
-            return sgRNA;
+        // 3. Last resort: first 20bp if it looks like a read starting with sgRNA
+        const first20 = seq.substring(0, 20);
+        if (first20.length === 20 && validDNA.test(first20)) {
+            return first20;
         }
+
         return null;
     }
 
     public static getReverseComplement(seq: string): string {
         const complement: Record<string, string> = {
-            'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C',
-            'N': 'N', 'R': 'Y', 'Y': 'R', 'M': 'K', 'K': 'M', 'S': 'S', 'W': 'W'
+            'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C', 'N': 'N'
         };
         return seq.split('').reverse().map(b => complement[b] || b).join('');
     }
 
-    // Updated processStream to handle orientation intelligently
     static async processStreamWithOrientation(
         filePath: string,
         library: { has(seq: string): boolean },
         adapterSequence: string = 'TCTTGTGGAAAGGACGAAACACC'
     ): Promise<StreamResult & { orientation: 'normal' | 'reverse-complement' | 'unknown' }> {
-        // We'll reopen the stream to be safe if we need two passes, but let's try single pass with smart counting.
-        // We will maintain two sets of counts: Normal and RC.
-        // After processing, we see which one yielded better library mapping.
-
         const fileStream = fs.createReadStream(filePath);
         let inputStream: NodeJS.ReadableStream = fileStream;
         if (filePath.endsWith('.gz')) {
@@ -217,7 +217,6 @@ export class FastqStreamParser {
         const rcCounts = new Map<string, number>();
         const adapter = (adapterSequence || 'TCTTGTGGAAAGGACGAAACACC').trim().toUpperCase();
         const validDNA = /^[ATCG]+$/;
-        const rcAdapter = this.getReverseComplement(adapter);
 
         let totalReads = 0;
         let totalQuality = 0;
@@ -227,10 +226,6 @@ export class FastqStreamParser {
 
         let lineIndex = 0;
         let currentSeq = '';
-
-        // Sample first 1000 reads to determine orientation? 
-        // Or just do whole file? 
-        // Doing whole file for both is safer and not much slower (just string reversal).
 
         for await (const line of rl) {
             if (!line.trim()) continue;
@@ -242,7 +237,6 @@ export class FastqStreamParser {
                 const quality = line.trim();
                 totalReads++;
 
-                // Stats
                 totalLength += currentSeq.length;
                 for (let i = 0; i < quality.length; i++) {
                     totalQuality += quality.charCodeAt(i) - 33;
@@ -259,14 +253,7 @@ export class FastqStreamParser {
                 }
 
                 // 2. Try RC
-                // For RC, the adapter would be at the 3' end in theory? 
-                // Or we simply RC the whole read and look for the adapter at 5'.
-                // Usually in standard cloning, if reviewed/sequenced from other end, the whole thing is RC.
                 const rcSeq = this.getReverseComplement(currentSeq);
-                // We look for the adapter in the RC sequence.
-                // Note: extractSgRNA uses the 'adapter' string passed in. 
-                // If the read is RC, the adapter in the read is also RC.
-                // So if we RC the read, we should find the NORMAL adapter sequence in it.
                 const rcSgRNA = this.extractSgRNA(rcSeq, adapter, validDNA);
                 if (rcSgRNA) {
                     rcCounts.set(rcSgRNA, (rcCounts.get(rcSgRNA) || 0) + 1);
@@ -275,7 +262,6 @@ export class FastqStreamParser {
             lineIndex++;
         }
 
-        // Calculate mapping rates
         let normalMapped = 0;
         for (const [seq, count] of normalCounts.entries()) {
             if (library.has(seq)) normalMapped += count;
@@ -293,12 +279,12 @@ export class FastqStreamParser {
         let finalMapped = normalMapped;
         let orientation: 'normal' | 'reverse-complement' | 'unknown' = 'normal';
 
-        if (rcRate > normalRate && rcRate > 0.1) { // Threshold to switch
+        if (rcRate > normalRate && rcRate > 0.1) {
             orientation = 'reverse-complement';
             finalCounts = rcCounts;
             finalMapped = rcMapped;
-        } else if (normalRate < 0.01 && rcRate < 0.01) {
-            orientation = 'unknown'; // Both failed
+        } else if (normalRate < 0.05 && rcRate < 0.05) {
+            orientation = 'unknown';
         }
 
         const avgQuality = totalBases > 0 ? totalQuality / totalBases : 0;

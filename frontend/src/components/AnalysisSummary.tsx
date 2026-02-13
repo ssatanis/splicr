@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle2, AlertTriangle, TrendingUp, BarChart3, Target, Database } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, TrendingUp, BarChart3, Target, Database, Info } from 'lucide-react';
 
 interface Props {
   library: {
@@ -74,7 +74,12 @@ export default function AnalysisSummary({ library, summary, qc }: Props) {
               <Database className="w-5 h-5 text-purple-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600 font-medium">Total Reads</p>
+              <p className="text-sm text-gray-600 font-medium flex items-center gap-1">
+                Total Reads
+                <span title="Total number of reads detected in the FASTQ/BAM files.">
+                  <Info className="w-3 h-3 text-gray-400 cursor-help" />
+                </span>
+              </p>
               <p className="text-2xl font-bold text-gray-900">
                 {formatNumber(summary.totalReads)}
               </p>
@@ -85,15 +90,18 @@ export default function AnalysisSummary({ library, summary, qc }: Props) {
         {/* Match Rate */}
         <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${
-              summary.matchRate >= 70 ? 'bg-green-100' : summary.matchRate >= 50 ? 'bg-yellow-100' : 'bg-red-100'
-            }`}>
-              <Target className={`w-5 h-5 ${
-                summary.matchRate >= 70 ? 'text-green-600' : summary.matchRate >= 50 ? 'text-yellow-600' : 'text-red-600'
-              }`} />
+            <div className={`p-2 rounded-lg ${summary.matchRate >= 70 ? 'bg-green-100' : summary.matchRate >= 50 ? 'bg-yellow-100' : 'bg-red-100'
+              }`}>
+              <Target className={`w-5 h-5 ${summary.matchRate >= 70 ? 'text-green-600' : summary.matchRate >= 50 ? 'text-yellow-600' : 'text-red-600'
+                }`} />
             </div>
             <div>
-              <p className="text-sm text-gray-600 font-medium">Match Rate</p>
+              <p className="text-sm text-gray-600 font-medium flex items-center gap-1">
+                Match Rate
+                <span title="Percentage of reads that successfully mapped to the selected sgRNA library.">
+                  <Info className="w-3 h-3 text-gray-400 cursor-help" />
+                </span>
+              </p>
               <div className="flex items-baseline gap-2">
                 <p className="text-2xl font-bold text-gray-900">
                   {formatPercentage(summary.matchRate)}
@@ -113,7 +121,12 @@ export default function AnalysisSummary({ library, summary, qc }: Props) {
               <TrendingUp className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600 font-medium">Unique sgRNAs</p>
+              <p className="text-sm text-gray-600 font-medium flex items-center gap-1">
+                Unique sgRNAs
+                <span title="Number of distinct sgRNA sequences detected with at least one read.">
+                  <Info className="w-3 h-3 text-gray-400 cursor-help" />
+                </span>
+              </p>
               <p className="text-2xl font-bold text-gray-900">
                 {formatNumber(summary.uniqueSgRNAs)}
               </p>
@@ -128,7 +141,12 @@ export default function AnalysisSummary({ library, summary, qc }: Props) {
               <BarChart3 className="w-5 h-5 text-indigo-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600 font-medium">Genes Detected</p>
+              <p className="text-sm text-gray-600 font-medium flex items-center gap-1">
+                Genes Detected
+                <span title="Number of genes that have at least one successfully mapped sgRNA.">
+                  <Info className="w-3 h-3 text-gray-400 cursor-help" />
+                </span>
+              </p>
               <p className="text-2xl font-bold text-gray-900">
                 {formatNumber(summary.genesDetected)}
               </p>
@@ -139,15 +157,18 @@ export default function AnalysisSummary({ library, summary, qc }: Props) {
         {/* Library Coverage */}
         <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${
-              summary.libraryCoverage >= 40 ? 'bg-green-100' : summary.libraryCoverage >= 20 ? 'bg-yellow-100' : 'bg-red-100'
-            }`}>
-              <Database className={`w-5 h-5 ${
-                summary.libraryCoverage >= 40 ? 'text-green-600' : summary.libraryCoverage >= 20 ? 'text-yellow-600' : 'text-red-600'
-              }`} />
+            <div className={`p-2 rounded-lg ${summary.libraryCoverage >= 40 ? 'bg-green-100' : summary.libraryCoverage >= 20 ? 'bg-yellow-100' : 'bg-red-100'
+              }`}>
+              <Database className={`w-5 h-5 ${summary.libraryCoverage >= 40 ? 'text-green-600' : summary.libraryCoverage >= 20 ? 'text-yellow-600' : 'text-red-600'
+                }`} />
             </div>
             <div>
-              <p className="text-sm text-gray-600 font-medium">Library Coverage</p>
+              <p className="text-sm text-gray-600 font-medium flex items-center gap-1">
+                Library Coverage
+                <span title="Percentage of the total library guides that were detected in this analysis.">
+                  <Info className="w-3 h-3 text-gray-400 cursor-help" />
+                </span>
+              </p>
               <p className="text-2xl font-bold text-gray-900">
                 {formatPercentage(summary.libraryCoverage)}
               </p>
@@ -162,7 +183,12 @@ export default function AnalysisSummary({ library, summary, qc }: Props) {
               <AlertTriangle className="w-5 h-5 text-gray-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600 font-medium">Unmatched</p>
+              <p className="text-sm text-gray-600 font-medium flex items-center gap-1">
+                Unmatched
+                <span title="Percentage and count of reads that could not be mapped to any guide in the library.">
+                  <Info className="w-3 h-3 text-gray-400 cursor-help" />
+                </span>
+              </p>
               <div className="flex items-baseline gap-2">
                 <p className="text-2xl font-bold text-gray-900">
                   {formatPercentage(100 - summary.matchRate)}

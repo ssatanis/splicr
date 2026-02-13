@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { LibraryDetectionPanel } from './LibraryDetectionPanel';
 import { BeforeAfterVisualization } from './BeforeAfterVisualization';
-import { AlertCircle, CheckCircle, Loader2, Play } from 'lucide-react';
+import { AlertCircle, CheckCircle, Loader2, Play, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 // import { Button } from '@/components/ui/button'; 
 
@@ -62,7 +62,12 @@ export function BatchCorrectionDashboard({ analysisId, initialMetrics }: BatchCo
     return (
         <div className="space-y-8">
             <div className="border-b border-slate-200 dark:border-slate-700 pb-4">
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Batch Effect Correction</h2>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    Batch Effect Correction
+                    <span title="Aligns your CRISPR screen data with public reference sets (like DepMap) to remove technical artifacts and increase biological signal.">
+                        <Info className="w-4 h-4 text-slate-400 cursor-help" />
+                    </span>
+                </h2>
                 <p className="text-slate-500 dark:text-slate-400">
                     Correct for technical artifacts by integrating with DepMap reference data.
                 </p>

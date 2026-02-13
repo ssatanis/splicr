@@ -259,8 +259,11 @@ export class AnalysisPipeline {
           const matchRatePercent = stats.totalReads > 0 ? (mappedReads / stats.totalReads) * 100 : 0;
           this.log('parsing', fileProgress + 4, `Matched ${mappedReads.toLocaleString()} sgRNAs (${matchRatePercent.toFixed(1)}% of reads) to ${libraryMeta.name} library (Size: ${library.size})`, 'info');
 
+          if (matchRatePercent < 10) {
+            throw new Error(`Critical Error: Only ${matchRatePercent.toFixed(1)}% of reads matched the ${libraryMeta.name} library (Size: ${library.size}). Analysis requires >10% match rate. Please verify you selected the correct library.`);
+          }
           if (matchRatePercent < 30) {
-            throw new Error(`Critical Error: Only ${matchRatePercent.toFixed(1)}% of reads matched the ${libraryMeta.name} library (Size: ${library.size}). Analysis requires >30% match rate. Please verify you selected the correct library.`);
+            this.log('parsing', fileProgress + 5, `Warning: Low match rate (${matchRatePercent.toFixed(1)}%). Orientation might be incorrect or library doesn't match well.`, 'warning');
           }
 
           // Use all extracted sgRNAs so unmapped ones get synthetic genes and analysis runs
