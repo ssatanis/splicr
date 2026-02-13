@@ -60,11 +60,23 @@ export class FastqStreamParser {
         let useR2 = false;
         let activeFilePath = filePath;
 
+        // Debug library
+        const guides = library as any;
+        console.log(`[DEBUG LIB] Loaded ${guides.size} guides`);
+        try {
+            console.log(`[DEBUG LIB] First 5 guides: ${Array.from(guides.keys()).slice(0, 5).join(', ')}`);
+        } catch (e) {
+            console.log('[DEBUG LIB] Could not list first 5 guides');
+        }
+        console.log(`[DEBUG LIB] Guide length: ${guideLength}`);
+
+
+
         if (typeof manualOffset !== 'number') {
             // Auto-detect phase
             console.log(`[FastqStreamParser] Auto-detecting offset for ${filePath}...`);
             const r1Reads = await this.readFirstNReads(filePath, 12500); // Increased from 5000 to 12500 for better stats
-            const r1Offset = this.detectOptimalOffset(r1Reads, library, guideLength);
+            const r1Offset = this.detectOptimalOffset(r1Reads, library, guideLength, filePath);
 
             if (r1Offset !== undefined) {
                 detectedOffset = r1Offset;
@@ -76,7 +88,7 @@ export class FastqStreamParser {
                 if (pairedFilePath) {
                     console.log(`[FastqStreamParser] Checking Read 2 (${pairedFilePath}) for guide sequences...`);
                     const r2Reads = await this.readFirstNReads(pairedFilePath, 12500); // Increased from 5000 to 12500
-                    const r2Offset = this.detectOptimalOffset(r2Reads, library, guideLength);
+                    const r2Offset = this.detectOptimalOffset(r2Reads, library, guideLength, pairedFilePath);
 
                     if (r2Offset !== undefined) {
                         detectedOffset = r2Offset;
@@ -165,7 +177,7 @@ export class FastqStreamParser {
             if (reads.length >= 10000) break;
         }
 
-        return this.detectOptimalOffset(reads, library, guideLength);
+        return this.detectOptimalOffset(reads, library, guideLength, 'chunk_content');
     }
 
     // NEW: Core streaming logic accepting a NodeJS Readable stream
@@ -340,7 +352,7 @@ export class FastqStreamParser {
     }
 
     // Detects optimal window by scanning positions 0-60
-    private static detectOptimalOffset(reads: string[], library: { has(seq: string): boolean }, guideLength: number): number | undefined {
+    private static detectOptimalOffset(reads: string[], library: { has(seq: string): boolean }, guideLength: number, filename: string = 'unknown'): number | undefined {
         const matchesPerOffset = new Map<number, number>();
         const total = reads.length;
         if (total === 0) return undefined;
@@ -358,42 +370,69 @@ export class FastqStreamParser {
             matchesPerOffset.set(offset, matches);
         }
 
-        // Sort offsets by hit count descending
-        const sortedOffsets = Array.from(matchesPerOffset.entries())
-            .map(([offset, count]) => ({ offset, count }))
+        // After scanning loop, before returning
+        const hitCounts = Array.from({ length: 121 }, (_, offset) => matchesPerOffset.get(offset) || 0);
+
+        const sortedOffsets = hitCounts
+            .map((count, offset) => ({ offset, count }))
             .filter(x => x.count > 0)
             .sort((a, b) => b.count - a.count);
 
-        console.log(`[DEBUG] Offset detection: Checked ${total} reads.`);
-        console.log(`[DEBUG] Top 10 offsets by hit count:`);
-        sortedOffsets.slice(0, 10).forEach(x => {
-            console.log(`[DEBUG]   Offset ${x.offset}: ${x.count} hits (${(100 * x.count / total).toFixed(1)}%)`);
-        });
+        const guides = library as any;
+        const sequences = reads;
+        const readsChecked = total;
 
-        if (sortedOffsets.length === 0) return undefined;
+        console.log(`[DEBUG OFFSET] Detection for ${filename}:`);
+        console.log(`[DEBUG OFFSET]   Sample size: ${readsChecked} reads`);
+        console.log(`[DEBUG OFFSET]   Library size: ${guides.size} guides`);
+        console.log(`[DEBUG OFFSET]   Scan range: 0-120`);
+        console.log(`[DEBUG OFFSET]   Top 15 offsets by hit count:`);
 
-        const best = sortedOffsets[0];
-        const maxHits = best.count;
-        const secondBestHits = sortedOffsets.length > 1 ? sortedOffsets[1].count : 0;
-        const bestOffset = best.offset;
+        if (sortedOffsets.length === 0) {
+            console.log(`[DEBUG OFFSET]     NO MATCHES AT ANY OFFSET`);
+            // Try a brute force sanity check
+            console.log(`[DEBUG OFFSET]   Running brute-force validation on first 100 reads...`);
 
-        console.log(`[DEBUG] Best offset: ${bestOffset}, hits: ${maxHits}`);
-        console.log(`[DEBUG] Second-best hits: ${secondBestHits}`);
+            let bruteForceMatches = 0;
+            for (let i = 0; i < Math.min(100, sequences.length); i++) {
+                const seq = sequences[i].toUpperCase();
+                // Check every possible 20-mer in this read
+                for (let pos = 0; pos <= seq.length - 20; pos++) {
+                    const window = seq.substring(pos, pos + 20);
+                    if (guides.has(window)) {
+                        console.log(`[DEBUG OFFSET]     FOUND GUIDE at position ${pos} in read ${i}: ${window}`);
+                        bruteForceMatches++;
+                        break; // only count once per read
+                    }
+                }
+            }
+            console.log(`[DEBUG OFFSET]   Brute force found ${bruteForceMatches}/100 reads with guides somewhere in the sequence`);
+
+        } else {
+            sortedOffsets.slice(0, 15).forEach(x => {
+                const pct = ((x.count / readsChecked) * 100).toFixed(2);
+                console.log(`[DEBUG OFFSET]     Offset ${x.offset}: ${x.count} hits (${pct}%)`);
+            });
+        }
+
+        const maxHits = sortedOffsets[0]?.count || 0;
+        const secondBestHits = sortedOffsets[1]?.count || 0;
+        const bestOffset = sortedOffsets[0]?.offset ?? null;
+
+        console.log(`[DEBUG OFFSET]   Best offset: ${bestOffset}, hits: ${maxHits}`);
+        console.log(`[DEBUG OFFSET]   Second-best hits: ${secondBestHits}`);
+        console.log(`[DEBUG OFFSET]   Threshold check (≥10 hits, ≥2x second): ${maxHits >= 10 && maxHits >= 2 * secondBestHits}`);
 
         const ratio = secondBestHits > 0 ? maxHits / secondBestHits : maxHits;
-        // Relaxed Thresholds:
-        // 1. At least 5 hits (was 10)
-        // 2. Either (Ratio >= 2.0) OR (High confidence absolute: > 20% of reads match)
+        // RELAXED Thresholds used in actual code:
+        // 1. At least 5 hits
+        // 2. Either (Ratio >= 1.8) OR (High confidence absolute: > 20% of reads match)
         const isHighConfidence = maxHits > (total * 0.2);
         const passesThreshold = maxHits >= 5 && (ratio >= 1.8 || isHighConfidence);
 
-        console.log(`[DEBUG] Passes threshold (Hits>=5, Ratio>=1.8 or HighConf)? ${passesThreshold}`);
+        console.log(`[DEBUG OFFSET]   Actual code threshold check (Hits>=5, Ratio>=1.8 or HighConf): ${passesThreshold}`);
 
-        // Criteria:
-        // 1. Max hits >= 5
-        // 2. Max hits >= 1.8 * secondBestHits OR >20% match rate
-
-        if (passesThreshold) {
+        if (passesThreshold && bestOffset !== null) {
             return bestOffset;
         }
 

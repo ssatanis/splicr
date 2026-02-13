@@ -95,7 +95,7 @@ export async function POST(
     let jobId: string | null = null;
     let enqueueError: unknown = null;
 
-    // Always use worker queue when Redis is available
+    // Standard Queue Mode: Always use worker queue when Redis is available
     if (isRedisAvailable()) {
       try {
         jobId = await Promise.race([
@@ -122,9 +122,36 @@ export async function POST(
       });
     }
 
+    // Serverless Fallback
+    const enableServerless = process.env.NEXT_PUBLIC_ENABLE_SERVERLESS_ANALYSIS === 'true' || !!process.env.VERCEL;
+
+    if (enableServerless) {
+      console.log('Serverless mode detected: Running analysis in-process via /run...');
+      const { runAnalysisPipeline } = await import('@/lib/runAnalysisPipeline');
+
+      // In the /run route, we DO want to await if it's the only way to run it,
+      // but since the UI is already on the results page, the user sees "Running" 
+      // instead of a frozen upload button.
+      try {
+        await runAnalysisPipeline(analysisId, analysis);
+        return NextResponse.json({
+          success: true,
+          message: 'Analysis completed in-process (Serverless Mode).',
+          analysisId,
+          mode: 'inline',
+        });
+      } catch (runErr) {
+        console.error('Inline analysis failed:', runErr);
+        return NextResponse.json({
+          error: 'Analysis failed during execution',
+          details: runErr instanceof Error ? runErr.message : String(runErr)
+        }, { status: 500 });
+      }
+    }
+
     // If Redis is available but enqueue failed, return error (no inline fallback)
     if (isRedisAvailable()) {
-      console.error('Redis execution failed. Worker queue is required.');
+      console.error('Redis execution failed and Serverless mode is disabled.');
       return NextResponse.json({
         error: 'Analysis queuing failed. Please check worker status.',
         details: enqueueError instanceof Error ? enqueueError.message : String(enqueueError)
@@ -132,16 +159,16 @@ export async function POST(
     }
 
     // No Redis configured - return error with debug info
-    console.error('Redis is not configured. Worker queue is required.');
+    console.error('Redis is not configured and Serverless mode is disabled.');
     console.error('Debug Env:', {
       HAS_REDIS_URL: !!process.env.REDIS_URL,
       HAS_UPSTASH_REST: !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN),
       HAS_UPSTASH_TCP: !!(process.env.UPSTASH_REDIS_ENDPOINT && process.env.UPSTASH_REDIS_PASSWORD),
-      RUN_INLINE: process.env.RUN_ANALYSIS_INLINE
+      ENABLE_SERVERLESS: enableServerless
     });
 
     return NextResponse.json({
-      error: 'Worker queue is not configured. Please set REDIS_URL environment variable.',
+      error: 'No execution engine available. Set REDIS_URL or ENABLE_SERVERLESS_ANALYSIS.',
     }, { status: 503 });
   } catch (error) {
     console.error('Run analysis error:', error);

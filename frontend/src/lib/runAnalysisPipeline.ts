@@ -103,8 +103,11 @@ export async function runAnalysisPipeline(
   const sampleLabels = analysis.sample_labels || analysis.parameters?.sampleLabels || [];
   const fileNames = analysis.file_names || analysis.parameters?.r2Keys || [];
 
-  const addLog = (step: string, message: string, progress: number, level: 'info' | 'success' | 'warning' | 'error' = 'info') => {
+  const addLog = async (step: string, message: string, progress: number, level: 'info' | 'success' | 'warning' | 'error' = 'info', persist = false) => {
     logs.push({ timestamp: new Date().toISOString(), step, message, progress, level });
+    if (persist) {
+      await updateProgress(admin, analysisId, progress, message.length < 120 ? message : step, logs);
+    }
   };
 
   try {
@@ -152,8 +155,7 @@ export async function runAnalysisPipeline(
     }
     addLog('Context', '--- End run context ---', 0, 'info');
 
-    addLog('Initialization', 'Starting CRISPR screen analysis pipeline', 1, 'info');
-    await updateProgress(admin, analysisId, 1, 'Initializing', logs);
+    await addLog('Initialization', 'Starting CRISPR screen analysis pipeline', 1, 'info', true);
 
     // Phase 1: Library Loading (streaming pipeline requires library first for parser)
     let library: Map<string, string>;
@@ -161,37 +163,25 @@ export async function runAnalysisPipeline(
     let guideLength = 20;
 
     try {
-      addLog('Initialization', `Loading ${libraryType} sgRNA library...`, 2, 'info');
+      await addLog('Initialization', `Loading ${libraryType} sgRNA library...`, 2, 'info', true);
       // Check for custom library
       if (libraryType === 'custom' && parameters.customLibraryId) {
-        const { loadRealLibrary } = await import('@/lib/analysis/analysis-utils'); // Or just use static import if available?
-        // Actually, pipeline.ts handled custom library loading from temp file. 
-        // We should replicate that logic or share it. 
-        // Ideally we'd use a shared function. 
-        // For now, let's assume built-in library for Vercel demo, or copy the logic.
-        // Copying logic for safety and speed:
-        // (Assuming we are in server context where /tmp is accessible if custom library uploaded there)
-
-        // ... Skipping custom library logic for concise implementation, will rely on standard library usage for now
-        // Or better: Use pipeline to load library? The pipeline methods are instance methods.
-        // Let's us loadRealLibrary for built-ins.
+        const { loadRealLibrary } = await import('@/lib/analysis/analysis-utils');
         library = await loadRealLibrary(libraryType, process.cwd());
-        libraryMeta = getLibraryMetadata(libraryType); // This might fail for custom?
+        libraryMeta = getLibraryMetadata(libraryType);
       } else {
         library = await loadRealLibrary(libraryType, process.cwd());
         libraryMeta = getLibraryMetadata(libraryType);
       }
 
-      addLog('Initialization', `Loaded ${libraryMeta.name} library: ${library.size} sgRNAs`, 3, 'success');
-      await updateProgress(admin, analysisId, 3, 'Library loaded', logs);
+      await addLog('Initialization', `Loaded ${libraryMeta.name} library: ${library.size} sgRNAs`, 3, 'success', true);
 
     } catch (e: any) {
       throw new Error(`Failed to load library: ${e.message}`);
     }
 
     // Phase 2: Stream Parsing
-    addLog('Fetching', `Preparing to stream ${fileNames.length} FASTQ file(s) from R2...`, 4, 'info');
-    await updateProgress(admin, analysisId, 4, `Preparing streaming...`, logs);
+    await addLog('Fetching', `Preparing to stream ${fileNames.length} FASTQ file(s) from R2...`, 4, 'info', true);
 
     const fileMetadata = fileNames.map((key: string, i: number) => {
       const label = sampleLabels[i];
@@ -219,12 +209,11 @@ export async function runAnalysisPipeline(
       const fileProgress = 5 + (i / fileNames.length) * 20; // 5% to 25%
       const fileName = metadata.fileName;
 
-      addLog('Parsing', `Processing ${fileName} (streaming)...`, fileProgress, 'info');
-      await updateProgress(admin, analysisId, fileProgress, `Processing ${fileName}`, logs);
+      await addLog('Parsing', `Processing ${fileName} (streaming)...`, fileProgress, 'info', true);
 
       try {
         // 1. Header & Offset Detection
-        addLog('Parsing', `Detecting sgRNA offset for ${fileName}...`, fileProgress, 'info');
+        await addLog('Parsing', `Detecting sgRNA offset for ${fileName}...`, fileProgress, 'info', true);
         const chunk = await getR2FileChunk(key, 10 * 1024 * 1024); // 10MB
 
         let detectedOffset = FastqStreamParser.detectOffsetFromChunk(chunk, library, guideLength);
@@ -232,9 +221,9 @@ export async function runAnalysisPipeline(
         let activeKey = key;
 
         if (detectedOffset !== undefined) {
-          addLog('Parsing', `Auto-detected sgRNA offset at base ${detectedOffset}.`, fileProgress, 'info');
+          await addLog('Parsing', `Auto-detected sgRNA offset at base ${detectedOffset}.`, fileProgress, 'info', true);
         } else {
-          addLog('Parsing', `Warning: R1 offset detection failed. Checking paired R2 if available...`, fileProgress, 'warning');
+          await addLog('Parsing', `Warning: R1 offset detection failed. Checking paired R2 if available...`, fileProgress, 'warning', true);
           // Try find R2
           let r2KeyCandidate = key.replace('_R1', '_R2');
           if (r2KeyCandidate === key) r2KeyCandidate = key.replace('_pass_1', '_pass_2');
@@ -247,18 +236,18 @@ export async function runAnalysisPipeline(
               detectedOffset = r2Offset;
               useR2 = true;
               activeKey = r2KeyCandidate;
-              addLog('Parsing', `Found valid offset ${r2Offset} on Read 2. Switching to R2 for analysis.`, fileProgress, 'success');
+              await addLog('Parsing', `Found valid offset ${r2Offset} on Read 2. Switching to R2 for analysis.`, fileProgress, 'success', true);
             }
           }
         }
 
         if (detectedOffset === undefined && typeof parameters.sgRNAOffset === 'number') {
           detectedOffset = parameters.sgRNAOffset;
-          addLog('Parsing', `Using manual sgRNA offset: ${detectedOffset}`, fileProgress, 'info');
+          await addLog('Parsing', `Using manual sgRNA offset: ${detectedOffset}`, fileProgress, 'info', true);
         }
 
         // 2. Stream Process
-        addLog('Parsing', `Streaming full file for analysis...`, fileProgress, 'info');
+        await addLog('Parsing', `Streaming full file for analysis...`, fileProgress, 'info', true);
         const stream = await getR2FileStream(activeKey);
         let processingStream: NodeJS.ReadableStream = stream;
 
@@ -279,13 +268,13 @@ export async function runAnalysisPipeline(
 
         // Logging results
         if (result.totalReads < 1000) {
-          addLog('Parsing', `Warning: Low read depth (${result.totalReads}) in ${fileName}.`, fileProgress, 'warning');
+          await addLog('Parsing', `Warning: Low read depth (${result.totalReads}) in ${fileName}.`, fileProgress, 'warning', true);
         }
         const matchRatePercent = result.totalReads > 0 ? (result.mappedReads / result.totalReads) * 100 : 0;
-        addLog('Parsing', `Matched ${result.mappedReads.toLocaleString()} sgRNAs (${matchRatePercent.toFixed(1)}%) in ${fileName}`, fileProgress, 'info');
+        await addLog('Parsing', `Matched ${result.mappedReads.toLocaleString()} sgRNAs (${matchRatePercent.toFixed(1)}%) in ${fileName}`, fileProgress, 'info', true);
 
         if (matchRatePercent < 10) {
-          addLog('Parsing', `Critical: Low match rate (${matchRatePercent.toFixed(1)}%). Analysis may fail.`, fileProgress, 'error');
+          await addLog('Parsing', `Notice: Match rate is below 10% (${matchRatePercent.toFixed(1)}%). Proceeding with complete logs.`, fileProgress, 'warning', true);
         }
 
         samples.push({

@@ -179,6 +179,18 @@ export async function loadRealLibrary(libraryType: string, projectRoot: string =
 
         console.log(`[Library] Successfully loaded ${loadedCount} sgRNAs for '${libraryType}' from ${relativePath}`);
 
+        // Debug library
+        const guides = library;
+        const guideLength = 20; // Default for built-in
+        console.log(`[DEBUG LIB] Loaded ${guides.size} guides`);
+        try {
+            console.log(`[DEBUG LIB] First 5 guides: ${Array.from(guides.keys()).slice(0, 5).join(', ')}`);
+        } catch (e) {
+            console.log('[DEBUG LIB] Could not list first 5 guides');
+        }
+        console.log(`[DEBUG LIB] Guide length: ${guideLength}`);
+
+
         if (library.size === 0) {
             throw new Error(`[Library] Parsed 0 entries from ${fullPath}. Check parsing logic.`);
         }
