@@ -70,8 +70,7 @@ export async function loadRealLibrary(libraryType: string, projectRoot: string =
 
 
     if (!fs.existsSync(fullPath)) {
-        console.warn(`[Library] Real library file not found at ${fullPath}. Using synthetic library fallback.`);
-        return getSyntheticLibrary(libraryType);
+        throw new Error(`[Library] Real library file not found at ${fullPath}. Please ensure library files are present.`);
     }
 
     console.log(`[Library] Loading real library '${libraryType}' from ${fullPath}...`);
@@ -175,21 +174,19 @@ export async function loadRealLibrary(libraryType: string, projectRoot: string =
             }
             console.log(`[Library] Parsed ${loadedCount} entries for ${libraryType}`);
         } else {
-            console.warn(`[Library] Unknown library type '${libraryType}' format. Returning synthetic.`);
-            return getSyntheticLibrary(libraryType);
+            throw new Error(`[Library] Unknown library type '${libraryType}' format.`);
         }
 
         console.log(`[Library] Successfully loaded ${loadedCount} sgRNAs for '${libraryType}' from ${relativePath}`);
 
         if (library.size === 0) {
-            console.warn(`[Library] Parsed 0 entries from ${fullPath}. Check parsing logic. Using synthetic fallback.`);
-            return getSyntheticLibrary(libraryType);
+            throw new Error(`[Library] Parsed 0 entries from ${fullPath}. Check parsing logic.`);
         }
 
         return library;
 
     } catch (error) {
         console.error(`[Library] Error loading library ${fullPath}:`, error);
-        return getSyntheticLibrary(libraryType);
+        throw new Error(`Failed to load library ${libraryType} from ${fullPath}: ${error}`);
     }
 }

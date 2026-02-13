@@ -1,25 +1,137 @@
 {
-    "libraries": [
-        {
-            "id": "brunello",
-            "name": "Brunello",
-            "organism": "Human",
-            "library_type": "knockout",
-            "description": "Brunello CRISPR-Cas9 Knockout Library",
-            "total_sgrnas": 77441,
-            "genes_targeted": 19114,
-            "sgrnas_per_gene": 4,
-            "addgene_id": "73172",
-            "addgene_url": "https://www.addgene.org/pooled-library/broadgpp-brunello-library/",
-            "files": [
-                "brunello.tsv"
-            ],
-            "file_format": "tsv",
-            "columns": {
-                "sequence": 0,
-                "gene_symbol": 1,
-                "gene_id": 2
-            }
-        }
-    ]
+  "libraries": [
+    {
+      "id": "brunello",
+      "name": "Brunello",
+      "organism": "Human",
+      "library_type": "knockout",
+      "description": "Human CRISPR Knockout Pooled Library (Brunello)",
+      "total_sgrnas": 76441,
+      "genes_targeted": 19114,
+      "sgrnas_per_gene": 4,
+      "addgene_id": "73179",
+      "addgene_url": "https://www.addgene.org/pooled-library/broadgpp-human-knockout-brunello/",
+      "files": ["brunello-library-contents.txt"],
+      "file_format": "tsv",
+      "columns": {
+        "sequence": 6,
+        "gene_symbol": 1,
+        "gene_id": 0
+      }
+    },
+    {
+      "id": "brie",
+      "name": "BRIE",
+      "organism": "Mouse",
+      "library_type": "knockout",
+      "description": "Mouse CRISPR Knockout Pooled Library (Brie)",
+      "total_sgrnas": 78637,
+      "genes_targeted": 19674,
+      "sgrnas_per_gene": 4,
+      "addgene_id": "73632",
+      "addgene_url": "https://www.addgene.org/pooled-library/broadgpp-mouse-knockout-brie/",
+      "files": ["brie-library-contents.txt"],
+      "file_format": "tsv",
+      "columns": {
+        "sequence": 6,
+        "gene_symbol": 1,
+        "gene_id": 0
+      }
+    },
+    {
+      "id": "gecko-v2",
+      "name": "GeCKO v2",
+      "organism": "Human",
+      "library_type": "knockout",
+      "description": "Human CRISPR Knockout Pooled Library (GeCKO v2)",
+      "total_sgrnas": 123411,
+      "genes_targeted": 19050,
+      "sgrnas_per_gene": 6,
+      "addgene_id": "1000000048",
+      "addgene_url": "https://www.addgene.org/pooled-library/zhang-human-gecko-v2/",
+      "files": ["gecko-v2-library-a.csv", "gecko-v2-library-b.csv"],
+      "file_format": "csv",
+      "columns": {
+        "sequence_a": 0,
+        "sequence_b": 2,
+        "gene_symbol_b": 0
+      }
+    },
+    {
+      "id": "tko-v3",
+      "name": "TKO v3",
+      "organism": "Human",
+      "library_type": "knockout",
+      "description": "Toronto KnockOut (TKO) CRISPR Library - Version 3",
+      "total_sgrnas": 70948,
+      "genes_targeted": 18053,
+      "sgrnas_per_gene": 4,
+      "addgene_id": "90294",
+      "addgene_url": "https://www.addgene.org/pooled-library/moffat-crispr-knockout-tkov3/",
+      "files": ["tko-v3-guide-sequences.xlsx"],
+      "file_format": "xlsx",
+      "columns": {
+        "sequence": "sgRNA Sequence",
+        "gene_symbol": "Gene Symbol",
+        "gene_id": "Gene ID"
+      }
+    },
+    {
+      "id": "calabrese",
+      "name": "Calabrese",
+      "organism": "Human",
+      "library_type": "activation",
+      "description": "Human CRISPR Activation Pooled Library (Calabrese P65-HSF)",
+      "total_sgrnas": 113238,
+      "genes_targeted": 18885,
+      "sgrnas_per_gene": 6,
+      "addgene_id": "92379",
+      "addgene_url": "https://www.addgene.org/pooled-library/broadgpp-human-crispra-calabrese-p65hsf/",
+      "files": ["calabrese-seta-target-genes.txt", "calabrese-setb-target-genes.txt"],
+      "file_format": "tsv",
+      "columns": {
+        "sequence": 0,
+        "gene_symbol": 1,
+        "gene_id": 2
+      }
+    },
+    {
+      "id": "dolcetto",
+      "name": "Dolcetto",
+      "organism": "Human",
+      "library_type": "inhibition",
+      "description": "Human CRISPR Inhibition Pooled Library (Dolcetto)",
+      "total_sgrnas": 114061,
+      "genes_targeted": 18900,
+      "sgrnas_per_gene": 6,
+      "addgene_id": "92385",
+      "addgene_url": "https://www.addgene.org/pooled-library/broadgpp-human-crispri-dolcetto/",
+      "files": ["dolcetto-seta-target-genes.txt", "dolcetto-setb-target-genes.txt"],
+      "file_format": "tsv",
+      "columns": {
+        "sequence": 0,
+        "gene_symbol": 1,
+        "gene_id": 2
+      }
+    },
+    {
+      "id": "dolomiti",
+      "name": "Dolomiti",
+      "organism": "Mouse",
+      "library_type": "inhibition",
+      "description": "Mouse CRISPR Inhibition Pooled Library (Dolomiti)",
+      "total_sgrnas": 134560,
+      "genes_targeted": 22279,
+      "sgrnas_per_gene": 6,
+      "addgene_id": "104090",
+      "addgene_url": "https://www.addgene.org/pooled-library/broadgpp-mouse-crispri-dolomiti/",
+      "files": ["dolomiti-seta-target-genes.txt", "dolomiti-setb-target-genes.txt"],
+      "file_format": "tsv",
+      "columns": {
+        "sequence": 0,
+        "gene_symbol": 1,
+        "gene_id": 2
+      }
+    }
+  ]
 }

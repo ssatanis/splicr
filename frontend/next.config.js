@@ -26,6 +26,9 @@ const nextConfig = {
     // Disable Turbopack persistent cache to avoid "Persisting failed" / "write batch" / range-index crashes
     turbopackFileSystemCacheForDev: false,
     turbopackFileSystemCacheForBuild: false,
+    outputFileTracingIncludes: {
+      '/api/**/*': ['./data/libraries/**/*'],
+    },
   },
   webpack: (config) => {
     // react-plotly.js expects 'plotly.js/dist/plotly'; we use plotly.js-dist-min

@@ -216,14 +216,13 @@ export class AnalysisPipeline {
 
       } else {
         // Built-in libraries - NOW LOADING REAL DATA
+        // Strict Mode: Fail if library cannot be loaded. No synthetic fallback.
         try {
           library = await loadRealLibrary(libraryType, process.cwd());
           libraryMeta = getLibraryMetadata(libraryType);
           this.log('library', 5, `Loaded ${libraryMeta.name} library: ${library.size} sgRNAs targeting ${new Set(library.values()).size} genes`, 'success');
         } catch (e) {
-          this.log('library', 5, `Failed to load real library ${libraryType}, using synthetic fallback. Error: ${e}`, 'warning');
-          library = getLibrary(libraryType);
-          libraryMeta = getLibraryMetadata(libraryType);
+          throw new Error(`Failed to load real library ${libraryType}. Please ensure library files are installed correctly. Error: ${e}`);
         }
       }
 
