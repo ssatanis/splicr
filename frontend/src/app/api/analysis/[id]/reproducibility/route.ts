@@ -273,14 +273,15 @@ export async function GET(
             signalDensity,
             skewIndex,
             overallQuality: 'POOR', // Placeholder
-            recommendation: ''
+            recommendation: '',
+            shouldProceed: false
         };
 
         // Assess
         const assessment = assessScreenQuality(metrics);
         metrics.overallQuality = assessment.quality;
         metrics.recommendation = assessment.recommendation;
-        // metrics.shouldProceed = assessment.shouldProceed; // Not in interface but useful
+        metrics.shouldProceed = assessment.shouldProceed;
 
         return NextResponse.json(metrics);
 

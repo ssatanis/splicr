@@ -7,11 +7,7 @@ import * as os from 'os';
 import { pipeline } from 'stream/promises';
 import { Readable } from 'stream';
 
-export const config = {
-    api: {
-        bodyParser: false, // Handle multipart uploads manually? Next.js App Router handles FormData naturally.
-    },
-};
+
 
 export async function POST(req: NextRequest) {
     try {

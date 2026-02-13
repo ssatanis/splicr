@@ -158,6 +158,7 @@
     "@aws-sdk/s3-request-presigner": "^3.980.0",
     "@floating-ui/dom": "^1.7.5",
     "@google/generative-ai": "^0.24.1",
+    "@radix-ui/react-tooltip": "^1.2.8",
     "@react-email/components": "^1.0.6",
     "@smithy/node-http-handler": "^4.4.8",
     "@stdlib/stats": "^0.3.3",

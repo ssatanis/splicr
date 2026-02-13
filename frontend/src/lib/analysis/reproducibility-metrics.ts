@@ -68,6 +68,7 @@ export interface ReproducibilityMetrics {
     // Pass/Fail
     overallQuality: 'EXCELLENT' | 'GOOD' | 'MARGINAL' | 'POOR';
     recommendation: string;
+    shouldProceed: boolean;
 }
 
 // --- Helper Functions ---
