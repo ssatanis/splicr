@@ -13,12 +13,12 @@
     --color-accent: #6ABF36;
     --color-border: #E8E6E3;
     --color-border-light: #F2F1EF;
-    
+
     /* Shadows - Minimal */
     --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04);
     --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.06);
     --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.08);
-    
+
     /* Status Colors */
     --color-success: #10B981;
     --color-warning: #F59E0B;
@@ -39,7 +39,12 @@
     overflow-x: hidden;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-instrument-serif);
     font-weight: 400;
     letter-spacing: -0.02em;
@@ -74,11 +79,25 @@
 }
 
 /* Accent color overrides via data attribute */
-[data-accent="ocean"] { --color-accent: #06B6D4; }
-[data-accent="forest"] { --color-accent: #10B981; }
-[data-accent="sunset"] { --color-accent: #F59E0B; }
-[data-accent="lavender"] { --color-accent: #A78BFA; }
-[data-accent="rose"] { --color-accent: #FB7185; }
+[data-accent="ocean"] {
+  --color-accent: #06B6D4;
+}
+
+[data-accent="forest"] {
+  --color-accent: #10B981;
+}
+
+[data-accent="sunset"] {
+  --color-accent: #F59E0B;
+}
+
+[data-accent="lavender"] {
+  --color-accent: #A78BFA;
+}
+
+[data-accent="rose"] {
+  --color-accent: #FB7185;
+}
 
 /* Reduce motion - accessibility */
 html.reduce-motion,
@@ -91,12 +110,30 @@ html.reduce-motion *::after {
 }
 
 /* Compact mode - tighter spacing */
-html[data-compact="true"] .space-y-6 > * + * { margin-top: 0.75rem; }
-html[data-compact="true"] .space-y-4 > * + * { margin-top: 0.5rem; }
-html[data-compact="true"] .p-6 { padding: 1rem; }
-html[data-compact="true"] .gap-8 { gap: 1rem; }
-html[data-compact="true"] .py-12 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
-html[data-compact="true"] .mb-8 { margin-bottom: 1rem; }
+html[data-compact="true"] .space-y-6>*+* {
+  margin-top: 0.75rem;
+}
+
+html[data-compact="true"] .space-y-4>*+* {
+  margin-top: 0.5rem;
+}
+
+html[data-compact="true"] .p-6 {
+  padding: 1rem;
+}
+
+html[data-compact="true"] .gap-8 {
+  gap: 1rem;
+}
+
+html[data-compact="true"] .py-12 {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+
+html[data-compact="true"] .mb-8 {
+  margin-bottom: 1rem;
+}
 
 /* High contrast */
 html[data-high-contrast="true"] {
@@ -104,6 +141,7 @@ html[data-high-contrast="true"] {
   --color-text-tertiary: #737373;
   --color-border: #404040;
 }
+
 html.dark[data-high-contrast="true"] {
   --color-text-secondary: #D4D4D4;
   --color-text-tertiary: #A3A3A3;
@@ -111,9 +149,17 @@ html.dark[data-high-contrast="true"] {
 }
 
 /* Colorblind mode filters (simulation) */
-html[data-colorblind="protanopia"] body { filter: url('#protanopia'); }
-html[data-colorblind="deuteranopia"] body { filter: url('#deuteranopia'); }
-html[data-colorblind="tritanopia"] body { filter: url('#tritanopia'); }
+html[data-colorblind="protanopia"] body {
+  filter: url('#protanopia');
+}
+
+html[data-colorblind="deuteranopia"] body {
+  filter: url('#deuteranopia');
+}
+
+html[data-colorblind="tritanopia"] body {
+  filter: url('#tritanopia');
+}
 
 @layer utilities {
   .text-balance {
@@ -171,6 +217,7 @@ html[data-colorblind="tritanopia"] body { filter: url('#tritanopia'); }
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -181,6 +228,7 @@ html[data-colorblind="tritanopia"] body { filter: url('#tritanopia'); }
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }

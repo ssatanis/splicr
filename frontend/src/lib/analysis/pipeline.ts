@@ -338,7 +338,13 @@ export class AnalysisPipeline {
           this.log('parsing', fileProgress + 4, `Matched ${mappedReads.toLocaleString()} sgRNAs (${matchRatePercent.toFixed(1)}% of reads) to ${libraryMeta.name} library (Size: ${library.size})`, 'info');
 
           if (matchRatePercent < 10) {
-            throw new Error(`Critical Error: Only ${matchRatePercent.toFixed(1)}% of reads matched the ${libraryMeta.name} library (Size: ${library.size}). Analysis requires >10% match rate. Please verify you selected the correct library.`);
+            // RELAXED: Don't throw, just warn. User wants to see logs.
+            this.log('parsing', fileProgress + 5, `Critical Error: Only ${matchRatePercent.toFixed(1)}% of reads matched the ${libraryMeta.name} library (Size: ${library.size}). Analysis requires >10% match rate. Please verify you selected the correct library.`, 'error');
+
+            // Only hard fail if effectively 0 matches
+            if (matchRatePercent < 0.1) {
+              throw new Error(`Pipeline Aborted: Match rate is ${matchRatePercent.toFixed(2)}% (effectively zero). Cannot proceed with analysis.`);
+            }
           }
           if (matchRatePercent < 30) {
             this.log('parsing', fileProgress + 5, `Warning: Low match rate (${matchRatePercent.toFixed(1)}%). Orientation might be incorrect or library doesn't match well.`, 'warning');
@@ -513,6 +519,351 @@ export class AnalysisPipeline {
           const controlCols = samples.filter(s => s.condition === 'control').map(s => s.name);
           const treatmentCols = samples.filter(s => s.condition === 'treatment').map(s => s.name);
           const outputPrefix = path.join(workingDir, 'bagel2_out');
+
+          const bagel2Result = await runBagel2Pipeline(
+            { countTablePath, controlColumns: controlCols, treatmentColumns: treatmentCols, outputPrefix: 'bagel2_out' },
+            { workingDir },
+            (p) => {
+              const scaledProgress = algorithmProgress.bagel2.start +
+                (p.progress / 100) * (algorithmProgress.bagel2.end - algorithmProgress.bagel2.start);
+              this.log('bagel2', scaledProgress, p.message, 'info');
+            }
+          );
+
+          if (bagel2Result.success) {
+            algorithmResults.bagel2 = bagel2CliToLegacy(
+              bagel2Result.bfResults,
+              bagel2Result.prResults,
+              bagel2Result.foldchangeResults
+            );
+          } else {
+            this.log('bagel2', algorithmProgress.bagel2.end, `BAGEL2 CLI failed: ${bagel2Result.userMessage || bagel2Result.error}. Falling back to TypeScript.`, 'warning');
+            // Fall through to TypeScript fallback below
+          }
+        }
+
+        if (!algorithmResults.bagel2) {
+          // TypeScript fallback
+          const bagel2Analyzer = new BAGEL2Analyzer({
+            essentialGenes: parameters.essentialGenes ? parameters.essentialGenes.split(',').map(s => s.trim()) : undefined,
+            nonEssentialGenes: parameters.nonEssentialGenes ? parameters.nonEssentialGenes.split(',').map(s => s.trim()) : undefined,
+            bootstrapIterations: parameters.bagelPermutations || 1000,
+            normalizationMethod: parameters.normalizationMethod
+          });
+
+          algorithmResults.bagel2 = await bagel2Analyzer.runAnalysis(
+            countMatrix,
+            sgRNAToGene,
+            controlIndices,
+            treatmentIndices,
+            (progress) => {
+              const scaledProgress = algorithmProgress.bagel2.start +
+                (progress.progress / 100) * (algorithmProgress.bagel2.end - algorithmProgress.bagel2.start);
+              this.log('bagel2', scaledProgress, progress.message, 'info');
+            }
+          );
+        }
+
+        this.log('bagel2', algorithmProgress.bagel2.end, `BAGEL2 complete: ${algorithmResults.bagel2.filter(r => r.bayesFactor > 0).length} putative essential genes`, 'success');
+      }
+
+      if (algorithms.includes('drugz')) {
+        this.log('drugz', algorithmProgress.drugz.start, 'Starting DrugZ analysis...', 'info');
+
+        if (isCliAvailable('drugz') && workingDir) {
+          // CLI path: call real DrugZ Python binary
+          this.log('drugz', algorithmProgress.drugz.start + 1, 'Using DrugZ CLI (Python)', 'info');
+
+          const countTablePath = path.join(workingDir, 'drugz_counts.txt');
+          writeCountTableToDisk(countMatrix, sgRNAToGene, samples.map(s => s.name), countTablePath);
+
+          const controlCols = samples.filter(s => s.condition === 'control').map(s => s.name);
+          const treatmentCols = samples.filter(s => s.condition === 'treatment').map(s => s.name);
+          const outputPath = path.join(workingDir, 'drugz_output.txt');
+
+          const drugzResult = await runDrugzPipeline(
+            {
+              inputCountTable: countTablePath,
+              outputPath,
+              controlColumns: controlCols,
+              treatmentColumns: treatmentCols,
+              pseudocount: 5,
+            },
+            { workingDir },
+            (p) => {
+              const scaledProgress = algorithmProgress.drugz.start +
+                (p.progress / 100) * (algorithmProgress.drugz.end - algorithmProgress.drugz.start);
+              this.log('drugz', scaledProgress, p.message, 'info');
+            }
+          );
+
+          if (drugzResult.success) {
+            algorithmResults.drugz = drugzCliToLegacy(drugzResult.geneResults);
+          } else {
+            this.log('drugz', algorithmProgress.drugz.end, `DrugZ CLI failed: ${drugzResult.userMessage || drugzResult.error}. Falling back to TypeScript.`, 'warning');
+            // Fall through to TypeScript fallback below
+          }
+        }
+
+        if (!algorithmResults.drugz) {
+          // TypeScript fallback
+          const drugzAnalyzer = new DrugZAnalyzer({
+            minSgRNAs: 3,
+            pseudocount: 5,
+            normalizationMethod: parameters.normalizationMethod
+          });
+
+          algorithmResults.drugz = await drugzAnalyzer.runAnalysis(
+            countMatrix,
+            sgRNAToGene,
+            controlIndices,
+            treatmentIndices,
+            (progress) => {
+              const scaledProgress = algorithmProgress.drugz.start +
+                (progress.progress / 100) * (algorithmProgress.drugz.end - algorithmProgress.drugz.start);
+              this.log('drugz', scaledProgress, progress.message, 'info');
+            }
+          );
+        }
+
+        this.log('drugz', algorithmProgress.drugz.end, `DrugZ complete: ${algorithmResults.drugz.filter(r => r.fdr < parameters.fdrThreshold).length} significant genes`, 'success');
+      }
+
+      // Phase 6: Merge Results (90-95%)
+      this.log('merge', 91, 'Merging results from all algorithms...', 'info');
+      const unifiedResults = this.mergeResults(algorithmResults, parameters);
+      this.log('merge', 95, `Merged results for ${unifiedResults.length} genes`, 'success');
+
+      // Phase 7: Generate Final Output (95-100%)
+      this.log('output', 96, 'Generating volcano plot data...', 'info');
+      const volcanoData = unifiedResults.map(r => ({
+        gene: r.gene,
+        log2FC: r.log2FC,
+        negLog10P: -Math.log10(Math.max(r.pValue, 1e-300)),
+        fdr: r.fdr,
+        isSignificant: r.fdr < parameters.fdrThreshold && Math.abs(r.log2FC) > parameters.lfcThreshold
+      }));
+
+      this.log('output', 98, 'Identifying top hits...', 'info');
+      const significantGenes = unifiedResults.filter(r =>
+        r.fdr < parameters.fdrThreshold && Math.abs(r.log2FC) > parameters.lfcThreshold
+      );
+
+      const depleted = significantGenes
+        .filter(r => r.log2FC < 0)
+        .sort((a, b) => a.log2FC - b.log2FC)
+        .slice(0, 20);
+
+      const enriched = significantGenes
+        .filter(r => r.log2FC > 0)
+        .sort((a, b) => b.log2FC - a.log2FC)
+        .slice(0, 20);
+
+      // Build raw data for export
+      const rawCountMatrix: Record<string, Record<string, number>> = {};
+      for (const [sgRNA, counts] of countMatrix.entries()) {
+        rawCountMatrix[sgRNA] = {};
+        samples.forEach((sample, i) => {
+          rawCountMatrix[sgRNA][sample.name] = counts[i];
+        });
+      }
+
+      this.log('complete', 100, `Analysis complete! Found ${significantGenes.length} significant genes (${depleted.length} depleted, ${enriched.length} enriched)`, 'success');
+
+      return {
+        id: analysisId,
+        resultsSource: 'pipeline' as const,
+        summary: {
+          totalGenes: unifiedResults.length,
+          significantHits: significantGenes.length,
+          enriched: enriched.length,
+          depleted: depleted.length
+        },
+        qcMetrics,
+        algorithms: algorithmResults,
+        unifiedResults,
+        volcanoData,
+        topHits: { depleted, enriched },
+        logs: this.logs,
+        rawData: {
+          countMatrix: rawCountMatrix,
+          normalizedCounts: rawCountMatrix // Simplified for now
+        }
+      };
+
+    } catch (error) {
+      this.log('error', 0, `Pipeline failed: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+      throw error;
+    }
+  }
+
+  /**
+   * Continues the analysis pipeline from a set of pre-parsed samples.
+   * Use this when parsing is done externally (e.g. via R2 streaming).
+   */
+  async continueFromSamples(
+    samples: SampleInfo[],
+    library: Map<string, string>,
+    libraryMeta: any,
+    algorithms: string[],
+    parameters: AnalysisParameters,
+    progressCallback?: ProgressCallback,
+    workingDir?: string
+  ): Promise<PipelineResults> {
+    this.logs = [];
+    this.progressCallback = progressCallback;
+
+    // Use a consistent ID or passed one? For now generate new one as this is a new run instance logic
+    const analysisId = `analysis_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+
+    try {
+      // Phase 3.5: Build Count Matrix (25-30%)
+      this.log('matrix', 26, 'Building sgRNA count matrix...', 'info');
+      let { countMatrix, sgRNAToGene, controlIndices, treatmentIndices } = this.buildCountMatrix(samples, library);
+      this.log('matrix', 30, `Count matrix: ${countMatrix.size} sgRNAs × ${samples.length} samples`, 'success');
+
+      // Phase 4: Calculate QC Metrics (30-35%)
+      this.log('qc', 31, 'Calculating quality control metrics...', 'info');
+      const qcMetrics = this.calculateQCMetrics(samples, countMatrix, library);
+      this.log('qc', 35, `QC complete: ${(qcMetrics.mappingRate * 100).toFixed(1)}% mapping rate, ${(qcMetrics.libraryCoverage * 100).toFixed(1)}% library coverage`, 'success');
+
+      // Filter Count Matrix (after QC, before analysis)
+      if (parameters.minimumReads > 0 || parameters.removeRibosomal) {
+        this.log('filtering', 34, 'Filtering count matrix (min reads / ribosomal)...', 'info');
+        const { filteredMatrix, stats } = filterCountMatrix(countMatrix, sgRNAToGene, {
+          minimumReads: parameters.minimumReads,
+          removeRibosomal: parameters.removeRibosomal
+        });
+        countMatrix = filteredMatrix;
+
+        const retainedPercent = (stats.filteredSgRnaCount / stats.originalSgRnaCount) * 100;
+        this.log('filtering', 35, `Filtering retained ${stats.filteredSgRnaCount} sgRNAs (${retainedPercent.toFixed(1)}% of total). Mean read depth: ${stats.meanReadDepth.toFixed(1)}`, 'info');
+
+        // Warning: Aggressive filtering
+        if (stats.removedFraction >= 0.9) {
+          this.log('filtering', 35,
+            `Warning: Filtering removed ${(stats.removedFraction * 100).toFixed(1)}% of sgRNAs. ` +
+            `Your settings (min reads = ${parameters.minimumReads}) may be too strict for this dataset ` +
+            `(Mean Depth: ${stats.meanReadDepth.toFixed(1)}). Consider lowering the threshold.`,
+            'warning'
+          );
+        }
+
+        // Warning: Low read depth
+        if (stats.meanReadDepth < 50) {
+          this.log('filtering', 35,
+            `Critical: Low sequencing depth (mean ${stats.meanReadDepth.toFixed(1)} reads/sgRNA). ` +
+            `This limits statistical power for MAGeCK, BAGEL2, and DrugZ.`,
+            'warning'
+          );
+        }
+
+        if (stats.filteredSgRnaCount < 100) {
+          this.log('filtering', 35, `Warning: Very low sgRNA count (${stats.filteredSgRnaCount}). Statistical power is severely limited.`, 'warning');
+        }
+
+        if (stats.filteredSgRnaCount === 0) {
+          throw new Error(`All sgRNAs were filtered out! Mean read depth is ${stats.meanReadDepth.toFixed(1)}, but Minimum Reads is set to ${parameters.minimumReads}. Please lower the threshold.`);
+        }
+      }
+
+      // Phase 5: Run Selected Algorithms (35-90%)
+      const algorithmResults: {
+        mageck?: MAGeCKGeneResult[];
+        bagel2?: BAGEL2GeneResult[];
+        drugz?: DrugZGeneResult[];
+      } = {};
+
+      const algorithmProgress = {
+        mageck: { start: 35, end: 55 },
+        bagel2: { start: 55, end: 75 },
+        drugz: { start: 75, end: 90 }
+      };
+
+      if (algorithms.includes('mageck')) {
+        this.log('mageck', 35, 'Starting MAGeCK analysis...', 'info');
+
+        if (isCliAvailable('mageck') && workingDir) {
+          this.log('mageck', 36, 'Using MAGeCK CLI (Python binary)', 'info');
+
+          // Write count table to disk for CLI
+          const countTablePath = path.join(workingDir, 'mageck_counts.txt');
+          writeCountTableToDisk(countMatrix, sgRNAToGene, samples.map(s => s.name), countTablePath);
+
+          const controlCols = samples.filter(s => s.condition === 'control').map(s => s.name);
+          const treatmentCols = samples.filter(s => s.condition === 'treatment').map(s => s.name);
+
+          const mageckResult = await runMageckPipeline(
+            {
+              // Library path isn't used if inputCountTable is provided, but required by type
+              libraryPath: 'custom',
+              fastqPaths: [],
+              sampleLabels: [],
+              inputCountTable: countTablePath,
+              outputPrefix: 'mageck_out',
+              normMethod: parameters.normalizationMethod === 'none' ? 'none' : parameters.normalizationMethod === 'total' ? 'total' : 'median',
+            },
+            {
+              controlColumns: controlCols.join(','),
+              treatmentColumns: treatmentCols.join(','),
+              outputPrefix: 'mageck_out',
+              normMethod: parameters.normalizationMethod === 'none' ? 'none' : parameters.normalizationMethod === 'total' ? 'total' : 'median',
+            },
+            { workingDir },
+            (p) => {
+              const scaledProgress = algorithmProgress.mageck.start +
+                (p.progress / 100) * (algorithmProgress.mageck.end - algorithmProgress.mageck.start);
+              this.log('mageck', scaledProgress, p.message, 'info');
+            }
+          );
+
+          if (mageckResult.success) {
+            algorithmResults.mageck = mageckResult.geneSummary.map(r => mageckGeneToUnified(r, parameters.fdrThreshold)) as any;
+          } else {
+            this.log('mageck', algorithmProgress.mageck.end, `MAGeCK CLI failed: ${mageckResult.userMessage || mageckResult.error}. Falling back to TypeScript.`, 'warning');
+            // Fall through to TypeScript fallback
+          }
+        }
+
+        if (!algorithmResults.mageck) {
+          this.log('mageck', 36, 'Using MAGeCK TypeScript implementation (fallback)', 'info');
+          const mageck = new MAGeCKAnalyzer({
+            normalizationMethod: parameters.normalizationMethod,
+          });
+
+          const ctrlIdx = samples.filter(s => s.condition === 'control').map(s => samples.indexOf(s));
+          const treatIdx = samples.filter(s => s.condition === 'treatment').map(s => samples.indexOf(s));
+
+          const rawResults = await mageck.runAnalysis(
+            countMatrix,
+            sgRNAToGene,
+            ctrlIdx,
+            treatIdx,
+            (p) => {
+              const scaledProgress = algorithmProgress.mageck.start +
+                (p.progress / 100) * (algorithmProgress.mageck.end - algorithmProgress.mageck.start);
+              this.log('mageck', scaledProgress, p.message, 'info');
+            }
+          );
+          algorithmResults.mageck = mageck.toUnifiedResults(rawResults) as any;
+        }
+
+        this.log('mageck', algorithmProgress.mageck.end, `MAGeCK complete: ${algorithmResults.mageck ? algorithmResults.mageck.filter(r => Math.min(r.fdrNeg, r.fdrPos) < parameters.fdrThreshold).length : 0} significant genes`, 'success');
+      }
+
+      if (algorithms.includes('bagel2')) {
+        this.log('bagel2', algorithmProgress.bagel2.start, 'Starting BAGEL2 analysis...', 'info');
+
+        if (isCliAvailable('bagel2') && workingDir) {
+          // CLI path: call real BAGEL2 Python binary
+          this.log('bagel2', algorithmProgress.bagel2.start + 1, 'Using BAGEL2 CLI (Python)', 'info');
+
+          const countTablePath = path.join(workingDir, 'bagel2_counts.txt');
+          writeCountTableToDisk(countMatrix, sgRNAToGene, samples.map(s => s.name), countTablePath);
+
+          const controlCols = samples.filter(s => s.condition === 'control').map(s => s.name);
+          const treatmentCols = samples.filter(s => s.condition === 'treatment').map(s => s.name);
+          // const outputPrefix = path.join(workingDir, 'bagel2_out');
 
           const bagel2Result = await runBagel2Pipeline(
             { countTablePath, controlColumns: controlCols, treatmentColumns: treatmentCols, outputPrefix: 'bagel2_out' },

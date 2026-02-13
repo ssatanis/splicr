@@ -63,7 +63,7 @@ export class FastqStreamParser {
         if (typeof manualOffset !== 'number') {
             // Auto-detect phase
             console.log(`[FastqStreamParser] Auto-detecting offset for ${filePath}...`);
-            const r1Reads = await this.readFirstNReads(filePath, 5000); // Increased from 1000 to 5000
+            const r1Reads = await this.readFirstNReads(filePath, 12500); // Increased from 5000 to 12500 for better stats
             const r1Offset = this.detectOptimalOffset(r1Reads, library, guideLength);
 
             if (r1Offset !== undefined) {
@@ -75,7 +75,7 @@ export class FastqStreamParser {
                 // Fallback to R2 if provided
                 if (pairedFilePath) {
                     console.log(`[FastqStreamParser] Checking Read 2 (${pairedFilePath}) for guide sequences...`);
-                    const r2Reads = await this.readFirstNReads(pairedFilePath, 5000); // Increased from 1000 to 5000
+                    const r2Reads = await this.readFirstNReads(pairedFilePath, 12500); // Increased from 5000 to 12500
                     const r2Offset = this.detectOptimalOffset(r2Reads, library, guideLength);
 
                     if (r2Offset !== undefined) {
@@ -140,6 +140,154 @@ export class FastqStreamParser {
         return reads;
     }
 
+    // NEW: precise offset detection from a text chunk (e.g. first 10MB of a file)
+    public static detectOffsetFromChunk(
+        chunk: string,
+        library: { has(seq: string): boolean },
+        guideLength: number
+    ): number | undefined {
+        // Extract reads from the chunk
+        // Chunk might be partial, so split by newline
+        const lines = chunk.split(/\r?\n/);
+        const reads: string[] = [];
+
+        // FastQ format: 4 lines per record. 
+        // We need to find the start. Usually line 0 is header (@), line 1 is seq.
+        // We'll scan for lines that look like sequences (ACGTN) and follow a header.
+        // But simply assuming standard 4-line stride from index 0 is unsafe if chunk starts mid-stream.
+        // For this function, we assume 'chunk' is the START of the file.
+
+        for (let i = 0; i < lines.length; i++) {
+            if (i % 4 === 1) { // Sequence line
+                const line = lines[i].trim().toUpperCase();
+                if (line) reads.push(line);
+            }
+            if (reads.length >= 10000) break;
+        }
+
+        return this.detectOptimalOffset(reads, library, guideLength);
+    }
+
+    // NEW: Core streaming logic accepting a NodeJS Readable stream
+    public static async processReadableStream(
+        inputStream: NodeJS.ReadableStream,
+        library: { has(seq: string): boolean },
+        adapterSequence: string,
+        offset: number | undefined,
+        guideLength: number,
+        isR2: boolean
+    ): Promise<StreamResult> {
+        const rl = readline.createInterface({
+            input: inputStream,
+            crlfDelay: Infinity,
+        });
+
+        // Use slightly looser map for counters to save memory? 
+        // No, standard Map is fine, but we should only track mapped sgRNAs to save RAM.
+        // Tracking "unmapped" or "unknown" sequences can explode memory on large noisy files.
+        const normalCounts = new Map<string, number>();
+        const rcCounts = new Map<string, number>(); // Only populated if we check RC
+        const adapter = (adapterSequence || 'TCTTGTGGAAAGGACGAAACACC').trim().toUpperCase();
+        const validDNA = /^[ATCGN]+$/; // Allow N in reads
+
+        let totalReads = 0;
+        let totalQuality = 0;
+        let totalBases = 0;
+        let gcCount = 0;
+
+        let lineIndex = 0;
+        let currentSeq = '';
+
+        for await (const line of rl) {
+            // if (!line.trim()) continue; // Skip empty lines? Might mess up 4-line sync if empty quality line? 
+            // Better to strictly follow 4-line structure.
+
+            const recordIndex = lineIndex % 4;
+            if (recordIndex === 1) {
+                currentSeq = line.trim().toUpperCase();
+            } else if (recordIndex === 3) {
+                // Quality line
+                const quality = line.trim();
+                totalReads++;
+
+                // Basic stats
+                totalBases += currentSeq.length;
+                for (let i = 0; i < currentSeq.length; i++) {
+                    if (currentSeq[i] === 'G' || currentSeq[i] === 'C') gcCount++;
+                }
+
+                // Only calc quality if needed (expensive loop)
+                // for (let i = 0; i < Math.min(quality.length, 100); i++) {
+                //    totalQuality += quality.charCodeAt(i) - 33;
+                // }
+                // Approximation: just take first char? No, take average of first 10
+                let localQ = 0;
+                const qLen = Math.min(quality.length, 50);
+                for (let k = 0; k < qLen; k++) localQ += quality.charCodeAt(k) - 33;
+                totalQuality += (qLen > 0 ? localQ / qLen : 0);
+
+                // Process Read
+                // OPTIMIZATION: In this new method, we ONLY store counts for sgRNAs that are IN the library.
+                // This prevents memory explosion from random Sequencing noise.
+
+                // 1. Try Normal
+                const normalSgRNA = this.extractSgRNA(currentSeq, adapter, validDNA, guideLength, offset);
+                if (normalSgRNA && library.has(normalSgRNA)) {
+                    normalCounts.set(normalSgRNA, (normalCounts.get(normalSgRNA) || 0) + 1);
+                }
+
+                // 2. Try RC (Reverse Complement)
+                // Checking RC for EVERY read doubles work. 
+                // Optimization: Only check RC if we haven't found a Strong Normal signal yet?
+                // Or just do it. Modern CPU can handle string reversal.
+                const rcSeq = this.getReverseComplement(currentSeq);
+                const rcSgRNA = this.extractSgRNA(rcSeq, adapter, validDNA, guideLength, offset);
+                if (rcSgRNA && library.has(rcSgRNA)) {
+                    rcCounts.set(rcSgRNA, (rcCounts.get(rcSgRNA) || 0) + 1);
+                }
+            }
+            lineIndex++;
+        }
+
+        // Determine orientation based on library matches
+        let normalMapped = 0;
+        for (const count of normalCounts.values()) normalMapped += count;
+
+        let rcMapped = 0;
+        for (const count of rcCounts.values()) rcMapped += count;
+
+        const normalRate = totalReads > 0 ? normalMapped / totalReads : 0;
+        const rcRate = totalReads > 0 ? rcMapped / totalReads : 0;
+
+        let finalCounts = normalCounts;
+        let finalMapped = normalMapped;
+        let orientation: 'normal' | 'reverse-complement' | 'unknown' = 'normal';
+
+        if (rcRate > normalRate && rcRate > 0.05) {
+            orientation = 'reverse-complement';
+            finalCounts = rcCounts;
+            finalMapped = rcMapped;
+        } else if (normalRate < 0.05 && rcRate < 0.05) {
+            orientation = 'unknown';
+        }
+
+        // Avg quality is approximate per read, summed up
+        const avgQuality = totalReads > 0 ? totalQuality / totalReads : 0;
+        const gcContent = totalBases > 0 ? (gcCount / totalBases) * 100 : 0;
+
+        return {
+            sgRNACounts: finalCounts,
+            totalReads,
+            mappedReads: finalMapped,
+            uniqueSgRNAs: finalCounts.size,
+            avgQuality,
+            gcContent,
+            orientation,
+            detectedOffset: offset,
+            usedR2: isR2
+        };
+    }
+
     private static async processFileStream(
         filePath: string,
         library: { has(seq: string): boolean },
@@ -156,94 +304,8 @@ export class FastqStreamParser {
             inputStream = gunzip;
         }
 
-        const rl = readline.createInterface({
-            input: inputStream,
-            crlfDelay: Infinity,
-        });
-
-        const normalCounts = new Map<string, number>();
-        const rcCounts = new Map<string, number>();
-        const adapter = (adapterSequence || 'TCTTGTGGAAAGGACGAAACACC').trim().toUpperCase();
-        const validDNA = /^[ATCG]+$/;
-
-        let totalReads = 0;
-        let totalQuality = 0;
-        let totalBases = 0;
-        let gcCount = 0;
-        let totalLength = 0;
-
-        let lineIndex = 0;
-        let currentSeq = '';
-
-        for await (const line of rl) {
-            if (!line.trim()) continue;
-
-            const recordIndex = lineIndex % 4;
-            if (recordIndex === 1) {
-                currentSeq = line.trim().toUpperCase();
-            } else if (recordIndex === 3) {
-                const quality = line.trim();
-                totalReads++;
-
-                totalLength += currentSeq.length;
-                for (let i = 0; i < quality.length; i++) {
-                    totalQuality += quality.charCodeAt(i) - 33;
-                }
-                for (const base of currentSeq) {
-                    if (base === 'G' || base === 'C') gcCount++;
-                    totalBases++;
-                }
-
-                // Normal processing
-                this.processRead(currentSeq, adapter, validDNA, normalCounts, rcCounts, guideLength, offset);
-            }
-            lineIndex++;
-        }
-
-        // Determine orientation
-        let normalMapped = 0;
-        for (const [seq, count] of normalCounts.entries()) {
-            if (library.has(seq)) normalMapped += count;
-        }
-
-        let rcMapped = 0;
-        for (const [seq, count] of rcCounts.entries()) {
-            if (library.has(seq)) rcMapped += count;
-        }
-
-        const normalRate = totalReads > 0 ? normalMapped / totalReads : 0;
-        const rcRate = totalReads > 0 ? rcMapped / totalReads : 0;
-
-        let finalCounts = normalCounts;
-        let finalMapped = normalMapped;
-        let orientation: 'normal' | 'reverse-complement' | 'unknown' = 'normal';
-
-        // Prefer RC if it has significantly better mapping
-        if (rcRate > normalRate && rcRate > 0.05) {
-            orientation = 'reverse-complement';
-            finalCounts = rcCounts;
-            finalMapped = rcMapped;
-        } else if (normalRate < 0.05 && rcRate < 0.05) {
-            orientation = 'unknown';
-        }
-
-        // If we switched to R2, we might want to flag the orientation differently or just note it
-        // The orientation here is relative to the READ sequence we processed.
-
-        const avgQuality = totalBases > 0 ? totalQuality / totalBases : 0;
-        const gcContent = totalBases > 0 ? (gcCount / totalBases) * 100 : 0;
-
-        return {
-            sgRNACounts: finalCounts,
-            totalReads,
-            mappedReads: finalMapped,
-            uniqueSgRNAs: finalCounts.size,
-            avgQuality,
-            gcContent,
-            orientation,
-            detectedOffset: offset,
-            usedR2: isR2
-        };
+        // Delegate to new generic stream handler
+        return this.processReadableStream(inputStream, library, adapterSequence, offset, guideLength, isR2);
     }
 
     public static getReverseComplement(seq: string): string {
@@ -283,8 +345,8 @@ export class FastqStreamParser {
         const total = reads.length;
         if (total === 0) return undefined;
 
-        // Scan offsets 0 to 60
-        for (let offset = 0; offset <= 60; offset++) {
+        // Scan offsets 0 to 120 (Cover deeper start points)
+        for (let offset = 0; offset <= 120; offset++) {
             let matches = 0;
             for (const seq of reads) {
                 // Ensure sequence is clean (though it should be from readFirstNReads)
@@ -317,12 +379,19 @@ export class FastqStreamParser {
 
         console.log(`[DEBUG] Best offset: ${bestOffset}, hits: ${maxHits}`);
         console.log(`[DEBUG] Second-best hits: ${secondBestHits}`);
-        const passesThreshold = maxHits >= 10 && maxHits >= 2 * secondBestHits;
-        console.log(`[DEBUG] Passes threshold (>=10 hits, >=2x second-best)? ${passesThreshold}`);
+
+        const ratio = secondBestHits > 0 ? maxHits / secondBestHits : maxHits;
+        // Relaxed Thresholds:
+        // 1. At least 5 hits (was 10)
+        // 2. Either (Ratio >= 2.0) OR (High confidence absolute: > 20% of reads match)
+        const isHighConfidence = maxHits > (total * 0.2);
+        const passesThreshold = maxHits >= 5 && (ratio >= 1.8 || isHighConfidence);
+
+        console.log(`[DEBUG] Passes threshold (Hits>=5, Ratio>=1.8 or HighConf)? ${passesThreshold}`);
 
         // Criteria:
-        // 1. Max hits >= 10 (absolute minimum)
-        // 2. Max hits >= 2 * secondBestHits (dominance)
+        // 1. Max hits >= 5
+        // 2. Max hits >= 1.8 * secondBestHits OR >20% match rate
 
         if (passesThreshold) {
             return bestOffset;

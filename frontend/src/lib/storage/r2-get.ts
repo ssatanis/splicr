@@ -123,3 +123,53 @@ export async function downloadR2FileToDisk(r2Key: string, destPath: string): Pro
     }
   }
 }
+
+/**
+ * Returns a generic Node.js Readable stream for the R2 object.
+ * Used for direct streaming analysis without disk buffer.
+ */
+export async function getR2FileStream(r2Key: string): Promise<Readable> {
+  const client = createServerR2Client();
+  const command = new GetObjectCommand({
+    Bucket: R2_BUCKET_NAME,
+    Key: r2Key,
+  });
+
+  const response = await client.send(command);
+  if (!response.Body) {
+    throw new Error(`R2 object found but body is empty: ${r2Key}`);
+  }
+  return response.Body as Readable;
+}
+
+/**
+ * Fetches the first N bytes of a file as a string (utf-8).
+ * Used for header inspection and offset detection.
+ */
+export async function getR2FileChunk(r2Key: string, endByte: number = 10 * 1024 * 1024): Promise<string> {
+  const client = createServerR2Client();
+  const command = new GetObjectCommand({
+    Bucket: R2_BUCKET_NAME,
+    Key: r2Key,
+    Range: `bytes=0-${endByte}` // partial content request
+  });
+
+  try {
+    const response = await client.send(command);
+    if (!response.Body) {
+      throw new Error('Empty body in Range request');
+    }
+    const str = await response.Body.transformToString('utf-8');
+    return str;
+  } catch (err) {
+    // If range is invalid (file too small), try plain fetch?
+    // AWS S3 usually ignores range if invalid, or returns 416. 
+    // For small files, just fetch whole thing.
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes('InvalidRange') || (err as any).statusCode === 416) {
+      console.warn(`[R2] Range request failed for ${r2Key}, fetching full file for header check.`);
+      return (await getR2FileAsFile(r2Key)).text();
+    }
+    throw err;
+  }
+}

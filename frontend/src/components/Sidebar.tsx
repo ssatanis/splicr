@@ -94,7 +94,7 @@ export default function Sidebar({ minimized: minimizedProp, onMaximize: onMaximi
           setEmail(u.email || "user@example.com");
           setDisplayName(u.display_name || u.email?.split("@")[0] || "Researcher");
           return;
-        } catch (_) {}
+        } catch (_) { }
       }
       const name = localStorage.getItem("splicr_display_name");
       if (name) setDisplayName(name);
@@ -104,7 +104,7 @@ export default function Sidebar({ minimized: minimizedProp, onMaximize: onMaximi
           const data = JSON.parse(stored);
           if (data.email) setEmail(data.email);
         }
-      } catch (_) {}
+      } catch (_) { }
     }
 
     loadUserData();

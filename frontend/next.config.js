@@ -21,14 +21,11 @@ const nextConfig = {
       { protocol: 'https', hostname: 'ui-avatars.com', pathname: '/**' },
     ],
   },
+  outputFileTracingIncludes: {
+    '/api/**/*': ['./data/libraries/**/*'],
+  },
   experimental: {
     optimizePackageImports: ['lucide-react'],
-    // Disable Turbopack persistent cache to avoid "Persisting failed" / "write batch" / range-index crashes
-    turbopackFileSystemCacheForDev: false,
-    turbopackFileSystemCacheForBuild: false,
-    outputFileTracingIncludes: {
-      '/api/**/*': ['./data/libraries/**/*'],
-    },
   },
   webpack: (config) => {
     // react-plotly.js expects 'plotly.js/dist/plotly'; we use plotly.js-dist-min

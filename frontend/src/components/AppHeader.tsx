@@ -11,7 +11,7 @@ export default function AppHeader() {
   const { isMinimized } = useSidebar();
 
   return (
-    <header 
+    <header
       className={cn(
         "fixed top-0 right-0 border-b border-border bg-surface min-h-[5rem] transition-all duration-200 ease-in-out z-40",
         isMinimized ? "left-[72px]" : "left-[260px]"

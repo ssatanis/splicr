@@ -558,9 +558,8 @@ export default function ShareAnalysisModal({
                                 Accepted
                               </span>
                             )}
-                            <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${
-                              share.permission === 'edit' ? 'bg-accent/10 text-accent' : 'bg-text-tertiary/10 text-text-tertiary'
-                            }`}>
+                            <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${share.permission === 'edit' ? 'bg-accent/10 text-accent' : 'bg-text-tertiary/10 text-text-tertiary'
+                              }`}>
                               {share.permission === "edit" ? (
                                 <>
                                   <Edit3 className="w-3 h-3" />
