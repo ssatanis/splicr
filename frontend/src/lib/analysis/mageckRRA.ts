@@ -358,7 +358,7 @@ export class MAGeCKAnalyzer {
 
   private calculateRho(ranks: number[], n: number, alpha: number): number {
     const k = ranks.length;
-    const rhoValues: number[] = [];
+    let minP = 1.0;
 
     for (let i = 0; i < k; i++) {
       const rank = ranks[i];
@@ -366,16 +366,15 @@ export class MAGeCKAnalyzer {
 
       if (p > alpha) continue; // Only consider top-alpha sgRNAs
 
-      // Calculate ρ_i using beta distribution
-      // ρ_i = B(p; i+1, k-i) where B is the incomplete beta function
-      const rho_i = this.betaCDF(p, i + 1, k - i) * (k / (i + 1));
-      rhoValues.push(rho_i);
+      // Calculate p-value of the i-th order statistic
+      // p_i = BetaCDF(p, i+1, k-i)
+      const pVal = this.betaCDF(p, i + 1, k - i);
+      if (pVal < minP) {
+        minP = pVal;
+      }
     }
 
-    if (rhoValues.length === 0) return 1.0;
-
-    // ρ = min(ρ_1, ρ_2, ..., ρ_j)
-    return Math.min(...rhoValues);
+    return minP;
   }
 
   private async permutationTest(
@@ -386,29 +385,142 @@ export class MAGeCKAnalyzer {
   ): Promise<MAGeCKGeneResult[]> {
     const results: MAGeCKGeneResult[] = [];
     const genes = Array.from(geneGroups.keys());
+    const totalSgRNAs = Array.from(geneGroups.values()).reduce((sum, g) => sum + g.length, 0);
 
-    // For each gene, estimate p-value from ρ score
-    // In a full implementation, this would use permutation
-    // Here we use an analytical approximation for speed
+    // Collect all LFCs for permutation
+    let allLog2FCs: number[] = [];
+    for (const group of geneGroups.values()) {
+      allLog2FCs.push(...group.map(s => s.log2FC));
+    }
 
-    for (let i = 0; i < genes.length; i++) {
-      const gene = genes[i];
+    // Optimization: Pre-calculate structure for fast permutation
+    // geneIndices[geneIndex] = [index in allLog2FCs, index in allLog2FCs, ...]
+    const geneIndices: number[][] = [];
+    let currentIndex = 0;
+    for (const gene of genes) {
+      const count = geneGroups.get(gene)!.length;
+      const indices = []; // indices relative to flattened array
+      // We don't actually need indices if we just shuffle the array and slice it
+      // But gene sizes vary.
+      // Let's store start/end indices for each gene in the flattened array
+      geneIndices.push(Array.from({ length: count }, (_, i) => currentIndex + i));
+      currentIndex += count;
+    }
+
+    // Determine RRA scores for null distribution
+    // To be efficient, we pool all rho scores from permutations into one distribution?
+    // MAGeCK typically estimates p-values by permuting and building an empirical distribution of Rho.
+    // Since Rho depends on gene size (number of sgRNAs), we should ideally control for that,
+    // but standard MAGeCK permutation often pools or bins by size.
+    // For simplicity and robustness here, we will pool all permutation Rho scores
+    // to build a global null distribution, which is a common approximation.
+    // Better: bin by sgRNA count.
+
+    const nullRhoValues: number[] = [];
+    const iterations = this.permutations;
+
+    // Chunk process to avoid blocking event loop
+    const chunkSize = 100;
+
+    for (let i = 0; i < iterations; i++) {
+      // Shuffle allLog2FCs
+      // Fisher-Yates shuffle
+      for (let j = allLog2FCs.length - 1; j > 0; j--) {
+        const r = Math.floor(Math.random() * (j + 1));
+        [allLog2FCs[j], allLog2FCs[r]] = [allLog2FCs[r], allLog2FCs[j]];
+      }
+
+      // Compute Rho for each gene using shuffled LFCs
+      // We only need to do this for a subset of genes if we pool, but let's do all to be safe
+      // To speed up, we can just do negative selection rho since symmetric usually?
+      // Let's do negative direction logic for the null.
+
+      // We need to rank the shuffled LFCs
+      // Sorting 100k items 10k times is slow.
+      // Optimization: Convert LFCs to ranks ONCE -> [1..N]
+      // Then shuffle the RANKS.
+      // This is much faster than sorting floats every time.
+    }
+
+    // Correct Approach with Optimization:
+    // 1. Convert all sgRNAs to ranks (1..N) based on original LFC (descending for negative?).
+    // No, permutation shuffles the association between sgRNA and gene.
+    // The set of LFC values (and thus their ranks 1..N) is fixed.
+    // We just assign random ranks to genes.
+
+    const allRanks = Array.from({ length: totalSgRNAs }, (_, i) => i + 1);
+
+    for (let i = 0; i < iterations; i++) {
+      // Shuffle ranks
+      for (let j = allRanks.length - 1; j > 0; j--) {
+        const r = Math.floor(Math.random() * (j + 1));
+        [allRanks[j], allRanks[r]] = [allRanks[r], allRanks[j]];
+      }
+
+      // Compute Rho for a random sample of genes (e.g. 100 genes per iteration) to build null
+      // or all genes. All genes is robust.
+      // To save time, we can assume Rho distribution depends mainly on K (num sgRNAs).
+      // Let's compute Rho for each gene using the shuffled ranks.
+
+      // Current implementation of calculateRho expects SORTED ranks for a gene.
+
+      let offset = 0;
+      for (let g = 0; g < genes.length; g++) {
+        const count = geneGroups.get(genes[g])!.length;
+        // Extract ranks for this gene
+        const geneRanks = [];
+        for (let k = 0; k < count; k++) {
+          geneRanks.push(allRanks[offset + k]);
+        }
+        offset += count;
+
+        if (count < this.minSgRNAs) continue;
+
+        // Sort ranks for RRA (required by alg)
+        geneRanks.sort((a, b) => a - b);
+
+        // Calculate Rho
+        const rho = this.calculateRho(geneRanks, totalSgRNAs, this.alpha);
+        nullRhoValues.push(rho);
+      }
+
+      if (i % chunkSize === 0) {
+        progressCallback?.(i / iterations);
+        await new Promise(resolve => setTimeout(resolve, 0)); // Yield
+      }
+    }
+
+    // Sort null distribution for fast p-value lookup
+    nullRhoValues.sort((a, b) => a - b);
+
+    // Compute empirical p-values
+    for (const gene of genes) {
       const sgRNAs = geneGroups.get(gene)!;
       const rhoNeg = negRho.get(gene) || 1.0;
       const rhoPos = posRho.get(gene) || 1.0;
 
-      // Convert ρ to p-value using approximation
-      // p ≈ ρ * k! / (k * (k-1) * ... * 1) for small ρ
-      // Simplified: p ≈ ρ for ρ close to 0
-      const pValueNeg = Math.min(1, rhoNeg);
-      const pValuePos = Math.min(1, rhoPos);
+      // Count how many null values are <= observed rho
+      // Binary search for speed
 
-      // Calculate mean log2FC
+      const calcP = (rho: number) => {
+        // Find index of first element > rho
+        let low = 0, high = nullRhoValues.length;
+        while (low < high) {
+          const mid = (low + high) >>> 1;
+          if (nullRhoValues[mid] <= rho) low = mid + 1;
+          else high = mid;
+        }
+        // low is count of values <= rho
+        return (low + 1) / (nullRhoValues.length + 1);
+      };
+
+      const pValueNeg = calcP(rhoNeg);
+      const pValuePos = calcP(rhoPos);
+
       const log2FCs = sgRNAs.map(s => s.log2FC);
       const meanLog2FC = this.mean(log2FCs);
       const stdLog2FC = Math.sqrt(this.variance(log2FCs));
 
-      // Count "good" sgRNAs (those with consistent direction and low p-value)
       const goodSgRNAs = sgRNAs.filter(s =>
         s.pValue < 0.1 && Math.sign(s.log2FC) === Math.sign(meanLog2FC)
       ).length;
@@ -423,15 +535,11 @@ export class MAGeCKAnalyzer {
         rhoPos,
         pValueNeg,
         pValuePos,
-        fdrNeg: 0, // Will be calculated in FDR step
-        fdrPos: 0,
+        fdrNeg: 1.0,
+        fdrPos: 1.0,
         rank: 0,
         goodSgRNAs
       });
-
-      if (i % 100 === 0) {
-        progressCallback?.(i / genes.length);
-      }
     }
 
     progressCallback?.(1.0);

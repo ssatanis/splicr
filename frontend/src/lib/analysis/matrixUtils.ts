@@ -3,9 +3,11 @@
  */
 
 export interface FilterStats {
-    total: number;
-    retained: number;
-    filtered: number;
+    originalSgRnaCount: number;
+    filteredSgRnaCount: number;
+    removedSgRnaCount: number;
+    removedFraction: number;
+    meanReadDepth: number;
 }
 
 export function filterCountMatrix(
@@ -13,6 +15,17 @@ export function filterCountMatrix(
     sgRNAToGene: Map<string, string>,
     options: { minimumReads: number; removeRibosomal: boolean }
 ): { filteredMatrix: Map<string, number[]>; stats: FilterStats } {
+    // Compute pre-filtering stats
+    const originalSgRnaCount = countMatrix.size;
+    let sumTotalReads = 0;
+
+    // Calculate mean read depth on ORIGINAL matrix
+    for (const counts of countMatrix.values()) {
+        const totalReadsForSgRNA = counts.reduce((a, b) => a + b, 0);
+        sumTotalReads += totalReadsForSgRNA;
+    }
+    const meanReadDepth = originalSgRnaCount > 0 ? sumTotalReads / originalSgRnaCount : 0;
+
     const filteredMatrix = new Map<string, number[]>();
     let retained = 0;
     let filtered = 0;
@@ -21,7 +34,11 @@ export function filterCountMatrix(
         const gene = sgRNAToGene.get(sgRNA);
 
         // Filter by minimum reads (mean count across samples)
+        // Note: User prompt implies "min reads" is usually mean count
+        // "Min reads = 30" -> usually means average coverage. 
+        // Existing logic used meanCount, preserving that.
         const meanCount = counts.reduce((a, b) => a + b, 0) / counts.length;
+
         if (meanCount < options.minimumReads) {
             filtered++;
             continue;
@@ -29,7 +46,6 @@ export function filterCountMatrix(
 
         // Filter ribosomal genes
         // Standard ribosomal patterns: RPL/RPS followed by number
-        // E.g. RPL5, RPS19, RPLP0
         if (options.removeRibosomal && gene && /^RP[LS]\d+/.test(gene)) {
             filtered++;
             continue;
@@ -41,6 +57,12 @@ export function filterCountMatrix(
 
     return {
         filteredMatrix,
-        stats: { total: countMatrix.size, retained, filtered }
+        stats: {
+            originalSgRnaCount,
+            filteredSgRnaCount: retained,
+            removedSgRnaCount: filtered,
+            removedFraction: originalSgRnaCount > 0 ? filtered / originalSgRnaCount : 0,
+            meanReadDepth
+        }
     };
 }

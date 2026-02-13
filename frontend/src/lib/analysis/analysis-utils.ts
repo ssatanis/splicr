@@ -93,9 +93,11 @@ export async function loadRealLibrary(libraryType: string, projectRoot: string =
 
                 for (const row of rows) {
                     if (row.SEQUENCE && row.GENE) {
+                        // Aggressive normalization: trim and uppercase
                         const seq = String(row.SEQUENCE).trim().toUpperCase();
                         const gene = String(row.GENE).trim();
-                        if (seq && gene) {
+                        // Validate: must be 20bp ACGT (or similar length)
+                        if (seq && gene && /^[ACGTN]+$/.test(seq)) {
                             library.set(seq, gene);
                             loadedCount++;
                         }
@@ -141,8 +143,8 @@ export async function loadRealLibrary(libraryType: string, projectRoot: string =
 
         } else if (libraryType === 'brunello' || libraryType === 'brie') {
             // Brunello and Brie are Tab-delimited TXT files from Addgene
-            // Brunello: Target Gene Symbol (1), sgRNA Target Sequence (6)
-            // Brie: Target Gene Symbol (1), sgRNA Target Sequence (6) - verified in Step 95 (index 1 is gene, index 6 is seq)
+            // Brunello: Target Gene Symbol (1), sgRNA Target Sequence (6) - verified
+            // Brie: Target Gene Symbol (1), sgRNA Target Sequence (6) - verified
 
             console.log(`[Library] Reading ${libraryType} from ${fullPath}`);
             const content = await fs.promises.readFile(fullPath, 'utf-8');
@@ -161,9 +163,11 @@ export async function loadRealLibrary(libraryType: string, projectRoot: string =
 
                 if (cols.length > seqIdx) {
                     const gene = cols[geneIdx]?.trim();
+                    // Aggressive normalization
                     const seq = cols[seqIdx]?.trim().toUpperCase();
 
-                    if (seq && gene) {
+                    // Validate
+                    if (seq && gene && /^[ACGTN]+$/.test(seq)) {
                         library.set(seq, gene);
                         loadedCount++;
                     }

@@ -2,7 +2,7 @@
 
 import { useRef, useState, useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { Download, ChevronDown, Grid3X3, BarChart3 } from 'lucide-react';
+import { Download, ChevronDown, Grid3X3, BarChart3, Info } from 'lucide-react';
 import { exportElementAsPNG } from '@/lib/chartExportUtils';
 
 const Plot = dynamic(() => import('react-plotly.js'), { ssr: false });
@@ -205,7 +205,16 @@ export default function InteractiveHeatmap({
   return (
     <div ref={containerRef} className="w-full bg-surface rounded-xl p-6 border border-border shadow-card">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-        <h3 className="text-2xl font-serif text-text-primary">Interactive Heatmap</h3>
+        <h3 className="text-2xl font-serif text-text-primary flex items-center gap-2">
+          Interactive Heatmap
+          <div className="group relative inline-block">
+            <Info className="w-5 h-5 text-text-tertiary cursor-help" />
+            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 p-2 bg-slate-800 text-white text-xs rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none text-center">
+              Visualizes sample correlations or expression values. Use this to identify sample clustering and outliers.
+              <div className="absolute left-1/2 -translate-x-1/2 top-full border-4 border-transparent border-t-slate-800"></div>
+            </div>
+          </div>
+        </h3>
         <div className="flex flex-wrap items-center gap-3">
           {hasCorrelation && hasCounts && (
             <div className="flex rounded-lg border border-border overflow-hidden">

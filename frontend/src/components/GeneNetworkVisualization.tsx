@@ -592,10 +592,12 @@ export default function GeneNetworkVisualization({
           menu.style.top = `${event.clientY}px`;
 
           const items = [
-            { label: `Show ${g} + neighbors only`, fn: () => {
-              setSelectedGeneNeighbors(g);
-              setMinDegree(0);
-            }, divider: true },
+            {
+              label: `Show ${g} + neighbors only`, fn: () => {
+                setSelectedGeneNeighbors(g);
+                setMinDegree(0);
+              }, divider: true
+            },
             { label: 'Show in KEGG pathway', fn: () => openInPathway(g) },
             { label: 'View in GeneCards', fn: () => openInGeneCards(g) },
             { label: 'Compare to DepMap', fn: () => openInDepMap(g) },
@@ -649,7 +651,7 @@ export default function GeneNetworkVisualization({
         graphInstanceRef.current = null;
       }
     };
-  // Only recreate graph when filtered data or mount/loading change; nodeColor/nodeVal are stable and read via closure.
+    // Only recreate graph when filtered data or mount/loading change; nodeColor/nodeVal are stable and read via closure.
   }, [isMounted, filteredGraphData, loading]);
 
   // Get all gene names for enrichment
@@ -684,341 +686,350 @@ export default function GeneNetworkVisualization({
       )}
 
       <div ref={containerRef} className="w-full bg-surface rounded-xl p-4 sm:p-6 border border-border shadow-card">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4">
-        <h3 className="text-xl sm:text-2xl font-serif text-text-primary">Gene interaction network</h3>
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <div className="relative flex-1 sm:flex-none min-w-[140px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
-            <input
-              type="text"
-              placeholder="Find gene"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-sm rounded-lg border border-border bg-background text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/50"
-            />
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4">
+          <h3 className="text-xl sm:text-2xl font-serif text-text-primary flex items-center gap-2">
+            Gene interaction network
+            <div className="group relative inline-block">
+              <Info className="w-5 h-5 text-text-tertiary cursor-help" />
+              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 p-2 bg-slate-800 text-white text-xs rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none text-center">
+                Network of protein-protein interactions (STRING db) between top hits. Nodes are colored by fold change (Green=Enriched, Red=Depleted).
+                <div className="absolute left-1/2 -translate-x-1/2 top-full border-4 border-transparent border-t-slate-800"></div>
+              </div>
+            </div>
+          </h3>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div className="relative flex-1 sm:flex-none min-w-[140px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
+              <input
+                type="text"
+                placeholder="Find gene"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 text-sm rounded-lg border border-border bg-background text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/50"
+              />
+            </div>
+            <button
+              onClick={togglePause}
+              disabled={!graphInstanceRef.current}
+              title={isPaused ? "Resume simulation" : "Pause simulation"}
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm rounded-lg border border-border bg-background text-text-primary hover:bg-accent/10 disabled:opacity-50"
+            >
+              {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+              <span className="hidden sm:inline">{isPaused ? 'Play' : 'Pause'}</span>
+            </button>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm rounded-lg border border-border bg-background text-text-primary hover:bg-accent/10"
+            >
+              <Filter className="w-4 h-4" />
+              <span className="hidden sm:inline">Filters</span>
+            </button>
+            <button
+              onClick={() => setShowStats(!showStats)}
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm rounded-lg border border-border bg-background text-text-primary hover:bg-accent/10"
+            >
+              <Info className="w-4 h-4" />
+              <span className="hidden sm:inline">Stats</span>
+            </button>
+            <button
+              onClick={() => setShowEnrichmentPanel(true)}
+              disabled={!filteredGraphData || filteredGraphData.nodes.length === 0}
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm rounded-lg border border-border bg-accent/10 text-accent hover:bg-accent/20 disabled:opacity-50 disabled:hover:bg-accent/10"
+              title="Analyze pathways for genes in network"
+            >
+              <TrendingUp className="w-4 h-4" />
+              <span className="hidden sm:inline">Enrichment</span>
+            </button>
+            <button
+              onClick={() => loadNetwork()}
+              disabled={loading}
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm rounded-lg border border-border bg-background text-text-primary hover:bg-accent/10 disabled:opacity-50"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+            <button
+              onClick={handleOpenExportModal}
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm rounded-lg border border-border bg-background text-text-primary hover:bg-accent/10"
+            >
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">Export</span>
+            </button>
           </div>
-          <button
-            onClick={togglePause}
-            disabled={!graphInstanceRef.current}
-            title={isPaused ? "Resume simulation" : "Pause simulation"}
-            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm rounded-lg border border-border bg-background text-text-primary hover:bg-accent/10 disabled:opacity-50"
-          >
-            {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
-            <span className="hidden sm:inline">{isPaused ? 'Play' : 'Pause'}</span>
-          </button>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm rounded-lg border border-border bg-background text-text-primary hover:bg-accent/10"
-          >
-            <Filter className="w-4 h-4" />
-            <span className="hidden sm:inline">Filters</span>
-          </button>
-          <button
-            onClick={() => setShowStats(!showStats)}
-            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm rounded-lg border border-border bg-background text-text-primary hover:bg-accent/10"
-          >
-            <Info className="w-4 h-4" />
-            <span className="hidden sm:inline">Stats</span>
-          </button>
-          <button
-            onClick={() => setShowEnrichmentPanel(true)}
-            disabled={!filteredGraphData || filteredGraphData.nodes.length === 0}
-            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm rounded-lg border border-border bg-accent/10 text-accent hover:bg-accent/20 disabled:opacity-50 disabled:hover:bg-accent/10"
-            title="Analyze pathways for genes in network"
-          >
-            <TrendingUp className="w-4 h-4" />
-            <span className="hidden sm:inline">Enrichment</span>
-          </button>
-          <button
-            onClick={() => loadNetwork()}
-            disabled={loading}
-            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm rounded-lg border border-border bg-background text-text-primary hover:bg-accent/10 disabled:opacity-50"
-          >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-            <span className="hidden sm:inline">Refresh</span>
-          </button>
-          <button
-            onClick={handleOpenExportModal}
-            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm rounded-lg border border-border bg-background text-text-primary hover:bg-accent/10"
-          >
-            <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Export</span>
-          </button>
         </div>
-      </div>
 
-      {/* Filters Panel */}
-      {showFilters && graphData && (
-        <div className="mb-4 p-4 rounded-lg bg-background border border-border">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="text-sm font-semibold text-text-primary">Filters</h4>
-            {(minDegree > 0 || selectedGeneNeighbors) && (
-              <button
-                onClick={() => {
-                  setMinDegree(0);
-                  setSelectedGeneNeighbors(null);
-                }}
-                className="text-xs text-accent hover:text-accent/80"
-              >
-                Reset filters
-              </button>
-            )}
-          </div>
-
-          {selectedGeneNeighbors && (
-            <div className="mb-3 p-3 rounded bg-accent/10 border border-accent/20">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-xs text-text-tertiary">Viewing neighbors of:</div>
-                  <div className="text-sm font-semibold text-accent">{selectedGeneNeighbors}</div>
-                </div>
+        {/* Filters Panel */}
+        {showFilters && graphData && (
+          <div className="mb-4 p-4 rounded-lg bg-background border border-border">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-semibold text-text-primary">Filters</h4>
+              {(minDegree > 0 || selectedGeneNeighbors) && (
                 <button
-                  onClick={() => setSelectedGeneNeighbors(null)}
+                  onClick={() => {
+                    setMinDegree(0);
+                    setSelectedGeneNeighbors(null);
+                  }}
                   className="text-xs text-accent hover:text-accent/80"
                 >
-                  Clear
+                  Reset filters
+                </button>
+              )}
+            </div>
+
+            {selectedGeneNeighbors && (
+              <div className="mb-3 p-3 rounded bg-accent/10 border border-accent/20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-xs text-text-tertiary">Viewing neighbors of:</div>
+                    <div className="text-sm font-semibold text-accent">{selectedGeneNeighbors}</div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedGeneNeighbors(null)}
+                    className="text-xs text-accent hover:text-accent/80"
+                  >
+                    Clear
+                  </button>
+                </div>
+                {filteredGraphData && (
+                  <p className="text-xs text-text-secondary mt-2">
+                    Showing {filteredGraphData.nodes.length - 1} neighbors + {selectedGeneNeighbors}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {!selectedGeneNeighbors && (
+              <div className="space-y-2">
+                <label className="block text-sm text-text-secondary">
+                  Minimum connections (degree): {minDegree}
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max={networkStats?.maxDegree || 10}
+                  value={minDegree}
+                  onChange={(e) => setMinDegree(Number(e.target.value))}
+                  className="w-full h-2 bg-border rounded-lg appearance-none cursor-pointer accent-accent"
+                />
+                <div className="flex justify-between text-xs text-text-tertiary">
+                  <span>All genes</span>
+                  <span>Hub genes only ({networkStats?.maxDegree} max)</span>
+                </div>
+                {minDegree > 0 && filteredGraphData && (
+                  <p className="text-xs text-text-secondary mt-2">
+                    Showing {filteredGraphData.nodes.length} of {graphData.nodes.length} genes
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Network Statistics Panel */}
+        {showStats && networkStats && (
+          <div className="mb-4 p-4 rounded-lg bg-background border border-border">
+            <h4 className="text-sm font-semibold text-text-primary mb-3">Network Statistics</h4>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+              <div>
+                <div className="text-xs text-text-tertiary">Nodes</div>
+                <div className="text-lg font-semibold text-text-primary">{networkStats.numNodes}</div>
+              </div>
+              <div>
+                <div className="text-xs text-text-tertiary">Edges</div>
+                <div className="text-lg font-semibold text-text-primary">{networkStats.numEdges}</div>
+              </div>
+              <div>
+                <div className="text-xs text-text-tertiary">Avg Degree</div>
+                <div className="text-lg font-semibold text-text-primary">{networkStats.avgDegree.toFixed(1)}</div>
+              </div>
+              <div>
+                <div className="text-xs text-text-tertiary">Density</div>
+                <div className="text-lg font-semibold text-text-primary">{(networkStats.density * 100).toFixed(1)}%</div>
+              </div>
+            </div>
+            {networkStats.hubGenes.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-border">
+                <div className="text-xs text-text-tertiary mb-2">Top hub genes (highly connected):</div>
+                <div className="flex flex-wrap gap-2">
+                  {networkStats.hubGenes.map(gene => (
+                    <button
+                      key={gene.id}
+                      onClick={() => setSearch(gene.name)}
+                      className="px-2 py-1 text-xs rounded bg-accent/10 text-accent hover:bg-accent/20 transition-colors"
+                      title={`${gene.name}: ${gene.degree} connections`}
+                    >
+                      {gene.name} ({gene.degree})
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Export options modal: map-only image, zoom-to-fit, title and options */}
+        {exportModalOpen && (
+          <>
+            <div className="fixed inset-0 z-40 bg-black/50" onClick={() => !exporting && setExportModalOpen(false)} />
+            <div
+              className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-surface p-6 shadow-elevated"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h4 className="font-serif text-lg text-text-primary mb-4">Export gene network image</h4>
+              <p className="text-sm text-text-secondary mb-4">
+                Exports only the network map (no header/controls). View is zoomed to fit all nodes so everything is visible.
+              </p>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Image title (used as filename)</label>
+                  <input
+                    type="text"
+                    value={exportTitle}
+                    onChange={(e) => setExportTitle(e.target.value)}
+                    placeholder={defaultExportTitle}
+                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/50"
+                  />
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={exportIncludeLabels}
+                    onChange={(e) => setExportIncludeLabels(e.target.checked)}
+                    className="rounded border-border text-accent focus:ring-accent/50"
+                  />
+                  <span className="text-sm text-text-primary">Include node labels (gene names on the map)</span>
+                </label>
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Padding (px) around the map</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={exportPadding}
+                    onChange={(e) => setExportPadding(Math.max(0, Math.min(100, Number(e.target.value) || 0)))}
+                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Image scale</label>
+                  <select
+                    value={exportScale}
+                    onChange={(e) => setExportScale(Number(e.target.value))}
+                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/50"
+                  >
+                    <option value={1}>1× (faster, smaller file)</option>
+                    <option value={2}>2× (sharper, recommended)</option>
+                    <option value={3}>3× (high resolution)</option>
+                  </select>
+                </div>
+              </div>
+              <div className="mt-6 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => !exporting && setExportModalOpen(false)}
+                  disabled={exporting}
+                  className="px-4 py-2 rounded-lg border border-border bg-background text-text-primary hover:bg-background/80 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleExportWithOptions}
+                  disabled={exporting}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent text-white hover:bg-accent/90 disabled:opacity-50"
+                >
+                  {exporting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" /> Exporting…
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4" /> Export PNG
+                    </>
+                  )}
                 </button>
               </div>
-              {filteredGraphData && (
-                <p className="text-xs text-text-secondary mt-2">
-                  Showing {filteredGraphData.nodes.length - 1} neighbors + {selectedGeneNeighbors}
-                </p>
-              )}
             </div>
-          )}
+          </>
+        )}
 
-          {!selectedGeneNeighbors && (
-            <div className="space-y-2">
-              <label className="block text-sm text-text-secondary">
-                Minimum connections (degree): {minDegree}
-              </label>
-              <input
-                type="range"
-                min="0"
-                max={networkStats?.maxDegree || 10}
-                value={minDegree}
-                onChange={(e) => setMinDegree(Number(e.target.value))}
-                className="w-full h-2 bg-border rounded-lg appearance-none cursor-pointer accent-accent"
-              />
-              <div className="flex justify-between text-xs text-text-tertiary">
-                <span>All genes</span>
-                <span>Hub genes only ({networkStats?.maxDegree} max)</span>
-              </div>
-              {minDegree > 0 && filteredGraphData && (
-                <p className="text-xs text-text-secondary mt-2">
-                  Showing {filteredGraphData.nodes.length} of {graphData.nodes.length} genes
-                </p>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Network Statistics Panel */}
-      {showStats && networkStats && (
-        <div className="mb-4 p-4 rounded-lg bg-background border border-border">
-          <h4 className="text-sm font-semibold text-text-primary mb-3">Network Statistics</h4>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
-            <div>
-              <div className="text-xs text-text-tertiary">Nodes</div>
-              <div className="text-lg font-semibold text-text-primary">{networkStats.numNodes}</div>
-            </div>
-            <div>
-              <div className="text-xs text-text-tertiary">Edges</div>
-              <div className="text-lg font-semibold text-text-primary">{networkStats.numEdges}</div>
-            </div>
-            <div>
-              <div className="text-xs text-text-tertiary">Avg Degree</div>
-              <div className="text-lg font-semibold text-text-primary">{networkStats.avgDegree.toFixed(1)}</div>
-            </div>
-            <div>
-              <div className="text-xs text-text-tertiary">Density</div>
-              <div className="text-lg font-semibold text-text-primary">{(networkStats.density * 100).toFixed(1)}%</div>
-            </div>
+        {error && (
+          <div className="mb-4 p-4 rounded-lg bg-error/10 text-error text-sm">
+            {error}. Check gene symbols and try again.
           </div>
-          {networkStats.hubGenes.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-border">
-              <div className="text-xs text-text-tertiary mb-2">Top hub genes (highly connected):</div>
-              <div className="flex flex-wrap gap-2">
-                {networkStats.hubGenes.map(gene => (
-                  <button
-                    key={gene.id}
-                    onClick={() => setSearch(gene.name)}
-                    className="px-2 py-1 text-xs rounded bg-accent/10 text-accent hover:bg-accent/20 transition-colors"
-                    title={`${gene.name}: ${gene.degree} connections`}
-                  >
-                    {gene.name} ({gene.degree})
-                  </button>
-                ))}
+        )}
+
+        {/* Graph Container */}
+        <div
+          style={{ height: `${height}px` }}
+          className="rounded-lg overflow-hidden bg-background border border-border relative"
+        >
+          {loading && !graphData && (
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center">
+                <Loader2 className="w-10 h-10 animate-spin text-accent mx-auto mb-2" />
+                <p className="text-sm text-text-tertiary">Loading network from STRING DB...</p>
               </div>
             </div>
           )}
-        </div>
-      )}
-
-      {/* Export options modal: map-only image, zoom-to-fit, title and options */}
-      {exportModalOpen && (
-        <>
-          <div className="fixed inset-0 z-40 bg-black/50" onClick={() => !exporting && setExportModalOpen(false)} />
-          <div
-            className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-surface p-6 shadow-elevated"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h4 className="font-serif text-lg text-text-primary mb-4">Export gene network image</h4>
-            <p className="text-sm text-text-secondary mb-4">
-              Exports only the network map (no header/controls). View is zoomed to fit all nodes so everything is visible.
-            </p>
-            <div className="space-y-4">
+          {isMounted && filteredGraphData && filteredGraphData.nodes.length > 0 && !loading && (
+            <div ref={graphContainerRef} style={{ width: '100%', height: `${height}px` }} />
+          )}
+          {filteredGraphData && filteredGraphData.nodes.length === 0 && !loading && (
+            <div className="h-full flex items-center justify-center text-center px-4">
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">Image title (used as filename)</label>
-                <input
-                  type="text"
-                  value={exportTitle}
-                  onChange={(e) => setExportTitle(e.target.value)}
-                  placeholder={defaultExportTitle}
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/50"
-                />
-              </div>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={exportIncludeLabels}
-                  onChange={(e) => setExportIncludeLabels(e.target.checked)}
-                  className="rounded border-border text-accent focus:ring-accent/50"
-                />
-                <span className="text-sm text-text-primary">Include node labels (gene names on the map)</span>
-              </label>
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">Padding (px) around the map</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={exportPadding}
-                  onChange={(e) => setExportPadding(Math.max(0, Math.min(100, Number(e.target.value) || 0)))}
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/50"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">Image scale</label>
-                <select
-                  value={exportScale}
-                  onChange={(e) => setExportScale(Number(e.target.value))}
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/50"
-                >
-                  <option value={1}>1× (faster, smaller file)</option>
-                  <option value={2}>2× (sharper, recommended)</option>
-                  <option value={3}>3× (high resolution)</option>
-                </select>
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => !exporting && setExportModalOpen(false)}
-                disabled={exporting}
-                className="px-4 py-2 rounded-lg border border-border bg-background text-text-primary hover:bg-background/80 disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleExportWithOptions}
-                disabled={exporting}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent text-white hover:bg-accent/90 disabled:opacity-50"
-              >
-                {exporting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" /> Exporting…
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-4 h-4" /> Export PNG
-                  </>
+                <p className="text-text-tertiary mb-2">
+                  {selectedGeneNeighbors
+                    ? `${selectedGeneNeighbors} has no connections in the network.`
+                    : minDegree > 0
+                      ? `No genes with ${minDegree}+ connections. Try lowering the filter.`
+                      : 'No interactions found for the selected genes.'
+                  }
+                </p>
+                {minDegree === 0 && !selectedGeneNeighbors && (
+                  <p className="text-sm text-text-quaternary">
+                    Try increasing the gene set or lowering the confidence score threshold.
+                  </p>
                 )}
-              </button>
+              </div>
             </div>
-          </div>
-        </>
-      )}
+          )}
 
-      {error && (
-        <div className="mb-4 p-4 rounded-lg bg-error/10 text-error text-sm">
-          {error}. Check gene symbols and try again.
+          {/* Simulation status indicator */}
+          {!loading && filteredGraphData && filteredGraphData.nodes.length > 0 && (
+            <div className="absolute top-3 right-3 px-2 py-1 rounded text-xs bg-background/90 backdrop-blur border border-border text-text-tertiary">
+              {isPaused ? '⏸ Paused' : '▶ Running'}
+            </div>
+          )}
         </div>
-      )}
 
-      {/* Graph Container */}
-      <div
-        style={{ height: `${height}px` }}
-        className="rounded-lg overflow-hidden bg-background border border-border relative"
-      >
-        {loading && !graphData && (
-          <div className="h-full flex items-center justify-center">
-            <div className="text-center">
-              <Loader2 className="w-10 h-10 animate-spin text-accent mx-auto mb-2" />
-              <p className="text-sm text-text-tertiary">Loading network from STRING DB...</p>
+        {/* Legend and Instructions */}
+        <div className="mt-4 space-y-3">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs sm:text-sm text-text-secondary">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-[#EF4444]" />
+              <span>Depleted</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-[#10B981]" />
+              <span>Enriched</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-[#9B9B9B]" />
+              <span>Other / STRING</span>
             </div>
           </div>
-        )}
-        {isMounted && filteredGraphData && filteredGraphData.nodes.length > 0 && !loading && (
-          <div ref={graphContainerRef} style={{ width: '100%', height: `${height}px` }} />
-        )}
-        {filteredGraphData && filteredGraphData.nodes.length === 0 && !loading && (
-          <div className="h-full flex items-center justify-center text-center px-4">
-            <div>
-              <p className="text-text-tertiary mb-2">
-                {selectedGeneNeighbors
-                  ? `${selectedGeneNeighbors} has no connections in the network.`
-                  : minDegree > 0
-                  ? `No genes with ${minDegree}+ connections. Try lowering the filter.`
-                  : 'No interactions found for the selected genes.'
-                }
-              </p>
-              {minDegree === 0 && !selectedGeneNeighbors && (
-                <p className="text-sm text-text-quaternary">
-                  Try increasing the gene set or lowering the confidence score threshold.
-                </p>
-              )}
-            </div>
+          <div className="text-xs sm:text-sm text-text-tertiary space-y-1">
+            <p>• Node size represents statistical significance (-log₁₀ FDR). Larger = more significant.</p>
+            <p>• <strong>Click</strong> a node to view detailed information (gene info, papers, drugs, interactions)</p>
+            <p>• <strong>Drag</strong> nodes to reposition (they stay pinned). <strong>Double-click</strong> to unpin.</p>
+            <p>• <strong>Right-click</strong> a node to focus on its neighbors or view in external databases</p>
+            <p>• <strong>Hub genes</strong> (highly connected) may be key regulatory or pathway nodes</p>
+            <p>• Data: STRING DB (Homo sapiens) - experimentally validated protein-protein interactions</p>
           </div>
-        )}
-
-        {/* Simulation status indicator */}
-        {!loading && filteredGraphData && filteredGraphData.nodes.length > 0 && (
-          <div className="absolute top-3 right-3 px-2 py-1 rounded text-xs bg-background/90 backdrop-blur border border-border text-text-tertiary">
-            {isPaused ? '⏸ Paused' : '▶ Running'}
-          </div>
-        )}
-      </div>
-
-      {/* Legend and Instructions */}
-      <div className="mt-4 space-y-3">
-        <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-xs sm:text-sm text-text-secondary">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-[#EF4444]" />
-            <span>Depleted</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-[#10B981]" />
-            <span>Enriched</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-[#9B9B9B]" />
-            <span>Other / STRING</span>
-          </div>
-        </div>
-        <div className="text-xs sm:text-sm text-text-tertiary space-y-1">
-          <p>• Node size represents statistical significance (-log₁₀ FDR). Larger = more significant.</p>
-          <p>• <strong>Click</strong> a node to view detailed information (gene info, papers, drugs, interactions)</p>
-          <p>• <strong>Drag</strong> nodes to reposition (they stay pinned). <strong>Double-click</strong> to unpin.</p>
-          <p>• <strong>Right-click</strong> a node to focus on its neighbors or view in external databases</p>
-          <p>• <strong>Hub genes</strong> (highly connected) may be key regulatory or pathway nodes</p>
-          <p>• Data: STRING DB (Homo sapiens) - experimentally validated protein-protein interactions</p>
         </div>
       </div>
-    </div>
     </>
   );
 }

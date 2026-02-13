@@ -64,9 +64,13 @@ export function BatchCorrectionDashboard({ analysisId, initialMetrics }: BatchCo
             <div className="border-b border-slate-200 dark:border-slate-700 pb-4">
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                     Batch Effect Correction
-                    <span title="Aligns your CRISPR screen data with public reference sets (like DepMap) to remove technical artifacts and increase biological signal.">
-                        <Info className="w-4 h-4 text-slate-400 cursor-help" />
-                    </span>
+                    <div className="group relative inline-block">
+                        <Info className="w-5 h-5 text-slate-400 cursor-help" />
+                        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 p-2 bg-slate-800 text-white text-xs rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none text-center">
+                            Aligns your CRISPR screen data with public reference sets (like DepMap) to remove technical artifacts and increase biological signal.
+                            <div className="absolute left-1/2 -translate-x-1/2 top-full border-4 border-transparent border-t-slate-800"></div>
+                        </div>
+                    </div>
                 </h2>
                 <p className="text-slate-500 dark:text-slate-400">
                     Correct for technical artifacts by integrating with DepMap reference data.

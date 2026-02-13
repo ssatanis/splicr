@@ -24,6 +24,7 @@ export default function UploadPage() {
   const [fastqFiles, setFastqFiles] = useState<R2UploadedFile[]>([]);
   const [inferredMetadata, setInferredMetadata] = useState<Record<string, any[]>>({});
   const [libraryType, setLibraryType] = useState<LibraryType | "">("");
+  const [customLibraryId, setCustomLibraryId] = useState<string | null>(null);
   const [selectedAlgorithms, setSelectedAlgorithms] = useState<Algorithm[]>(["mageck"]);
   const [showSampleLabelModal, setShowSampleLabelModal] = useState(false);
   const [sampleLabels, setSampleLabels] = useState<SampleLabel[]>([]);
@@ -41,6 +42,7 @@ export default function UploadPage() {
     calculateCorrelations: true,
     exportIntermediateFiles: false,
     bagelPermutations: 1000,
+    sgRNAOffset: undefined as number | undefined,
   });
 
   // Sync sample labels when R2 uploaded files change
@@ -100,6 +102,7 @@ export default function UploadPage() {
     if (draft) {
       const parsed = JSON.parse(draft);
       setLibraryType(parsed.libraryType || "");
+      setCustomLibraryId(parsed.customLibraryId || null);
       setSelectedAlgorithms(parsed.algorithms || ["mageck"]);
       setAdvancedOptions((prev) => parsed.advanced ?? prev);
     }
@@ -112,12 +115,13 @@ export default function UploadPage() {
         "splicr_upload_draft",
         JSON.stringify({
           libraryType,
+          customLibraryId,
           algorithms: selectedAlgorithms,
           advanced: advancedOptions,
         })
       );
     }
-  }, [libraryType, selectedAlgorithms, advancedOptions, fastqFiles.length]);
+  }, [libraryType, customLibraryId, selectedAlgorithms, advancedOptions, fastqFiles.length]);
 
   const handleToggleAlgorithm = (algorithm: Algorithm) => {
     setSelectedAlgorithms((prev) =>
@@ -128,18 +132,14 @@ export default function UploadPage() {
   };
 
   const [analyzing, setAnalyzing] = useState(false);
-  const [ingesting, setIngesting] = useState(false);
-  const [ingestWarnings, setIngestWarnings] = useState<string[]>([]);
-  const [ingestDesign, setIngestDesign] = useState<string | null>(null);
+
 
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleSmartIngest = async (file: File) => {
     if (!libraryType) return; // Can't ingest without library to map against (for FASTQ) or at least context
 
-    setIngesting(true);
-    setIngestWarnings([]);
-    setIngestDesign(null);
+
 
     try {
       const formData = new FormData();
@@ -186,15 +186,14 @@ export default function UploadPage() {
           [file.name]: result.sampleMetadata
         }));
 
-        setIngestDesign(result.inferredDesign);
-        if (result.warnings) setIngestWarnings(result.warnings);
+
       }
 
     } catch (error) {
       console.error("Smart ingest error:", error);
       // Don't block upload, just fail silently or warn
     } finally {
-      setIngesting(false);
+
     }
   };
 
@@ -235,6 +234,7 @@ export default function UploadPage() {
             ...advancedOptions,
             algorithms: selectedAlgorithms,
             sampleLabels,
+            customLibraryId: libraryType === 'custom' ? (customLibraryId ?? undefined) : undefined,
           },
         }),
       });
@@ -281,6 +281,7 @@ export default function UploadPage() {
             <LibrarySelector
               selectedLibrary={libraryType || null}
               onSelectLibrary={(id) => setLibraryType(id as LibraryType)}
+              onCustomLibraryIdChange={setCustomLibraryId}
               disabled={analyzing}
             />
           </motion.div>
@@ -299,64 +300,6 @@ export default function UploadPage() {
               maxFiles={10}
             />
           </motion.div>
-
-          {/* Smart Ingest Feedback */}
-          {(ingesting || ingestDesign) && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-12"
-            >
-              <div className={`p-6 rounded-xl border ${ingestDesign ? 'bg-success/5 border-success/20' : 'bg-surface border-border'}`}>
-                <div className="flex items-start gap-4">
-                  {ingesting ? (
-                    <div className="p-2 bg-accent/10 rounded-lg">
-                      <ArrowRight className="w-6 h-6 text-accent animate-pulse" />
-                    </div>
-                  ) : (
-                    <div className="p-2 bg-success/10 rounded-lg">
-                      <Info className="w-6 h-6 text-success" />
-                    </div>
-                  )}
-
-                  <div className="flex-1">
-                    <h3 className="text-lg font-serif text-text-primary mb-1">
-                      {ingesting ? 'Analyzing file structure...' : 'Smart Ingest Complete'}
-                    </h3>
-
-                    {ingesting && (
-                      <p className="text-text-secondary">
-                        Auto-detecting experimental design and conditions...
-                      </p>
-                    )}
-
-                    {!ingesting && ingestDesign && (
-                      <div className="space-y-2">
-                        <p className="text-text-primary font-medium">
-                          Inferred Design: <span className="capitalize">{ingestDesign.replace(/_/g, ' ')}</span>
-                        </p>
-                        <p className="text-text-secondary text-sm">
-                          We automatically labeled your samples based on the file contents.
-                          Please review the labels below to ensure they are correct.
-                        </p>
-
-                        {ingestWarnings.length > 0 && (
-                          <div className="mt-3 p-3 bg-warning/10 border border-warning/20 rounded-lg">
-                            <p className="text-warning font-medium text-sm mb-1">Pass with warnings:</p>
-                            <ul className="list-disc list-inside text-xs text-warning/90 space-y-1">
-                              {ingestWarnings.map((w, i) => (
-                                <li key={i}>{w}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
 
           {/* Sample Labeling (for uploaded R2 files) - labels always visible */}
           {fastqFiles.length > 0 && (
@@ -605,6 +548,35 @@ export default function UploadPage() {
                     <p className="text-xs text-text-tertiary ml-8 -mt-3">
                       Excludes rRNA, tRNA, and mtDNA genes from analysis (recommended for most screens)
                     </p>
+
+                    {/* sgRNA Offset */}
+                    <div className="border-t border-border pt-6 mt-6">
+                      <h4 className="font-serif font-medium text-text-primary mb-4">
+                        Read Processing
+                      </h4>
+                      <div>
+                        <label className="block text-sm font-serif text-text-primary mb-2">
+                          Manual sgRNA Offset
+                          <span className="ml-2 text-xs text-text-tertiary">(Optional)</span>
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="Auto-detect (Default)"
+                          value={advancedOptions.sgRNAOffset ?? ''}
+                          onChange={(e) =>
+                            setAdvancedOptions((prev) => ({
+                              ...prev,
+                              sgRNAOffset: e.target.value === '' ? undefined : parseInt(e.target.value),
+                            }))
+                          }
+                          className="w-full px-4 py-3 bg-background border border-border rounded-xl font-serif focus:outline-none focus:border-text-primary"
+                        />
+                        <p className="text-xs text-text-tertiary mt-2">
+                          Position of the sgRNA within the read (0-based). Leave empty to use auto-detection.
+                        </p>
+                      </div>
+                    </div>
 
                     {/* Control/Treatment Gene Lists */}
                     <div className="border-t border-border pt-6 mt-6">

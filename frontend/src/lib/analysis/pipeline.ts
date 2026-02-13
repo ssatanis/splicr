@@ -2,6 +2,8 @@
 // Orchestrates MAGeCK, BAGEL2, and DrugZ algorithms with real-time progress tracking
 
 import * as path from 'path';
+import * as fs from 'fs';
+import * as os from 'os';
 import { MAGeCKAnalyzer, MAGeCKGeneResult } from './mageckRRA';
 import { BAGEL2Analyzer, BAGEL2GeneResult } from './bagel2';
 import { DrugZAnalyzer, DrugZGeneResult } from './drugz';
@@ -45,6 +47,8 @@ export interface AnalysisParameters {
   essentialGenes?: string;
   nonEssentialGenes?: string;
   bagelPermutations?: number;
+  sgRNAOffset?: number; // Optional manual override for sgRNA start position (0-based)
+  customLibraryId?: string; // ID of the uploaded custom library
 }
 
 export interface LogEntry {
@@ -174,16 +178,57 @@ export class AnalysisPipeline {
       this.log('library', 2, `Loading ${libraryType} sgRNA library...`, 'info');
 
       // Dynamic import to avoid bundling fs in client
-      const { loadRealLibrary } = await import('./analysis-utils'); // Ensure this file exists
-      const library = await loadRealLibrary(libraryType, process.cwd());
+      const { loadRealLibrary } = await import('./analysis-utils'); // Use real library loader
+      // const library = await loadRealLibrary(libraryType, process.cwd());
       // const library = getLibrary(libraryType); // OLD
+      let library: Map<string, any>;
+      let libraryMeta: any;
+      let guideLength = 20;
 
-      const libraryMeta = getLibraryMetadata(libraryType);
+      if (libraryType === 'custom' && parameters.customLibraryId) {
+        // Load custom library from temp storage
+        const tempDir = path.join(os.tmpdir(), 'splicr-custom-libs');
+        const filePath = path.join(tempDir, `${parameters.customLibraryId}.json`);
+
+        if (!fs.existsSync(filePath)) {
+          throw new Error(`Custom library not found. ID: ${parameters.customLibraryId}`);
+        }
+
+        const rawLib = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        library = new Map();
+        guideLength = rawLib.guideLength || 20;
+
+        // Populate map for fast lookup
+        // rawLib.entries is array of { id, gene, sequence }
+        for (const entry of rawLib.entries) {
+          library.set(entry.sequence, entry.gene || entry.id);
+        }
+
+        libraryMeta = {
+          name: rawLib.filename || 'Custom Library',
+          id: 'custom',
+          total_sgrnas: rawLib.count,
+          genes_targeted: new Set(rawLib.entries.map((e: any) => e.gene).filter(Boolean)).size,
+          organism: 'Custom'
+        };
+
+        this.log('library', 5, `Loaded Custom Library: ${libraryMeta.name} (${library.size} sgRNAs, len=${guideLength})`, 'success');
+
+      } else {
+        // Built-in libraries - NOW LOADING REAL DATA
+        try {
+          library = await loadRealLibrary(libraryType, process.cwd());
+          libraryMeta = getLibraryMetadata(libraryType);
+          this.log('library', 5, `Loaded ${libraryMeta.name} library: ${library.size} sgRNAs targeting ${new Set(library.values()).size} genes`, 'success');
+        } catch (e) {
+          this.log('library', 5, `Failed to load real library ${libraryType}, using synthetic fallback. Error: ${e}`, 'warning');
+          library = getLibrary(libraryType);
+          libraryMeta = getLibraryMetadata(libraryType);
+        }
+      }
 
       // Override meta stats with real loaded stats
-      const loadedGenes = new Set(library.values()).size;
-
-      this.log('library', 5, `Loaded ${libraryMeta.name} library: ${library.size} sgRNAs targeting ${loadedGenes} genes`, 'success');
+      // const loadedGenes = new Set(library.values()).size;
 
       // Phase 3: Parse FASTQ Files (5-25%)
       this.log('parsing', 6, 'Beginning FASTQ file parsing...', 'info');
@@ -209,7 +254,30 @@ export class AnalysisPipeline {
 
           if (typeof file === 'string') {
             // Streaming path
-            const result = await FastqStreamParser.processStreamWithOrientation(file, library);
+            // Check for paired R2 file
+            let pairedFilePath: string | undefined;
+            if (typeof file === 'string') {
+              // Heuristic: if file is R1, look for R2 in the file list
+              // e.g. Sample_R1.fastq.gz -> Sample_R2.fastq.gz
+              let r2Candidate = file.replace('_R1', '_R2');
+              if (r2Candidate === file) {
+                // Try _pass_1 -> _pass_2
+                r2Candidate = file.replace('_pass_1', '_pass_2');
+              }
+
+              if (r2Candidate !== file && files.includes(r2Candidate)) {
+                pairedFilePath = r2Candidate;
+              }
+            }
+
+            const result = await FastqStreamParser.processStreamWithOrientation(
+              file,
+              library,
+              'TCTTGTGGAAAGGACGAAACACC',
+              parameters.sgRNAOffset,
+              guideLength,
+              pairedFilePath
+            );
             sgRNACounts = result.sgRNACounts;
             stats = {
               totalReads: result.totalReads,
@@ -217,16 +285,27 @@ export class AnalysisPipeline {
               gcContent: result.gcContent
             };
 
+            if (result.detectedOffset !== undefined && result.detectedOffset !== parameters.sgRNAOffset) {
+              this.log('parsing', fileProgress + 0.5, `Auto-detected sgRNA offset at base ${result.detectedOffset}.`, 'success');
+            } else if (typeof parameters.sgRNAOffset === 'number') {
+              this.log('parsing', fileProgress + 0.5, `Using manual sgRNA offset: ${parameters.sgRNAOffset}`, 'info');
+            }
+
             if (result.orientation === 'reverse-complement') {
               this.log('parsing', fileProgress + 1, `Auto-detected Reverse Complement reads in ${fileName}. Corrected automatically.`, 'warning');
             } else if (result.orientation === 'unknown') {
               this.log('parsing', fileProgress + 1, `Warning: Could not determine clear read orientation for ${fileName}. Results may be poor.`, 'warning');
             }
 
+            if (result.usedR2) {
+              this.log('parsing', fileProgress + 1, `Note: Primary read (R1) failed offset detection. Switched to R2 for analysis.`, 'warning');
+            }
+
             // Mapped reads calculated against library in parser? 
             // Yes, FastqStreamParser now calculates mappedReads against library.
             mappedReads = result.mappedReads;
             uniqueSgRNAs = result.uniqueSgRNAs;
+
           } else {
             // Legacy File object path (loads into RAM)
             const res = await FASTQParser.parseFASTQ(file);
@@ -306,10 +385,35 @@ export class AnalysisPipeline {
           removeRibosomal: parameters.removeRibosomal
         });
         countMatrix = filteredMatrix;
-        this.log('filtering', 35, `Filtering retained ${stats.retained} sgRNAs (${stats.filtered} removed)`, 'info');
 
-        if (stats.retained === 0) {
-          throw new Error('All sgRNAs were filtered out! Check your minimum reads setting.');
+        const retainedPercent = (stats.filteredSgRnaCount / stats.originalSgRnaCount) * 100;
+        this.log('filtering', 35, `Filtering retained ${stats.filteredSgRnaCount} sgRNAs (${retainedPercent.toFixed(1)}% of total). Mean read depth: ${stats.meanReadDepth.toFixed(1)}`, 'info');
+
+        // Warning: Aggressive filtering
+        if (stats.removedFraction >= 0.9) {
+          this.log('filtering', 35,
+            `Warning: Filtering removed ${(stats.removedFraction * 100).toFixed(1)}% of sgRNAs. ` +
+            `Your settings (min reads = ${parameters.minimumReads}) may be too strict for this dataset ` +
+            `(Mean Depth: ${stats.meanReadDepth.toFixed(1)}). Consider lowering the threshold.`,
+            'warning'
+          );
+        }
+
+        // Warning: Low read depth
+        if (stats.meanReadDepth < 50) {
+          this.log('filtering', 35,
+            `Critical: Low sequencing depth (mean ${stats.meanReadDepth.toFixed(1)} reads/sgRNA). ` +
+            `This limits statistical power for MAGeCK, BAGEL2, and DrugZ.`,
+            'warning'
+          );
+        }
+
+        if (stats.filteredSgRnaCount < 100) {
+          this.log('filtering', 35, `Warning: Very low sgRNA count (${stats.filteredSgRnaCount}). Statistical power is severely limited.`, 'warning');
+        }
+
+        if (stats.filteredSgRnaCount === 0) {
+          throw new Error(`All sgRNAs were filtered out! Mean read depth is ${stats.meanReadDepth.toFixed(1)}, but Minimum Reads is set to ${parameters.minimumReads}. Please lower the threshold.`);
         }
       }
 

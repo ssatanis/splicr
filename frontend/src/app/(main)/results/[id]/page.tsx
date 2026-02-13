@@ -690,7 +690,7 @@ export default function ResultsPage() {
     { id: "volcano", label: "Volcano Plot", icon: TrendingUp },
     { id: "heatmap", label: "Heatmap", icon: Grid3X3 },
     { id: "network", label: "Gene Network", icon: Network },
-    { id: "timecourse", label: "Time-Course", icon: Clock },
+    // { id: "timecourse", label: "Time-Course", icon: Clock }, // Hidden per user request
     { id: "drug-finder", label: "Drug–Gene Finder", icon: Pill },
     { id: "advanced", label: "Advanced Analysis", icon: FlaskConical },
     { id: "top-hits", label: "Top Hits", icon: Star },

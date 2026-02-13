@@ -12,7 +12,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from 'recharts';
-import { Search, Download, ChevronDown, ExternalLink } from 'lucide-react';
+import { Search, Download, ChevronDown, ExternalLink, Info } from 'lucide-react';
 import { exportElementAsPNG, exportSVGAsFile, exportVolcanoAsInteractiveHTML } from '@/lib/chartExportUtils';
 import type { VolcanoDataPoint } from '@/lib/types';
 
@@ -119,7 +119,16 @@ export default function VolcanoPlot({
   return (
     <div ref={containerRef} className="w-full bg-surface rounded-xl p-6 border border-border shadow-card">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-        <h3 className="text-2xl font-serif text-text-primary">Volcano Plot</h3>
+        <h3 className="text-2xl font-serif text-text-primary flex items-center gap-2">
+          Volcano Plot
+          <div className="group relative inline-block">
+            <Info className="w-5 h-5 text-text-tertiary cursor-help" />
+            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 p-2 bg-slate-800 text-white text-xs rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none text-center">
+              Scatter plot showing statistical significance (-Log₁₀ P-value) vs magnitude of change (Log₂ Fold Change). High outlier points are significant hits.
+              <div className="absolute left-1/2 -translate-x-1/2 top-full border-4 border-transparent border-t-slate-800"></div>
+            </div>
+          </div>
+        </h3>
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />

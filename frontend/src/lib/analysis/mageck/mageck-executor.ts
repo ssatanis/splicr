@@ -166,37 +166,55 @@ export async function runMageckPipeline(
   }
 
   try {
-    // Step 1: mageck count (only if countParams provided)
+    // Step 1: mageck count (only if countParams provided AND no input table)
     if (countParams) {
-      const countArgs = buildMageckCountCommand(countParams);
-      commandLog.push(formatCommandForLog(options.mageckBinary ?? 'mageck', countArgs));
+      // If inputCountTable is provided, we skip the actual 'mageck count' command
+      // and just use that table for the test step.
+      if (countParams.inputCountTable) {
+        countTablePath = countParams.inputCountTable;
+        onProgress?.({ step: 'initializing', progress: 45, message: 'Using existing count table, skipping MAGeCK count' });
 
-      onProgress?.({ step: 'initializing', progress: 2, message: 'Starting MAGeCK count' });
+        if (!fs.existsSync(countTablePath)) {
+          return {
+            success: false,
+            geneSummary: [],
+            error: `Input count table not found at: ${countTablePath}`,
+            userMessage: 'The prepared count table file could not be found.',
+            commandLog: commandLog.join('\n'),
+          };
+        }
+      } else {
+        // Regular flow: run mageck count
+        const countArgs = buildMageckCountCommand(countParams);
+        commandLog.push(formatCommandForLog(options.mageckBinary ?? 'mageck', countArgs));
 
-      const countResult = await executeMageckCommand(countArgs, options, (p) => {
-        onProgress?.({ ...p, progress: Math.min(45, p.progress * 0.45) });
-      });
+        onProgress?.({ step: 'initializing', progress: 2, message: 'Starting MAGeCK count' });
 
-      if (countResult.exitCode !== 0) {
-        const err = detectMageckError(countResult.stderr || countResult.stdout);
-        return {
-          success: false,
-          geneSummary: [],
-          error: err.technicalMessage,
-          userMessage: err.userMessage,
-          suggestedAction: err.suggestedAction,
-          commandLog: commandLog.join('\n'),
-        };
-      }
+        const countResult = await executeMageckCommand(countArgs, options, (p) => {
+          onProgress?.({ ...p, progress: Math.min(45, p.progress * 0.45) });
+        });
 
-      if (!fs.existsSync(countTablePath)) {
-        return {
-          success: false,
-          geneSummary: [],
-          error: 'MAGeCK count did not produce count table',
-          userMessage: 'Count step completed but output file was not found.',
-          commandLog: commandLog.join('\n'),
-        };
+        if (countResult.exitCode !== 0) {
+          const err = detectMageckError(countResult.stderr || countResult.stdout);
+          return {
+            success: false,
+            geneSummary: [],
+            error: err.technicalMessage,
+            userMessage: err.userMessage,
+            suggestedAction: err.suggestedAction,
+            commandLog: commandLog.join('\n'),
+          };
+        }
+
+        if (!fs.existsSync(countTablePath)) {
+          return {
+            success: false,
+            geneSummary: [],
+            error: 'MAGeCK count did not produce count table',
+            userMessage: 'Count step completed but output file was not found.',
+            commandLog: commandLog.join('\n'),
+          };
+        }
       }
     }
 

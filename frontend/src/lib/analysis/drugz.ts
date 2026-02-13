@@ -8,6 +8,7 @@ export interface DrugZSgRNAStats {
   log2FC: number;
   zScore: number;
   normalizedRank: number;
+  controlMean?: number;
 }
 
 export interface DrugZGeneResult {
@@ -205,6 +206,7 @@ export class DrugZAnalyzer {
         gene,
         foldChange,
         log2FC,
+        controlMean,  // Store for variance modeling
         zScore: 0,      // Will be calculated
         normalizedRank: 0
       });
@@ -214,35 +216,71 @@ export class DrugZAnalyzer {
   }
 
   private calculateZScores(stats: DrugZSgRNAStats[]): void {
-    // Calculate mean and std of all log2FC values
-    const log2FCs = stats.map(s => s.log2FC);
-    const mean = this.mean(log2FCs);
-    const std = Math.sqrt(this.variance(log2FCs));
+    // DrugZ variance moderation:
+    // 1. Bin sgRNAs by control mean count
+    // 2. Calculate variance of log2FC in each bin
+    // 3. Smooth variance estimates (optional, using bin variance here for robustness)
+    // 4. Calculate Z = log2FC / sqrt(estimated_variance)
 
-    // Calculate Z-score for each sgRNA
-    for (const stat of stats) {
-      stat.zScore = std > 0 ? (stat.log2FC - mean) / std : 0;
+    // Sort by control mean
+    // Create bins of size ~1000 or so
+    const n = stats.length;
+    if (n === 0) return;
+
+    // Create a copy to sort for binning
+    const sortedStats = [...stats].sort((a, b) => (a.controlMean ?? 0) - (b.controlMean ?? 0));
+    const numBins = Math.max(1, Math.floor(n / 500)); // Minimum 500 items per bin
+    const binSize = Math.ceil(n / numBins);
+
+    // Calculate variance per bin
+    const binVariances = new Map<number, number>(); // binIndex -> variance
+
+    for (let i = 0; i < numBins; i++) {
+      const start = i * binSize;
+      const end = Math.min((i + 1) * binSize, n);
+      const binItems = sortedStats.slice(start, end);
+
+      if (binItems.length < 2) {
+        binVariances.set(i, 1.0); // Fallback
+        continue;
+      }
+
+      const binLFCs = binItems.map(s => s.log2FC);
+      const v = this.variance(binLFCs);
+      // Add small epsilon to variance to prevent explosion
+      binVariances.set(i, v + 0.01);
+    }
+
+    // Assign Z-scores
+    // We need to map back to original stats. 
+    // Is it efficient? We can just iterate sortedStats and assign back to object references.
+
+    for (let i = 0; i < numBins; i++) {
+      const start = i * binSize;
+      const end = Math.min((i + 1) * binSize, n);
+      const binVar = binVariances.get(i)!;
+      const binStd = Math.sqrt(binVar);
+
+      for (let j = start; j < end; j++) {
+        const stat = sortedStats[j];
+        // Center log2FC? DrugZ assumes null distribution is centered at 0 usually.
+        // Or center globally? 
+        // DrugZ paper: "standardized by the width of the distribution... estimated from the data in that bin"
+        // Usually Z = (x - mean) / std.
+        // If we assume most genes are non-essential, mean should be close to 0 or mode.
+        // Let's use 0 as center if we trust normalization, or bin mean.
+        // Using bin mean is safer to remove systematic bias in low counts.
+        // Let's calculate bin mean too.
+        const binItems = sortedStats.slice(start, end);
+        const binMean = this.mean(binItems.map(s => s.log2FC));
+
+        stat.zScore = (stat.log2FC - binMean) / binStd;
+      }
     }
   }
 
   private calculateNormalizedRanks(stats: DrugZSgRNAStats[]): void {
-    // Sort by Z-score
-    const sorted = [...stats].sort((a, b) => a.zScore - b.zScore);
-    const n = sorted.length;
-
-    // Create rank map
-    const rankMap = new Map<string, number>();
-    sorted.forEach((stat, index) => {
-      // Normalized rank: (rank - 0.5) / n
-      // This gives values between 0 and 1
-      const normalizedRank = (index + 0.5) / n;
-      rankMap.set(stat.sgRNA, normalizedRank);
-    });
-
-    // Assign normalized ranks
-    for (const stat of stats) {
-      stat.normalizedRank = rankMap.get(stat.sgRNA) || 0.5;
-    }
+    // Kept for compatibility if needed, but not used for scoring anymore
   }
 
   private groupSgRNAsByGene(stats: DrugZSgRNAStats[]): Map<string, DrugZSgRNAStats[]> {
@@ -274,19 +312,16 @@ export class DrugZAnalyzer {
         continue;
       }
 
-      // Calculate normZ using sum of normalized ranks
-      // normZ = sum(qnorm(normalized_rank)) / sqrt(n)
-      // where qnorm is the inverse normal CDF
+      // Calculate normZ using sum of Z-scores (Stouffer's method weighted?)
+      // DrugZ: sum(Z_i) / sqrt(k)
 
-      let sumInvNorm = 0;
+      let sumZ = 0;
       for (const sgRNA of sgRNAs) {
-        // Convert normalized rank to Z-score via inverse normal CDF
-        const invNorm = this.inverseNormalCDF(sgRNA.normalizedRank);
-        sumInvNorm += invNorm;
+        sumZ += sgRNA.zScore;
       }
 
       const k = sgRNAs.length;
-      const normZ = sumInvNorm / Math.sqrt(k);
+      const normZ = sumZ / Math.sqrt(k);
 
       // Calculate log2FC statistics
       const log2FCs = sgRNAs.map(s => s.log2FC);
@@ -294,7 +329,9 @@ export class DrugZAnalyzer {
       const stdLog2FC = Math.sqrt(this.variance(log2FCs));
 
       // Synthetic score (positive = depletion/synthetic lethal, negative = enrichment/suppressor)
-      const syntheticScore = -normZ; // Negative normZ = depletion
+      // DrugZ paper: negative Z = synthetic lethal (depletion).
+      // So synthetic score = -normZ.
+      const syntheticScore = -normZ;
 
       results.push({
         gene,

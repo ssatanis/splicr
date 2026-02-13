@@ -30,6 +30,8 @@ export interface AnalysisParameters {
   calculateCorrelations: boolean;
   exportIntermediateFiles: boolean;
   bagelPermutations: number;
+  sgRNAOffset?: number;
+  customLibraryId?: string;
 }
 
 export interface Analysis {

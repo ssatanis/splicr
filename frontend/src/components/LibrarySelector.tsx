@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Info, ChevronDown } from 'lucide-react';
+import CustomLibraryUploader from './CustomLibraryUploader';
 
 export interface Library {
   id: string;
@@ -19,12 +20,14 @@ export interface Library {
 interface Props {
   selectedLibrary: string | null;
   onSelectLibrary: (libraryId: string) => void;
+  onCustomLibraryIdChange?: (id: string | null) => void;
   disabled?: boolean;
 }
 
 export default function LibrarySelector({
   selectedLibrary,
   onSelectLibrary,
+  onCustomLibraryIdChange,
   disabled = false,
 }: Props) {
   const [libraries, setLibraries] = useState<Library[]>([]);
@@ -143,6 +146,7 @@ export default function LibrarySelector({
             `}
           >
             <option value="">Choose a library...</option>
+            <option value="custom">Custom library...</option>
 
             {/* Human Libraries */}
             {humanKnockout.length > 0 && (
@@ -210,6 +214,14 @@ export default function LibrarySelector({
           </button>
         )}
       </div>
+
+      {selectedLibrary === 'custom' && (
+        <CustomLibraryUploader
+          onLibraryUploaded={(info) => {
+            if (onCustomLibraryIdChange) onCustomLibraryIdChange(info.id);
+          }}
+        />
+      )}
 
       {/* Info Modal */}
       {showInfo && selectedLibInfo && (
