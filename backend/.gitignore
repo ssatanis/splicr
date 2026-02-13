@@ -61,3 +61,10 @@ alembic/versions/*.pyc
 *.db
 *.sqlite
 *.sqlite3
+
+# Large Data & SRA Toolkit
+*.sra
+*.prf
+*.tmp*
+*.fastq*
+SRR*/

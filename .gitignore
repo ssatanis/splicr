@@ -112,7 +112,14 @@ frontend/public/uploads/
 .cache/
 .temp/
 .tmp/
+*.tmp
+*.temp
 *.bak
+*.prf
+*.sra
+*.sra.tmp
+*.sra.prf
+*.sra.vdbcache
 
 # STRING DB Data (Large)
 data/raw/string/*.txt
