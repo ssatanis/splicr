@@ -56,7 +56,7 @@ export async function smartIngestScreenFile(
 
     if (dataType === 'fastq' || dataType === 'bam') {
         if (!library) {
-            throw new Error(`Library ${libraryId} is required for FASTQ/BAM ingestion.`);
+            console.warn(`[SmartIngest] Warning: Library ${libraryId} not found. Proceeding with raw sequence extraction.`);
         }
         const result = await ingestFastq(filePath, originalFilename, dataType, library);
         countMatrix = result.countMatrix;
@@ -112,7 +112,7 @@ async function ingestFastq(
     filePath: string,
     originalFilename: string,
     type: 'fastq' | 'bam',
-    library: LibraryData
+    library: LibraryData | null
 ): Promise<{ countMatrix: Record<string, Record<string, number>>; samples: string[]; warning?: string }> {
 
     if (type === 'bam') {
@@ -128,15 +128,9 @@ async function ingestFastq(
     const sampleId = originalFilename.replace(/\.(fastq|fq)(\.gz)?$/i, '');
     const counts: Record<string, number> = {};
 
-    // Initialize counts for all library guides to 0
-    for (const seq of library.sgRNAMap.keys()) {
-        const info = library.sgRNAMap.get(seq);
-        if (info?.gene_id) { // Use gene_id or some unique ID from library? Usually we want sgRNA ID. 
-            // The library loader returns SgRNAInfo. We need a unique ID for the matrix rows.
-            // Usually this is the Sequence itself or a constructed ID. 
-            // Let's use Sequence for now as the key, or construct ID if available.
-            // The prompt says "sgRNA_ID from library". libraryLoader doesn't explicitly have an ID field on SgRNAInfo 
-            // other than Sequence. Let's use Sequence as the canonical ID for now.
+    if (library) {
+        // Initialize counts for all library guides to 0
+        for (const seq of library.sgRNAMap.keys()) {
             counts[seq] = 0;
         }
     }
@@ -158,27 +152,32 @@ async function ingestFastq(
         lineNum++;
         if (lineNum % 4 === 2) {
             const seq = line.trim().toUpperCase();
-            // Heuristic: Extract 20bp. 
-            // Brunello/GeCKO usually have cloning vector flanking. 
-            // Simple approach: Look for the sequence in the library. 
-            // If the read is longer than 20bp, we need to find the 20bp window.
-            // This is expensive ($O(L \times W)$). 
-            // Optimization: Check the most common starting positions (e.g. index 0, 1, ...).
 
-            // Checking for exact match of 20bp substring
-            // A full "smart" aligner would align flanking sequences. 
-            // For this "preview" ingest, let's try a few fixed windows.
-
-            // Standard cloning often puts sgRNA early.
-            // Let's check a sliding window of 20bp for the first 50bp.
-            const searchLimit = Math.min(seq.length - 20, 50);
-            let found = false;
-            for (let i = 0; i <= searchLimit; i++) {
-                const candidate = seq.substring(i, i + 20);
-                if (library.sgRNAMap.has(candidate)) {
+            if (library) {
+                // Heuristic: Extract 20bp. 
+                // Let's check a sliding window of 20bp for the first 50bp.
+                const searchLimit = Math.min(seq.length - 20, 50);
+                for (let i = 0; i <= searchLimit; i++) {
+                    const candidate = seq.substring(i, i + 20);
+                    if (library.sgRNAMap.has(candidate)) {
+                        counts[candidate] = (counts[candidate] || 0) + 1;
+                        break; // Count once per read
+                    }
+                }
+            } else {
+                // Fallback: Just take the first 20bp if it looks valid
+                // Or maybe the 20bp after a common scaffold? 
+                // Without library, we have to guess.
+                // Simplest guess: First 20bp. 
+                // Better guess: Scan for 20bp that appears "sgRNA-like"? No, that's impossible.
+                // Let's just take the first 20bp for now as a naive fallback or maybe the whole read if it's short?
+                // Most sgRNA reads are ~20bp + adapters.
+                // Let's try to extract a 20bp sequence from the start.
+                if (seq.length >= 20) {
+                    const candidate = seq.substring(0, 20);
+                    // Simple filter: GC content? No.
+                    // Just count it.
                     counts[candidate] = (counts[candidate] || 0) + 1;
-                    found = true;
-                    break; // Count once per read
                 }
             }
         }
@@ -188,16 +187,11 @@ async function ingestFastq(
     const matrix: Record<string, Record<string, number>> = {};
     for (const [seq, count] of Object.entries(counts)) {
         if (count > 0) { // Only include if present? Or all? Usually sparse is better but for small preview all is fine.
-            // Actually, for a matrix we generally want all rows. 
-            // But to save space regarding "rows ... that have >= 1 read", we can filter.
-            // However, for standard analysis we usually keep zero counts.
-            // Let's keep all from library to be safe.
             if (!matrix[seq]) matrix[seq] = {};
             matrix[seq][sampleId] = count;
         }
     }
-    // Ensure we return all library keys even if 0, for consistency? 
-    // The prompt said "Rows = sgRNA IDs ... that have >= 1 read". Okay, we obey that.
+
     // Re-filtering:
     const finalMatrix: Record<string, Record<string, number>> = {};
     for (const seq of Object.entries(counts)) {
@@ -206,7 +200,9 @@ async function ingestFastq(
         }
     }
 
-    return { countMatrix: finalMatrix, samples: [sampleId] };
+    const warning = library ? undefined : "Library metadata was not found. Using raw extracted sequences (first 20bp). Gene annotation will be missing.";
+
+    return { countMatrix: finalMatrix, samples: [sampleId], warning };
 }
 
 // ============================================================================

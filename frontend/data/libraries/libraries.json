@@ -1,0 +1,25 @@
+{
+    "libraries": [
+        {
+            "id": "brunello",
+            "name": "Brunello",
+            "organism": "Human",
+            "library_type": "knockout",
+            "description": "Brunello CRISPR-Cas9 Knockout Library",
+            "total_sgrnas": 77441,
+            "genes_targeted": 19114,
+            "sgrnas_per_gene": 4,
+            "addgene_id": "73172",
+            "addgene_url": "https://www.addgene.org/pooled-library/broadgpp-brunello-library/",
+            "files": [
+                "brunello.tsv"
+            ],
+            "file_format": "tsv",
+            "columns": {
+                "sequence": 0,
+                "gene_symbol": 1,
+                "gene_id": 2
+            }
+        }
+    ]
+}
