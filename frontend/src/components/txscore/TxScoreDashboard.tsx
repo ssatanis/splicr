@@ -30,7 +30,6 @@ import TherapeuticWindowPlot from './TherapeuticWindowPlot';
 import SubscoreHeatmap from './SubscoreHeatmap';
 import FilterPanel from './FilterPanel';
 import TargetDossier from './TargetDossier';
-import TxScoreOnboarding from './TxScoreOnboarding';
 
 type WorkflowStep = 'input' | 'results';
 
@@ -153,7 +152,6 @@ export default function TxScoreDashboard() {
     if (step === 'input') {
         return (
             <div className="max-w-[860px] mx-auto px-8 py-12">
-                <TxScoreOnboarding />
                 {selectedGene && (
                     <TargetDossier geneSymbol={selectedGene} onClose={() => setSelectedGene(null)} />
                 )}
@@ -332,8 +330,6 @@ export default function TxScoreDashboard() {
     // ── RESULTS STEP ────────────────────────────────────────────────────────────
     return (
         <div className="flex flex-col h-full bg-background text-foreground overflow-hidden">
-            <TxScoreOnboarding />
-
             {selectedGene && (
                 <TargetDossier geneSymbol={selectedGene} onClose={() => setSelectedGene(null)} />
             )}
