@@ -8,11 +8,11 @@
 -- Drop existing table if recreating
 -- DROP TABLE IF EXISTS txscore_analyses CASCADE;
 
--- Create txscore_analyses table
+-- Create txscore_analyses table (matches existing schema)
 CREATE TABLE IF NOT EXISTS txscore_analyses (
   -- Primary identifiers
   id TEXT PRIMARY KEY,
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id),
   
   -- Analysis metadata
   name TEXT NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS txscore_analyses (
   -- Gene list information
   gene_list TEXT[] NOT NULL,
   gene_count INTEGER NOT NULL,
-  gene_source TEXT CHECK (gene_source IN ('manual', 'csv', 'tsv', 'txt', 'xlsx', 'screen_import')),
+  gene_source TEXT DEFAULT 'manual' CHECK (gene_source IN ('manual', 'csv', 'tsv', 'txt', 'xlsx', 'screen_import')),
   source_analysis_id TEXT, -- Reference to CRISPR screen if imported
   
   -- Analysis parameters
@@ -35,12 +35,11 @@ CREATE TABLE IF NOT EXISTS txscore_analyses (
   results JSONB,
   average_tvs NUMERIC,
   top_target TEXT,
-  targetable_count INTEGER, -- Count of genes with TVS > 50
   
   -- Status tracking
   status TEXT DEFAULT 'created' CHECK (status IN ('created', 'running', 'complete', 'failed', 'cancelled')),
   progress INTEGER DEFAULT 0 CHECK (progress >= 0 AND progress <= 100),
-  current_step TEXT,
+  current_step TEXT DEFAULT 'Initializing',
   error_message TEXT,
   
   -- Constraints
@@ -87,21 +86,6 @@ CREATE TRIGGER txscore_set_completed_at
   FOR EACH ROW
   EXECUTE FUNCTION set_txscore_completed_at();
 
--- Create function to generate TxScore IDs
-CREATE OR REPLACE FUNCTION generate_txscore_id()
-RETURNS TEXT AS $$
-DECLARE
-  new_id TEXT;
-  timestamp_part TEXT;
-  random_part TEXT;
-BEGIN
-  timestamp_part := TO_CHAR(EXTRACT(EPOCH FROM NOW()), 'FM999999999999');
-  random_part := UPPER(SUBSTRING(MD5(RANDOM()::TEXT) FROM 1 FOR 8));
-  new_id := 'TXS-' || timestamp_part || '-' || random_part;
-  RETURN new_id;
-END;
-$$ LANGUAGE plpgsql;
-
 -- Enable Row Level Security
 ALTER TABLE txscore_analyses ENABLE ROW LEVEL SECURITY;
 
@@ -141,9 +125,9 @@ SELECT
   gene_source,
   average_tvs,
   top_target,
-  targetable_count,
   status,
   progress,
+  current_step,
   created_at,
   completed_at
 FROM txscore_analyses;
@@ -176,8 +160,7 @@ INSERT INTO txscore_analyses (
   gene_source,
   status,
   average_tvs,
-  top_target,
-  targetable_count
+  top_target
 ) VALUES (
   'TXS-TEST-001',
   auth.uid(), -- Replace with actual user ID
@@ -187,8 +170,7 @@ INSERT INTO txscore_analyses (
   'manual',
   'complete',
   72.5,
-  'TP53',
-  4
+  'TP53'
 );
 */
 
@@ -204,12 +186,6 @@ SELECT
 FROM information_schema.columns
 WHERE table_name = 'txscore_analyses'
 ORDER BY ordinal_position;
-
--- Test ID generation
-SELECT generate_txscore_id();
-
--- Test gene search function (after inserting sample data)
--- SELECT * FROM search_txscore_by_gene('TP53');
 
 -- ============================================================================
 -- Analytics Views (Optional - for dashboards)
