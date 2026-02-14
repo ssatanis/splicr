@@ -19,6 +19,8 @@ import {
   Save,
   X,
   Ban,
+  Target,
+  ArrowRight,
 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
@@ -179,6 +181,78 @@ export default function DashboardPage() {
             value={stats.failed}
             color="text-error"
           />
+        </motion.div>
+
+        {/* Advanced Analysis Modules */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mb-16"
+        >
+          <h2 className="text-3xl font-serif text-text-primary mb-2">Advanced Analysis Modules</h2>
+          <p className="text-sm font-serif text-text-secondary mb-6">
+            Computational frameworks for therapeutic genome editing and target validation
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* TEA Card */}
+            <Link href="/tea/new">
+              <div className="group bg-gradient-to-br from-emerald-500/5 to-emerald-500/10 border border-emerald-500/20 rounded-2xl p-8 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-300 cursor-pointer">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="p-3 bg-emerald-500/10 rounded-xl group-hover:bg-emerald-500/20 transition-colors">
+                    <Activity className="w-6 h-6 text-emerald-400" strokeWidth={1.5} />
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-emerald-400/60 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all" strokeWidth={1.5} />
+                </div>
+                <h3 className="text-2xl font-serif text-text-primary mb-2 group-hover:text-emerald-400 transition-colors">
+                  Therapeutic Editability Atlas
+                </h3>
+                <p className="text-sm font-serif text-text-secondary mb-4 leading-relaxed">
+                  Quantitative assessment of variant editability using the EDIT score—a composite metric integrating base editor efficiency, prime editor compatibility, therapeutic window analysis, chromatin accessibility, and patient-specific off-target risk profiling.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-xs font-serif text-emerald-400">
+                    ABE/CBE Scoring
+                  </span>
+                  <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-xs font-serif text-emerald-400">
+                    PE3/PE4/PE5 Analysis
+                  </span>
+                  <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-xs font-serif text-emerald-400">
+                    Off-Target Profiling
+                  </span>
+                </div>
+              </div>
+            </Link>
+
+            {/* Therapeutic Translation Card */}
+            <Link href="/txscore/new">
+              <div className="group bg-gradient-to-br from-violet-500/5 to-violet-500/10 border border-violet-500/20 rounded-2xl p-8 hover:border-violet-500/40 hover:shadow-lg hover:shadow-violet-500/10 transition-all duration-300 cursor-pointer">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="p-3 bg-violet-500/10 rounded-xl group-hover:bg-violet-500/20 transition-colors">
+                    <Target className="w-6 h-6 text-violet-400" strokeWidth={1.5} />
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-violet-400/60 group-hover:text-violet-400 group-hover:translate-x-1 transition-all" strokeWidth={1.5} />
+                </div>
+                <h3 className="text-2xl font-serif text-text-primary mb-2 group-hover:text-violet-400 transition-colors">
+                  Therapeutic Translation Platform
+                </h3>
+                <p className="text-sm font-serif text-text-secondary mb-4 leading-relaxed">
+                  Evidence-based target prioritization using the Therapeutic Viability Score (TVS)—integrating genetic essentiality (DepMap CRISPR fitness), tissue-specific dependency profiles, clinical variant burden, druggability predictions, and therapeutic window modeling.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-2.5 py-1 bg-violet-500/10 border border-violet-500/20 rounded-lg text-xs font-serif text-violet-400">
+                    DepMap Integration
+                  </span>
+                  <span className="px-2.5 py-1 bg-violet-500/10 border border-violet-500/20 rounded-lg text-xs font-serif text-violet-400">
+                    TVS Multivariate Ranking
+                  </span>
+                  <span className="px-2.5 py-1 bg-violet-500/10 border border-violet-500/20 rounded-lg text-xs font-serif text-violet-400">
+                    Clinical Annotation
+                  </span>
+                </div>
+              </div>
+            </Link>
+          </div>
         </motion.div>
 
         <motion.div

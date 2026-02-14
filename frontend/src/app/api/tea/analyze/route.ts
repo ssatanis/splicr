@@ -201,7 +201,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Store analysis in database
-    const { data: analysis, error: insertError } = await supabase
+    const { data: analysis, error: insertError } = await (supabase as any)
       .from('tea_analyses')
       .insert({
         user_id: user.id,
@@ -294,7 +294,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { data: analyses, error } = await supabase
+    const { data: analyses, error } = await (supabase as any)
       .from('tea_analyses')
       .select('report_id, gene_symbol, variant_id, tissue, edit_score, optimal_strategy, created_at, status')
       .eq('user_id', user.id)
