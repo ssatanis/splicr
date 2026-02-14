@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { buildDataExport, getExportFileName, type DataResidency } from '@/lib/data-export';
 import Button from '@/components/Button';
@@ -18,6 +19,8 @@ import {
   Eye,
   EyeOff,
   Key,
+  FileText,
+  Scale,
 } from 'lucide-react';
 
 interface ActiveSession {
@@ -554,8 +557,8 @@ export function PrivacySecuritySettings() {
                   key={option.id}
                   onClick={() => setSettings({ ...settings, data_residency: option.id as any })}
                   className={`p-4 rounded-lg border-2 transition-all ${settings.data_residency === option.id
-                      ? 'border-accent bg-accent/5'
-                      : 'border-border hover:border-accent/50'
+                    ? 'border-accent bg-accent/5'
+                    : 'border-border hover:border-accent/50'
                     }`}
                 >
                   <div className="text-3xl mb-2">{option.flag}</div>
@@ -578,6 +581,38 @@ export function PrivacySecuritySettings() {
               </Button>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Legal Documents */}
+      <div className="bg-surface rounded-xl p-6 border border-border">
+        <h3 className="text-lg font-serif text-text-primary mb-4 flex items-center gap-2">
+          <Scale className="w-5 h-5" />
+          Legal Documents
+        </h3>
+        <p className="text-sm text-text-secondary mb-4">
+          Review our legal agreements and policies.
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-4">
+          <a
+            href="https://splicr.org/privacy-and-security"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-4 py-2 bg-background border border-border rounded-lg text-text-primary hover:border-accent transition-colors group"
+          >
+            <Shield className="w-4 h-4 text-text-tertiary group-hover:text-accent" />
+            <span className="text-sm font-medium">Privacy Policy</span>
+          </a>
+          <a
+            href="https://splicr.org/terms-and-conditions"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-4 py-2 bg-background border border-border rounded-lg text-text-primary hover:border-accent transition-colors group"
+          >
+            <FileText className="w-4 h-4 text-text-tertiary group-hover:text-accent" />
+            <span className="text-sm font-medium">Terms & Conditions</span>
+          </a>
         </div>
       </div>
 

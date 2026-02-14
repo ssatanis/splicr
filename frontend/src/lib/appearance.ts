@@ -16,7 +16,7 @@ export interface AppearanceState {
 }
 
 export const DEFAULT_APPEARANCE: AppearanceState = {
-  theme: "system",
+  theme: "light",
   color_scheme: "default",
   font_size: "medium",
   compact_mode: false,
@@ -60,11 +60,14 @@ export function applyAppearance(settings: AppearanceState): void {
   const root = document.documentElement;
 
   // Theme (dark class)
-  const isDark =
-    settings.theme === "dark" ||
-    (settings.theme === "system" &&
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches);
+  let isDark = false;
+  if (settings.theme === 'dark') {
+    isDark = true;
+  } else if (settings.theme === 'system') {
+    isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  // 'light' is default, so isDark remains false
+
   root.classList.toggle("dark", isDark);
 
   // Accent color

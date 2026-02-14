@@ -285,12 +285,7 @@ export function resetPasswordEmailContent(options: { resetUrl: string }): { subj
         </td>
       </tr>
     </table>
-    <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.6; color: ${TEXT_SECONDARY};">
-      If the button doesn't work, copy and paste this link into your browser:
-    </p>
-    <p style="margin: 0 0 24px; font-size: 14px; line-height: 1.5; word-break: break-all;">
-      <a href="${escapeHtml(resetUrl)}" style="color: ${ACCENT}; text-decoration: underline;">${escapeHtml(resetUrl)}</a>
-    </p>
+
     <p style="margin: 0; font-size: 15px; line-height: 1.6; color: ${TEXT_SECONDARY};">
       If you didn’t request this, you can safely ignore this email — your password will stay the same.
     </p>

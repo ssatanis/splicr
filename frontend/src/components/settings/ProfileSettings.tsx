@@ -252,6 +252,9 @@ export function ProfileSettings() {
       }
 
       setSuccess(true);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('profile-updated'));
+      }
     } catch (error: any) {
       console.error('Error saving profile:', error);
       setError(error.message || 'Failed to save profile');

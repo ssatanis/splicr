@@ -283,9 +283,8 @@ export default function SignUpPage() {
           <div className="text-center mb-8">
             <h1 className="text-3xl font-serif text-text-primary mb-3">Create account</h1>
             <p
-              className={`text-text-secondary font-serif text-sm h-5 transition-opacity duration-500 ${
-                taglineFading ? 'opacity-0' : 'opacity-100'
-              }`}
+              className={`text-text-secondary font-serif text-sm h-5 transition-opacity duration-500 ${taglineFading ? 'opacity-0' : 'opacity-100'
+                }`}
             >
               {taglines[taglineIndex]}
             </p>
@@ -364,11 +363,10 @@ export default function SignUpPage() {
                 value={labCode}
                 onChange={(e) => setLabCode(e.target.value.toUpperCase())}
                 maxLength={6}
-                className={`w-full px-4 py-3 bg-white border rounded-xl font-serif text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all uppercase ${
-                  codeValidation.valid === false
-                    ? 'border-error focus:border-error focus:ring-error/30'
-                    : 'border-border focus:border-accent'
-                }`}
+                className={`w-full px-4 py-3 bg-white border rounded-xl font-serif text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all uppercase ${codeValidation.valid === false
+                  ? 'border-error focus:border-error focus:ring-error/30'
+                  : 'border-border focus:border-accent'
+                  }`}
                 placeholder="ABC123"
               />
               {validatingCode && (
@@ -450,11 +448,10 @@ export default function SignUpPage() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   autoComplete="new-password"
-                  className={`w-full px-4 py-3 pr-11 bg-white border rounded-xl font-serif text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all ${
-                    confirmPassword && password !== confirmPassword
-                      ? 'border-error focus:border-error focus:ring-error/30'
-                      : 'border-border focus:border-accent'
-                  }`}
+                  className={`w-full px-4 py-3 pr-11 bg-white border rounded-xl font-serif text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all ${confirmPassword && password !== confirmPassword
+                    ? 'border-error focus:border-error focus:ring-error/30'
+                    : 'border-border focus:border-accent'
+                    }`}
                   placeholder="Confirm your password"
                 />
                 <button

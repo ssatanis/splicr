@@ -212,7 +212,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
-COMMENT ON FUNCTION get_email_domain IS 'Extracts domain from email (e.g., user@cornell.edu → cornell.edu)';
+COMMENT ON FUNCTION get_email_domain(TEXT) IS 'Extracts domain from email (e.g., user@cornell.edu → cornell.edu)';
 
 -- Update updated_at timestamp automatically
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -255,7 +255,7 @@ CREATE POLICY "Owners can manage analysis shares"
     OR EXISTS (
       SELECT 1 FROM public.analyses
       WHERE analyses.id = analysis_shares.analysis_id
-        AND analyses.user_id::text = auth.uid()::text
+        AND analyses.user_id = auth.uid()
     )
   )
   WITH CHECK (
@@ -263,7 +263,7 @@ CREATE POLICY "Owners can manage analysis shares"
     OR EXISTS (
       SELECT 1 FROM public.analyses
       WHERE analyses.id = analysis_shares.analysis_id
-        AND analyses.user_id::text = auth.uid()::text
+        AND analyses.user_id = auth.uid()
     )
   );
 
@@ -288,8 +288,8 @@ CREATE POLICY "Owners can view access logs"
   USING (
     EXISTS (
       SELECT 1 FROM public.analyses
-      WHERE analyses.id = analysis_access_log.analysis_id
-        AND analyses.user_id::text = auth.uid()::text
+      WHERE analyses.id::text = analysis_access_log.analysis_id
+        AND analyses.user_id = auth.uid()
     )
   );
 

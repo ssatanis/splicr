@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from app.config import get_settings
 from app.database import engine, Base
 from app.api.endpoints import ccs 
-from app.api import upload, analysis, results, websocket, auth, reference_sets, api_keys
+from app.api import upload, analysis, results, websocket, auth, reference_sets, api_keys, tea
 from app.schemas import HealthCheckResponse
 from datetime import datetime
 import logging
@@ -77,6 +77,11 @@ app.include_router(
     reference_sets.router,
     prefix=f"{settings.API_V1_PREFIX}",
     tags=["Reference Gene Sets"]
+)
+app.include_router(
+    tea.router,
+    prefix=f"{settings.API_V1_PREFIX}/tea",
+    tags=["Therapeutic Editability Types"]
 )
 
 

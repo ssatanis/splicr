@@ -1,0 +1,61 @@
+{
+  "name": "@splicr/txscore-sdk",
+  "version": "1.0.0",
+  "description": "TypeScript SDK for TxScore - Therapeutic Viability Score System for Cancer Target Prioritization",
+  "main": "dist/txscore-client.js",
+  "types": "dist/txscore-client.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --write \"**/*.ts\"",
+    "typecheck": "tsc --noEmit",
+    "demo": "tsx examples/txscore-demo.ts",
+    "generate-types": "supabase gen types typescript --local > sdk/typescript/database.types.ts"
+  },
+  "keywords": [
+    "cancer",
+    "drug-discovery",
+    "target-prioritization",
+    "genomics",
+    "precision-medicine",
+    "depmap",
+    "gtex",
+    "gnomad",
+    "alphafold",
+    "supabase",
+    "postgresql"
+  ],
+  "author": "SplicR Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ssatanis/splicr"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.54.0",
+    "prettier": "^3.1.0",
+    "tsx": "^4.6.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "@vitest/coverage-v8": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

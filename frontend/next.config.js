@@ -8,7 +8,7 @@ const nextConfig = {
   reactStrictMode: true,
   devIndicators: false,
   // Use frontend as root for file tracing (required when building from monorepo root)
-  outputFileTracingRoot: __dirname,
+  outputFileTracingRoot: path.join(__dirname, '../'),
   // Use consistent build ID for Electron builds to avoid path issues
   generateBuildId: isElectronBuild ? async () => 'electron-build' : undefined,
   // Conditional static export for Electron builds
@@ -27,11 +27,19 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react'],
   },
+  transpilePackages: ['@splicr/txscore-sdk'],
   webpack: (config) => {
     // react-plotly.js expects 'plotly.js/dist/plotly'; we use plotly.js-dist-min
     config.resolve.alias['plotly.js/dist/plotly'] = path.resolve(
       __dirname,
       'node_modules/plotly.js-dist-min/plotly.min.js'
+    );
+    // Add alias for @sdk to resolve to ../sdk/typescript
+    config.resolve.alias['@sdk'] = path.resolve(__dirname, '../sdk/typescript');
+    // Force resolution of @supabase/supabase-js to the frontend's installed version
+    config.resolve.alias['@supabase/supabase-js'] = path.resolve(
+      __dirname,
+      'node_modules/@supabase/supabase-js'
     );
     return config;
   },
@@ -39,6 +47,8 @@ const nextConfig = {
     // Use package name so Turbopack resolves via node_modules (avoids server-relative path error)
     resolveAlias: {
       'plotly.js/dist/plotly': 'plotly.js-dist-min',
+      '@sdk': path.resolve(__dirname, '../sdk/typescript'),
+      '@supabase/supabase-js': './node_modules/@supabase/supabase-js',
     },
   },
   // Redirects only work in non-static builds

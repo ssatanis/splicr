@@ -2,7 +2,10 @@
 # SPLICR .gitignore - PRODUCTION READY
 # ============================================================================
 
-# Dependencies
+# Large Datasets
+tea_data/
+
+# Dependencies (reinstalled in Docker)
 node_modules/
 .pnp
 .pnp.js

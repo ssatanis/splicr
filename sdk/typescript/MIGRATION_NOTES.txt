@@ -1,0 +1,77 @@
+TxScore Schema Migration - Important Notes
+===========================================
+
+WHAT CHANGED:
+-------------
+All TxScore tables have been renamed with "tx_" prefix to avoid conflicts with existing SplicR database schema.
+
+OLD TABLE NAMES → NEW TABLE NAMES:
+- genes_master → tx_genes_master
+- depmap_data → tx_depmap_data
+- gtex_expression → tx_gtex_expression
+- gnomad_constraint → tx_gnomad_constraint
+- alphafold_structures → tx_alphafold_structures
+- clinvar_variants → tx_clinvar_variants
+- drug_interactions → tx_drug_interactions
+- clinical_trials → tx_clinical_trials
+- txscore_cache → tx_txscore_cache
+- cell_line_metadata → tx_cell_line_metadata
+- tissue_metadata → tx_tissue_metadata
+- cancer_type_metadata → tx_cancer_type_metadata
+
+ALL FUNCTIONS RENAMED:
+- get_essential_genes → tx_get_essential_genes
+- get_pan_cancer_targets → tx_get_pan_cancer_targets
+- rank_targets_custom → tx_rank_targets_custom
+- find_similar_targets → tx_find_similar_targets
+- compute_selectivity_index → tx_compute_selectivity_index
+- compute_tissue_safety_risk → tx_compute_tissue_safety_risk
+- get_tvs_distribution → tx_get_tvs_distribution
+- get_subscore_correlations → tx_get_subscore_correlations
+- get_protein_class_enrichment → tx_get_protein_class_enrichment
+- search_genes_ranked → tx_search_genes_ranked
+
+ALL VIEWS RENAMED:
+- top_targets_by_cancer → tx_top_targets_by_cancer
+- druggable_targets → tx_druggable_targets
+- essential_with_precedent → tx_essential_with_precedent
+
+MIGRATION FILES:
+----------------
+1. 20260213000002_txscore_schema_revised.sql - Complete schema with tx_ prefixes
+2. 20260213000003_txscore_functions_revised.sql - All functions with tx_ prefixes
+
+ACTION REQUIRED:
+----------------
+1. Run migration: supabase db reset (or apply migrations manually)
+2. Regenerate types: npx supabase gen types typescript --local > sdk/typescript/database.types.ts
+3. Update TypeScript SDK imports to use new table names
+4. Update all queries in your application code
+
+COMPATIBILITY:
+--------------
+✅ No conflicts with existing SplicR schema
+✅ Compatible with existing auth.users table
+✅ RLS policies use auth.role() = 'authenticated'
+✅ All constraints and indexes properly prefixed
+✅ Safe to run alongside existing database
+
+ROLLBACK:
+---------
+If needed, you can drop all tx_ tables and functions:
+DROP TABLE IF EXISTS tx_txscore_cache, tx_clinical_trials, tx_drug_interactions, 
+  tx_clinvar_variants, tx_alphafold_structures, tx_gnomad_constraint, 
+  tx_gtex_expression, tx_depmap_data, tx_genes_master, tx_cell_line_metadata,
+  tx_tissue_metadata, tx_cancer_type_metadata CASCADE;
+
+DROP FUNCTION IF EXISTS tx_get_essential_genes CASCADE;
+DROP FUNCTION IF EXISTS tx_get_pan_cancer_targets CASCADE;
+DROP FUNCTION IF EXISTS tx_rank_targets_custom CASCADE;
+DROP FUNCTION IF EXISTS tx_find_similar_targets CASCADE;
+DROP FUNCTION IF EXISTS tx_compute_selectivity_index CASCADE;
+DROP FUNCTION IF EXISTS tx_compute_tissue_safety_risk CASCADE;
+DROP FUNCTION IF EXISTS tx_get_tvs_distribution CASCADE;
+DROP FUNCTION IF EXISTS tx_get_subscore_correlations CASCADE;
+DROP FUNCTION IF EXISTS tx_get_protein_class_enrichment CASCADE;
+DROP FUNCTION IF EXISTS tx_search_genes_ranked CASCADE;
+

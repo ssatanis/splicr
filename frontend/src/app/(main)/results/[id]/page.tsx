@@ -70,6 +70,8 @@ import {
   FlaskConical,
   MessageSquare,
   Pill,
+  Target,
+  Scissors,
 } from "lucide-react";
 
 import { BatchCorrectionDashboard } from "@/components/analysis/BatchCorrectionDashboard";
@@ -788,6 +790,22 @@ export default function ResultsPage() {
           <FileText className="w-4 h-4" strokeWidth={1.5} />
           Create Report
         </Button>
+        {results && significantGenes.length > 0 && (
+          <Link href={`/txscore?genes=${significantGenes.slice(0, 50).join(',')}&from=${id}`}>
+            <Button variant="secondary" size="md" className="inline-flex items-center gap-1.5 text-sm py-2 border-violet-400/40 text-violet-400 hover:bg-violet-400/10">
+              <Target className="w-4 h-4" strokeWidth={1.5} />
+              Find Therapeutic Targets
+            </Button>
+          </Link>
+        )}
+        {results && significantGenes.length > 0 && (
+          <Link href={`/tea?genes=${significantGenes.slice(0, 20).join(',')}&from=${id}`}>
+            <Button variant="secondary" size="md" className="inline-flex items-center gap-1.5 text-sm py-2 border-emerald-400/40 text-emerald-400 hover:bg-emerald-400/10">
+              <Scissors className="w-4 h-4" strokeWidth={1.5} />
+              Analyze Editability (TEA)
+            </Button>
+          </Link>
+        )}
         {/* Screen → Structure button temporarily hidden for performance optimization */}
         {/* {results && hitGenesForStructure.length > 0 && (
           <Button

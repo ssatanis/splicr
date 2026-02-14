@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { sendResetPasswordEmail } from '@/lib/email/send';
 
-const RESET_REDIRECT_PATH = '/auth/reset-password';
+// Point to callback handler which exchanges code for session, then redirects to reset-password page
+const RESET_REDIRECT_PATH = '/auth/callback?next=/auth/reset-password';
 
 // Redirect URL where Supabase sends the user after they click the email link.
-// Add this exact URL (e.g. https://splicr.org/auth/reset-password) to Supabase Dashboard →
-// Authentication → URL Configuration → Redirect URLs, or the link will redirect to sign-in.
+// Add this exact URL (e.g. https://splicr.org/auth/callback) to Supabase Dashboard →
+// Authentication → URL Configuration → Redirect URLs.
 function getResetRedirectUrl(request: NextRequest): string {
   let base = process.env.NEXT_PUBLIC_APP_URL || '';
 
@@ -39,6 +40,8 @@ export async function POST(request: NextRequest) {
       email,
       options: { redirectTo },
     });
+
+    console.log('[ForgotPassword] Generated reset link for:', email, 'RedirectTo:', redirectTo);
 
     if (linkError) {
       console.error('Forgot password generateLink error:', linkError);
