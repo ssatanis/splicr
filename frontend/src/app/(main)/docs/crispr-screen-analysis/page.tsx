@@ -136,12 +136,15 @@ export default function CRISPRScreenDocs() {
             ul: ({ node, ...props }) => <ul className={styles.ul} {...props} />,
             ol: ({ node, ...props }) => <ol className={styles.ol} {...props} />,
             li: ({ node, ...props }) => <li className={styles.li} {...props} />,
-            code: ({ node, inline, ...props }) =>
-              inline ? (
+            code: ({ node, className, ...props }) => {
+              // Check if it's inline code by looking at the className
+              const isInline = !className || !className.includes('language-');
+              return isInline ? (
                 <code className={styles.inlineCode} {...props} />
               ) : (
                 <code className={styles.codeBlock} {...props} />
-              ),
+              );
+            },
             pre: ({ node, ...props }) => (
               <pre className={styles.pre} {...props} />
             ),
