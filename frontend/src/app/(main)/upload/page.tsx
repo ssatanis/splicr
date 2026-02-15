@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import FastqUploader from "@/components/FastqUploader";
 import LibrarySelector from "@/components/LibrarySelector";
@@ -16,6 +17,7 @@ import {
   Info,
   Save,
   X,
+  BookOpen,
 } from "lucide-react";
 
 export default function UploadPage() {
@@ -265,10 +267,20 @@ export default function UploadPage() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-16"
           >
-            <h1 className="text-6xl font-serif text-text-primary mb-3">Upload Dataset</h1>
-            <p className="text-lg text-text-secondary">
-              Start your CRISPR screen analysis by uploading sequencing data
-            </p>
+            <div className="flex items-start justify-between gap-4 flex-wrap mb-3">
+              <div>
+                <h1 className="text-6xl font-serif text-text-primary mb-3">Upload Dataset</h1>
+                <p className="text-lg text-text-secondary">
+                  Start your CRISPR screen analysis by uploading sequencing data
+                </p>
+              </div>
+              <Link href="/docs/crispr-screen-analysis">
+                <Button variant="outline" size="md" className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4" />
+                  View Analysis Documentation
+                </Button>
+              </Link>
+            </div>
           </motion.div>
 
           {/* Library Selection */}

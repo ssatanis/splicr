@@ -1,0 +1,271 @@
+/* Academic Documentation Styling */
+
+.documentation {
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1.8;
+  color: var(--color-text-primary);
+}
+
+/* Headers */
+.h1 {
+  font-size: 2.5rem;
+  font-weight: 400;
+  margin-top: 3rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--color-border);
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
+}
+
+.h2 {
+  font-size: 1.875rem;
+  font-weight: 400;
+  margin-top: 2.5rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-border-light);
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+
+.h3 {
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: var(--color-text-primary);
+}
+
+.h4 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+/* Paragraphs and text */
+.p {
+  margin-bottom: 1.25rem;
+  color: var(--color-text-secondary);
+  text-align: justify;
+}
+
+.em {
+  font-style: italic;
+  color: var(--color-text-secondary);
+}
+
+.strong {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* Lists */
+.ul,
+.ol {
+  margin-bottom: 1.5rem;
+  padding-left: 2rem;
+  color: var(--color-text-secondary);
+}
+
+.li {
+  margin-bottom: 0.5rem;
+}
+
+.ul .li {
+  list-style-type: disc;
+}
+
+.ol .li {
+  list-style-type: decimal;
+}
+
+/* Code */
+.inlineCode {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.9em;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border-light);
+  border-radius: 4px;
+  padding: 0.125rem 0.375rem;
+  color: var(--color-accent);
+}
+
+.pre {
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.codeBlock {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
+/* Blockquotes */
+.blockquote {
+  margin: 1.5rem 0;
+  padding-left: 1.5rem;
+  border-left: 4px solid var(--color-border);
+  font-style: italic;
+  color: var(--color-text-tertiary);
+}
+
+/* Horizontal rules */
+.hr {
+  margin: 2.5rem 0;
+  border: 0;
+  border-top: 1px solid var(--color-border-light);
+}
+
+/* Links */
+.a {
+  color: var(--color-accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.a:hover {
+  border-bottom-color: var(--color-accent);
+}
+
+/* Tables */
+.tableWrapper {
+  margin: 2rem 0;
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.thead {
+  background-color: var(--color-background);
+}
+
+.tbody {
+  background-color: var(--color-surface);
+}
+
+.tr {
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  border-bottom: 2px solid var(--color-border);
+}
+
+.td {
+  padding: 0.75rem 1rem;
+  color: var(--color-text-secondary);
+}
+
+.tbody .tr:hover {
+  background-color: var(--color-background);
+}
+
+/* Math equations - ensure proper spacing */
+.documentation :global(.katex-display) {
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.documentation :global(.katex) {
+  font-size: 1.1em;
+}
+
+/* Print styles */
+@media print {
+  .documentation {
+    font-size: 11pt;
+    line-height: 1.6;
+  }
+
+  .h1 {
+    font-size: 20pt;
+    page-break-after: avoid;
+  }
+
+  .h2 {
+    font-size: 16pt;
+    page-break-after: avoid;
+  }
+
+  .h3 {
+    font-size: 14pt;
+    page-break-after: avoid;
+  }
+
+  .h4 {
+    font-size: 12pt;
+    page-break-after: avoid;
+  }
+
+  .p,
+  .li {
+    orphans: 3;
+    widows: 3;
+  }
+
+  .tableWrapper {
+    page-break-inside: avoid;
+  }
+
+  .pre {
+    page-break-inside: avoid;
+  }
+
+  .a {
+    color: var(--color-text-primary);
+    text-decoration: underline;
+  }
+
+  /* Ensure equations print correctly */
+  .documentation :global(.katex-display) {
+    page-break-inside: avoid;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .h1 {
+    font-size: 2rem;
+  }
+
+  .h2 {
+    font-size: 1.5rem;
+  }
+
+  .h3 {
+    font-size: 1.25rem;
+  }
+
+  .h4 {
+    font-size: 1.125rem;
+  }
+
+  .p {
+    text-align: left;
+  }
+
+  .tableWrapper {
+    font-size: 0.85rem;
+  }
+}
