@@ -298,31 +298,6 @@ export default function TxScoreDashboard() {
                         </div>
                     )}
                 </motion.div>
-
-                {/* About */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.17 }}
-                    className="bg-surface rounded-2xl p-6 border border-border"
-                >
-                    <h3 className="text-sm font-serif text-text-primary mb-3">Why use this tool?</h3>
-                    <p className="text-sm text-text-secondary font-serif leading-relaxed mb-4">
-                        Prioritize therapeutic targets using multi-dimensional evidence derived from public and proprietary datasets.
-                    </p>
-                    <ul className="space-y-1.5 text-xs text-text-secondary font-serif">
-                        <li className="flex items-start gap-2"><span className="text-text-tertiary mt-0.5">·</span>Genetic validation from pooled CRISPR fitness screens (DepMap, Chronos)</li>
-                        <li className="flex items-start gap-2"><span className="text-text-tertiary mt-0.5">·</span>Clinical safety predictions from human population genetics (gnomAD, GTEx)</li>
-                        <li className="flex items-start gap-2"><span className="text-text-tertiary mt-0.5">·</span>Druggability assessment from structural biology (AlphaFold, fpocket)</li>
-                        <li className="flex items-start gap-2"><span className="text-text-tertiary mt-0.5">·</span>Real-world precedent from clinical trials and approved drug databases</li>
-                    </ul>
-                    <Link href="/docs/therapeutic-translation">
-                        <button className="mt-4 inline-flex items-center gap-1.5 text-xs text-text-tertiary hover:text-text-primary transition-colors font-serif">
-                            Learn more
-                            <ChevronRight className="w-3.5 h-3.5" />
-                        </button>
-                    </Link>
-                </motion.div>
             </div>
         );
     }
