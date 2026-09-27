@@ -6,6 +6,13 @@ import { supabaseConfigured, supabasePublishableKey, supabaseUrl } from "./env";
 export const DEMO_COOKIE = "splicr_demo";
 
 /**
+ * The console (dashboard, login, signup, invite links) isn't open to the
+ * public yet. Routed to the marketing homepage here instead of deleted so
+ * the code is ready to flip back on later.
+ */
+const DISABLED_PREFIXES = ["/login", "/signup", "/dashboard", "/invite"];
+
+/**
  * Keeps the Supabase session fresh on every request and gates the
  * dashboard. Visitors without a session can still explore the dashboard
  * in demo mode (cookie set by /api/demo) so the product can be reviewed
@@ -14,7 +21,12 @@ export const DEMO_COOKIE = "splicr_demo";
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
-  const isDashboard = request.nextUrl.pathname.startsWith("/dashboard");
+  const pathname = request.nextUrl.pathname;
+  if (DISABLED_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+
+  const isDashboard = pathname.startsWith("/dashboard");
   const isDemo = request.cookies.get(DEMO_COOKIE)?.value === "1";
 
   if (!supabaseConfigured) {

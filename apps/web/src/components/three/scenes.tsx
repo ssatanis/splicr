@@ -1,5 +1,7 @@
 "use client";
 
+import { useThree } from "@react-three/fiber";
+
 import {
   CoilRibbon,
   CYAN,
@@ -12,38 +14,72 @@ import {
   TwistRibbon,
 } from "./primitives";
 
+/**
+ * Corner positions as fractions of the visible viewport rather than fixed
+ * world units, so the four ribbons still frame the edges of the screen on a
+ * narrow/tall phone viewport instead of drifting off the sides of the camera
+ * frustum the way fixed x positions do.
+ */
+function useCorners() {
+  const { width, height } = useThree((s) => s.viewport);
+  const halfW = width / 2;
+  const halfH = height / 2;
+  // On a narrow phone viewport halfW shrinks a lot more than halfH does, so
+  // the ribbons (whose own size is fixed in world units) are scaled down too
+  // — otherwise they'd swallow the whole width instead of framing a corner.
+  const REFERENCE_HALF_W = 8;
+  const objectScale = Math.min(1, Math.max(0.4, halfW / REFERENCE_HALF_W));
+  return {
+    topLeft: [-0.92 * halfW, 0.72 * halfH, -1] as const,
+    topRight: [0.9 * halfW, 0.7 * halfH, -1.5] as const,
+    bottomLeft: [-0.88 * halfW, -0.76 * halfH, -0.5] as const,
+    bottomRight: [0.89 * halfW, -0.72 * halfH, -1] as const,
+    objectScale,
+  };
+}
+
 /** Ribbons and tubes framing the four corners of the home hero. */
-export function HeroFieldScene({ className }: { className?: string }) {
+function HeroFieldRig() {
+  const { topLeft, topRight, bottomLeft, bottomRight, objectScale } = useCorners();
   return (
-    <Scene className={className} camera={{ position: [0, 0, 14], fov: 34 }}>
+    <>
       <Studio />
       {/* top left */}
       <Drift speed={0.8} rotation={0.25} float={0.5}>
-        <group position={[-6.6, 3.2, -1]} rotation={[0.2, 0.4, 0.3]}>
+        <group position={topLeft} rotation={[0.2, 0.4, 0.3]} scale={objectScale}>
           <SmoothTube seed={11} spread={[2.2, 1.6, 1]} radius={0.13} />
           <CoilRibbon seed={21} spread={[2.4, 1, 0.8]} radius={0.45} turns={6} scale={0.8} position={[0.2, -1.4, 0.4]} rotation={[0.3, 0.2, 0.9]} />
         </group>
       </Drift>
       {/* top right */}
       <Drift speed={0.9} rotation={0.3} float={0.6}>
-        <group position={[6.4, 3.1, -1.5]} rotation={[-0.2, -0.5, 0.2]}>
+        <group position={topRight} rotation={[-0.2, -0.5, 0.2]} scale={objectScale}>
           <CoilRibbon seed={5} spread={[2.6, 1.2, 0.9]} radius={0.5} turns={7} scale={0.85} />
           <SmoothTube seed={19} spread={[2, 1.6, 1]} radius={0.12} position={[0.4, -1.2, 0.6]} rotation={[0.4, 0.5, 0.1]} />
         </group>
       </Drift>
       {/* bottom left */}
       <Drift speed={0.7} rotation={0.2} float={0.5}>
-        <group position={[-6.2, -3.4, -0.5]} rotation={[0.3, -0.3, -0.4]}>
+        <group position={bottomLeft} rotation={[0.3, -0.3, -0.4]} scale={objectScale}>
           <CoilRibbon seed={33} spread={[3.2, 1.2, 0.9]} radius={0.62} turns={8} width={0.5} />
         </group>
       </Drift>
       {/* bottom right */}
       <Drift speed={0.85} rotation={0.3} float={0.6}>
-        <group position={[6.3, -3.2, -1]} rotation={[0.4, 0.4, 0.6]}>
+        <group position={bottomRight} rotation={[0.4, 0.4, 0.6]} scale={objectScale}>
           <SmoothTube seed={41} spread={[2.5, 2, 1.1]} radius={0.14} />
           <CoilRibbon seed={47} spread={[2.2, 1, 0.8]} radius={0.42} turns={6} scale={0.75} position={[0.6, 1.2, 0.3]} rotation={[0.8, 0.3, 0.2]} />
         </group>
       </Drift>
+    </>
+  );
+}
+
+/** Ribbons and tubes framing the four corners of the home hero. */
+export function HeroFieldScene({ className }: { className?: string }) {
+  return (
+    <Scene className={className} camera={{ position: [0, 0, 14], fov: 34 }}>
+      <HeroFieldRig />
     </Scene>
   );
 }

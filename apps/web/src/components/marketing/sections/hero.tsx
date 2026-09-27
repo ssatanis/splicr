@@ -59,8 +59,8 @@ export function Hero() {
           transition={{ duration: 0.8, delay: 0.42, ease: [0.22, 1, 0.36, 1] }}
           className="mt-10 md:mt-12 flex flex-wrap items-center justify-center gap-3"
         >
-          <LinkButton href="/login" tone="teal" size="lg" icon="none">
-            Open the console
+          <LinkButton href="/contact" tone="teal" size="lg" icon="none">
+            Request a Demo
           </LinkButton>
           <LinkButton href="/technology" tone="ghost" size="lg" icon="none">
             How it works

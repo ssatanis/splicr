@@ -14,21 +14,17 @@ export const site = {
 };
 
 export const marketingNav = [
-  { href: "/", label: "Homepage" },
   { href: "/technology", label: "Technology" },
   { href: "/pipeline", label: "Pipeline" },
   { href: "/about", label: "About Us" },
-  { href: "/contact", label: "Contact Us" },
 ] as const;
 
 export const footerColumns = [
   {
     title: "Product",
     links: [
-      { href: "/technology", label: "Technology" },
+      { href: "/technology", label: "Tech" },
       { href: "/pipeline", label: "Pipeline" },
-      { href: "/dashboard", label: "Dashboard" },
-      { href: "/login", label: "Sign in" },
     ],
   },
   {

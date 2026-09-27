@@ -32,8 +32,8 @@ export function CtaSection() {
               <LinkButton href="/contact" tone="teal" icon="none">
                 Request a blind test
               </LinkButton>
-              <LinkButton href="/login" tone="white" icon="none">
-                Try for free
+              <LinkButton href="/contact" tone="white" icon="none">
+                Request a Demo
               </LinkButton>
             </div>
           </div>

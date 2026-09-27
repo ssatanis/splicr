@@ -7,7 +7,7 @@ import { SectionHeading } from "@/components/ui/bits";
 import { Reveal, Stagger, StaggerItem } from "@/components/ui/reveal";
 
 export const metadata: Metadata = {
-  title: "About",
+  title: "About Us",
   description:
     "SplicR was started by researchers at Cornell University to answer one question: which hits are real?",
 };
