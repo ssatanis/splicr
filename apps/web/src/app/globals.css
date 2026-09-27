@@ -111,6 +111,26 @@
     background: var(--color-orange-500);
     color: white;
   }
+
+  /* Keyboard focus. There was no global rule at all, so 14 of the 18 focusable
+     elements on a page had no visible indicator and a keyboard user had no way
+     to tell where they were.
+
+     Two rings, because no single colour clears the 3:1 a focus indicator needs
+     against every background here. Measured: the dark ring scores 14.15 on
+     white, 5.02 on the orange panels and 5.82 on cyan, but only 1.57 on the
+     dark teal; the white ring sitting in the offset gap scores 9.01 there. One
+     of the pair is always clearly visible.
+
+     :focus-visible rather than :focus, so a mouse click does not leave a ring
+     behind. Components that define their own ring still win, being layered
+     later. */
+  :focus-visible {
+    outline: 2px solid var(--color-teal-950);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px white;
+    border-radius: 2px;
+  }
 }
 
 /* ------------------------------------------------------------------ */
