@@ -278,6 +278,10 @@ class ScreenQc:
     samples: list[SampleQc]
     replicate_pairs: list[ReplicatePair]
     nnmd: float | None
+    # Which contrast the NNMD and AUROC were measured on. A bare NNMD is
+    # ambiguous: the same screen reads -2.63 against its plasmid and -0.02
+    # against its own control arm.
+    nnmd_contrast: str
     auroc: float | None
     n_essential_found: int
     n_nonessential_found: int
@@ -289,6 +293,7 @@ class ScreenQc:
         return {
             "verdict": self.verdict,
             "nnmd": None if self.nnmd is None else round(self.nnmd, 3),
+            "nnmd_contrast": self.nnmd_contrast,
             "auroc": None if self.auroc is None else round(self.auroc, 4),
             "n_essential_found": self.n_essential_found,
             "n_nonessential_found": self.n_nonessential_found,
@@ -393,6 +398,41 @@ def nnmd(lfc: dict[str, float], taxid: int = 9606) -> tuple[float | None, int, i
     return (st.median(e) - st.median(n)) / mad, len(e), len(n), None
 
 
+def dropout_contrast(
+    roles: dict[str, str],
+    treatment: list[str],
+    control: list[str],
+) -> tuple[list[str], list[str], str]:
+    """
+    Pick the contrast that measures essential-gene dropout.
+
+    Numerator: the latest-timepoint arms, preferring the untreated control so
+    the measurement is of the screen rather than of the drug. Denominator: the
+    plasmid pool, else T0. Returns an empty denominator when the design has
+    neither, which makes NNMD unmeasurable rather than wrong.
+    """
+    plasmid = [s for s, r in roles.items() if r == "plasmid"]
+    t0 = [s for s, r in roles.items() if r == "reference"]
+    reference = plasmid or t0
+
+    # The role decides what counts as an endpoint, not the contrast lists. In a
+    # dropout screen the T0 arms are passed as the control side of the contrast
+    # while carrying the "reference" role, and measuring T0 against plasmid
+    # finds no dropout because none has happened yet. In a drug screen the
+    # untreated arm carries the "control" role and is the arm we want, because
+    # it measures the screen without the drug's own effect.
+    endpoint = [s for s in (control or []) if roles.get(s) == "control"]
+    if not endpoint:
+        endpoint = [s for s in (treatment or []) if roles.get(s) == "treatment"]
+    if not endpoint:
+        endpoint = [s for s, r in roles.items() if r in ("control", "treatment")]
+
+    if not reference or not endpoint:
+        return endpoint, [], "none available"
+    kind = "plasmid" if plasmid else "T0"
+    return endpoint, reference, f"{'+'.join(endpoint)} vs {kind}"
+
+
 def screen_qc(
     matrix: CountMatrix,
     roles: dict[str, str],
@@ -419,8 +459,22 @@ def screen_qc(
                     )
                 )
 
-    lfc = gene_log_fold_changes(matrix, treatment, control)
+    # NNMD and AUROC measure whether the screen killed the genes it should have,
+    # so both need a DROPOUT contrast: an endpoint arm against the library
+    # reference. Measuring them on treatment against control gives roughly zero
+    # by construction, because both arms sat in culture the same length of time
+    # and lost the same essential genes. On a real olaparib screen that scored
+    # NNMD -2.63 against its plasmid, the drug contrast gives -0.02, which would
+    # be reported as a failed screen.
+    dropout_t, dropout_c, dropout_label = dropout_contrast(roles, treatment, control)
+    lfc = gene_log_fold_changes(matrix, dropout_t, dropout_c) if dropout_c else {}
     value, n_ess, n_non, nnmd_reason = nnmd(lfc, library.taxid)
+    if not dropout_c:
+        nnmd_reason = (
+            "no plasmid or T0 reference sample was supplied, and a treatment against "
+            "control contrast cancels essentiality out, so there is nothing to measure "
+            "separation against"
+        )
 
     area = None
     if lfc:
@@ -436,6 +490,22 @@ def screen_qc(
         s.label for s in samples
         if s.zero_fraction - median_zero > thresholds.bottleneck_guide_loss
     ]
+
+    # Amplicon purity: how much of each sample is guide amplicon at all. A
+    # sample can map poorly for two very different reasons, and they need
+    # different fixes. If the reads carry the vector anchor but do not match the
+    # library, the library call is likely wrong. If they do not carry the anchor,
+    # the sample simply contains non-amplicon sequence and the PCR is at fault.
+    # Judged against peers rather than an absolute floor, because the floor
+    # depends on the protocol.
+    anchor_rates = {s.label: s.anchor_rate for s in matrix.per_sample
+                    if s.anchor_rate is not None}
+    impure: list[tuple[str, float, float]] = []
+    if len(anchor_rates) >= 3:
+        median_anchor = st.median(anchor_rates.values())
+        for label, rate in anchor_rates.items():
+            if median_anchor - rate > thresholds.anchor_rate_drop:
+                impure.append((label, rate, median_anchor))
 
     notes: list[str] = []
     verdicts: list[Verdict] = [s.verdict for s in samples]
@@ -455,12 +525,23 @@ def screen_qc(
     elif value > thresholds.nnmd_max:
         verdicts.append("fail")
         notes.append(
-            f"NNMD {value:.2f} is worse than DepMap's {thresholds.nnmd_max} threshold: "
-            "known essential genes are not separating from nonessentials, so hit calls "
-            "from this screen are not trustworthy."
+            f"NNMD {value:.2f} on {dropout_label} is worse than DepMap's "
+            f"{thresholds.nnmd_max} threshold: known essential genes are not separating "
+            "from nonessentials, so hit calls from this screen are not trustworthy."
         )
     else:
-        notes.append(f"NNMD {value:.2f} passes (threshold {thresholds.nnmd_max}).")
+        notes.append(
+            f"NNMD {value:.2f} on {dropout_label} passes "
+            f"(threshold {thresholds.nnmd_max})."
+        )
+
+    for label, rate, median_anchor in impure:
+        verdicts.append("warn")
+        notes.append(
+            f"Only {rate:.0%} of {label} reads carry the vector anchor, against "
+            f"{median_anchor:.0%} across the other samples. The rest is not guide "
+            "amplicon, so its effective depth is lower than its read count suggests."
+        )
 
     for p in pairs:
         if p.r < thresholds.replicate_r_min:
@@ -478,6 +559,7 @@ def screen_qc(
         samples=samples,
         replicate_pairs=pairs,
         nnmd=value,
+        nnmd_contrast=dropout_label,
         auroc=area,
         n_essential_found=n_ess,
         n_nonessential_found=n_non,

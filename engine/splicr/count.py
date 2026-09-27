@@ -71,6 +71,21 @@ class SpacerLocation:
     offsets: tuple[int, ...] = ()      # fallback fixed offsets, most common first
     search_window: int = 40            # how far into the read to look for the anchor
     reverse_complement: bool = False
+    # The best-scoring anchor found during detection, kept even when a fixed
+    # offset wins. A fixed offset slices every read long enough to slice, so it
+    # cannot tell a guide amplicon from unrelated sequence. Tallying the anchor
+    # separately is what makes "half this sample is not amplicon" visible
+    # instead of looking like a low mapping rate with no explanation.
+    probe_anchor: str | None = None
+    probe_anchor_name: str | None = None
+
+    def has_anchor(self, read: str) -> bool:
+        if not self.probe_anchor:
+            return False
+        if self.reverse_complement:
+            read = revcomp(read)
+        return read.find(self.probe_anchor, 0,
+                         self.search_window + len(self.probe_anchor)) >= 0
 
     def extract(self, read: str) -> str | None:
         if self.reverse_complement:
@@ -119,6 +134,7 @@ def detect_spacer_location(
     guide_length = library.dominant_length
     sequences = library.sequences
     best: tuple[int, SpacerLocation] | None = None
+    best_anchor: tuple[int, str, str] | None = None   # hits, sequence, name
 
     def score(loc: SpacerLocation) -> int:
         hits = 0
@@ -135,6 +151,8 @@ def detect_spacer_location(
             hits = score(loc)
             if best is None or hits > best[0]:
                 best = (hits, loc)
+            if best_anchor is None or hits > best_anchor[0]:
+                best_anchor = (hits, anchor, name)
 
         # Offset histogram: for every read, find where a library guide starts.
         # This is what recovers unusual backbones with no known anchor.
@@ -154,6 +172,8 @@ def detect_spacer_location(
 
     assert best is not None
     hits, loc = best
+    if best_anchor is not None and best_anchor[0] > 0:
+        loc.probe_anchor, loc.probe_anchor_name = best_anchor[1], best_anchor[2]
     rate = hits / max(1, len(reads))
     if rate < config.min_detect_match_rate:
         # Keep the best guess but make the weak signal visible to the caller.
@@ -194,6 +214,8 @@ class SampleCounts:
     mapped_mismatch: int = 0
     unmapped: int = 0
     no_spacer: int = 0
+    with_anchor: int = 0               # reads carrying the vector anchor
+    anchor_name: str | None = None
     location: SpacerLocation | None = None
 
     @property
@@ -204,13 +226,28 @@ class SampleCounts:
     def mapping_rate(self) -> float:
         return self.mapped / self.total_reads if self.total_reads else 0.0
 
+    @property
+    def anchor_rate(self) -> float | None:
+        """Fraction of reads that look like guide amplicons at all.
+
+        None when no anchor was identified, which is not the same as zero.
+        """
+        if self.anchor_name is None or not self.total_reads:
+            return None
+        return self.with_anchor / self.total_reads
+
     def summary(self) -> str:
-        return (
-            f"{self.label}: {self.total_reads:,} reads, "
+        parts = [
+            f"{self.label}: {self.total_reads:,} reads",
             f"{self.mapping_rate:.1%} mapped "
-            f"({self.mapped_exact:,} exact, {self.mapped_mismatch:,} 1mm), "
-            f"{self.no_spacer:,} with no locatable spacer"
-        )
+            f"({self.mapped_exact:,} exact, {self.mapped_mismatch:,} 1mm)",
+        ]
+        rate = self.anchor_rate
+        if rate is not None:
+            parts.append(f"{rate:.1%} carry the {self.anchor_name} anchor")
+        if self.no_spacer:
+            parts.append(f"{self.no_spacer:,} too short to read a spacer")
+        return ", ".join(parts)
 
 
 def count_fastq(
@@ -235,8 +272,12 @@ def count_fastq(
     observed: Counter[str] = Counter()
     total = 0
     no_spacer = 0
+    with_anchor = 0
+    check_anchor = location.probe_anchor is not None
     for read in iter_reads(path):
         total += 1
+        if check_anchor and location.has_anchor(read):
+            with_anchor += 1
         spacer = location.extract(read)
         if spacer is None:
             no_spacer += 1
@@ -273,6 +314,8 @@ def count_fastq(
         mapped_mismatch=mismatch,
         unmapped=unmapped,
         no_spacer=no_spacer,
+        with_anchor=with_anchor,
+        anchor_name=location.probe_anchor_name if check_anchor else None,
         location=location,
     )
 

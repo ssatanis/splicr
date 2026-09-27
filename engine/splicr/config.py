@@ -117,6 +117,13 @@ class QcThresholds:
     # treated as bottlenecked and down-weighted.
     bottleneck_guide_loss: float = 0.10
 
+    # How far a sample's vector-anchor rate may fall below the screen median
+    # before its amplicon purity is called out. Our own convention, not a
+    # published threshold: DepMap's nearest equivalent is the cross-library
+    # read fraction, which must stay under 0.1. Set relative rather than
+    # absolute because the baseline rate depends on the PCR protocol.
+    anchor_rate_drop: float = 0.20
+
 
 @dataclass(frozen=True)
 class ArtifactThresholds:
