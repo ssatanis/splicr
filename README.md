@@ -1,58 +1,63 @@
+<div align="center">
+
 # SplicR
 
-Know which hits are real.
+**Know which hits are real.**
 
-SplicR is the answer key for CRISPR screens. Upload a screen and every hit comes
-back with a calibrated chance it is real, the reason behind it, and what to do
-next. It is built on every public screen re-analyzed through one pipeline, plus
-a growing record of which hits held up when labs went back and checked.
+A CRISPR screen returns hundreds of candidates. Most labs can only validate a
+handful. SplicR tells you which ones are worth the months.
 
-## What is here
+</div>
+
+---
+
+## What it does
+
+Upload a screen. Every hit comes back with three things:
+
+| | |
+|---|---|
+| **A number** | The calibrated chance the hit survives a re-test |
+| **A reason** | Why, in one line, with the evidence behind it |
+| **A next step** | Which hits to validate first, and a plan to do it |
+
+It is built on every public CRISPR screen, re-analyzed through one pipeline,
+plus a growing record of which hits actually held up.
+
+## The pipeline
+
+Nine stages, run the same way on your screen and on every screen in the Atlas.
 
 ```
-apps/web          Next.js app: marketing site, auth, dashboard
-supabase          Database migrations (Postgres schema, RLS, queues, storage)
-engine            Offline pipeline: counting, QC, hit calling, scoring
-scripts           Data downloads and database tooling
-data              Reference data (downloaded, not committed)
-docs              How the pipeline, data model and science fit together
+ingest → detect → count → QC → call hits → flag artifacts → atlas → score → report
 ```
 
-## Getting started
+Detection identifies the library by guide sequence, not by file name. Counting
+locates the spacer by scanning for the vector anchor, so staggered primers do
+not cost you reads. Artifacts are named individually, so a copy-number cluster
+never quietly passes as biology.
+
+## Quick start
 
 ```bash
 npm install
 npm run dev
 ```
 
-The site runs at http://localhost:3000. The dashboard has a demo mode, so you
-can look around without an account.
+Open http://localhost:3000. The dashboard has a demo mode, so you can look
+around before making an account.
 
-Copy `.env.example` to `apps/web/.env.local` and fill in your Supabase URL and
-publishable key.
-
-## Database
-
-```bash
-npm run db:push
-```
-
-Applies every migration in `supabase/migrations` in order and records it the
-same way the Supabase CLI does. `npm run db:status` prints what is actually in
-the database: tables, row-level security, policies and scheduled jobs.
-
-## Analysis engine
+## The analysis engine
 
 ```bash
 bash engine/setup.sh
 export PATH="engine/.tools/env/bin:$PATH"
-python engine/tests/smoke_test.py
+python engine/tests/integration_test.py
 ```
 
-Installs MAGeCK, BAGEL2, bowtie, cutadapt, fastp, seqkit and samtools into a
-local environment, then verifies each one runs. The smoke test builds a count
-table from real Brunello guides and checks both hit callers recover known
-essential genes. See `docs/05-engine.md`.
+This installs MAGeCK, BAGEL2, bowtie, cutadapt, fastp, seqkit and samtools,
+then runs a screen built from real Brunello guides end to end to prove the
+toolchain works.
 
 ## Reference data
 
@@ -60,11 +65,21 @@ essential genes. See `docs/05-engine.md`.
 bash scripts/data/download.sh
 ```
 
-Downloads gene annotation, reference gene sets, cell line identities, pooled
-library definitions and public evidence into `data/references`. Add `--all` for
-the large archives. Licences differ per source, and `docs/04-data-sources.md`
-lists each one. Addgene library files are for local use and are never
-redistributed.
+Gene annotation, reference gene sets, cell line identities, pooled libraries
+and public evidence. Add `--all` for the large archives.
+
+Licences differ by source. Addgene libraries and Sanger Project Score stay
+local and are never redistributed. See `docs/04-data-sources.md`.
+
+## Layout
+
+```
+apps/web      the web app and dashboard
+engine        the analysis pipeline
+supabase      database migrations
+scripts       data downloads and database tools
+docs          how it all fits together
+```
 
 ## Checks
 

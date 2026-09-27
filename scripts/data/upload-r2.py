@@ -121,8 +121,11 @@ def main() -> None:
     manifest: list[dict] = []
 
     for i, (path, key) in enumerate(planned, 1):
-        size = path.stat().st_size
         try:
+            # Re-stat inside the try: a download still in flight can move or
+            # replace a file between the scan and the upload, and one missing
+            # file must not abort a multi-gigabyte sync.
+            size = path.stat().st_size
             did, _ = upload(s3, cfg.bucket, path, key, guess_content_type(path))
             if did:
                 uploaded += 1
@@ -133,6 +136,9 @@ def main() -> None:
                 print(f"  [{i:>3}/{len(planned)}] have {key}")
             manifest.append({"key": key, "bytes": size,
                              "source": str(path.relative_to(ROOT))})
+        except FileNotFoundError:
+            failed += 1
+            print(f"  [{i:>3}/{len(planned)}] gone {key} (moved or removed since the scan)")
         except Exception as exc:
             failed += 1
             print(f"  [{i:>3}/{len(planned)}] FAIL {key}: {type(exc).__name__}: {exc}")

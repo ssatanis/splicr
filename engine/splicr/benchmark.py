@@ -127,6 +127,56 @@ CANDIDATES_SCREEN_LIBRARY = "screen_library"
 CANDIDATES_TRAIN_UNION = "train_union"
 """Rank within the union of training-screen libraries -- no screen-specific input."""
 
+PUBLISHED: dict[str, dict[str, Any]] = {
+    # Reference numbers handed to us for the yearfold0 test split (334 screens),
+    # each paired with what this harness actually measures.  Measured values come
+    # from runs of this module; see :func:`reproduce_published`.
+    "oracle_knn": {
+        "published": 0.2918,
+        "measured": 0.2918,
+        "note": "exact match; 1349 x 334 sweep, ORACLE (reads test labels)",
+    },
+    "gene_frequency_prior": {
+        "published": 0.1334,
+        "measured": 0.1329,
+        "measured_seed_range": (0.1324, 0.1338),
+        "note": (
+            "0.1334 is upstream's coarse-phenotype-hit-freq, i.e. hit frequency "
+            "stratified by the 5-category `cleaned_phenotype` with NO backoff -- "
+            "GeneFrequencyPrior(stratify_by='cleaned_phenotype', "
+            "stratum_backoff=False).  The *unstratified* global prior that the "
+            "prose describes measures 0.1217 here, not 0.1334."
+        ),
+    },
+    "global_hit_freq_unstratified": {
+        "published": None,
+        "measured": 0.1217,
+        "note": "literal hits[g]/measured[g] over the 1349 training screens",
+    },
+    "random": {"published": 0.0, "measured": 0.0150, "note": "clamp at 0 makes this > 0"},
+}
+"""Published reference numbers vs what this harness measures.
+
+Recorded here because a score is only meaningful against a baseline measured on
+the *same* split with the *same* metric.  Two facts worth carrying forward:
+
+* :class:`OracleKNN` reproduces the published 0.2918 **exactly**, which is strong
+  evidence that the split, the candidate handling, the symbol normalization and
+  the metric are all correct.
+* Given that, the 0.1334 figure cannot be the unstratified global hit-frequency
+  prior, which measures 0.1217 here.  Sweeping upstream's published baseline
+  family identified it as ``coarse-phenotype-hit-freq`` (stratified by
+  ``cleaned_phenotype``, no backoff), measured at 0.1329 with a tie-break seed
+  range of 0.1324--0.1338 that contains 0.1334.  So the honest baseline for a
+  frequency prior on this split is **0.1329**, and that is what a SplicR scorer
+  has to beat.  Other rejected explanations, each measured: train+validation
+  priors (0.1221), a global rather than per-gene denominator (0.1232),
+  both-direction hits (0.1226), forward/reverse example expansion (0.1214),
+  relevance-weighted counts (0.1209), Beta smoothing from s=5 to s=200
+  (0.1212--0.1215), and the alternative ``year_match_val_testfold0`` split
+  (0.1400 unstratified).
+"""
+
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DEPMAP_COMMON_ESSENTIALS = os.path.join(
     _REPO_ROOT, "data", "references", "depmap", "CRISPRInferredCommonEssentials.csv"
@@ -719,19 +769,37 @@ class GeneStats:
         return (self.rel_sum.get(gene, 0.0) / n) if n else 0.0
 
     def stratum_rate(
-        self, field_name: str, value: str, gene: str, smoothing: float = 20.0
+        self,
+        field_name: str,
+        value: str,
+        gene: str,
+        smoothing: float = 20.0,
+        backoff: bool = True,
     ) -> float:
-        """Hit rate within one metadata stratum, backed off to the global rate.
+        """Hit rate within one metadata stratum.
 
-        The backoff target is the global smoothed rate, so an unseen stratum or
-        an unseen gene degrades to the global prior instead of to zero.
+        Args:
+            field_name: the stratifying metadata field.
+            value: that field's value on the screen being predicted.
+            gene: the gene.
+            smoothing: Beta pseudo-count toward the backoff target.
+            backoff: ``True`` (SplicR) backs an unseen stratum or an unseen gene
+                off to the global smoothed rate.  ``False`` reproduces upstream's
+                stratified baselines exactly: a gene the stratum never assayed
+                scores ``0.0`` (upstream's ``score_dict.get(g, 0.0)``), and only
+                an entirely unseen stratum falls back to the global rate.
+
+        Backoff is the better estimator, but ``backoff=False`` is what
+        reproduces the published table, so both are available.
         """
         bucket = self.by_stratum.get((field_name, value or "unknown"))
-        fallback = self.rate(gene, smoothing=smoothing)
         if bucket is None:
-            return fallback
+            return self.raw_rate(gene) if not backoff else self.rate(gene, smoothing)
         m_counter, h_counter = bucket
         n = m_counter.get(gene, 0)
+        if not backoff:
+            return (h_counter.get(gene, 0) / n) if n else 0.0
+        fallback = self.rate(gene, smoothing=smoothing)
         if n == 0:
             return fallback
         return (h_counter.get(gene, 0) + smoothing * fallback) / (n + smoothing)
@@ -1008,9 +1076,14 @@ class GeneFrequencyPrior(Scorer):
         negative_penalty: subtract this times the opposite-direction rate.
             ``0`` = upstream behaviour.
         candidates: candidate pool mode.
-        stratify_by: optional metadata field for a stratified prior backed off to
-            the global one (upstream's ``screen-type-hit-freq`` is
-            ``stratify_by="screen_type"``).
+        stratify_by: optional metadata field for a stratified prior.  Upstream's
+            ``screen-type-hit-freq`` is ``stratify_by="screen_type"`` and its
+            ``coarse-phenotype-hit-freq`` -- the baseline that actually produces
+            the published 0.1334 -- is ``stratify_by="cleaned_phenotype",
+            stratum_backoff=False``; see :data:`PUBLISHED`.
+        stratum_backoff: ``False`` reproduces upstream's stratified baselines
+            exactly (unseen gene in stratum -> 0.0); ``True`` backs off to the
+            global smoothed rate, which is the better estimator.
         tie_break / seed: see :func:`rank_by_scores`.
         k: truncate the emitted ranking (the metric ignores the rest).
     """
@@ -1021,6 +1094,7 @@ class GeneFrequencyPrior(Scorer):
         negative_penalty: float = 0.0,
         candidates: str = CANDIDATES_SCREEN_LIBRARY,
         stratify_by: str | None = None,
+        stratum_backoff: bool = True,
         tie_break: str = "random",
         seed: int = 42,
         k: int = DEFAULT_K,
@@ -1030,6 +1104,7 @@ class GeneFrequencyPrior(Scorer):
         self.negative_penalty = negative_penalty
         self.candidates = candidates
         self.stratify_by = stratify_by
+        self.stratum_backoff = stratum_backoff
         self.tie_break = tie_break
         self.seed = seed
         self.k = k
@@ -1041,6 +1116,8 @@ class GeneFrequencyPrior(Scorer):
         bits = ["gene_frequency_prior"]
         if self.stratify_by:
             bits.append(f"by_{self.stratify_by}")
+            if not self.stratum_backoff:
+                bits.append("exact")
         if self.smoothing:
             bits.append(f"s{self.smoothing:g}")
         if self.negative_penalty:
@@ -1063,7 +1140,11 @@ class GeneFrequencyPrior(Scorer):
         if self.stratify_by:
             value = _clean(screen.get(self.stratify_by)) or "unknown"
             base = self.stats.stratum_rate(
-                self.stratify_by, value, gene, smoothing=max(self.smoothing, 1e-9)
+                self.stratify_by,
+                value,
+                gene,
+                smoothing=max(self.smoothing, 1e-9),
+                backoff=self.stratum_backoff,
             )
         else:
             base = self.stats.rate(gene, smoothing=self.smoothing)
@@ -1360,6 +1441,7 @@ class HybridScorer(Scorer):
         self.stats: GeneStats | None = None
         self.tuning: list[tuple[float, float]] = []
         self._universe: list[str] | None = None
+        self._component_cache: dict[str, tuple[list[str], np.ndarray, np.ndarray]] = {}
 
     @property
     def name(self) -> str:  # type: ignore[override]
@@ -1382,16 +1464,37 @@ class HybridScorer(Scorer):
         self.prior.fit(train)
         if self.candidates == CANDIDATES_TRAIN_UNION:
             self._universe = self.stats.universe()
+        self._component_cache.clear()
         return self
 
-    def _blended(self, screen: Mapping[str, Any], alpha: float) -> list[str]:
+    def _components(
+        self, screen: Mapping[str, Any]
+    ) -> tuple[list[str], np.ndarray, np.ndarray]:
+        """Candidates plus the two percentile-ranked component scores, memoised.
+
+        Cached per screen so an ``alpha`` sweep costs one component pass, not one
+        per ``alpha``.  Computing the retrieval scores is the expensive half
+        (it walks every neighbour's full gene list), so this cache is the
+        difference between a tunable method and an intractable one.
+        """
+        key = str(screen["dataset_name"])
+        cached = self._component_cache.get(key)
+        if cached is not None:
+            return cached
         assert self.retrieval is not None and self.prior is not None
         genes = candidate_genes(screen, self.candidates, self._universe)
-        r = np.asarray(
-            [self.retrieval.gene_scores(screen, genes)[g] for g in genes], dtype=float
+        retrieval_scores = self.retrieval.gene_scores(screen, genes)
+        r = percentile_ranks(np.asarray([retrieval_scores[g] for g in genes], dtype=float))
+        p = percentile_ranks(
+            np.asarray([self.prior.gene_score(g, screen) for g in genes], dtype=float)
         )
-        p = np.asarray([self.prior.gene_score(g, screen) for g in genes], dtype=float)
-        blended = alpha * percentile_ranks(r) + (1.0 - alpha) * percentile_ranks(p)
+        out = (genes, r, p)
+        self._component_cache[key] = out
+        return out
+
+    def _blended(self, screen: Mapping[str, Any], alpha: float) -> list[str]:
+        genes, r, p = self._components(screen)
+        blended = alpha * r + (1.0 - alpha) * p
         scores = dict(zip(genes, blended.tolist()))
         return rank_by_scores(
             genes, scores, tie_break=self.tie_break, seed=self.seed, limit=self.k
@@ -1752,7 +1855,9 @@ def _synthetic_screen(
     }
 
 
-def self_test(real: bool = False, verbose: bool = True) -> dict[str, Any]:
+def self_test(
+    real: bool = False, verbose: bool = True, parity_screens: int = 10_000
+) -> dict[str, Any]:
     """Verify the metric, then (optionally) verify it against upstream on real data.
 
     Checks, in order:
@@ -1777,6 +1882,8 @@ def self_test(real: bool = False, verbose: bool = True) -> dict[str, Any]:
         real: also run the upstream-parity and end-to-end checks (needs the
             parquet snapshot on disk).
         verbose: print each check.
+        parity_screens: cap on how many test screens enter the upstream-parity
+            sweep.  The default covers the whole split.
 
     Returns:
         A dict of the measured numbers, so a caller can report them rather than
@@ -1912,7 +2019,7 @@ def self_test(real: bool = False, verbose: bool = True) -> dict[str, Any]:
     rng2 = random.Random(11)
     worst = 0.0
     n_pairs = 0
-    for screen in test[:40]:
+    for screen in test[:parity_screens]:
         gt = screen["relevance_genes"]
         rel = screen["relevance_scores"]
         tbl = dict(zip(gt, rel))
@@ -1994,10 +2101,88 @@ def self_test(real: bool = False, verbose: bool = True) -> dict[str, Any]:
     return out
 
 
+def reproduce_published(
+    fold_column: str = "yearfold0", seeds: Sequence[int] = (0, 1, 2, 3), verbose: bool = True
+) -> dict[str, Any]:
+    """Re-measure the two published reference points on the full splits.
+
+    This is the calibration run, not the SplicR evaluation: it establishes that
+    the harness agrees with the published table before any SplicR number is
+    quoted against it.  Checks
+
+    * ``oracle_knn`` (published 0.2918) -- a full ``len(train) x len(test)``
+      sweep.  ORACLE: reads test labels.
+    * the frequency prior (published 0.1334), both unstratified and in upstream's
+      ``coarse-phenotype-hit-freq`` form, over several tie-break seeds.
+
+    Args:
+        fold_column: which split assignment to use.
+        seeds: tie-break seeds for the prior (upstream tie-breaks at random, so a
+            single seed is not a fair comparison).
+        verbose: print as it goes.
+
+    Returns:
+        The measured numbers alongside :data:`PUBLISHED`.
+    """
+    from splicr.assaybench_io import load_split
+
+    say = print if verbose else (lambda *a, **k: None)
+    andcg = AnDCG(k=DEFAULT_K)
+    train = load_split("train", fold_column=fold_column)
+    test = load_split("test", fold_column=fold_column)
+    targets = build_targets(test, andcg)
+    stats = GeneStats().fit(train)
+    out: dict[str, Any] = {
+        "fold_column": fold_column,
+        "n_train": len(train),
+        "n_test": len(test),
+    }
+    say(f"calibration on {fold_column}: train={len(train)} test={len(test)}")
+
+    def sweep(label: str, make: Callable[[int], Scorer]) -> list[float]:
+        vals = []
+        for seed in seeds:
+            res = evaluate(make(seed), test, andcg=andcg, targets=targets, split="test")
+            vals.append(res.mean)
+        say(
+            f"  {label:<52} {np.mean(vals):.4f}  "
+            f"[{min(vals):.4f}, {max(vals):.4f}] over {len(seeds)} seeds"
+        )
+        return vals
+
+    out["global_hit_freq_unstratified"] = sweep(
+        "gene_frequency_prior, unstratified",
+        lambda s: GeneFrequencyPrior(smoothing=0.0, seed=s, stats=stats),
+    )
+    out["coarse_phenotype_hit_freq"] = sweep(
+        "gene_frequency_prior, coarse-phenotype (published 0.1334)",
+        lambda s: GeneFrequencyPrior(
+            smoothing=0.0,
+            stratify_by="cleaned_phenotype",
+            stratum_backoff=False,
+            seed=s,
+            stats=stats,
+        ),
+    )
+    out["random"] = sweep("random", lambda s: RandomBaseline(seed=s).fit(train))
+
+    say(f"  sweeping oracle: {len(train) * len(test):,} metric evaluations ...")
+    oracle = OracleKNN(k=DEFAULT_K, andcg=andcg).fit(train)
+    res = evaluate(oracle, test, andcg=andcg, targets=targets, split="test")
+    out["oracle_knn"] = res.mean
+    say(f"  {'oracle_knn (published 0.2918) [ORACLE]':<52} {res.mean:.4f}")
+
+    out["published"] = PUBLISHED
+    return out
+
+
 def main(argv: Sequence[str] | None = None) -> int:
-    """CLI entry point: ``python -m splicr.benchmark [--real]``."""
+    """CLI entry point: ``python -m splicr.benchmark [--real] [--reproduce]``."""
     argv = list(sys.argv[1:] if argv is None else argv)
-    self_test(real="--real" in argv, verbose=True)
+    self_test(real="--real" in argv or "--reproduce" in argv, verbose=True)
+    if "--reproduce" in argv:
+        print("-" * 78)
+        reproduce_published()
     return 0
 
 
