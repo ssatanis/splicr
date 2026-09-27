@@ -135,8 +135,8 @@ LONG_CACHE = os.path.join(PARSED_DIR, "orcs_human_safe_long.parquet")
 #: because two of them (``orcs_prf_rate``, ``orcs_cohit_ppmi``) are honest
 #: negatives that should stay visible rather than be quietly dropped.
 FEATURE_NAMES: list[str] = [
-    "orcs_retrieval_rate",       # PRIMARY: library x drug x text similarity kNN, graded hits
-    "orcs_retrieval_rate_bin",   # same, binary hits instead of graded strength
+    "orcs_retrieval_rate",       # PRIMARY: library x drug x text similarity kNN, binary hits
+    "orcs_retrieval_rate_graded",  # same, SCORE.1-graded hit strength (NEGATIVE RESULT: worse)
     "orcs_libnn_rate",           # library-containment similarity only
     "orcs_text_rate",            # TF-IDF metadata-text similarity only
     "orcs_hit_rate",             # direction-matched global smoothed hit rate (no retrieval)
@@ -151,7 +151,7 @@ FEATURE_NAMES: list[str] = [
 #: Pre-registered configuration of the primary feature, fixed on validation
 #: before any test evaluation.  Chosen as the centre of a stable plateau of the
 #: (cond_mult, text_mult, k) grid rather than the grid argmax.
-PRIMARY = dict(cond_mult=15.0, text_mult=10.0, k=150, eps=1000.0, graded=True)
+PRIMARY = dict(cond_mult=15.0, text_mult=10.0, k=150, eps=1000.0, binary=True)
 NET_LAMBDA = 1.0
 PRF_TOP = 200          # pseudo-positives used by orcs_prf_rate
 PRF_BETA = 1.0
@@ -590,7 +590,7 @@ def _rate(weights: np.ndarray, library: np.ndarray, hits: sparse.csr_matrix,
 
 def _screen_arrays(view: Mapping[str, Any], corpus: ORCSCorpus, query_text_vec,
                    eps: float, cond_mult: float, text_mult: float, k: int | None,
-                   ) -> tuple[list[str], np.ndarray]:
+                   binary: bool = True) -> tuple[list[str], np.ndarray]:
     """Compute every feature for one screen. Returns (gene symbols, values array)."""
     gi = corpus.gene_index
     library = np.array(sorted({gi[g] for g in
@@ -630,17 +630,23 @@ def _screen_arrays(view: Mapping[str, Any], corpus: ORCSCorpus, query_text_vec,
         weights = np.asarray(weights, np.float32)
         return weights if weights.sum() > 0 else compat.copy()
 
+    # `binary` selects which pool is primary. Binary HIT calls win: grading them by
+    # SCORE.1 costs -0.0105 AnDCG@100 on validation, CI [-0.0175, -0.0033], p=0.001,
+    # and loses in every cell of the (cond_mult, text_mult, k) grid. SCORE.1 spans 42
+    # incompatible score types, so the strength ordering is partly noise.
+    H = corpus.hits_bin if binary else corpus.hits
+    H_other = corpus.hits if binary else corpus.hits_bin
     w_primary = safe(_topk(w_full, k))
     out[:, col["orcs_retrieval_rate"]] = _rate(
-        w_primary, library, corpus.hits[direction], M, eps, n_d)
-    out[:, col["orcs_retrieval_rate_bin"]] = _rate(
-        w_primary, library, corpus.hits_bin[direction], M, eps, n_d)
+        w_primary, library, H[direction], M, eps, n_d)
+    out[:, col["orcs_retrieval_rate_graded"]] = _rate(
+        w_primary, library, H_other[direction], M, eps, n_d)
     out[:, col["orcs_libnn_rate"]] = _rate(
-        safe(_topk(w_lib, k)), library, corpus.hits[direction], M, eps, n_d)
+        safe(_topk(w_lib, k)), library, H[direction], M, eps, n_d)
     out[:, col["orcs_text_rate"]] = _rate(
-        safe(_topk(w_text, k)), library, corpus.hits[direction], M, eps, n_d)
+        safe(_topk(w_text, k)), library, H[direction], M, eps, n_d)
     out[:, col["orcs_hit_rate"]] = _rate(
-        safe(w_uniform), library, corpus.hits[direction], M, eps, n_d)
+        safe(w_uniform), library, H[direction], M, eps, n_d)
 
     stratum = (view.get("cleaned_phenotype") or "").strip()
     w_strat = np.where((corpus.stratum == stratum) | (corpus.stratum == ""),
@@ -648,18 +654,18 @@ def _screen_arrays(view: Mapping[str, Any], corpus: ORCSCorpus, query_text_vec,
     if w_strat.sum() <= 0 and STRATUM_SMOOTHING_FALLBACK:
         w_strat = w_uniform
     out[:, col["orcs_hit_rate_stratum"]] = _rate(
-        safe(w_strat), library, corpus.hits[direction], M, eps, n_d)
+        safe(w_strat), library, H[direction], M, eps, n_d)
 
     opposite = {"dec": "inc", "inc": "dec"}.get(direction)
     if opposite is not None:
         out[:, col["orcs_opposite_rate"]] = _rate(
-            w_primary, library, corpus.hits[opposite], M, eps, n_d)
+            w_primary, library, H[opposite], M, eps, n_d)
     out[:, col["orcs_net_rate"]] = (out[:, col["orcs_retrieval_rate"]]
                                     - NET_LAMBDA * out[:, col["orcs_opposite_rate"]])
     out[:, col["orcs_support_log"]] = np.log1p(corpus.support[library])
 
     # ---- pseudo-relevance feedback (reported negative) ----
-    hits_csc = corpus.hits_csc(direction)[:, library]
+    hits_csc = corpus.hits_csc(direction, binary=binary)[:, library]
     norms = np.sqrt(np.asarray(hits_csc.multiply(hits_csc).sum(1)).ravel()) + 1e-6
     base = out[:, col["orcs_retrieval_rate"]]
     top = np.argsort(-base, kind="stable")[:PRF_TOP]
@@ -667,7 +673,7 @@ def _screen_arrays(view: Mapping[str, Any], corpus: ORCSCorpus, query_text_vec,
     pseudo[top] = 1.0 / np.log2(2.0 + np.arange(len(top)))
     sim = (np.asarray(hits_csc @ pseudo).ravel() / norms) / (np.linalg.norm(pseudo) + 1e-9)
     w_prf = safe(_topk(w_primary * np.power(np.maximum(sim, 0.0) + 1e-6, PRF_BETA), k))
-    out[:, col["orcs_prf_rate"]] = _rate(w_prf, library, corpus.hits[direction], M, eps, n_d)
+    out[:, col["orcs_prf_rate"]] = _rate(w_prf, library, H[direction], M, eps, n_d)
 
     # ---- co-hit PPMI against the pseudo-positive seeds (reported negative) ----
     present = (hits_csc > 0).astype(np.float32)
@@ -748,7 +754,7 @@ def orcs_retrieval_features(
     for i, view in enumerate(views):
         symbols, values = _screen_arrays(
             view, corpus, text_sim[i], eps=cfg["eps"], cond_mult=cfg["cond_mult"],
-            text_mult=cfg["text_mult"], k=cfg["k"])
+            text_mult=cfg["text_mult"], k=cfg["k"], binary=cfg["binary"])
         if top_n is not None and len(symbols) > top_n:
             keep = np.argsort(-values[:, primary_col], kind="stable")[:top_n]
             symbols = [symbols[j] for j in keep]
@@ -790,7 +796,7 @@ def rank_genes(
     for i, view in enumerate(views):
         symbols, values = _screen_arrays(
             view, corpus, text_sim[i], eps=cfg["eps"], cond_mult=cfg["cond_mult"],
-            text_mult=cfg["text_mult"], k=cfg["k"])
+            text_mult=cfg["text_mult"], k=cfg["k"], binary=cfg["binary"])
         order = np.argsort(-values[:, col], kind="stable")[:k]
         out[str(view[key])] = [symbols[j] for j in order]
         if progress and (i + 1) % 50 == 0:
@@ -833,7 +839,7 @@ def _self_check(split: str = "validation", bootstrap: int = 20000) -> int:
     for i, view in enumerate(views):
         symbols, values = _screen_arrays(
             view, corpus, text_sim[i], eps=cfg["eps"], cond_mult=cfg["cond_mult"],
-            text_mult=cfg["text_mult"], k=cfg["k"])
+            text_mult=cfg["text_mult"], k=cfg["k"], binary=cfg["binary"])
         if not symbols:
             continue
         for c in range(len(FEATURE_NAMES)):

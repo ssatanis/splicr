@@ -34,8 +34,8 @@ random baseline on the same split is 0.01941)::
     depmap_frac_strong_dependent     0.16929
     depmap_dependency_amount         0.16564
     depmap_mean_dependency           0.16539
-    depmap_lineage_dependency        0.16511
-    depmap_cellline_dependency       0.15624
+    depmap_lineage_dependency        0.16301
+    depmap_cellline_dependency       0.15414
     ceg_v2_core_essential            0.12410
     depmap_common_essential          0.11650
     string_physical_degree           0.11084
@@ -45,27 +45,54 @@ random baseline on the same split is 0.01941)::
     string_functional_degree         0.07169
     ot_neg_loeuf                     0.05204
     literature_mentions_log          0.05089
-    condition_string_proximity       0.04972
+    condition_string_proximity       0.05016
     ot_n_go                          0.04482
-    condition_codependency           0.03886
+    condition_codependency           0.03911
     condition_reactome_overlap       0.03613
     condition_seed_member            0.02483
-    neg_v1_nonessential              0.01981   (indistinguishable from random)
+    neg_v1_nonessential              0.01914   (indistinguishable from random)
+
+``neg_v1_nonessential`` is reported for the raw feature, i.e. ranking Hart
+nonessentials *first*. That is the wrong direction for a dependency screen; the
+feature is emitted un-negated so a downstream model can choose the sign, and its
+standalone number is therefore expected to sit at the random baseline.
 
 The honest headline: **the family's entire usable signal is DepMap breadth of
-essentiality.** Nothing else in it is additive — see the module docstring
-section "What did not work" below and the notes on ``biology_composite``.
+essentiality.** Nothing else in it is additive — see "What did not work" below
+and the notes on ``biology_composite``.
+
+And the harder finding: **the family is redundant with the screen-derived
+frequency prior, not complementary to it.** Fitting a per-gene hit frequency on
+the 1,349 train screens and applying it to validation gives 0.17681, slightly
+*better* than this family's best feature::
+
+    train gene-frequency prior (screen-derived)   0.17681
+    depmap_frac_dependent (zero screen labels)    0.17083
+        paired delta -0.00598, bootstrap CI95 [-0.01200, -0.00022],
+        Wilcoxon p=0.232   -> biology is at best equal, probably slightly worse
+    rank-average of the two                       0.17627
+        paired delta vs the prior alone -0.00054, CI95 [-0.00407, +0.00294]
+        -> the ensemble does NOT beat the prior; the CI straddles zero
+
+Both estimators are ranking essentially the same thing — "genes that are broadly
+essential, and therefore commonly reported as hits" — one from DepMap and one
+from the train screens. So this family is best read as an *independent
+confirmation* that the frequency prior's signal is real biology rather than a
+corpus artefact, and as a label-free substitute usable where no train screens
+exist. It is not, on this evidence, a route to beating the 0.16309 LLM RRF
+ensemble. Something that discriminates *between* screens is still required.
 
 What did not work
 -----------------
-* **Cell-line-specific dependency is worse than the global prior** (0.156 vs
+* **Cell-line-specific dependency is worse than the global prior** (0.154 vs
   0.171), even though 144 of the 218 validation screens match a DepMap line
   with CRISPR data. A single Chronos column is noisy, and AssayBench relevance
   tracks whether a screen *reported* a gene, which favours broadly reproducible
   essentials over line-specific ones.
 * **Seed expansion barely works.** Drug-target seeds resolve for 110/218
   validation screens and text gene mentions for 66/218, but the best expansion
-  (1-hop STRING max-weight) only reaches 0.0497, and random-walk-with-restart,
+  (1-hop STRING max-weight, seeds boosted above their own neighbours) only
+  reaches 0.0502, and random-walk-with-restart,
   Reactome co-membership, GO co-membership and DepMap co-dependency are all
   worse. Seed membership itself is 0.0248, barely above random.
 * **Ontology text matching failed outright.** Exact GO biological-process label
@@ -697,13 +724,17 @@ def match_depmap_model(cell_line: Any) -> str | None:
 def _cellline_dependency(screen: Mapping[str, Any]) -> dict[str, float]:
     """Negated Chronos effect for the screen's own line, with graceful fallback.
 
-    Order: the matched line's own profile -> its lineage mean -> the global
-    ``depmap_frac_dependent`` prior. Measured standalone it is *worse* than the
-    global prior (0.156 vs 0.171); it is kept because it is the right feature to
-    hand a downstream model that can learn when to trust it.
+    Order: the matched line's own profile -> its lineage mean -> the all-lines
+    mean. Every step of that chain is a negated Chronos gene effect, so the
+    feature stays on one scale across screens no matter which step supplied it —
+    falling back to a 0..1 dependency *fraction* here would make the column
+    incomparable between a matched and an unmatched screen.
+
+    Measured standalone it is *worse* than the global ``depmap_frac_dependent``
+    prior (0.154 vs 0.171); it is kept because it is the right feature to hand a
+    downstream model that can learn when to trust it.
     """
     mat, genes, _, _, model_idx = _chronos()
-    _, lineage = _depmap_model_index()
     model = match_depmap_model(screen.get("cell_line"))
     if model in model_idx:
         col = -mat[model_idx[model], :]
@@ -712,13 +743,18 @@ def _cellline_dependency(screen: Mapping[str, Any]) -> dict[str, float]:
 
 
 def _lineage_dependency(screen: Mapping[str, Any]) -> dict[str, float]:
+    """Negated mean Chronos effect across the screen's DepMap lineage.
+
+    Falls back to the all-lines mean (``depmap_mean_dependency``), which is the
+    same quantity averaged over every lineage, so the scale is preserved.
+    """
     _, lineage = _depmap_model_index()
     model = match_depmap_model(screen.get("cell_line"))
     name = lineage.get(model) if model else None
     frames = _lineage_means()
     if name and name in frames.columns:
         return (-frames[name]).fillna(0.0).astype(float).to_dict()
-    return _depmap_gene_priors()["depmap_frac_dependent"]
+    return _depmap_gene_priors()["depmap_mean_dependency"]
 
 
 def _string_proximity(seeds: Mapping[str, float]) -> dict[str, float]:
@@ -768,7 +804,7 @@ def _codependency(seeds: Mapping[str, float]) -> dict[str, float]:
     """Max Pearson correlation of a gene's Chronos profile with any seed's.
 
     Co-essentiality is the standard label-free way to place a gene in the same
-    pathway or complex as a known target. On validation it reaches only 0.0389.
+    pathway or complex as a known target. On validation it reaches only 0.0391.
     """
     if not seeds:
         return {}
@@ -934,8 +970,8 @@ VALIDATION_ANDCG_AT_100: dict[str, float] = {
     "depmap_frac_strong_dependent": 0.16929,
     "depmap_dependency_amount": 0.16564,
     "depmap_mean_dependency": 0.16539,
-    "depmap_lineage_dependency": 0.16511,
-    "depmap_cellline_dependency": 0.15624,
+    "depmap_lineage_dependency": 0.16301,
+    "depmap_cellline_dependency": 0.15414,
     "ceg_v2_core_essential": 0.12410,
     "depmap_common_essential": 0.11650,
     "string_physical_degree": 0.11084,
@@ -945,12 +981,12 @@ VALIDATION_ANDCG_AT_100: dict[str, float] = {
     "string_functional_degree": 0.07169,
     "ot_neg_loeuf": 0.05204,
     "literature_mentions_log": 0.05089,
-    "condition_string_proximity": 0.04972,
+    "condition_string_proximity": 0.05016,
     "ot_n_go": 0.04482,
-    "condition_codependency": 0.03886,
+    "condition_codependency": 0.03911,
     "condition_reactome_overlap": 0.03613,
     "condition_seed_member": 0.02483,
-    "neg_v1_nonessential": 0.01981,
+    "neg_v1_nonessential": 0.01914,
     "biology_composite": 0.17677,
 }
 

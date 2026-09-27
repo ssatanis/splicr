@@ -9,6 +9,45 @@ If we can name the screen's cell line, DepMap hands us a label-free prior over
 which genes matter *in that exact biological system*, which is strictly more
 information than a pan-cancer gene-frequency prior.
 
+What it turned out to be worth
+-----------------------------
+Measured on the 218 AssayBench validation screens, ranking each screen's own
+library by one feature, scored with ``adjusted_ndcg@100``.  Test was never
+loaded.  Random is 0.0202 on this split; the frequency prior is ~0.177.
+
+    dm_effect_lineage_p10   0.17458   <- best single feature (pre-registered)
+    dm_effect_p10           0.17055
+    dm_effect_lineage       0.16860
+    dm_effect_global        0.16698   <- the family with cell-line matching off
+    dm_effect               0.15678   <- the screen's OWN matched cell line
+    dm_pan_essential        0.10888
+    dm_cn_log2              0.02166   (= random; copy number carries nothing here)
+
+Two findings, both paired-tested across the 218 screens:
+
+1. **Matching the exact cell line is significantly harmful.**  ``dm_effect``
+   loses 0.0102 to the pan-cancer mean (bootstrap CI ``[-0.0163, -0.0044]``,
+   Wilcoxon ``p = 6e-3``).  Restricted to the 147 screens that *did* match a cell
+   line exactly, that line's own Chronos row scores 0.0773 against 0.0948 for the
+   lineage mean (``d = -0.0175``, CI ``[-0.0276, -0.0077]``, ``p = 1e-3``).  A
+   single Chronos row is a noisy estimate; averaging over cell lines denoises it.
+   Anything built on this family should use the aggregate, not the matched line.
+
+2. **The left tail over cell lines beats the centre.**  ``dm_effect_p10`` gains
+   0.0036 over the mean (CI ``[+0.0014, +0.0058]``, ``p = 4e-3``), and the same
+   direction and magnitude holds on the 24Q4 release, so it is not a fluke of one
+   Chronos build.  Narrowing that percentile to the screen's own lineage
+   (``dm_effect_lineage_p10``) adds a further 0.0040 on 26Q1, but Wilcoxon puts
+   that at ``p = 0.10`` and it *reverses* on 24Q4 -- treat the lineage refinement
+   as unproven even though it is the best number here.
+
+By stratum the family is one signal wearing five hats: fitness screens 0.471,
+drug response 0.128, host-pathogen 0.020 (= random), and the two 4-screen strata
+are noise.  Within-screen Spearman against relevance is -0.126 on fitness and
+-0.044 on non-fitness for ``dm_effect_p10``; ``dm_pan_essential`` has the highest
+fitness correlation of all (0.175) yet a much worse AnDCG, because a binary flag
+cannot order the genes inside the essential set.
+
 Three signals are separable and are all exposed here:
 
 * **level** -- how essential a gene is in the matched line (``dm_neg_effect``).
@@ -44,6 +83,19 @@ trustworthy first: DepMap's own names, then Cellosaurus ID/synonym -> RRID ->
 ``LNCaP clone FGC``), each retried against progressively de-engineered name
 variants (``HepG2-NTCP1 HBV Cas9`` -> ``HepG2``).  The tier is reported, never
 hidden: see :func:`match_report`.
+
+Coverage, measured:
+
+    validation (218)  cell-line rung 67.4%  lineage rung 31.2%  global rung 1.4%
+    train      (1349) cell-line rung 30.9%  lineage rung 68.1%  global rung 1.0%
+
+Train's low cell-line rung is not a matching failure -- 1116 of 1349 train screens
+match a DepMap name exactly -- it is the leakage guard below deliberately pushing
+697 DepMap-derived screens down to the lineage rung.  195 of 218 validation
+screens resolve to a ``ModelID``; the 23 that do not are the systems DepMap has no
+model for (``HEK293-A``, ``HEK293T``, ``primary melanoma cell line``,
+``hTERT-RPE1``, iPSC/ESC lines), and they fall back to a lineage inferred from
+``cell_type``, which reaches 215 of 218 screens.
 
 Leakage
 -------
@@ -975,6 +1027,39 @@ def resource(
 # --------------------------------------------------------------------------- #
 
 @dataclass
+class ScreenMatrix:
+    """One screen's features as a dense array -- the efficient shape.
+
+    Attributes:
+        dataset_name: the screen's AssayBench ``dataset_name``.
+        match: how its cell line resolved onto DepMap.
+        genes: sorted, deduplicated, metric-normalized symbols -- exactly the
+            screen's own measured library, so any ranking taken from ``values``
+            is library-restricted by construction.
+        values: ``(len(genes), len(feature_names))`` float32, all finite.
+        feature_names: the columns of ``values``.
+    """
+
+    dataset_name: str
+    match: CellLineMatch
+    genes: list[str]
+    values: np.ndarray
+    feature_names: list[str]
+
+    def column(self, name: str) -> np.ndarray:
+        """One feature as a vector aligned to :attr:`genes`."""
+        return self.values[:, self.feature_names.index(name)]
+
+    def as_dict(self) -> dict[str, dict[str, float]]:
+        """``{gene: {feature: value}}`` -- the shape :func:`compute` returns."""
+        names = self.feature_names
+        return {
+            g: dict(zip(names, (float(v) for v in row)))
+            for g, row in zip(self.genes, self.values)
+        }
+
+
+@dataclass
 class ScreenFeatures:
     """Per-screen result of :func:`compute`."""
 
@@ -1019,30 +1104,29 @@ def compute(
         ``condensed`` AnDCG evaluation rewards.  Values are always finite
         Python floats.
 
+    Note:
+        This shape costs roughly 500 000 dict entries for one 18 500-gene
+        fitness library.  For bulk work -- anything over a few dozen screens --
+        use :func:`iter_feature_matrices`, which returns the same numbers as a
+        dense array and is the path :func:`compute` itself is built on.
+
     Raises:
         ValueError: unknown ``release``, ``on_self_measured`` or feature name.
     """
-    if on_self_measured not in ("degrade", "flag", "drop"):
-        raise ValueError(f"on_self_measured must be degrade/flag/drop, got {on_self_measured!r}")
-    names = list(feature_names or FEATURE_NAMES)
-    unknown = [n for n in names if n not in _FEATURE_INDEX]
-    if unknown:
-        raise ValueError(f"unknown feature name(s): {unknown}")
-
     out: dict[str, dict[str, dict[str, float]]] = {}
-    for sf in iter_screen_features(
+    for sm in iter_feature_matrices(
         screens,
         release=release,
         on_self_measured=on_self_measured,
         with_copy_number=with_copy_number,
         with_dependency=with_dependency,
-        feature_names=names,
+        feature_names=feature_names,
     ):
-        out[sf.dataset_name] = sf.features
+        out[sm.dataset_name] = sm.as_dict()
     return out
 
 
-def iter_screen_features(
+def iter_feature_matrices(
     screens: Sequence[Mapping[str, Any]],
     *,
     release: str = DEFAULT_RELEASE,
@@ -1051,11 +1135,28 @@ def iter_screen_features(
     with_dependency: bool = True,
     feature_names: Sequence[str] | None = None,
 ):
-    """Generator form of :func:`compute` that also yields the cell-line match."""
+    """Vectorized core: yield one :class:`ScreenMatrix` per screen.
+
+    This is the path to use for anything that touches more than a handful of
+    screens.  A train-split fitness screen measures ~18 500 genes, so the
+    dict-of-dicts shape :func:`compute` returns costs ~500 k dict entries per
+    screen; the matrix shape is one ``(n_genes, n_features)`` float32 array.
+    :func:`compute` is a thin wrapper over this, so the two can never drift.
+
+    Raises:
+        ValueError: unknown ``release``, ``on_self_measured`` or feature name.
+    """
+    if on_self_measured not in ("degrade", "flag", "drop"):
+        raise ValueError(
+            f"on_self_measured must be degrade/flag/drop, got {on_self_measured!r}"
+        )
     names = list(feature_names or FEATURE_NAMES)
+    unknown = [n for n in names if n not in _FEATURE_INDEX]
+    if unknown:
+        raise ValueError(f"unknown feature name(s): {unknown}")
+
     res = resource(release, with_copy_number, with_dependency)
     norm = res._normalize
-    stats = res.stats
     models = frozenset(res.models)
 
     for screen in screens:
@@ -1070,71 +1171,126 @@ def iter_screen_features(
                     "cell_line" if match.has_crispr
                     else ("lineage" if match.lineage else "global"),
                 )
-
-        eff = res.effect_row(match)
-        dep = res.dependency_row(match)
-        cn = res.copy_number_row(match)
-        lineage_mean = res.lineage_profile(match.lineage) if match.lineage else None
-        lineage_p10 = res.lineage_percentile(match.lineage, 10.0)
-        src = {"cell_line": 2.0, "lineage": 1.0, "global": 0.0}[match.source]
-
-        genes: dict[str, dict[str, float]] = {}
-        for raw in screen["relevance_genes"]:
-            g = norm(raw)
-            if g in genes:
-                continue
-            k = res._gene_pos.get(g)
-            if k is None:
-                genes[g] = _absent_row(names, src)
-                continue
-            e = float(eff[k])
-            if not np.isfinite(e):
-                e = float(stats.mean[k])
-            gmean = float(stats.mean[k])
-            gsd = float(stats.sd[k])
-            lmean = gmean
-            if lineage_mean is not None and np.isfinite(lineage_mean[k]):
-                lmean = float(lineage_mean[k])
-            d = float(dep[k]) if np.isfinite(dep[k]) else float("nan")
-            c = float(cn[k]) if np.isfinite(cn[k]) else float("nan")
-            frac = float(stats.frac_dependent[k])
-            row = {
-                "dm_effect": e,
-                "dm_neg_effect": -e,
-                "dm_dep_prob": d if np.isfinite(d) else 0.0,
-                "dm_effect_source": src,
-                "dm_effect_lineage": lmean,
-                "dm_effect_global": gmean,
-                "dm_effect_median": float(stats.median[k]),
-                "dm_effect_p10": float(stats.p10[k]),
-                "dm_effect_p25": float(stats.p25[k]),
-                "dm_effect_lineage_p10": float(lineage_p10[k]),
-                "dm_effect_min": float(stats.minimum[k]),
-                "dm_effect_sd": gsd,
-                "dm_effect_skew": float(stats.skew[k]),
-                "dm_effect_shrunk": 0.6 * lmean + 0.4 * gmean,
-                "dm_selective": gmean - e,
-                "dm_selective_lineage": lmean - e,
-                "dm_effect_z": (e - gmean) / gsd if gsd > 1e-6 else 0.0,
-                "dm_pan_essential": float(stats.pan_essential[k]),
-                "dm_frac_dependent": frac,
-                "dm_dep_prob_global": float(stats.dep_prob_mean[k]),
-                "dm_selectivity_score": (-e) * (1.0 - frac),
-                "dm_cn_log2": c if np.isfinite(c) else 1.0,
-                "dm_cn_loss": 1.0 if np.isfinite(c) and c < 0.7 else 0.0,
-                "dm_cn_amp": 1.0 if np.isfinite(c) and c > 1.3 else 0.0,
-                "dm_in_depmap": 1.0,
-            }
-            genes[g] = {n: row[n] for n in names}
-        yield ScreenFeatures(str(screen.get("dataset_name")), match, genes)
+        genes, values = _screen_matrix(res, match, screen["relevance_genes"], names)
+        yield ScreenMatrix(
+            dataset_name=str(screen.get("dataset_name")),
+            match=match,
+            genes=genes,
+            values=values,
+            feature_names=names,
+        )
 
 
-def _absent_row(names: Sequence[str], src: float) -> dict[str, float]:
-    """Feature row for a gene DepMap never measured.  Chronos 0 = no effect."""
-    zero = {n: 0.0 for n in FEATURE_NAMES}
-    zero["dm_effect_source"] = src
-    zero["dm_cn_log2"] = 1.0          # neutral diploid
-    return {n: zero[n] for n in names}
+def _screen_matrix(
+    res: "DepMapResource",
+    match: CellLineMatch,
+    relevance_genes: Sequence[str],
+    names: Sequence[str],
+) -> tuple[list[str], np.ndarray]:
+    """``(sorted unique normalized genes, (n_genes, len(names)) float32)``.
+
+    Genes are returned sorted so the output is independent of the order the
+    screen happened to list its library in, which is what makes the whole family
+    deterministic.  A gene DepMap never measured gets an all-zero row apart from
+    ``dm_effect_source`` and the neutral-diploid ``dm_cn_log2`` -- Chronos 0
+    means "knocking this out does nothing", which is the honest default.
+    """
+    norm = res._normalize
+    stats = res.stats
+    genes = sorted({norm(g) for g in relevance_genes})
+    n = len(genes)
+    pos = res._gene_pos
+    idx = np.fromiter((pos.get(g, -1) for g in genes), dtype=np.int64, count=n)
+    ok = idx >= 0
+    gi = idx[ok]
+
+    src = {"cell_line": 2.0, "lineage": 1.0, "global": 0.0}[match.source]
+    out = np.zeros((n, len(names)), dtype=np.float32)
+    out[:, [i for i, nm in enumerate(names) if nm == "dm_effect_source"]] = src
+    for i, nm in enumerate(names):
+        if nm == "dm_cn_log2":
+            out[:, i] = 1.0
+    if gi.size == 0:
+        return genes, out
+
+    gmean = stats.mean[gi]
+    gsd = stats.sd[gi]
+    frac = stats.frac_dependent[gi]
+
+    eff = res.effect_row(match)[gi]
+    eff = np.where(np.isfinite(eff), eff, gmean)
+
+    lineage_mean = res.lineage_profile(match.lineage) if match.lineage else None
+    if lineage_mean is None:
+        lmean = gmean
+    else:
+        lm = lineage_mean[gi]
+        lmean = np.where(np.isfinite(lm), lm, gmean)
+
+    dep = res.dependency_row(match)[gi]
+    dep_ok = np.isfinite(dep)
+    cn = res.copy_number_row(match)[gi]
+    cn_ok = np.isfinite(cn)
+    lin_p10 = res.lineage_percentile(match.lineage, 10.0)[gi]
+
+    col: dict[str, np.ndarray] = {
+        "dm_effect": eff,
+        "dm_neg_effect": -eff,
+        "dm_dep_prob": np.where(dep_ok, dep, 0.0),
+        "dm_effect_source": np.full(gi.size, src, dtype=np.float32),
+        "dm_effect_lineage": lmean,
+        "dm_effect_global": gmean,
+        "dm_effect_median": stats.median[gi],
+        "dm_effect_p10": stats.p10[gi],
+        "dm_effect_p25": stats.p25[gi],
+        "dm_effect_lineage_p10": lin_p10,
+        "dm_effect_min": stats.minimum[gi],
+        "dm_effect_sd": gsd,
+        "dm_effect_skew": stats.skew[gi],
+        "dm_effect_shrunk": 0.6 * lmean + 0.4 * gmean,
+        "dm_selective": gmean - eff,
+        "dm_selective_lineage": lmean - eff,
+        "dm_effect_z": np.where(gsd > 1e-6, (eff - gmean) / np.where(gsd > 1e-6, gsd, 1.0), 0.0),
+        "dm_pan_essential": stats.pan_essential[gi],
+        "dm_frac_dependent": frac,
+        "dm_dep_prob_global": stats.dep_prob_mean[gi],
+        "dm_selectivity_score": (-eff) * (1.0 - frac),
+        "dm_cn_log2": np.where(cn_ok, cn, 1.0),
+        "dm_cn_loss": (cn_ok & (cn < 0.7)).astype(np.float32),
+        "dm_cn_amp": (cn_ok & (cn > 1.3)).astype(np.float32),
+        "dm_in_depmap": np.ones(gi.size, dtype=np.float32),
+    }
+    for i, nm in enumerate(names):
+        out[ok, i] = col[nm]
+    return genes, out
+
+
+#: Alias for :func:`compute`, matching the ``transform`` verb the other families
+#: in this package use.  There is deliberately no ``fit``: this family is derived
+#: entirely from DepMap, so it reads no AssayBench labels from any split and has
+#: nothing to learn from train.
+transform = compute
+
+
+def iter_screen_features(
+    screens: Sequence[Mapping[str, Any]],
+    *,
+    release: str = DEFAULT_RELEASE,
+    on_self_measured: str = "degrade",
+    with_copy_number: bool = True,
+    with_dependency: bool = True,
+    feature_names: Sequence[str] | None = None,
+):
+    """Generator form of :func:`compute` that also yields the cell-line match."""
+    for sm in iter_feature_matrices(
+        screens,
+        release=release,
+        on_self_measured=on_self_measured,
+        with_copy_number=with_copy_number,
+        with_dependency=with_dependency,
+        feature_names=feature_names,
+    ):
+        yield ScreenFeatures(sm.dataset_name, sm.match, sm.as_dict())
 
 
 def match_report(
@@ -1226,24 +1382,22 @@ def per_screen_andcg(
 
     names = list(names or FEATURE_NAMES)
     scorer = AnDCG(k=k)
-    feats = compute(screens, release=release, feature_names=names)
     disc = 1.0 / np.log2(np.arange(2, k + 2))
+    by_name = {str(s.get("dataset_name")): s for s in screens}
 
     order_names: list[str] = []
     scores: dict[tuple[str, str], list[float]] = {
         (n, d): [] for n in names for d in ("desc", "asc")
     }
     checked = 0
-    for screen in screens:
-        key = str(screen.get("dataset_name"))
-        per_gene = feats.get(key)
-        if not per_gene:
+    for sm in iter_feature_matrices(screens, release=release, feature_names=names):
+        key = sm.dataset_name
+        genes, mat = sm.genes, sm.values
+        if not genes:
             continue
-        target = scorer.target(screen)
-        genes = sorted(per_gene)                      # deterministic tie-break
+        target = scorer.target(by_name[key])
         rel = np.fromiter((target.relevance.get(g, 0.0) for g in genes),
                           dtype=np.float64, count=len(genes))
-        mat = np.array([[per_gene[g][n] for n in names] for g in genes], dtype=np.float64)
         order_names.append(key)
         tie = np.arange(len(genes))
         for j, n in enumerate(names):
@@ -1309,11 +1463,28 @@ def paired_delta(a: np.ndarray, b: np.ndarray, *, n_boot: int = 20000, seed: int
     idx = rng.integers(0, d.size, size=(n_boot, d.size))
     boot = d[idx].mean(axis=1)
     lo, hi = np.percentile(boot, [2.5, 97.5])
-    try:
-        p = float(wilcoxon(a, b).pvalue)
-    except ValueError:      # all differences zero
+    if not np.any(d):               # identical vectors: no difference to test
+        return 0.0, 0.0, 0.0, 1.0
+    with _quiet_nan():
+        try:
+            p = float(wilcoxon(a, b).pvalue)
+        except ValueError:          # all non-zero differences tied
+            p = 1.0
+    if not np.isfinite(p):
         p = 1.0
     return float(d.mean()), float(lo), float(hi), p
+
+
+def is_significant(delta: float, lo: float, hi: float, p: float, alpha: float = 0.05) -> bool:
+    """Whether a paired delta counts as a real improvement.
+
+    Deliberately strict: the bootstrap CI must exclude zero **and** Wilcoxon must
+    agree at ``alpha``.  The two disagree more often than is comfortable on 218
+    screens -- ``dm_frac_dependent`` has a CI of ``[-0.017, -0.001]`` with
+    Wilcoxon ``p = 0.42`` -- and a claim only one of them supports is not a
+    finding.
+    """
+    return (lo > 0 or hi < 0) and p < alpha
 
 
 # --------------------------------------------------------------------------- #
@@ -1357,30 +1528,48 @@ def _self_check() -> int:
         best_vec = per[(n, "desc")] if d >= a else per[(n, "asc")]
         print(f"{n:<24}{d:>9.5f}{a:>9.5f}{max(d, a):>9.5f}{int((best_vec > 0).sum()):>6}")
 
-    head = per[(HEADLINE_FEATURE, HEADLINE_DIRECTION)]
     base = per[(BASELINE_FEATURE, BASELINE_DIRECTION)]
-    delta, lo, hi, p = paired_delta(head, base)
-    print(f"\npre-registered headline: {HEADLINE_FEATURE} ({HEADLINE_DIRECTION})")
-    print(f"  validation AnDCG@100 = {head.mean():.5f}  over {len(keys)} screens")
-    print(f"  vs {BASELINE_FEATURE} ({base.mean():.5f}, the same family with the "
-          f"cell-line match switched off):")
-    print(f"  delta {delta:+.5f}  bootstrap CI95 [{lo:+.5f}, {hi:+.5f}]  "
-          f"Wilcoxon p = {p:.2e}  -> "
-          f"{'REAL (CI excludes 0)' if lo > 0 or hi < 0 else 'NOT SIGNIFICANT'}")
 
-    cell = per[("dm_effect", "asc")]
-    delta, lo, hi, p = paired_delta(cell, base)
-    print(f"\nhonest counter-result: dm_effect (the screen's OWN matched cell line) "
-          f"= {cell.mean():.5f}")
-    print(f"  delta vs {BASELINE_FEATURE} {delta:+.5f}  CI95 [{lo:+.5f}, {hi:+.5f}]  "
-          f"Wilcoxon p = {p:.2e}  -> exact cell-line matching is significantly WORSE")
+    def line(label: str, vec: np.ndarray, against: np.ndarray = base) -> None:
+        delta, lo, hi, p = paired_delta(vec, against)
+        verdict = "REAL" if is_significant(delta, lo, hi, p) else "not significant"
+        print(f"  {label:<42}{vec.mean():.5f}  d={delta:+.5f}  "
+              f"CI95 [{lo:+.5f},{hi:+.5f}]  p={p:.1e}  {verdict}")
+
+    head = per[(HEADLINE_FEATURE, HEADLINE_DIRECTION)]
+    print(f"\npre-registered headline: {HEADLINE_FEATURE} ({HEADLINE_DIRECTION}), "
+          f"release {DEFAULT_RELEASE}")
+    print(f"  standalone validation AnDCG@100 = {head.mean():.5f}  over {len(keys)} screens")
+    print(f"\nall deltas are against {BASELINE_FEATURE} = {base.mean():.5f}, which is this "
+          f"family\n  with the cell-line match switched off. Significance needs BOTH the "
+          f"bootstrap\n  CI to exclude zero and Wilcoxon p < 0.05.")
+    line(HEADLINE_FEATURE, head)
+    line("dm_effect_p10 (pan-cancer left tail)", per[("dm_effect_p10", "asc")])
+    line("dm_effect_lineage (lineage mean)", per[("dm_effect_lineage", "asc")])
+    line("dm_effect (the screen's OWN cell line)", per[("dm_effect", "asc")])
+
+    print("\nthe two results that matter:")
+    d1 = paired_delta(per[("dm_effect", "asc")], base)
+    print(f"  1. Matching the exact cell line is significantly HARMFUL: "
+          f"{d1[0]:+.5f} (p={d1[3]:.1e}).")
+    print(f"     Within the {sum(1 for s in val if resolver().match(s, frozenset(resource(DEFAULT_RELEASE, False, False).models)).source == 'cell_line')} "
+          f"screens that matched a cell line exactly, using that line's own")
+    print(f"     Chronos row loses to the pan-cancer mean. The family's value is a "
+          f"left tail\n     over cell lines, not the value in the screen's own line.")
+    d2 = paired_delta(per[("dm_effect_p10", "asc")], base)
+    print(f"  2. The 10th-percentile effect beats the mean: {d2[0]:+.5f} (p={d2[3]:.1e}), "
+          f"and this\n     holds on both Chronos releases.")
+    d3 = paired_delta(head, per[("dm_effect_p10", "asc")])
+    print(f"  Caveat: narrowing the percentile to the screen's own lineage adds "
+          f"{d3[0]:+.5f} on\n     {DEFAULT_RELEASE} (CI [{d3[1]:+.5f},{d3[2]:+.5f}], "
+          f"Wilcoxon p={d3[3]:.2f} -- the tests disagree) and\n     REVERSES on the 24Q4 "
+          f"release. Treat the lineage refinement as unproven.")
 
     best = ranked[0]
     bd = "desc" if means[best]["desc"] >= means[best]["asc"] else "asc"
     if best != HEADLINE_FEATURE:
         print(f"\nnote: the best feature on this run is {best} ({bd}) at "
-              f"{max(means[best].values()):.5f}; the headline stays as "
-              f"pre-registered.")
+              f"{max(means[best].values()):.5f}; the headline stays as pre-registered.")
     return 0
 
 

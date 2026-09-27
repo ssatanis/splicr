@@ -79,7 +79,11 @@ DATASETS: dict[str, Dataset] = {
         # each a few hundred KB, and the per-file overhead over HTTP would cost
         # more than the pruning saves. Sorted on model_id instead, so row-group
         # statistics prune just as well from a handful of larger files.
-        "copy_number", (), ("model_id", "gene_symbol"),
+        # No sort either. UNPIVOT emits one output row per input cell in input
+        # order, so the result is already model-major, which is the only order
+        # that matters for pushdown. Asking DuckDB to sort it anyway forces all
+        # 74 million rows to be materialised at once and it runs out of memory.
+        "copy_number", (), (),
         "DepMap relative copy number per gene per cell line. Linear ratio, not log2.",
     ),
     "screen_hits": Dataset(
@@ -111,6 +115,12 @@ def connect(read_only_remote: bool = True):
 
     conn = duckdb.connect(":memory:")
     conn.execute("install httpfs; load httpfs;")
+    # Streaming settings for the wide reference matrices. Insertion order costs
+    # memory proportional to the whole result when a COPY is fed by a 74 million
+    # row UNPIVOT, and nothing downstream depends on it.
+    conn.execute("set preserve_insertion_order = false")
+    conn.execute(f"set memory_limit = '{os.environ.get('SPLICR_DUCKDB_MEMORY', '6GB')}'")
+    conn.execute("set temp_directory = '/tmp/splicr-duckdb'")
 
     account = os.environ.get("R2_ACCOUNT_ID", "")
     key_id = os.environ.get("R2_ACCESS_KEY_ID", "")

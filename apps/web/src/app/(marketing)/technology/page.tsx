@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { ArrowUpRight } from "lucide-react";
 
 import { MarketingNav } from "@/components/marketing/nav";
 import { CtaSection } from "@/components/marketing/sections/cta";
@@ -10,11 +9,10 @@ import { Reveal, Stagger, StaggerItem } from "@/components/ui/reveal";
 import {
   benchmark,
   benchmarkCite,
-  comparison,
   comparisonCaveats,
   discoveryQuadrants,
   modules,
-  verifiedClaims,
+  proofPoints,
 } from "@/lib/content";
 import { Cite } from "@/components/ui/cite";
 import { cn } from "@/lib/utils";
@@ -224,31 +222,55 @@ export default function TechnologyPage() {
               <Cite cite={benchmarkCite} prefix="Source:" />
             </p>
           </div>
-          <Stagger className="space-y-3">
-            {benchmark.map((b) => (
-              <StaggerItem key={b.label} className="grid grid-cols-[1fr_auto] gap-4 items-center">
-                <div>
-                  <div className="text-sm text-white/90 mb-1.5">{b.label}</div>
-                  <div className="h-2.5 rounded-full bg-white/10 overflow-hidden">
+          <Stagger className="space-y-5">
+            {benchmark.map((b) => {
+              const ours = b.tone === "orange";
+              return (
+                <StaggerItem key={b.label}>
+                  <div className="flex items-baseline justify-between gap-6 mb-2">
+                    <span
+                      className={cn(
+                        "text-sm leading-snug",
+                        ours ? "text-white font-medium" : "text-white/80",
+                      )}
+                    >
+                      {b.label}
+                    </span>
+                    <span
+                      className={cn(
+                        "tabular-nums tracking-tight shrink-0",
+                        ours ? "text-2xl text-orange-400 font-medium" : "text-lg text-white/90",
+                      )}
+                    >
+                      {b.value.toFixed(3)}
+                    </span>
+                  </div>
+                  {/* Widths are a share of the oracle row, which is the ceiling
+                      this whole chart is measured against. A 0 to 1 axis would
+                      render every bar as a sliver and hide the differences the
+                      section is about. */}
+                  <div className="h-2 rounded-full bg-white/10 overflow-hidden">
                     <div
                       className={cn(
                         "h-full rounded-full",
-                        b.tone === "orange" && "bg-orange-500",
-                        b.tone === "teal" && "bg-cyan-500",
-                        b.tone === "muted" && "bg-white/40",
+                        ours && "bg-orange-500",
+                        b.tone === "teal" && "bg-cyan-400",
+                        b.tone === "muted" && "bg-white/30",
                       )}
-                      style={{ width: `${(b.value / 0.3) * 100}%` }}
+                      style={{ width: `${(b.value / 0.292) * 100}%` }}
                     />
                   </div>
-                </div>
-                <div className="text-lg font-medium tabular-nums w-14 text-right">{b.value.toFixed(3)}</div>
-              </StaggerItem>
-            ))}
+                </StaggerItem>
+              );
+            })}
+            <li className="pt-2 text-xs text-white/70 list-none">
+              Higher is better. Bars are drawn against the oracle row.
+            </li>
           </Stagger>
         </div>
       </section>
 
-      {/* What we measured that the alternatives do not do */}
+      {/* Four numbers, each legible without a background in screening */}
       <section className="py-16 md:py-24 relative overflow-hidden">
         <AccentCoil className="absolute -right-24 top-0 w-[520px] h-[520px] opacity-90 hidden lg:block" />
         <div className="container-x relative">
@@ -257,86 +279,42 @@ export default function TechnologyPage() {
               eyebrow="What we measured"
               title={
                 <>
-                  Seven things we can
+                  Four numbers,
                   <br />
-                  show you the number for.
+                  checked against someone else.
                 </>
               }
-              body="Each of these is reproducible from this codebase, and the file that produces it is named. Where a figure comes from one screen we say so, because one screen is one screen."
+              body="Not our own benchmarks. Each of these is measured against a published screen or a published method, so it can be disagreed with."
             />
           </Reveal>
-          <ol className="mt-12 divide-y divide-line border-y border-line">
-            {verifiedClaims.map((c, i) => (
-              <Reveal key={c.id} delay={0.04 * i}>
-                <li className="grid md:grid-cols-[1fr_1.6fr] gap-4 md:gap-10 py-6">
-                  <h3 className="text-ink font-medium leading-snug">{c.claim}</h3>
-                  <div>
-                    <p className="text-body leading-relaxed">{c.measured}</p>
-                    <p className="mt-2 text-sm text-muted font-mono">{c.checkedIn}</p>
+
+          <div className="mt-14 grid sm:grid-cols-2 gap-5">
+            {proofPoints.map((p, i) => (
+              <Reveal key={p.id} delay={0.05 * i}>
+                <article className="h-full card-line p-8 flex flex-col">
+                  <div className="flex items-baseline gap-3">
+                    <span className="font-serif text-ink leading-none text-[clamp(2.6rem,5vw,3.6rem)]">
+                      {p.figure}
+                    </span>
+                    <span className="text-sm text-muted">{p.scale}</span>
                   </div>
-                </li>
-              </Reveal>
-            ))}
-          </ol>
-          <div className="mt-10 flex items-center gap-4">
-            <a href="/pipeline" className="inline-flex items-center gap-2 text-ink underline underline-offset-4">
-              Read the full pipeline <ArrowUpRight className="w-4 h-4" />
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* The alternatives, each on its own terms */}
-      <section className="py-16 md:py-24 bg-mist-soft">
-        <div className="container-x">
-          <Reveal>
-            <SectionHeading
-              eyebrow="The alternatives"
-              title={
-                <>
-                  What else a lab
-                  <br />
-                  would reasonably use.
-                </>
-              }
-              body="Most of these are free, and three of them run inside our own pipeline. The point of listing what each one is good at is that it is the only way the previous section means anything."
-            />
-          </Reveal>
-
-          {/* Cards rather than a four-column table: the same content reflows to
-              one column on a phone without changing markup, so the row and
-              field association a table would carry is not something a screen
-              reader loses at a breakpoint. Each field keeps its own <dt>, so
-              "Good at" is read out with its answer either way. */}
-          <div className="mt-14 grid md:grid-cols-2 xl:grid-cols-3 gap-5">
-            {comparison.map((row, i) => (
-              <Reveal key={row.id} delay={0.03 * i}>
-                <article className="h-full rounded-[1.5rem] bg-white shadow-card p-7 flex flex-col">
-                  <div className="eyebrow eyebrow-orange">{row.kind}</div>
-                  <h3 className="mt-3 text-xl font-medium text-ink tracking-tight">{row.name}</h3>
-                  <dl className="mt-5 space-y-4 text-sm leading-relaxed flex-1">
-                    <div>
-                      <dt className="text-ink font-medium">Good at</dt>
-                      <dd className="mt-1 text-body">{row.good}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-ink font-medium">Does not do</dt>
-                      <dd className="mt-1 text-body">{row.gap}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-ink font-medium">Cost</dt>
-                      <dd className="mt-1 text-body">{row.cost}</dd>
-                    </div>
-                  </dl>
-                  <p className="mt-6 pt-4 border-t border-line text-sm text-muted">
-                    <Cite cite={row.cite} />
-                  </p>
+                  <h3 className="mt-6 text-lg text-ink font-medium leading-snug">{p.title}</h3>
+                  <p className="mt-2.5 text-body leading-relaxed">{p.body}</p>
                 </article>
               </Reveal>
             ))}
           </div>
+
+          <Reveal delay={0.1}>
+            <div className="mt-10">
+              <LinkButton href="/pipeline" tone="ghost" icon="none">
+                How the pipeline works
+              </LinkButton>
+            </div>
+          </Reveal>
         </div>
       </section>
+
 
       {/* Where the other tool is the right answer */}
       <section className="py-16 md:py-24 bg-teal-800 text-white">
