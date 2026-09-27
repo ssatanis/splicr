@@ -1,0 +1,48 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.*
+
+# next.js
+.next/
+out/
+build/
+next-env.d.ts
+*.tsbuildinfo
+
+# env
+.env
+.env.*
+!.env.example
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+dist/
+*.egg-info/
+
+# downloaded reference data: large, and some sources forbid redistribution
+data/references/
+data/atlas/
+data/cache/
+*.fastq
+*.fastq.gz
+*.fq.gz
+*.parquet
+
+# supabase local
+supabase/.branches
+supabase/.temp
+
+# misc
+.DS_Store
+*.pem
+*.log
+.vercel
+.idea
+.vscode/*
+!.vscode/extensions.json
+coverage/

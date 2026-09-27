@@ -1,0 +1,576 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------
+   SplicR design tokens
+   Colors were sampled from the reference design set:
+   teal #174F62 · orange #F87315 · cyan #07B6D3 · peach #FDD7A9 · mist #E2E7EF
+------------------------------------------------------------------- */
+@theme {
+  --font-sans: var(--font-outfit), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+  --color-teal-950: #0b2f3b;
+  --color-teal-900: #113d4c;
+  --color-teal-800: #174f62;
+  --color-teal-700: #1a606f;
+  --color-teal-600: #2b7a8a;
+  --color-teal-500: #3f95a6;
+  --color-teal-200: #bfd8de;
+  --color-teal-100: #dbe9ed;
+  --color-teal-50: #eef5f7;
+
+  --color-orange-700: #c8560d;
+  --color-orange-600: #e5650c;
+  --color-orange-500: #f87315;
+  --color-orange-400: #f9904a;
+  --color-orange-300: #fbb07e;
+  --color-orange-100: #fde3cc;
+  --color-orange-50: #fff3e8;
+
+  --color-cyan-700: #05819a;
+  --color-cyan-600: #069bb3;
+  --color-cyan-500: #07b6d3;
+  --color-cyan-400: #38c8df;
+  --color-cyan-100: #d5f4f9;
+  --color-cyan-50: #ecfafc;
+
+  --color-peach: #fdd7a9;
+  --color-peach-soft: #fee8c9;
+  --color-cream: #fff6ea;
+  --color-mist: #e2e7ef;
+  --color-mist-soft: #eef1f5;
+  --color-canvas: #f6f8fa;
+  --color-white: #ffffff;
+  --color-ink: #174f62;
+  --color-body: #4f6470;
+  --color-muted: #848d9a;
+  --color-line: #e6ebef;
+  --color-line-strong: #d3dbe1;
+
+  --radius-sheet: 2rem;
+  --radius-card: 1.5rem;
+  --radius-pill: 999px;
+
+  --shadow-soft: 0 10px 40px -12px rgb(23 79 98 / 0.18);
+  --shadow-card: 0 1px 2px rgb(23 79 98 / 0.04), 0 8px 24px -12px rgb(23 79 98 / 0.14);
+  --shadow-float: 0 24px 60px -20px rgb(23 79 98 / 0.35);
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root {
+  --sheet-margin: 0.75rem;
+  color-scheme: light;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --sheet-margin: 1.25rem;
+  }
+}
+
+/* Base element styles must live in @layer base so Tailwind utilities such as
+   text-white can override them. Unlayered rules would win over layered
+   utilities and make headings disappear on dark backgrounds. */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--color-peach);
+    color: var(--color-body);
+    font-family: var(--font-sans);
+    font-weight: 300;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    overflow-wrap: break-word;
+    color: var(--color-ink);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+
+  strong,
+  b {
+    font-weight: 500;
+  }
+
+  ::selection {
+    background: var(--color-orange-500);
+    color: white;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+@layer components {
+  .sheet {
+    background: white;
+    border-radius: var(--radius-sheet);
+    margin: var(--sheet-margin);
+    overflow: clip;
+    position: relative;
+  }
+
+  .sheet-dark {
+    background: var(--color-teal-800);
+    color: white;
+  }
+
+  .sheet-dark h1,
+  .sheet-dark h2,
+  .sheet-dark h3,
+  .sheet-dark h4 {
+    color: white;
+  }
+
+  .container-x {
+    width: 100%;
+    max-width: 1400px;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+
+  @media (min-width: 768px) {
+    .container-x {
+      padding-inline: 2.5rem;
+    }
+  }
+
+  .eyebrow {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-cyan-600);
+  }
+
+  .eyebrow-orange {
+    color: var(--color-orange-500);
+  }
+
+  .eyebrow-ink {
+    color: var(--color-ink);
+  }
+
+  .display {
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 0.98;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: var(--radius-pill);
+    padding: 0.9rem 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 400;
+    line-height: 1;
+    white-space: nowrap;
+    transition:
+      transform 0.25s var(--ease-out-soft),
+      background-color 0.2s ease,
+      color 0.2s ease,
+      box-shadow 0.25s ease;
+    cursor: pointer;
+  }
+
+  .btn:hover {
+    transform: translateY(-1px);
+  }
+
+  .btn:active {
+    transform: translateY(0);
+  }
+
+  .btn-orange {
+    background: var(--color-orange-500);
+    color: white;
+  }
+
+  .btn-orange:hover {
+    background: var(--color-orange-600);
+  }
+
+  .btn-cyan {
+    background: var(--color-cyan-500);
+    color: white;
+  }
+
+  .btn-cyan:hover {
+    background: var(--color-cyan-600);
+  }
+
+  .btn-teal {
+    background: var(--color-teal-800);
+    color: white;
+  }
+
+  .btn-teal:hover {
+    background: var(--color-teal-900);
+  }
+
+  .btn-white {
+    background: white;
+    color: var(--color-ink);
+  }
+
+  .btn-white:hover {
+    background: var(--color-cream);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--color-ink);
+    border: 1px solid var(--color-line-strong);
+  }
+
+  .btn-ghost:hover {
+    background: var(--color-mist-soft);
+  }
+
+  .btn-sm {
+    padding: 0.65rem 1.1rem;
+    font-size: 0.85rem;
+  }
+
+  .btn-lg {
+    padding: 1.1rem 1.9rem;
+    font-size: 1.05rem;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: var(--radius-pill);
+    background: var(--color-cream);
+    color: var(--color-ink);
+    font-size: 0.8rem;
+    font-weight: 400;
+    padding: 0.4rem 0.85rem;
+  }
+
+  .chip-dot::before {
+    content: "";
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 999px;
+    background: var(--color-orange-500);
+  }
+
+  .card {
+    background: white;
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  .card-line {
+    background: white;
+    border-radius: var(--radius-card);
+    border: 1px solid var(--color-line);
+  }
+
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-line-strong);
+    color: var(--color-ink);
+    background: white;
+    transition:
+      background-color 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .icon-btn:hover {
+    background: var(--color-mist-soft);
+    transform: translateY(-1px);
+  }
+
+  .underline-input {
+    width: 100%;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--color-line-strong);
+    padding: 0.7rem 0;
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--color-ink);
+    outline: none;
+    transition: border-color 0.2s ease;
+  }
+
+  .underline-input::placeholder {
+    color: var(--color-ink);
+    opacity: 0.55;
+  }
+
+  .underline-input:focus {
+    border-bottom-color: var(--color-cyan-500);
+  }
+
+  .label-sm {
+    font-size: 0.8rem;
+    color: var(--color-muted);
+    font-weight: 400;
+  }
+
+  /* Glowing orb used in the "science" and "pipeline" sections */
+  .orb {
+    position: relative;
+    border-radius: 999px;
+    background:
+      radial-gradient(circle at 50% 50%, rgb(248 115 21 / 0.95) 0%, rgb(248 115 21 / 0.55) 28%, rgb(23 79 98 / 0.9) 62%, var(--color-teal-900) 100%);
+    box-shadow:
+      inset 0 0 40px rgb(0 0 0 / 0.35),
+      0 30px 60px -30px rgb(0 0 0 / 0.6);
+  }
+
+  .orb::after {
+    content: "";
+    position: absolute;
+    inset: 24%;
+    border-radius: 999px;
+    border: 2px dashed rgb(255 255 255 / 0.85);
+  }
+
+  .orb-cyan {
+    background:
+      radial-gradient(circle at 50% 50%, rgb(7 182 211 / 0.95) 0%, rgb(7 182 211 / 0.5) 28%, rgb(23 79 98 / 0.9) 62%, var(--color-teal-900) 100%);
+  }
+
+  /* Marquee rows */
+  .marquee {
+    display: flex;
+    overflow: hidden;
+    user-select: none;
+    gap: 3rem;
+    mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+  }
+
+  .marquee-track {
+    display: flex;
+    flex-shrink: 0;
+    gap: 3rem;
+    min-width: 100%;
+    animation: marquee 48s linear infinite;
+  }
+
+  .marquee-reverse .marquee-track {
+    animation-direction: reverse;
+  }
+
+  .marquee:hover .marquee-track {
+    animation-play-state: paused;
+  }
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(calc(-100% - 3rem));
+    }
+  }
+
+  /* Vertical dots pager (decorative, from the reference layouts) */
+  .dots {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .dots > span {
+    width: 0.35rem;
+    height: 0.35rem;
+    border-radius: 999px;
+    background: var(--color-line-strong);
+  }
+
+  .dots > span:first-child {
+    background: var(--color-orange-500);
+  }
+
+  /* Dashboard */
+  .dash-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.6rem;
+    color: rgb(255 255 255 / 0.66);
+    font-size: 0.875rem;
+    position: relative;
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease;
+  }
+
+  .dash-nav-link:hover {
+    background: rgb(255 255 255 / 0.07);
+    color: white;
+  }
+
+  .dash-nav-link[data-active="true"] {
+    background: rgb(255 255 255 / 0.11);
+    color: white;
+  }
+
+  .dash-nav-link[data-active="true"]::before {
+    content: "";
+    position: absolute;
+    left: -0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 1.1rem;
+    border-radius: 999px;
+    background: var(--color-orange-500);
+  }
+
+  .stat-num {
+    font-size: 2.25rem;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    color: var(--color-ink);
+    line-height: 1;
+  }
+
+  .scroll-cue {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 2.4rem;
+    border-radius: 999px;
+    border: 1.5px solid currentColor;
+    opacity: 0.7;
+    animation: cue 2.2s ease-in-out infinite;
+  }
+
+  @keyframes cue {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(6px);
+    }
+  }
+
+  .table-base {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+
+  .table-base th {
+    text-align: left;
+    font-weight: 500;
+    color: var(--color-muted);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--color-line);
+    white-space: nowrap;
+  }
+
+  .table-base td {
+    padding: 0.7rem 0.75rem;
+    border-bottom: 1px solid var(--color-line);
+    color: var(--color-ink);
+    vertical-align: middle;
+  }
+
+  .table-base tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .progress-track {
+    height: 0.55rem;
+    border-radius: 999px;
+    background: var(--color-mist-soft);
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 999px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track,
+  .scroll-cue {
+    animation: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Thin scrollbars inside the dashboard */
+.thin-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-line-strong);
+  border-radius: 999px;
+}
+
+
+/* ------------------------------------------------------------------
+   Responsive guards. No horizontal scroll at any width, and the 3D
+   canvases never force the page wider than the viewport.
+------------------------------------------------------------------- */
+@layer base {
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  canvas {
+    max-width: 100%;
+    touch-action: pan-y;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --sheet-margin: 0.5rem;
+  }
+
+  .container-x {
+    padding-inline: 1rem;
+  }
+
+  .btn {
+    padding: 0.8rem 1.25rem;
+    font-size: 0.9rem;
+  }
+
+  .btn-lg {
+    padding: 0.95rem 1.5rem;
+    font-size: 0.98rem;
+  }
+}
+
+.text-balance {
+  text-wrap: balance;
+}

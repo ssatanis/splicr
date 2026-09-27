@@ -1,0 +1,29 @@
+{
+  "name": "splicr",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SplicR: the answer key for CRISPR screens.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "npm run dev -w apps/web",
+    "build": "npm run build -w apps/web",
+    "start": "npm run start -w apps/web",
+    "lint": "npm run lint -w apps/web",
+    "typecheck": "npm run typecheck -w apps/web",
+    "db:push": "node scripts/db/push.mjs",
+    "db:status": "node scripts/db/status.mjs",
+    "db:types": "npx supabase gen types typescript --db-url \"$SUPABASE_DB_URL\" --schema public > packages/db/src/database.types.ts",
+    "data:nih": "node scripts/data/nih-summary.mjs",
+    "data:seed": "node scripts/data/seed-atlas.mjs"
+  },
+  "devDependencies": {
+    "pg": "^8.18.0",
+    "pg-copy-streams": "^7.0.0"
+  }
+}
