@@ -1,7 +1,17 @@
 #!/usr/bin/env bash
-# BioGRID ORCS is a 718 MB archive behind Cloudflare. The host does not honour
-# Range, so a truncated transfer cannot resume: each attempt restarts.
-# This retries until the gzip stream validates, or gives up after N tries.
+# BioGRID ORCS archives, behind Cloudflare.
+#
+# The four smaller species download fine. The human archive (718 MB) does not:
+# across 27 attempts it was truncated every time, at points ranging from 28 MB
+# to 105 MB. Rate limiting the transfer to 2 MB/s did not help, and the host
+# ignores Range, so nothing can resume. Retrying is still worth one pass in
+# case conditions change, but plan on fetching the human file in a browser.
+#
+# Manual fallback for the human archive:
+#   open https://downloads.thebiogrid.org/BioGRID-ORCS
+#   download BIOGRID-ORCS-ALL-homo_sapiens-2.0.18.screens.tar.gz
+#   mv ~/Downloads/BIOGRID-ORCS-ALL-homo_sapiens-*.tar.gz \
+#      data/references/orcs/orcs-human.tar.gz
 set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 DEST="${SPLICR_REFERENCE_DIR:-$ROOT/data/references}/orcs"

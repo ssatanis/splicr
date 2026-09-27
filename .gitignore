@@ -46,3 +46,4 @@ supabase/.temp
 .vscode/*
 !.vscode/extensions.json
 coverage/
+engine/.tools/

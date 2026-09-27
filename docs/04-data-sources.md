@@ -55,10 +55,18 @@ content before accepting.
 coordinates. Gattinara, Calabrese and Dolcetto have 3 columns and no
 coordinates. There is no single "GPP format".
 
-**BioGRID ORCS rate-limits and does not resume.** It answers a throttled
-request with a 17-byte `error code: 1015` body under a 200 status, and it
-ignores `Range`, so a truncated 718 MB transfer must restart from zero.
-`scripts/data/fetch-orcs.sh` retries until the gzip stream validates.
+**The BioGRID ORCS human archive cannot be scripted.** The four smaller
+species download cleanly. The 718 MB human archive was truncated on all 27
+attempts, at points from 28 MB to 105 MB, and capping the rate at 2 MB/s made
+no difference. The host also ignores `Range`, so nothing resumes. ORCS
+separately answers throttled requests with a 17-byte `error code: 1015` body
+under a 200 status, which a naive downloader will happily save as a `.tar.gz`.
+
+Fetch the human file in a browser from
+https://downloads.thebiogrid.org/BioGRID-ORCS and move it to
+`data/references/orcs/orcs-human.tar.gz`. Everything downstream validates the
+gzip stream before reading it, so a partial file fails loudly rather than
+silently producing a short Atlas.
 
 **SourceForge cannot be scripted.** MAGeCK's library mirror serves a 142 KB
 HTML interstitial to non-browser clients, then a bot challenge. Use Addgene.
