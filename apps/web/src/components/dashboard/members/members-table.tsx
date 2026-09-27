@@ -143,7 +143,7 @@ export function MembersTable({
                           className={cn(
                             "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-medium",
                             member.isSelf
-                              ? "bg-orange-500 text-white"
+                              ? "bg-orange-500 text-teal-950"
                               : "bg-teal-50 text-teal-800",
                           )}
                         >

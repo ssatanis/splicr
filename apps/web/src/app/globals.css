@@ -44,7 +44,11 @@
   --color-white: #ffffff;
   --color-ink: #174f62;
   --color-body: #4f6470;
-  --color-muted: #848d9a;
+  /* Measured, not guessed. The previous #848d9a scored 3.36 on white, 3.15 on
+     the canvas and 2.98 on mist, so secondary text failed WCAG AA everywhere it
+     appeared, worst on the background it is used against most. This clears 4.5
+     on all three (5.39 / 5.07 / 4.79) and still reads as a muted grey. */
+  --color-muted: #626b78;
   --color-line: #e6ebef;
   --color-line-strong: #d3dbe1;
 
@@ -210,9 +214,13 @@
     transform: translateY(0);
   }
 
+  /* Text on the bright brand fills is the darkest teal, not white. Measured on
+     the real values: white gives 2.82 on #f87315 and 2.43 on #07b6d3, both well
+     under the 4.5 WCAG AA needs, while #0b2f3b gives 5.27 and 6.11. The brand
+     hues are unchanged; only the ink on them is. */
   .btn-orange {
     background: var(--color-orange-500);
-    color: white;
+    color: var(--color-teal-950);
   }
 
   .btn-orange:hover {
@@ -221,7 +229,7 @@
 
   .btn-cyan {
     background: var(--color-cyan-500);
-    color: white;
+    color: var(--color-teal-950);
   }
 
   .btn-cyan:hover {

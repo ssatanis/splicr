@@ -18,7 +18,7 @@ export default function SignupPage() {
           ].map(([v, l]) => (
             <div key={v} className="rounded-2xl bg-white/10 p-4">
               <div className="text-xl font-medium">{v}</div>
-              <div className="text-white/70 mt-1">{l}</div>
+              <div className="text-white/90 mt-1">{l}</div>
             </div>
           ))}
         </div>

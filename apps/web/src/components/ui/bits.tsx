@@ -49,7 +49,16 @@ export function MarkerPill({
   const bg = tone === "cyan" ? "bg-cyan-500" : "bg-teal-800";
   return (
     <div className={cn("absolute flex flex-col items-center", flip && "flex-col-reverse", className)} aria-hidden>
-      <span className={cn("rounded-xl px-3.5 py-2 text-white text-sm font-medium shadow-float", bg)}>{value}</span>
+      <span
+        className={cn(
+          "rounded-xl px-3.5 py-2 text-sm font-medium shadow-float",
+          // Dark ink on the bright fills: white reads 2.43 on cyan, well under AA.
+          tone === "cyan" ? "text-teal-950" : "text-white",
+          bg,
+        )}
+      >
+        {value}
+      </span>
       <span className={cn("w-0.5 h-3", bg)} />
       <span className={cn("w-4 h-4 rounded-full border-[3px] border-white", bg)} />
     </div>
@@ -104,7 +113,7 @@ export function SectionHeading({
       {eyebrow && <div className={cn("eyebrow mb-4", tone === "dark" && "text-cyan-400")}>{eyebrow}</div>}
       <h2 className={cn("display text-4xl md:text-5xl lg:text-6xl", tone === "dark" && "text-white")}>{title}</h2>
       {body && (
-        <p className={cn("mt-6 text-lg leading-relaxed", tone === "dark" ? "text-white/75" : "text-body")}>{body}</p>
+        <p className={cn("mt-6 text-lg leading-relaxed", tone === "dark" ? "text-white/90" : "text-body")}>{body}</p>
       )}
     </div>
   );

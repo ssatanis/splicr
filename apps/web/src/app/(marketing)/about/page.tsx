@@ -74,7 +74,7 @@ export default function AboutPage() {
               </h1>
             </Reveal>
             <Reveal delay={0.1}>
-              <p className="mt-6 text-lg text-white/80 leading-relaxed">
+              <p className="mt-6 text-lg text-white/90 leading-relaxed">
                 We turn the world&apos;s CRISPR screens into ground truth for the next
                 one. Built from {site.location}.
               </p>
@@ -93,7 +93,7 @@ export default function AboutPage() {
             ].map(([v, l]) => (
               <div key={l} className="px-6 first:pl-0">
                 <div className="text-2xl md:text-3xl font-medium tabular-nums">{v}</div>
-                <div className="text-white/70 text-xs md:text-sm mt-1">{l}</div>
+                <div className="text-white/90 text-xs md:text-sm mt-1">{l}</div>
               </div>
             ))}
           </div>

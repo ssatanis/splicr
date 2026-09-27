@@ -110,7 +110,7 @@ export default function TechnologyPage() {
                     <h3 className={cn("mt-3 text-3xl md:text-4xl font-medium tracking-tight", i % 2 === 0 ? "text-ink" : "text-white")}>
                       {m.title}
                     </h3>
-                    <p className={cn("mt-5 leading-relaxed max-w-md", i % 2 === 0 ? "text-body" : "text-white/80")}>{m.blurb}</p>
+                    <p className={cn("mt-5 leading-relaxed max-w-md", i % 2 === 0 ? "text-body" : "text-white/90")}>{m.blurb}</p>
                   </div>
                   <ul className="grid sm:grid-cols-3 gap-4 content-start">
                     {m.points.map((p) => (
@@ -166,7 +166,7 @@ export default function TechnologyPage() {
                     key={q.title}
                     className={cn(
                       "rounded-2xl p-6 min-h-[150px] flex flex-col justify-end",
-                      q.tone === "orange" && "bg-orange-500 text-white",
+                      q.tone === "orange" && "bg-orange-500 text-teal-950",
                       q.tone === "teal" && "bg-teal-800 text-white",
                       q.tone === "muted" && "bg-mist-soft text-ink",
                       i === 0 && "order-3",
@@ -176,7 +176,7 @@ export default function TechnologyPage() {
                     )}
                   >
                     <div className="font-medium text-lg">{q.title}</div>
-                    <div className={cn("text-sm mt-1", q.tone === "muted" ? "text-body" : "text-white/85")}>{q.body}</div>
+                    <div className={cn("text-sm mt-1", q.tone === "muted" ? "text-body" : "text-white/90")}>{q.body}</div>
                   </div>
                 ))}
               </div>
@@ -204,7 +204,7 @@ export default function TechnologyPage() {
                 body="How well each method predicts a new screen's hits. The answer usually sits in an older screen, and text search cannot find it."
               />
             </Reveal>
-            <p className="mt-6 text-sm text-white/55">
+            <p className="mt-6 text-sm text-white/80">
               <Cite cite={benchmarkCite} prefix="Source:" />
             </p>
           </div>
@@ -212,7 +212,7 @@ export default function TechnologyPage() {
             {benchmark.map((b) => (
               <StaggerItem key={b.label} className="grid grid-cols-[1fr_auto] gap-4 items-center">
                 <div>
-                  <div className="text-sm text-white/85 mb-1.5">{b.label}</div>
+                  <div className="text-sm text-white/90 mb-1.5">{b.label}</div>
                   <div className="h-2.5 rounded-full bg-white/10 overflow-hidden">
                     <div
                       className={cn(

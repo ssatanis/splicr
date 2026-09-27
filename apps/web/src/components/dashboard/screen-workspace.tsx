@@ -226,14 +226,14 @@ export function ScreenWorkspace({ screen, tab }: { screen: Screen; tab: string }
           </Card>
           <div className="space-y-3">
             {[
-              ["Real and new", "Your paper. Validate these first.", "bg-orange-500 text-white"],
+              ["Real and new", "Your paper. Validate these first.", "bg-orange-500 text-teal-950"],
               ["Fake and new", "The trap. Exciting, and where most wasted months go.", "bg-teal-800 text-white"],
               ["Real and known", "Good positive controls. Not a paper.", "bg-mist-soft text-ink"],
               ["Fake and known", "Ignore.", "bg-mist-soft text-ink"],
             ].map(([t, b, c]) => (
               <div key={t} className={cn("rounded-2xl p-5", c)}>
                 <div className="font-medium">{t}</div>
-                <div className={cn("text-sm mt-1", c.includes("text-white") ? "text-white/85" : "text-body")}>{b}</div>
+                <div className={cn("text-sm mt-1", c.includes("text-white") ? "text-white/90" : "text-body")}>{b}</div>
               </div>
             ))}
           </div>
@@ -513,10 +513,10 @@ function ValidationPanel({ hits, screenId }: { hits: Hit[]; screenId: string }) 
                               "rounded-full px-2.5 py-1 text-[11px] capitalize border",
                               value === r
                                 ? r === "validated"
-                                  ? "bg-cyan-500 text-white border-cyan-500"
+                                  ? "bg-cyan-500 text-teal-950 border-cyan-500"
                                   : r === "failed"
                                     ? "bg-teal-800 text-white border-teal-800"
-                                    : "bg-orange-500 text-white border-orange-500"
+                                    : "bg-orange-500 text-teal-950 border-orange-500"
                                 : "border-line text-muted hover:border-line-strong",
                             )}
                           >
@@ -547,7 +547,7 @@ function ValidationPanel({ hits, screenId }: { hits: Hit[]; screenId: string }) 
                 title={filled ? plan[idx].gene : isControl ? "control" : "empty"}
                 className={cn(
                   "aspect-square rounded-full text-[8px] flex items-center justify-center",
-                  filled ? "bg-orange-500 text-white" : isControl ? "bg-teal-800 text-white" : "bg-mist-soft text-muted",
+                  filled ? "bg-orange-500 text-teal-950" : isControl ? "bg-teal-800 text-white" : "bg-mist-soft text-muted",
                 )}
               >
                 {filled ? plan[idx].gene.slice(0, 3) : isControl ? "C" : ""}

@@ -64,7 +64,7 @@ export function DashboardShell({ user, children }: { user: ShellUser; children: 
     <div className="flex flex-col h-full">
       <div className="px-5 pt-5 pb-4 flex items-center justify-between">
         <Logo tone="light" href="/dashboard" size="md" />
-        <button className="lg:hidden text-white/70 p-1" onClick={close} aria-label="Close menu">
+        <button className="lg:hidden text-white/90 p-1" onClick={close} aria-label="Close menu">
           <X className="w-5 h-5" />
         </button>
       </div>
@@ -78,7 +78,7 @@ export function DashboardShell({ user, children }: { user: ShellUser; children: 
       <nav className="px-3 mt-6 space-y-6 flex-1 overflow-y-auto thin-scroll">
         {nav.map((section) => (
           <div key={section.group}>
-            <div className="px-3 mb-1.5 text-[10px] uppercase tracking-[0.16em] text-white/35">
+            <div className="px-3 mb-1.5 text-[10px] uppercase tracking-[0.16em] text-white/70">
               {section.group}
             </div>
             <div className="space-y-0.5">
@@ -105,12 +105,12 @@ export function DashboardShell({ user, children }: { user: ShellUser; children: 
 
       <div className="p-3 border-t border-white/10">
         <div className="flex items-center gap-3 px-2 py-1.5">
-          <span className="w-8 h-8 rounded-full bg-orange-500 text-white text-[11px] font-medium flex items-center justify-center shrink-0">
+          <span className="w-8 h-8 rounded-full bg-orange-500 text-teal-950 text-[11px] font-medium flex items-center justify-center shrink-0">
             {initials(user.name)}
           </span>
           <div className="min-w-0 flex-1">
             <div className="text-sm text-white truncate leading-tight">{user.name}</div>
-            <div className="text-[11px] text-white/45 truncate">{user.org}</div>
+            <div className="text-[11px] text-white/75 truncate">{user.org}</div>
           </div>
         </div>
         <form action="/auth/signout" method="post" className="mt-1">

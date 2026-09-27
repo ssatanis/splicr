@@ -119,7 +119,7 @@ export function PipelineDiagram() {
                   <div
                     className={[
                       "text-[0.65rem] tracking-[0.18em]",
-                      selected ? "text-white/60" : "text-muted",
+                      selected ? "text-white/85" : "text-muted",
                     ].join(" ")}
                   >
                     {s.n}
@@ -135,7 +135,7 @@ export function PipelineDiagram() {
                   <div
                     className={[
                       "mt-1 text-xs leading-snug",
-                      selected ? "text-white/70" : "text-muted",
+                      selected ? "text-white/90" : "text-muted",
                     ].join(" ")}
                   >
                     {s.produces}

@@ -11,7 +11,7 @@ export function Footer() {
         <div className="grid gap-10 md:grid-cols-[1.6fr_1fr_1fr]">
           <div>
             <Logo tone="light" size="lg" />
-            <p className="mt-5 max-w-xs text-white/70 leading-relaxed">{site.tagline}</p>
+            <p className="mt-5 max-w-xs text-white/90 leading-relaxed">{site.tagline}</p>
             <a
               href={`mailto:${site.email}`}
               className="mt-5 inline-flex items-center gap-1.5 text-orange-300 hover:text-orange-200"
@@ -27,7 +27,7 @@ export function Footer() {
               <ul className="space-y-2.5">
                 {col.links.map((l) => (
                   <li key={l.label}>
-                    <Link href={l.href} className="text-white/75 hover:text-white">
+                    <Link href={l.href} className="text-white/90 hover:text-white">
                       {l.label}
                     </Link>
                   </li>
@@ -37,7 +37,7 @@ export function Footer() {
           ))}
         </div>
 
-        <div className="mt-12 pt-6 border-t border-white/10 text-sm text-white/50">
+        <div className="mt-12 pt-6 border-t border-white/10 text-sm text-white/80">
           © {new Date().getFullYear()} SplicR | {site.location}.
         </div>
       </div>

@@ -29,7 +29,7 @@ const facts = [
 
 export function ScienceSection() {
   return (
-    <section className="bg-orange-500 text-white py-18 md:py-24 overflow-hidden">
+    <section className="bg-orange-500 text-teal-950 py-18 md:py-24 overflow-hidden">
       <div className="container-x">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <Reveal>
@@ -51,7 +51,7 @@ export function ScienceSection() {
             <StaggerItem key={s.n} className="flex flex-col items-center text-center gap-4">
               <Orb size={orbSizes[i]} tone={i === 4 ? "cyan" : "orange"} />
               <div>
-                <div className="text-white/65 text-xs tracking-[0.18em]">{s.n}</div>
+                <div className="text-white/85 text-xs tracking-[0.18em]">{s.n}</div>
                 <div className="mt-1 text-base font-normal">{s.title}</div>
               </div>
             </StaggerItem>
@@ -63,7 +63,7 @@ export function ScienceSection() {
             <Reveal key={f.value}>
               <div className="text-5xl font-medium tracking-tight tabular-nums">{f.value}</div>
               <div className="mt-2 text-white/90 leading-snug">{f.label}</div>
-              <div className="mt-2 text-xs text-white/65">
+              <div className="mt-2 text-xs text-white/85">
                 <Cite cite={f.cite} />
               </div>
             </Reveal>

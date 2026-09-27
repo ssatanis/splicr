@@ -56,8 +56,8 @@ export default function ContactPage() {
             </div>
 
             <Reveal delay={0.15}>
-              <div className="rounded-[1.75rem] bg-orange-500 text-white p-8 md:p-10 max-w-lg">
-                <h3 className="text-3xl md:text-4xl font-medium text-white">The blind test</h3>
+              <div className="rounded-[1.75rem] bg-orange-500 text-teal-950 p-8 md:p-10 max-w-lg">
+                <h3 className="text-3xl md:text-4xl font-medium text-teal-950">The blind test</h3>
                 <div className="mt-8 flex items-end gap-8">
                   <Orb size={96} />
                   <Orb size={140} tone="cyan" />
@@ -65,14 +65,14 @@ export default function ContactPage() {
                 <div className="mt-10 grid grid-cols-2 gap-8">
                   <div>
                     <div className="text-4xl font-medium">3 labs</div>
-                    <div className="text-white/85 mt-1">To start the pilot</div>
+                    <div className="text-teal-950/85 mt-1">To start the pilot</div>
                   </div>
                   <div>
                     <div className="text-4xl font-medium">2 wks</div>
-                    <div className="text-white/85 mt-1">From upload to reveal</div>
+                    <div className="text-teal-950/85 mt-1">From upload to reveal</div>
                   </div>
                 </div>
-                <p className="mt-8 text-white/90 leading-relaxed">
+                <p className="mt-8 text-teal-950/90 leading-relaxed">
                   Send a screen you finished a year or two ago. Do not tell us which hits worked.
                   SplicR makes its calls first, then you reveal the truth and we score it on the
                   spot.

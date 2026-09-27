@@ -44,14 +44,14 @@ export function RedefinedSection() {
             </Reveal>
 
             <div className="mt-10 flex flex-col md:flex-row md:items-end justify-between gap-8">
-              <p className="max-w-sm text-white/85 leading-relaxed">
+              <p className="max-w-sm text-white/90 leading-relaxed">
                 Precision, honesty about uncertainty, and a record of what actually held up.
               </p>
               <div className="flex flex-wrap gap-y-4 divide-x divide-white/25">
                 {stats.map((s) => (
                   <div key={s.label} className="px-6 first:pl-0 last:pr-0">
                     <div className="text-2xl md:text-3xl font-medium tabular-nums">{s.value}</div>
-                    <div className="mt-1 text-white/70 text-xs md:text-sm">{s.label}</div>
+                    <div className="mt-1 text-white/90 text-xs md:text-sm">{s.label}</div>
                   </div>
                 ))}
               </div>

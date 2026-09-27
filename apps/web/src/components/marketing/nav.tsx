@@ -44,7 +44,7 @@ export function MarketingNav({ variant = "pill" }: { variant?: "pill" | "bar" })
                   href={item.href}
                   className={cn(
                     "transition-colors hover:text-orange-300",
-                    active ? "text-white" : "text-white/85",
+                    active ? "text-white" : "text-white/90",
                   )}
                 >
                   {item.label}
@@ -57,7 +57,7 @@ export function MarketingNav({ variant = "pill" }: { variant?: "pill" | "bar" })
             <Link
               href="/login"
               className={cn(
-                "inline-flex items-center justify-center rounded-full bg-orange-500 text-white",
+                "inline-flex items-center justify-center rounded-full bg-orange-500 text-teal-950",
                 "px-7 py-3 text-[0.95rem] font-normal transition-colors hover:bg-orange-600",
               )}
             >

@@ -14,7 +14,7 @@ export function AuthPanel({ children, aside }: { children: React.ReactNode; asid
       <div className="relative bg-teal-800 text-white flex flex-col p-7 md:p-10 lg:p-12 overflow-hidden">
         <div className="relative z-20 flex items-center justify-between">
           <Logo tone="light" />
-          <Link href="/" className="text-sm text-white/70 hover:text-white">
+          <Link href="/" className="text-sm text-white/90 hover:text-white">
             Back to site
           </Link>
         </div>
@@ -30,11 +30,11 @@ export function AuthPanel({ children, aside }: { children: React.ReactNode; asid
             <br />
             hits are real.
           </h1>
-          <p className="mt-4 text-white/75 leading-relaxed">{site.description}</p>
+          <p className="mt-4 text-white/90 leading-relaxed">{site.description}</p>
           {aside}
         </div>
 
-        <div className="relative z-20 mt-8 flex flex-wrap gap-x-8 gap-y-2 text-xs text-white/55">
+        <div className="relative z-20 mt-8 flex flex-wrap gap-x-8 gap-y-2 text-xs text-white/80">
           <span>SOC 2 in progress</span>
           <span>Data stays in us-east-1</span>
           <span>Free for public data</span>
