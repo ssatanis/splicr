@@ -384,82 +384,176 @@ def nonessentials(taxid: int = 9606) -> frozenset[str]:
 
 
 # ---------------------------------------------------------------------------
-# Off-target alignment counts (Fortin et al. 2019, Genome Biology 20:21)
+# Off-target data (Fortin et al. 2019, Genome Biology 20:21)
 #
-# Per-guide counts of perfect and 1-mismatch genomic alignments. This is the
-# evidence behind the promiscuous-guide and multi-gene-guide flags.
+# Two file shapes, both real and both useful:
+#
+#   *_gene_summary_*.csv   one row per GENE, with n.multiplex.guides (guides
+#                          that perfectly target more than one gene),
+#                          n.mismatch.guides, and a precomputed flag.
+#   *_alignments_*.csv     one row per ALIGNMENT, so a guide appears once per
+#                          genomic site it hits. Counting per-guide
+#                          promiscuity means grouping by sgrna.
+#
+# The gene summary answers the artifact question directly and is small, so it
+# is the default. The alignment files are parsed only when per-guide detail
+# is actually needed, because GeCKOv2's is 186 MB.
 # ---------------------------------------------------------------------------
 
-@functools.lru_cache(maxsize=None)
-def load_offtarget(library_slug: str) -> dict[str, tuple[int, int]]:
-    """
-    sequence -> (perfect_alignments, mismatch1_alignments).
+# Library slug -> the stem Fortin used. Avana has a gene summary but no
+# published alignment file.
+_FORTIN_STEM = {
+    "brunello": "brunello",
+    "geckov2-a": "geckov2",
+    "geckov2-b": "geckov2",
+    "tkov3": "tkov3",
+    "avana": "avana",
+}
 
-    Returns an empty dict when the table for that library is not on disk, so
-    callers degrade to "unknown" rather than failing.
+
+def _find_fortin(kind: str, stem: str) -> Path | None:
+    """Filenames carry an additional-file number (af5, af9), so glob for them."""
+    matches = sorted(OFFTARGET_DIR.glob(f"fortin2019_*_{kind}_{stem}.csv"))
+    return matches[0] if matches else None
+
+
+@dataclass
+class GeneOffTarget:
+    gene: str
+    n_guides: int
+    n_multiplex_guides: int          # guides perfectly targeting >1 gene
+    n_multiplex_exonic: int
+    n_mismatch_guides: int
+    flagged: bool                    # Fortin's own flag
+    flagged_exonic: bool
+
+    @property
+    def multiplex_fraction(self) -> float:
+        return self.n_multiplex_guides / self.n_guides if self.n_guides else 0.0
+
+
+@functools.lru_cache(maxsize=None)
+def load_gene_offtarget(library_slug: str) -> dict[str, GeneOffTarget]:
     """
-    stem = {
-        "brunello": "brunello",
-        "geckov2-a": "geckov2",
-        "geckov2-b": "geckov2",
-        "tkov3": "tkov3",
-        "avana": "avana",
-    }.get(library_slug)
+    Per-gene off-target summary. Empty when the table is absent, so callers
+    degrade to "unknown" rather than failing.
+    """
+    stem = _FORTIN_STEM.get(library_slug)
     if stem is None:
         return {}
-
-    path = OFFTARGET_DIR / f"fortin2019_alignments_{stem}.csv"
-    if not path.exists():
+    path = _find_fortin("gene_summary", stem)
+    if path is None:
         return {}
 
-    text = read_text_any(path)
-    lines = [l for l in text.split("\n") if l.strip()]
-    if not lines:
-        return {}
-    delim = sniff_delimiter(lines[0])
-    reader = csv.DictReader(io.StringIO("\n".join(lines)), delimiter=delim)
+    reader = csv.DictReader(io.StringIO(read_text_any(path)))
+    out: dict[str, GeneOffTarget] = {}
 
-    def pick(names: list[str], fields: list[str]) -> str | None:
-        low = {f.lower().strip(): f for f in fields}
-        for n in names:
-            if n in low:
-                return low[n]
-        return None
+    def as_int(row: dict, key: str) -> int:
+        v = (row.get(key) or "").strip().strip('"')
+        try:
+            return int(float(v))
+        except (ValueError, TypeError):
+            return 0
 
-    fields = reader.fieldnames or []
-    seq_f = pick(["sequence", "seq", "sgrna", "spacer", "protospacer"], fields)
-    perf_f = pick(["n_perfect", "perfect", "nperfect", "n_alignments", "perfect_match"], fields)
-    mm_f = pick(["n_mismatch", "mismatch", "n_mismatch1", "one_mismatch"], fields)
-    if seq_f is None:
-        return {}
-
-    out: dict[str, tuple[int, int]] = {}
     for row in reader:
-        seq = (row.get(seq_f) or "").strip().upper()
-        if not seq:
+        gene = (row.get("gene") or "").strip().strip('"')
+        if not gene:
             continue
-        def num(f: str | None) -> int:
-            if not f:
-                return 0
-            try:
-                return int(float(row.get(f) or 0))
-            except (ValueError, TypeError):
-                return 0
-        out[seq] = (num(perf_f), num(mm_f))
+        out[gene] = GeneOffTarget(
+            gene=gene,
+            n_guides=as_int(row, "n.guides"),
+            n_multiplex_guides=as_int(row, "n.multiplex.guides"),
+            n_multiplex_exonic=as_int(row, "n.multiplex.guides.exonic"),
+            n_mismatch_guides=as_int(row, "n.mismatch.guides"),
+            flagged=(row.get("flag") or "").strip().strip('"').upper() == "YES",
+            flagged_exonic=(row.get("flag.exonic") or "").strip().strip('"').upper() == "YES",
+        )
     return out
 
 
-def annotate_offtarget(library: Library) -> int:
-    """Attach alignment counts to a library's guides. Returns how many matched."""
-    table = load_offtarget(library.slug)
-    if not table:
+@functools.lru_cache(maxsize=None)
+def load_guide_offtarget(library_slug: str) -> dict[str, tuple[int, int, int]]:
+    """
+    Per-guide alignment counts, derived by grouping the alignment table.
+
+    Returns sequence -> (perfect_alignments, one_mismatch_alignments,
+    distinct_genes_hit). GeCKOv2's alignment file is 186 MB, so this streams
+    rather than loading it whole.
+    """
+    stem = _FORTIN_STEM.get(library_slug)
+    if stem is None:
+        return {}
+    path = _find_fortin("alignments", stem)
+    if path is None:
+        return {}
+
+    perfect: dict[str, int] = {}
+    mismatch: dict[str, int] = {}
+    genes: dict[str, set[str]] = {}
+
+    with path.open(newline="") as fh:
+        for row in csv.DictReader(fh):
+            seq = (row.get("sgrna") or "").strip().strip('"').upper()
+            if not seq:
+                continue
+            try:
+                n_mm = int(float(row.get("n.mismatches") or 0))
+            except (ValueError, TypeError):
+                continue
+            if n_mm == 0:
+                perfect[seq] = perfect.get(seq, 0) + 1
+            elif n_mm == 1:
+                mismatch[seq] = mismatch.get(seq, 0) + 1
+            symbols = (row.get("gene_symbol") or "").strip().strip('"')
+            if symbols and symbols != "NA":
+                genes.setdefault(seq, set()).update(
+                    s for s in symbols.split(";") if s and s != "NA"
+                )
+
+    return {
+        seq: (perfect.get(seq, 0), mismatch.get(seq, 0), len(genes.get(seq, ())))
+        for seq in set(perfect) | set(mismatch) | set(genes)
+    }
+
+
+def annotate_offtarget(library: Library, per_guide: bool = False) -> int:
+    """
+    Attach off-target counts to a library's guides.
+
+    per_guide=False (default) uses the small gene summary and marks every
+    guide of a flagged gene. per_guide=True parses the full alignment table
+    for exact per-guide counts, which is slower but precise.
+
+    Returns the number of guides annotated.
+    """
+    if per_guide:
+        table = load_guide_offtarget(library.slug)
+        if not table:
+            return 0
+        hit = 0
+        for g in library.guides:
+            counts = table.get(g.sequence)
+            if counts:
+                g.perfect_alignments, g.mismatch1_alignments, _ = counts
+                hit += 1
+        return hit
+
+    summary = load_gene_offtarget(library.slug)
+    if not summary:
         return 0
     hit = 0
     for g in library.guides:
-        counts = table.get(g.sequence)
-        if counts:
-            g.perfect_alignments, g.mismatch1_alignments = counts
-            hit += 1
+        entry = summary.get(g.gene) if g.gene else None
+        if entry is None:
+            continue
+        # Attribute the gene's multiplex guides across its guides. This is an
+        # upper bound per guide, so it is used to raise a flag for review, not
+        # to assert that a specific guide is promiscuous.
+        if entry.n_multiplex_guides > 0:
+            g.perfect_alignments = 2
+        if entry.n_mismatch_guides > 0:
+            g.mismatch1_alignments = 1
+        hit += 1
     return hit
 
 
