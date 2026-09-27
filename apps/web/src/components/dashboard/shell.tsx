@@ -97,15 +97,22 @@ export function DashboardShell({ user, children }: { user: ShellUser; children: 
   const modifier = useSyncExternalStore(subscribePlatform, macSnapshot, serverSnapshot);
 
   return (
-    <div className="flex min-h-screen bg-canvas">
-      <aside className="sticky top-0 hidden h-screen w-[236px] shrink-0 bg-teal-900 text-white lg:flex">
+    /* A fixed app shell rather than a document that scrolls.
+       The sidebar was sticky inside a page taller than the viewport, which
+       works while you are looking at it but means the rail has an end: scroll
+       far enough, or capture the whole page, and the teal simply stops. Here
+       the shell is exactly the viewport, the rail is a flex child of it, and
+       only the content column scrolls. The rail cannot end because it is never
+       longer than the screen. */
+    <div className="flex h-dvh overflow-hidden bg-canvas">
+      <aside className="hidden w-[236px] shrink-0 bg-teal-900 text-white lg:flex">
         <Sidebar user={user} pathname={pathname} />
       </aside>
 
       {open && <MenuDrawer user={user} pathname={pathname} onClose={close} />}
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 border-b border-line bg-canvas/90 backdrop-blur">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <header className="z-30 shrink-0 border-b border-line bg-canvas/90 backdrop-blur">
           <div className="flex h-14 items-center gap-3 px-4 md:px-7">
             <button
               className="icon-btn h-9 w-9 lg:hidden"
@@ -148,7 +155,11 @@ export function DashboardShell({ user, children }: { user: ShellUser; children: 
             </button>
           </div>
         </header>
-        <main className="flex-1 px-4 py-5 md:px-7 md:py-7">{children}</main>
+        {/* The only scroll container on the page. thin-scroll keeps the
+            bar from adding a visual edge beside the content. */}
+        <main className="thin-scroll flex-1 overflow-y-auto px-4 py-5 md:px-7 md:py-7">
+          {children}
+        </main>
       </div>
 
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
