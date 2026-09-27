@@ -3,7 +3,7 @@ export const site = {
   name: "SplicR",
   /** The full name, for the document title, Open Graph and anywhere the
       product is being introduced rather than referred to. */
-  fullName: "SplicR - The Answer Key for CRISPR Screens",
+  fullName: "SplicR | The Answer Key for CRISPR Screens",
   tagline: "Know which hits are real.",
   description:
     "The answer key for CRISPR screens. For every hit, a calibrated chance it is real, the reason, and what to do next.",

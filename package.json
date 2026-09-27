@@ -2,7 +2,7 @@
   "name": "splicr",
   "version": "0.1.0",
   "private": true,
-  "description": "SplicR - The Answer Key for CRISPR Screens",
+  "description": "SplicR | The Answer Key for CRISPR Screens",
   "workspaces": [
     "apps/*",
     "packages/*"

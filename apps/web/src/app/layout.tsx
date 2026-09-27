@@ -20,13 +20,13 @@ const serif = Instrument_Serif({
 export const metadata: Metadata = {
   metadataBase: new URL("https://splicr.org"),
   title: {
-    default: "SplicR - The Answer Key for CRISPR Screens",
+    default: "SplicR | The Answer Key for CRISPR Screens",
     template: "%s · SplicR",
   },
   description:
     "For every hit in a CRISPR screen, SplicR tells you how likely it is to be real, why, and what to do next. Built on every public screen re-analyzed the same way, plus the record of which hits held up.",
   openGraph: {
-    title: "SplicR - The Answer Key for CRISPR Screens",
+    title: "SplicR | The Answer Key for CRISPR Screens",
     description: "Know which hits are real before you spend months finding out.",
     siteName: "SplicR",
     type: "website",

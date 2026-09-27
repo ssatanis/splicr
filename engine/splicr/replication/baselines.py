@@ -93,6 +93,18 @@ def _der(*parts: str) -> str:
 # cache's own floor restated and not a second choice.
 OT_MIN_SCORE = 0.01
 
+# Disease name patterns that make an Open Targets association proliferation
+# relevant. The generic fame prior treats a link to migraine like a link to
+# leukaemia; on a proliferation benchmark a reader will object that a competent
+# analyst would have weighted cancer relevance instead. This is that prior. The
+# pattern list is deliberately broad and fixed before any score was computed, so
+# it cannot be narrowed toward whatever worked.
+OT_CANCER_PATTERNS = (
+    "cancer", "carcinoma", "neoplasm", "tumor", "tumour", "leukemia", "leukaemia",
+    "lymphoma", "sarcoma", "melanoma", "myeloma", "glioma", "blastoma", "adenoma",
+    "malignan", "metastas",
+)
+
 # A "complex-like" Reactome pathway. Reactome mixes two-protein complexes with
 # 1,000-gene superpathways, and only the small end supports the argument "the
 # other members of this gene's complex also hit". The cap is the 90th percentile
@@ -173,6 +185,48 @@ def opentargets_association_summary() -> dict[str, tuple[float, float, float]]:
 
 
 @functools.lru_cache(maxsize=1)
+def _cancer_disease_ids() -> frozenset[str]:
+    """Open Targets disease ids whose names match :data:`OT_CANCER_PATTERNS`.
+
+    Matched against every synonym the shipped name map carries, so a disease
+    named only by a synonym containing "carcinoma" still counts.
+    """
+    with open(_der("ot_disease_names.json")) as fh:
+        names = json.load(fh)
+    out = set()
+    for did, syns in names.items():
+        blob = " ".join(syns if isinstance(syns, list) else [str(syns)]).lower()
+        if any(p in blob for p in OT_CANCER_PATTERNS):
+            out.add(str(did))
+    return frozenset(out)
+
+
+@functools.lru_cache(maxsize=1)
+def opentargets_cancer_summary() -> dict[str, tuple[float, float, float]]:
+    """Symbol -> (n cancer diseases, max cancer score, cancer evidence count).
+
+    The proliferation-relevant form of the literature prior. A generic fame count
+    cannot tell a cell-cycle gene from a well studied neurotransmitter receptor;
+    this can, and on a proliferation benchmark it is the version of the argument
+    that deserves to be beaten rather than the generic one.
+    """
+    import pandas as pd
+
+    ids = _cancer_disease_ids()
+    df = pd.read_parquet(_der("ot_assoc_direct.parquet"))
+    df = df[(df["associationScore"] >= OT_MIN_SCORE) & df["diseaseId"].isin(ids)]
+    agg = df.groupby("symbol").agg(
+        n_diseases=("diseaseId", "size"),
+        max_score=("associationScore", "max"),
+        evidence=("evidenceCount", "sum"),
+    )
+    return {
+        str(sym): (float(r.n_diseases), float(r.max_score), float(r.evidence))
+        for sym, r in agg.iterrows()
+    }
+
+
+@functools.lru_cache(maxsize=1)
 def gene_attributes() -> dict[str, dict[str, float]]:
     """Symbol -> Open Targets gene attributes: LOEUF, missense z, annotation counts.
 
@@ -197,6 +251,65 @@ def gene_attributes() -> dict[str, dict[str, float]]:
             "n_subcell": float(r.n_subcell or 0),
         }
     return out
+
+
+@functools.lru_cache(maxsize=1)
+def depmap_gene_summary() -> dict[str, dict[str, float]]:
+    """Symbol -> DepMap Chronos summary ACROSS lines: mean, spread, dependency fraction.
+
+    The most embarrassing baseline if it were not tried: a lookup table saying
+    what fraction of about 1,178 DepMap lines depend on this gene. It never opens
+    the screen being ranked, and if it matches a pipeline that does, the pipeline
+    has not earned its complexity.
+
+    This sits on the benchmark's one explicit judgement, recorded in
+    ``docs/07-replication-benchmark.md``: per-cell-line DepMap features are
+    forbidden because for most units DepMap holds a fitness measurement of the
+    same line, and where the target screen is Avana it is a later release of the
+    label itself. Cell-line-independent summaries over about a thousand lines are
+    allowed, on the argument that they do not identify one unit's label. This
+    feature is exactly that allowance being cashed in, so it is reported as its
+    own family and named in the write-up, and a reader who rejects the judgement
+    should discount every ``dep_`` row rather than have to work out which numbers
+    it touched.
+    """
+    import pandas as pd
+
+    df = pd.read_parquet(_der("depmap_gene_stats.parquet"))
+    out: dict[str, dict[str, float]] = {}
+    for r in df.itertuples():
+        out[str(r.gene)] = {
+            "mean": float(r.mean),
+            "std": float(r.std),
+            "frac_dep": float(r.frac_dep),
+            "frac_strong_dep": float(r.frac_strong_dep),
+            "q10": float(r.q10),
+        }
+    return out
+
+
+def depmap_features(genes: Sequence[str]) -> dict[str, np.ndarray]:
+    """The DepMap lookup-table prior, per gene. Sign-oriented so higher is more essential."""
+    d = depmap_gene_summary()
+    miss = {"mean": float("nan"), "std": float("nan"), "frac_dep": 0.0,
+            "frac_strong_dep": 0.0, "q10": float("nan")}
+
+    def col(name: str) -> np.ndarray:
+        return np.array([d.get(g, miss)[name] for g in genes], dtype=float)
+
+    return {
+        # Negated so that higher means a stronger dependency, matching every
+        # other feature's orientation.
+        "dep_mean_effect": -col("mean"),
+        "dep_q10_effect": -col("q10"),
+        "dep_frac_dep": col("frac_dep"),
+        "dep_frac_strong_dep": col("frac_strong_dep"),
+        # Spread across lines: a selectively essential gene is the interesting
+        # case, and a pan-essential one is mostly excluded from the primary space
+        # already.
+        "dep_std": col("std"),
+        "dep_known": np.array([1.0 if g in d else 0.0 for g in genes], dtype=float),
+    }
 
 
 @functools.lru_cache(maxsize=1)
@@ -343,12 +456,16 @@ def literature_features(genes: Sequence[str]) -> dict[str, np.ndarray]:
     """
     pt = pubtator_counts()
     ot = opentargets_association_summary()
+    onc = opentargets_cancer_summary()
     attrs = gene_attributes()
 
     papers = np.array([pt.get(g, 0.0) for g in genes], dtype=float)
     n_dis = np.array([ot.get(g, (0.0, 0.0, 0.0))[0] for g in genes], dtype=float)
     max_sc = np.array([ot.get(g, (0.0, 0.0, 0.0))[1] for g in genes], dtype=float)
     evid = np.array([ot.get(g, (0.0, 0.0, 0.0))[2] for g in genes], dtype=float)
+    onc_n = np.array([onc.get(g, (0.0, 0.0, 0.0))[0] for g in genes], dtype=float)
+    onc_max = np.array([onc.get(g, (0.0, 0.0, 0.0))[1] for g in genes], dtype=float)
+    onc_ev = np.array([onc.get(g, (0.0, 0.0, 0.0))[2] for g in genes], dtype=float)
 
     def attr(name: str, default: float) -> np.ndarray:
         return np.array([attrs.get(g, {}).get(name, default) for g in genes], dtype=float)
@@ -358,6 +475,9 @@ def literature_features(genes: Sequence[str]) -> dict[str, np.ndarray]:
         "lit_ot_n_diseases": np.log1p(n_dis),
         "lit_ot_max_score": max_sc,
         "lit_ot_evidence": np.log1p(evid),
+        "lit_ot_cancer_n": np.log1p(onc_n),
+        "lit_ot_cancer_max_score": onc_max,
+        "lit_ot_cancer_evidence": np.log1p(onc_ev),
         "lit_n_go": np.log1p(attr("n_go", 0.0)),
         "lit_n_pathway": np.log1p(attr("n_pathway", 0.0)),
         "lit_n_subcell": attr("n_subcell", 0.0),
@@ -470,7 +590,40 @@ def network_features(
     return out
 
 
-def multi_hit_features(unit: dataset.ReplicationPair, genes: Sequence[str]) -> dict[str, np.ndarray]:
+def _beta_moment_prior(n_hit: np.ndarray, n_meas: np.ndarray) -> tuple[float, float]:
+    """Beta prior by method of moments over adequately covered genes.
+
+    The standard empirical-Bayes moment match, so the shrinkage strength is read
+    off the corpus rather than tuned. Falls back to Jeffreys-ish (1, 1) when the
+    moments are degenerate, which cannot happen on the real corpus but would on a
+    two-screen background.
+    """
+    ok = n_meas >= MULTI_MIN_MEASURED
+    if ok.sum() < 100:
+        return 1.0, 1.0
+    p = n_hit[ok] / n_meas[ok]
+    m, v = float(p.mean()), float(p.var())
+    if not (0.0 < v < m * (1.0 - m)):
+        return 1.0, 1.0
+    k = m * (1.0 - m) / v - 1.0
+    return max(m * k, 1e-3), max((1.0 - m) * k, 1e-3)
+
+
+#: Fractions of the allowed background kept by the similarity-weighted
+#: recurrence prior. All three are reported on development rather than one being
+#: picked and the others hidden, because "recurs in screens like mine" has no
+#: principled k and a single reported value would be a tuned constant presented
+#: as a design choice. The quartile (0.25) is the pre-registered default, on the
+#: grounds that it is the coarsest cut that still leaves 30 or more screens for
+#: the least covered unit.
+MULTI_SIM_FRACTIONS = (0.10, 0.25, 0.50)
+
+
+def multi_hit_features(
+    unit: dataset.ReplicationPair,
+    genes: Sequence[str],
+    a_hit: np.ndarray | None = None,
+) -> dict[str, np.ndarray]:
     """Published multi-hit reasoning, fitted ONLY on the allowed background.
 
     The argument, as several papers make it: a hit is more credible when it
@@ -482,13 +635,19 @@ def multi_hit_features(unit: dataset.ReplicationPair, genes: Sequence[str]) -> d
     The raw fraction is unusable on its own because coverage varies from 130 to
     786 screens, so a gene measured twice and hit twice would outrank a gene hit
     in 600 of 700. It is shrunk toward the corpus mean with a Beta prior fitted
-    by method of moments over the genes that clear
-    :data:`MULTI_MIN_MEASURED`, which is the standard empirical-Bayes correction
-    and adds no tuned constant.
+    by method of moments over the genes that clear :data:`MULTI_MIN_MEASURED`.
+
+    When ``a_hit`` is supplied, the stronger form of the argument is built too:
+    recurrence among the background screens that most resemble screen A, rather
+    than among all of them. A reviewer will ask for this, because "hit in many
+    screens" and "hit in the screens that behave like mine" are different claims
+    and the second is the one the multi-hit literature actually makes. Similarity
+    is the Jaccard overlap of hit sets over the genes both screens measure, which
+    reads screen A and the background only.
 
     The screen set comes from :func:`dataset.allowed_background_screens`, which
     removes both pair screens, both publications and every screen in the pair's
-    cell line. So this cannot read B, a same-paper sibling of B, or a third
+    cell line. So nothing here can read B, a same-paper sibling of B, or a third
     lab's screen of B's cell line.
     """
     screen_ids, corpus_genes, measured, hit = background_matrix()
@@ -499,20 +658,7 @@ def multi_hit_features(unit: dataset.ReplicationPair, genes: Sequence[str]) -> d
 
     n_meas = measured[rows].sum(axis=0).astype(float)
     n_hit = hit[rows].sum(axis=0).astype(float)
-
-    # Beta prior by method of moments over adequately covered genes. Recorded
-    # source: the standard empirical-Bayes moment match, not a tuned value.
-    ok = n_meas >= MULTI_MIN_MEASURED
-    if ok.sum() < 100:
-        alpha = beta = 1.0
-    else:
-        p = n_hit[ok] / n_meas[ok]
-        m, v = float(p.mean()), float(p.var())
-        if 0.0 < v < m * (1.0 - m):
-            k = m * (1.0 - m) / v - 1.0
-            alpha, beta = max(m * k, 1e-3), max((1.0 - m) * k, 1e-3)
-        else:
-            alpha = beta = 1.0
+    alpha, beta = _beta_moment_prior(n_hit, n_meas)
 
     with np.errstate(invalid="ignore", divide="ignore"):
         raw = np.where(n_meas > 0, n_hit / n_meas, np.nan)
@@ -526,14 +672,48 @@ def multi_hit_features(unit: dataset.ReplicationPair, genes: Sequence[str]) -> d
     def pick(arr: np.ndarray, default: float) -> np.ndarray:
         return np.where(present, arr[safe], default)
 
-    return {
+    out = {
         "multi_hit_rate_shrunk": pick(shrunk, alpha / (alpha + beta)),
         "multi_hit_rate_raw": pick(raw, np.nan),
         "multi_n_hit": np.log1p(pick(n_hit, 0.0)),
         "multi_n_measured": np.log1p(pick(n_meas, 0.0)),
-        "multi_well_covered": pick(ok.astype(float), 0.0),
+        "multi_well_covered": pick(n_meas >= MULTI_MIN_MEASURED, 0.0).astype(float),
         "_prior": np.array([alpha, beta, float(rows.size)]),
     }
+
+    if a_hit is None:
+        return out
+
+    # Similarity-weighted recurrence. Project A onto the corpus gene space so the
+    # comparison is over genes both screens actually measured, then Jaccard the
+    # hit sets. A screen that calls very few or very many hits scores low against
+    # A automatically, which is the behaviour wanted: it is a poor analogue.
+    a = np.asarray(a_hit, dtype=float) > 0.5
+    a_vec = np.zeros(len(corpus_genes), dtype=bool)
+    a_meas = np.zeros(len(corpus_genes), dtype=bool)
+    a_vec[idx[present]] = a[present]
+    a_meas[idx[present]] = True
+
+    sub_hit = hit[rows]
+    sub_meas = measured[rows]
+    shared = sub_meas & a_meas  # genes measured by A and by that background screen
+    both = (sub_hit & a_vec & shared).sum(axis=1).astype(float)
+    either = ((sub_hit | a_vec) & shared).sum(axis=1).astype(float)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        jac = np.where(either > 0, both / either, 0.0)
+
+    order = np.argsort(-jac, kind="stable")
+    for frac in MULTI_SIM_FRACTIONS:
+        k = max(int(round(frac * rows.size)), 20)
+        keep = order[:k]
+        sm = sub_meas[keep].sum(axis=0).astype(float)
+        sh = sub_hit[keep].sum(axis=0).astype(float)
+        sa, sb = _beta_moment_prior(sh, sm)
+        sim_shrunk = (sh + sa) / (sm + sa + sb)
+        tag = f"multi_sim_rate_q{int(round(frac * 100)):02d}"
+        out[tag] = pick(sim_shrunk, sa / (sa + sb))
+    out["_sim"] = np.array([float(jac.max()), float(np.median(jac)), float(rows.size)])
+    return out
 
 
 def _effect_direction_sign(unit: dataset.ReplicationPair) -> float:
@@ -593,10 +773,12 @@ def unit_features(unit: dataset.ReplicationPair):
     a_hit = inputs["a_hit"].to_numpy().astype(float)
     a_score1 = inputs["a_score1"].to_numpy().astype(float)
 
-    multi = multi_hit_features(unit, genes)
+    multi = multi_hit_features(unit, genes, a_hit=a_hit)
     prior = multi.pop("_prior")
+    sim = multi.pop("_sim", np.array([float("nan")] * 3))
     feats: dict[str, np.ndarray] = {}
     feats.update(literature_features(genes))
+    feats.update(depmap_features(genes))
     feats.update(network_features(genes, a_hit, multi_rate=multi["multi_hit_rate_shrunk"]))
     feats.update(multi)
 
@@ -613,6 +795,8 @@ def unit_features(unit: dataset.ReplicationPair):
         "alpha": float(prior[0]),
         "beta": float(prior[1]),
         "n_background_screens": int(prior[2]),
+        "max_jaccard_to_a": float(sim[0]),
+        "median_jaccard_to_a": float(sim[1]),
     }
     df.attrs["unit_id"] = unit.unit_id
     return df
@@ -638,6 +822,8 @@ SINGLE_BASELINES: dict[str, tuple[str, float]] = {
     "lit_papers": ("lit_papers", 1.0),
     "lit_ot_n_diseases": ("lit_ot_n_diseases", 1.0),
     "lit_ot_evidence": ("lit_ot_evidence", 1.0),
+    "lit_ot_cancer_n": ("lit_ot_cancer_n", 1.0),
+    "lit_ot_cancer_evidence": ("lit_ot_cancer_evidence", 1.0),
     "lit_n_pathway": ("lit_n_pathway", 1.0),
     "lit_loeuf": ("lit_loeuf", -1.0),
     "lit_mis_z": ("lit_mis_z", 1.0),
@@ -648,6 +834,42 @@ SINGLE_BASELINES: dict[str, tuple[str, float]] = {
     "net_phys_nbr_multi_rate": ("net_phys_nbr_multi_rate", 1.0),
     "net_reactome_best_a_hit_frac": ("net_reactome_best_a_hit_frac", 1.0),
     "multi_hit_rate_shrunk": ("multi_hit_rate_shrunk", 1.0),
+    # The DepMap lookup table: no screen opened at all. See depmap_gene_summary
+    # for the judgement this rests on.
+    "depmap_frac_dep": ("dep_frac_dep", 1.0),
+    "depmap_mean_effect": ("dep_mean_effect", 1.0),
+    # The unshrunk fraction and the raw count, so the shrinkage can be shown to
+    # earn its place rather than asserted to.
+    "multi_hit_rate_raw": ("multi_hit_rate_raw", 1.0),
+    "multi_n_hit": ("multi_n_hit", 1.0),
+    # Recurrence among the background screens most like A, at three cut depths,
+    # all reported.
+    "multi_sim_rate_q10": ("multi_sim_rate_q10", 1.0),
+    "multi_sim_rate_q25": ("multi_sim_rate_q25", 1.0),
+    "multi_sim_rate_q50": ("multi_sim_rate_q50", 1.0),
+    # The literature prior with the sign flipped. Included because if fame is
+    # anti-predictive on this task that is a result, not a bug, and reporting only
+    # the positive direction would hide it.
+    "lit_papers_low": ("lit_papers", -1.0),
+}
+
+#: Rerank baselines: A's hit list, ordered within itself by a gene-level prior.
+#:
+#: This is the fairest and strongest framing of the literature and network priors
+#: for THIS task. A language model at the product level is not asked to rank
+#: 17,000 genes cold; it is handed a screen's hit list and asked which of those
+#: are real. Scoring ``2 * a_hit + rank(feature)`` reproduces exactly that: every
+#: hit outranks every non-hit, and the prior only orders within each block. So a
+#: prior that carries any information about which of A's hits replicate will beat
+#: ``a_hit`` here even when it is worthless as a cold ranking.
+RERANK_BASELINES: dict[str, tuple[str, float]] = {
+    "rerank_lit_papers": ("lit_papers", 1.0),
+    "rerank_lit_cancer": ("lit_ot_cancer_evidence", 1.0),
+    "rerank_lit_composite": ("_lit_composite", 1.0),
+    "rerank_net_composite": ("_net_composite", 1.0),
+    "rerank_multi_rate": ("multi_hit_rate_shrunk", 1.0),
+    "rerank_depmap_frac_dep": ("dep_frac_dep", 1.0),
+    "rerank_a_effect": ("a_effect", 1.0),
 }
 
 #: Hand-combined baselines, each the strongest honest version of one argument.
@@ -659,6 +881,8 @@ COMBO_BASELINES: dict[str, tuple[str, ...]] = {
         "+lit_papers",
         "+lit_ot_n_diseases",
         "+lit_ot_evidence",
+        "+lit_ot_cancer_n",
+        "+lit_ot_cancer_evidence",
         "+lit_n_pathway",
         "+lit_n_go",
         "-lit_loeuf",
@@ -678,6 +902,11 @@ COMBO_BASELINES: dict[str, tuple[str, ...]] = {
     # the recurrence prior, equally weighted.
     "a_effect_plus_multi": ("+a_effect", "+multi_hit_rate_shrunk"),
     "a_effect_plus_lit": ("+a_effect", "+lit_papers"),
+    "a_effect_plus_depmap": ("+a_effect", "+dep_frac_dep"),
+    # The strongest hand-built combination available without fitting anything:
+    # the screen, recurrence across other people's screens, and the DepMap
+    # lookup, equally weighted.
+    "a_effect_plus_multi_plus_depmap": ("+a_effect", "+multi_hit_rate_shrunk", "+dep_frac_dep"),
 }
 
 
@@ -698,6 +927,22 @@ def score_combo(df, name: str) -> np.ndarray:
     return total
 
 
+def score_rerank(df, name: str) -> np.ndarray:
+    """A's hit list, ordered within itself by a gene-level prior.
+
+    ``2 * a_hit`` dominates the rank term, which lies in [0, 1], so every gene A
+    called stays above every gene it did not and the prior only reorders within
+    each block. Equal to ``a_hit``'s own AP when the prior is noise.
+    """
+    col, sign = RERANK_BASELINES[name]
+    if col.startswith("_"):
+        inner = sign * score_combo(df, col[1:])
+    else:
+        inner = sign * df[col].to_numpy()
+    tie = np.nan_to_num(_rank01(np.asarray(inner, dtype=float)), nan=0.5)
+    return 2.0 * df["a_hit"].to_numpy().astype(float) + tie
+
+
 # ---------------------------------------------------------------------------
 # The learned baseline
 # ---------------------------------------------------------------------------
@@ -711,6 +956,9 @@ LEARNED_FEATURES: tuple[str, ...] = (
     "lit_ot_n_diseases",
     "lit_ot_max_score",
     "lit_ot_evidence",
+    "lit_ot_cancer_n",
+    "lit_ot_cancer_max_score",
+    "lit_ot_cancer_evidence",
     "lit_n_go",
     "lit_n_pathway",
     "lit_n_subcell",
@@ -733,17 +981,69 @@ LEARNED_FEATURES: tuple[str, ...] = (
     "multi_n_hit",
     "multi_n_measured",
     "multi_well_covered",
+    "multi_sim_rate_q10",
+    "multi_sim_rate_q25",
+    "multi_sim_rate_q50",
+    "dep_mean_effect",
+    "dep_q10_effect",
+    "dep_frac_dep",
+    "dep_frac_strong_dep",
+    "dep_std",
+    "dep_known",
     "a_hit",
     "a_effect",
     "a_effect_known",
 )
 
-#: The gene-only subset: no screen data at all. This answers "how much of the
-#: benchmark is predictable from gene identity alone", which is the question the
-#: AssayBench analysis says a language model would be good at.
-GENE_ONLY_FEATURES: tuple[str, ...] = tuple(
-    f for f in LEARNED_FEATURES if not f.startswith("a_") and "nbr_a_hit" not in f and "reactome_best_a_hit" not in f and "reactome_mean_a_hit" not in f
+#: Features that read screen A. Everything else is either gene-level or comes
+#: from the allowed background corpus.
+_READS_A = ("a_", "net_full_nbr_a_hit", "net_phys_nbr_a_hit", "net_reactome_best_a_hit",
+            "net_reactome_mean_a_hit", "multi_sim_")
+
+
+def _drops_a(name: str) -> bool:
+    return not any(name.startswith(p) or p in name for p in _READS_A)
+
+
+#: No target-screen data: gene-level priors plus the background corpus, but
+#: nothing read off screen A. NOT "no screen data at all" -- the ``multi_``
+#: features are other people's screens, which is the point of the multi-hit
+#: argument. It answers "how much of this benchmark is predictable without
+#: opening the screen being ranked".
+GENE_ONLY_FEATURES: tuple[str, ...] = tuple(f for f in LEARNED_FEATURES if _drops_a(f))
+
+#: Literature and unit-independent network features only: no screen data of any
+#: kind, from A or from anyone else. This is the closest learned analogue of what
+#: a language model brings to the task, and the AssayBench analysis says that is
+#: exactly what wins when the label is a published hit list.
+LIT_ONLY_FEATURES: tuple[str, ...] = tuple(
+    f for f in LEARNED_FEATURES
+    if f.startswith("lit_")
+    or f in ("net_full_wdegree", "net_full_degree", "net_phys_wdegree", "net_phys_degree",
+             "net_reactome_n_complexes", "net_reactome_mean_complex_size")
 )
+
+#: Ablations. ``no_lit`` asks whether the literature prior contributes anything
+#: once the screen and the background corpus are in the model, which is the
+#: question that matters: a prior can be worthless alone and still carry
+#: information at the margin. ``no_multi`` is the same question for recurrence,
+#: and ``a_only`` is screen A by itself, learned.
+NO_LIT_FEATURES: tuple[str, ...] = tuple(f for f in LEARNED_FEATURES if not f.startswith("lit_"))
+NO_MULTI_FEATURES: tuple[str, ...] = tuple(f for f in LEARNED_FEATURES if not f.startswith("multi_"))
+#: Everything except the DepMap lookup family, for a reader who rejects the
+#: cell-line-independent-DepMap judgement.
+NO_DEPMAP_FEATURES: tuple[str, ...] = tuple(f for f in LEARNED_FEATURES if not f.startswith("dep_"))
+A_ONLY_FEATURES: tuple[str, ...] = ("a_hit", "a_effect", "a_effect_known")
+
+FEATURE_SETS: dict[str, tuple[str, ...]] = {
+    "learned_all": LEARNED_FEATURES,
+    "learned_no_target_screen": GENE_ONLY_FEATURES,
+    "learned_lit_only": LIT_ONLY_FEATURES,
+    "learned_no_lit": NO_LIT_FEATURES,
+    "learned_no_multi": NO_MULTI_FEATURES,
+    "learned_no_depmap": NO_DEPMAP_FEATURES,
+    "learned_a_only": A_ONLY_FEATURES,
+}
 
 
 def design_matrix(df, features: Sequence[str]) -> np.ndarray:
@@ -794,10 +1094,25 @@ def _frames(split: str) -> dict[str, "object"]:
     return {u.unit_id: unit_features(u) for u in dataset.pairs(split)}
 
 
-def _labels(split: str, evaluating: bool):
+def _labels(split: str, evaluating: bool, frames=None):
+    """Label vectors, positionally aligned to the feature frames.
+
+    Both loaders order by gene over the same shared space, so position is the
+    same key, but this asserts it rather than trusting it. A silent misalignment
+    would shuffle every label against every score and still produce a plausible
+    looking number, which is the worst failure mode available here.
+    """
     out = {}
     for u in dataset.pairs(split):
         lab = dataset.load_pair_labels(u, evaluating=evaluating)
+        if frames is not None:
+            got = lab["gene"].astype(str).tolist()
+            want = frames[u.unit_id]["gene"].astype(str).tolist()
+            if got != want:
+                raise RuntimeError(
+                    f"{u.unit_id}: label gene order differs from the feature frame; "
+                    f"scores and labels would be compared position by position"
+                )
         out[u.unit_id] = lab["b_hit"].to_numpy().astype(float)
     return out
 
@@ -822,6 +1137,7 @@ def run(
     evaluating: bool = False,
     space: str = dataset.PRIMARY_SPACE,
     learned_from: str | None = None,
+    learned_sets: Sequence[str] | None = None,
     verbose: bool = True,
 ) -> dict:
     """Score every baseline on ``split`` and paired-test each against A's effect size.
@@ -837,7 +1153,7 @@ def run(
     import pandas as pd
 
     frames = _frames(split)
-    labels = _labels(split, evaluating=evaluating)
+    labels = _labels(split, evaluating=evaluating, frames=frames)
     uids = sorted(frames)
 
     scores: dict[str, dict[str, np.ndarray]] = {}
@@ -845,9 +1161,13 @@ def run(
         scores[name] = {u: score_single(frames[u], name) for u in uids}
     for name in COMBO_BASELINES:
         scores[name] = {u: score_combo(frames[u], name) for u in uids}
+    for name in RERANK_BASELINES:
+        scores[name] = {u: score_rerank(frames[u], name) for u in uids}
 
     # --- learned models -----------------------------------------------------
-    feature_sets = {"learned_all": LEARNED_FEATURES, "learned_gene_only": GENE_ONLY_FEATURES}
+    feature_sets = dict(FEATURE_SETS) if learned_sets is None else {
+        k: FEATURE_SETS[k] for k in learned_sets
+    }
     unit_pair = {u.unit_id: u.pair_key for u in dataset.pairs(split)}
 
     if learned_from is None:
@@ -872,7 +1192,7 @@ def run(
                 scores[f"{tag}_{kind}"] = preds
     else:
         src_frames = _frames(learned_from)
-        src_labels = _labels(learned_from, evaluating=False)
+        src_labels = _labels(learned_from, evaluating=False, frames=src_frames)
         for tag, feats in feature_sets.items():
             Xtr, ytr = [], []
             for u in sorted(src_frames):
@@ -925,12 +1245,18 @@ def _main() -> None:
     ap.add_argument("--evaluating", action="store_true", help="required to read held-out labels")
     ap.add_argument("--space", default=dataset.PRIMARY_SPACE, choices=list(dataset.GENE_SPACES))
     ap.add_argument("--learned-from", default=None, choices=[None, *dataset.SPLITS])
+    ap.add_argument(
+        "--sets",
+        default=None,
+        help="comma-separated learned feature sets to fit; default all of " + ",".join(FEATURE_SETS),
+    )
     args = ap.parse_args()
     run(
         split=args.split,
         evaluating=args.evaluating,
         space=args.space,
         learned_from=args.learned_from,
+        learned_sets=args.sets.split(",") if args.sets else None,
     )
 
 
