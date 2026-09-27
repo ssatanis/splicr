@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { MarketingNav } from "@/components/marketing/nav";
 import { PipelineDiagram } from "@/components/marketing/pipeline-diagram";
 import { CtaSection } from "@/components/marketing/sections/cta";
-import { SideCoil, WaveRibbons } from "@/components/three";
-import { LinkButton, MarkerPill } from "@/components/ui/bits";
+import { SideCoil } from "@/components/three";
+import { LinkButton } from "@/components/ui/bits";
 import { Reveal } from "@/components/ui/reveal";
 
 export const metadata: Metadata = {
@@ -61,12 +61,6 @@ export default function PipelinePage() {
           </div>
         </div>
       </section>
-
-      <div className="relative h-[240px] sm:h-[320px] md:h-[400px] overflow-hidden">
-        <WaveRibbons className="absolute inset-0" />
-        <MarkerPill value="91%" tone="cyan" className="left-[20%] top-[24%]" />
-        <MarkerPill value="9%" tone="cyan" className="left-[68%] top-[56%]" flip />
-      </div>
 
       <section className="container-x py-16 md:py-24">
         <Reveal>
