@@ -22,6 +22,17 @@ export interface CandidateRow {
   lfc: number | null;
   /** Benjamini-Hochberg q-value. */
   fdr: number | null;
+  /**
+   * How little of the Atlas has called this gene, 0 to 1.
+   *
+   * The second of the three constraints the page serves. A gene can be as real as
+   * the statistics allow and still be worthless to take to a bench, because it is
+   * called in a third of every screen ever run: that is a core essential, and the
+   * reader needs to see it in the row rather than infer it from a flag.
+   */
+  novelty: number | null;
+  /** BAGEL2 Bayes factor. Evidence the score is derived from, not a restatement. */
+  bayes: number | null;
   guides: number | null;
   guidesAgree: number | null;
   flags: string[];

@@ -43,6 +43,44 @@ pairs in train+validation) and each carries the other's hits as *negative* relev
 which the metric's numerator does not clip.  Subtracting the opposite direction both
 demotes the wrong genes and avoids the active subtraction.
 
+THE RANK BLEND: THE SECOND IDEA, AND WHERE THE NON-`increases` GAIN COMES FROM
+------------------------------------------------------------------------------
+The estimator above leaves ``decreases`` / ``either`` / ``impacts`` screens -- 118 of
+the 218 validation screens and 556 of the 724 holdout screens -- on the unstratified
+base, i.e. at upstream parity.  Routing them to the stratum estimate instead does not
+work: it is worth +0.0010 to +0.0023 on validation with a CI that crosses zero, and it
+*loses* 0.0019 to 0.0046 on the holdout with a CI that does not.  Both endpoints of
+that choice are therefore bad, but for opposite reasons: the base is well estimated and
+coarse, the stratum is finer and noisier.
+
+Blending them as **within-library percentiles** beats both, on both splits at once::
+
+    p_blend(g) = (1 - w) * pct( p_base(g) )  +  w * pct( p_stratum(g) )
+
+    w        0.0      0.3      0.4      0.5      0.6      0.7      1.0
+    val   0.21218  0.21389  0.21445  0.21467  0.21354  0.21528     --
+    hold  0.50915  0.51093  0.51176  0.51325  0.51231  0.51215  0.50473(*)
+
+    (*) w=1 is the pure stratum; measured separately, and the only column that is
+        worse than w=0 on the holdout.
+
+The whole interior of the interval wins.  ``w = 0.5`` -- equal weight, the round
+midpoint, not the argmax (0.7 is higher on validation, 0.5 on the holdout) -- is the
+pre-registered value.
+
+Why percentiles rather than probabilities?  Because the two estimates are not on a
+common scale: the base is a genome-wide hit rate, the stratum's mean shifts with its
+own cell's hit rate, so a probability-space mixture is dominated by whichever happens
+to be numerically larger.  The probability blend does still work (+0.00217 val /
++0.00227 hold at w=0.25) but it is worth about half as much and its useful range is
+much narrower.  The direction of that comparison is specific to the *blend*: the
+opposite-direction **contrast** wants the opposite treatment and is strictly worse in
+rank space (-0.019 to -0.023) than in probability space, because there the two terms
+*are* commensurable -- both are hit rates for the same gene under mirrored phenotypes,
+and their difference is meaningful while their rank difference is not.
+
+Tie handling in ``pct`` is load-bearing; see :func:`_tied_percentile`.
+
 WHY ASYMMETRIC, AND HOW IT WAS SELECTED
 ---------------------------------------
 Selecting on the 218 validation screens alone gives a different and *worse* answer.
@@ -83,30 +121,49 @@ MEASURED RESULTS (mean AnDCG@100, from ``assaybench.benchmark.metrics.RankingMet
     feature                                  validation(218)   holdout(724)
     prior_global_raw   upstream global-hit-freq   0.17662          0.49567
     prior_pheno_exact  upstream coarse-phenotype  0.16907            --
-    prior_global       + Beta smoothing a=300     0.17713          0.50089
-    prior_direction    + direction stratum        0.17966            --
-    prior_stratum      + (phenotype x direction)  0.19370          0.49679
-    prior_contrast_sym ungated symmetric contrast 0.21069          0.44647
-    prior_directed     PRE-REGISTERED DEFAULT     0.21112          0.50904
+    prior_global       + Beta smoothing a=300     0.17755          0.50089
+    prior_direction    + direction stratum        0.17927            --
+    prior_stratum      + (phenotype x direction)  0.19372          0.49679
+    prior_contrast_sym ungated symmetric contrast 0.21071          0.44647
+    prior_directed     probability branch only    0.21218          0.50915
+    prior_blended      PRE-REGISTERED DEFAULT     0.21467          0.51325
 
-    prior_directed vs upstream global-hit-freq
-      validation   delta=+0.03450  95% CI [+0.01832,+0.05306]  Wilcoxon p=1.6e-05
-      holdout      delta=+0.01337  95% CI [+0.00752,+0.01933]  Wilcoxon p=4.2e-13
-    prior_directed vs upstream coarse-phenotype-hit-freq
-      validation   delta=+0.04205  95% CI [+0.01871,+0.06709]  Wilcoxon p=3.0e-02
+``prior_directed`` with ``evidence="hit"``, which was the previous shipped default,
+measures 0.21112 / 0.50904; every "vs the previous default" comparison below is against
+that.  ``prior_blended`` with ``evidence="hit"`` is 0.21466 / 0.51274, i.e. the blend
+carries the gain and the evidence switch is a rounding error on validation (see below).
+
+::
+
+    prior_blended vs upstream global-hit-freq
+      validation   delta=+0.03805  95% CI [+0.02151,+0.05688]  Wilcoxon p=1.3e-06
+    prior_blended vs upstream coarse-phenotype-hit-freq
+      validation   delta=+0.04560  95% CI [+0.02300,+0.06962]  Wilcoxon p=9.1e-03
+    prior_blended vs the previous default (prior_directed, evidence="hit")
+      validation   delta=+0.00355  95% CI [+0.00070,+0.00634]  Wilcoxon p=8.6e-02
+      holdout      delta=+0.00421  95% CI [+0.00295,+0.00548]  Wilcoxon p=8.0e-10
 
     per direction        validation                     holdout
                       ours     upstream            ours     upstream
-      decreases      0.25814    0.25691  (n=67)   0.72054    0.71425  (n=471)
-      increases      0.09990    0.02536  (n=100)  0.06887    0.03303  (n=168)
-      either         0.43605    0.43653  (n=42)   0.19694    0.18960  (n=59)
-      impacts        0.04718    0.04666  (n=9)    0.22996    0.22006  (n=26)
+      decreases      0.26047    0.25691  (n=67)   0.72670    0.71425  (n=471)
+      increases      0.10106    0.02536  (n=100)  0.06880    0.03303  (n=168)
+      either         0.44685    0.43653  (n=42)   0.19680    0.18960  (n=59)
+      impacts        0.05250    0.04666  (n=9)    0.23260    0.22006  (n=26)
 
-The ``increases`` subgroup is where all of it comes from: 3.9x on validation, 2.1x on
-the holdout.  Every other subgroup is a tie on validation and a small win on the
-holdout; validation ``either`` is -0.00048 (CI [-0.00435, +0.00331]).
+Note the honesty caveat on that first pair of deltas: the **bootstrap CI excludes zero
+on validation but the Wilcoxon does not** (p = 0.086).  The blend's gain is concentrated
+on a minority of screens rather than being a broad shift, which is exactly the situation
+where those two tests disagree.  On the 724-screen holdout the same change is decisive
+by both (p = 8e-10), and the win holds across the whole w interval 0.3-0.8, so the
+claim rests on the holdout's power and the plateau's width, not on validation's p-value.
+
+The ``increases`` subgroup is still where most of it comes from: 4.0x upstream on
+validation, 2.1x on the holdout.  What the blend adds is that the other three subgroups
+are no longer ties -- ``either`` +0.0103 and ``decreases`` +0.0036 on validation,
++0.0072 and +0.0125 on the holdout.
 57 of the 218 validation screens are still clamped to 0 by the metric, so a quarter of
-the split contributes nothing to anyone's mean.
+the split contributes nothing to anyone's mean, and that count is unchanged by the
+blend: it improves screens that already scored above random rather than rescuing any.
 
 **The gate costs nothing and buys nothing on validation -- it buys robustness.**
 ``prior_contrast_sym``, the ungated symmetric version, scores 0.21069 against the
@@ -132,7 +189,30 @@ WHAT DID NOT WORK (measured, not assumed)
   in :data:`LEVEL_KEYS` if you want to re-measure.  A third hierarchy level on
   (phenotype x direction x cell_type) gained +0.0024 on validation with a bootstrap CI
   of [+0.00051, +0.00453] but Wilcoxon p = 0.25 -- the gain sits on a handful of
-  screens, so it is not shipped.
+  screens, so it is not shipped.  Re-measured as a third level under the shipped chain,
+  with shrinkage swept over ``{10, 30, 100, 300, 1000}``, every one of them is negative
+  or a null on validation: ``cell_type`` -0.0121 to -0.0001, ``screen_type`` -0.0108 to
+  +0.0004 (best CI [-0.00052,+0.00131]).
+* **Library-size buckets, the one stratum the metric's shape argues for, lose.**  The
+  metric is library-restricted and validation is split almost evenly between
+  genome-wide screens (106) and focused libraries of 300-1500 genes (97), with 1103 and
+  114 train donors respectively -- so the donor pools exist, and a focused library is a
+  curated candidate set whose hit population is genuinely different.  It still does not
+  work.  As a third level under (phenotype x direction) it runs -0.0048 (alpha=10) to
+  -0.0002 (alpha=1000) on validation; as a *replacement* for phenotype it is far worse
+  (direction x libsize -0.0071, libsize-first -0.0159 to -0.0321), and both splits agree.
+  Buckets tried: <300 / <1500 / <6000 / <14000 / >=14000.  The phenotype field already
+  encodes most of what library size encodes -- focused libraries are drug screens -- and
+  it encodes it without fragmenting the counts.
+* **Drug identity, which should have been the big one, has no coverage.**  72% of
+  validation is "Drug / Chemical / Environmental Response", and ``condition_name`` names
+  the compound, so pooling donors that used the *same* compound looks like the obvious
+  win.  After normalising the field (lowercase, dosages, units and parentheticals
+  stripped) only 54 of 218 validation screens have a compound that occurs in train at
+  all, and only 19 have three or more train donors.  Measured as a third level, the best
+  cell was +0.00100 on validation, CI [-0.00165, +0.00425], and at the shrinkage where
+  the CI tightens the level is effectively switched off.  Not a modelling failure, a
+  sample-size one: the temporal split puts almost every 2021 compound in its own cell.
 * **Time-decay weighting** of donors by publication year (parsed from ``author``):
   monotonically worse as the decay sharpens -- 0.21418 at no decay, 0.21241 at a
   10-year constant, 0.20095 at 1 year.  There is no usable recency signal here.
@@ -155,6 +235,34 @@ WHAT DID NOT WORK (measured, not assumed)
 * **Asymmetric contrast weights per direction** beyond the on/off gate: sweeping
   ``lam_dec`` and ``lam_inc`` independently bought +0.0007 over the gate on
   validation, inside the noise, so the gate is binary.
+* **Rank-based pooling, the natural alternative to counting, loses badly.**  Replacing
+  each donor's contribution with a reciprocal-rank weight ``1/(60 + rank)`` -- the RRF
+  rule the LLM ensemble baseline uses, applied to donor screens inside a stratum -- costs
+  -0.0079 on validation and **-0.0507** on the holdout.  Borda (linear rank weight) is
+  -0.0009 / -0.0135.  Both concentrate a donor's vote on its own few strongest hits, and
+  the evidence that a gene hits *at all*, across many donors, is what carries the signal.
+  The same conclusion as the earlier ``relrank`` finding, from the opposite direction and
+  much more sharply.
+* **Specificity (lift) instead of probability.**  Dividing the stratum estimate by the
+  global one, ``p_stratum / p_global**beta``, to ask "is this gene unusually hit *here*"
+  rather than "is it hit here": -0.0027 at beta=0.25, -0.0071 at 0.5, -0.0226 at 1.0.
+  Under a top-100 metric the genes that are hit everywhere are the right answer; asking
+  for specificity throws away the strongest genes to promote noisy rare ones.
+* **A second subtrahend from the within-donor negative mask.**  Same-direction donors
+  carry 31,821 negative-relevance genes in train, a different quantity from the mirrored
+  record: pooling those separately and subtracting them too is worth +0.00079 on
+  validation at weight 0.5, CI [-0.00082, +0.00249], and +0.00016 on the holdout.  The
+  mirrored-record contrast already captures it.
+* **Giving the ``increases`` branch a base or own-stratum component.**  Rank-blending the
+  contrast with the unstratified base costs -0.0030 to -0.0093 on validation; blending it
+  with its own unsubtracted stratum estimate reads +0.0037 on validation (CI
+  [-0.00030,+0.00760]) but gives back most of the holdout gain (0.50988 vs 0.51325).
+  The blend belongs on the branch that has no contrast, and only there.
+* **Blending the base against a coarser or a third estimate.**  Against the
+  direction-level estimate instead of the full (phenotype x direction) stratum:
+  -0.0005 / -0.0015, so the blend needs the *fine* stratum, not just any second opinion.
+  An equal three-way blend of base, direction and stratum is positive (+0.0023 / +0.0025)
+  but strictly below the two-way at w=0.5 on both splits.
 * **Beta-Binomial MLE shrinkage works, and is barely worse than tuning.**  Fitted on
   train alone the marginal likelihood gives ``alpha_global = 4.805``,
   ``alpha_direction = 13.002``, ``alpha_pheno_direction = 5.147``.  Inside the shipped
@@ -175,6 +283,24 @@ WHAT DID NOT WORK (measured, not assumed)
   scored 0.0006 *higher*; the shipped value is the consistent one (a gene with zero
   counts shrinks to the pooled rate at every level), not the higher one.
 
+ONE SMALL THING THAT DID WORK, AND IS ALMOST A NULL
+--------------------------------------------------
+``evidence="pos"`` (relevance > 0) rather than upstream's ``hit`` flag.  These are not
+the same field: 3081 of train's 52,763 ``increases``-direction positive-relevance genes
+carry ``hit=False``, and 133 negative-relevance genes carry ``hit=True``.  ``rel > 0``
+is what the metric actually rewards, so it is the better-specified estimator.  It is
+also, on validation, a dead tie: +0.00001, CI [-0.00145, +0.00148], Wilcoxon p = 0.56.
+On the 724-screen holdout it is +0.00051, CI [+0.00030, +0.00072], p = 6e-20 -- tiny but
+unambiguous, and non-negative at every ``lam`` and ``w`` tested.  It is the default on
+the correctness argument, with the measurement recorded as the near-null it is.
+
+(Unrelated data note found while checking this: four records -- ``U_1389_inc``,
+``U_1633_inc``, ``U_1636_inc`` in train and ``U_1718_inc`` in validation -- ship a
+``hit`` list 1-3 entries *longer* than ``relevance_genes``.  ``zip`` in
+:meth:`StratifiedPrior._encode_donor` truncates to the shortest, so only the trailing
+extras are dropped and no gene is lost.  Worth knowing before anyone indexes those
+columns in parallel.)
+
 HONEST TUNING NOTE
 ------------------
 Hyperparameters were selected on validation plus the train-internal holdout; the test
@@ -186,6 +312,19 @@ selection optimism.  Two things bound that risk here: the winning region is broa
 (1255 of 1260 direction-gated variants beat upstream on both splits, spanning
 0.1779-0.2128 on validation and 0.4959-0.5096 on the holdout), and the untuned
 ``alphas="eb"`` estimator lands within 0.0008 of the tuned default.
+
+The same check run on ``blend_weight`` alone (grid ``{0, 0.2, ..., 0.8, 1.0}``, tune on
+109 validation screens, score the other 109, 400 resamples) is the one number in this
+file that should temper the headline: the honestly-held-out value of tuning ``w`` is
+**+0.00096** over ``w = 0``, against the +0.00249 that full-validation tuning shows --
+so about 0.0015 of the blend's validation gain is selection optimism, and on validation
+alone the honest gain is about a third of the apparent one.  That is why the holdout
+matters here rather than being a formality: it is 724 screens, it was not used to pick
+``w = 0.5``, and it puts the same change at +0.00421 with CI [+0.00295, +0.00548].  The
+grid's own preference is also worth stating plainly -- across those 400 resamples the
+half-sample argmax landed on w=0.7 (170x) or w=0.8 (152x), not on the shipped 0.5, and
+w=0 won only 5 times.  Shipping the midpoint of a flat interval rather than its argmax
+costs ~0.0006 on validation and gains ~0.0011 on the holdout.
 
 The shipped default is not literally the argmax of the selection rule.  The rule's
 argmax mixes hierarchy depths -- own estimate at the direction level, subtrahend at
@@ -223,7 +362,8 @@ import numpy as np
 
 #: Every feature this module emits, in a stable order.
 FEATURE_NAMES: list[str] = [
-    "prior_directed",            # THE feature: direction-gated prior (see BEST_FEATURE)
+    "prior_blended",             # THE feature: rank-blended branch (see BEST_FEATURE)
+    "prior_directed",            # the previous default: probability-space branch only
     "prior_global_raw",          # upstream global-hit-freq: hits / times_measured
     "prior_global",              # the same, Beta-smoothed -- the `p_base` branch
     "prior_pheno_exact",         # upstream coarse-phenotype-hit-freq (no backoff)
@@ -236,13 +376,19 @@ FEATURE_NAMES: list[str] = [
     "gene_never_hit",            # 1.0 when assayed >= 20 times and never a hit
 ]
 
+#: Features whose value depends on the *query library*, not only on the gene, because
+#: they are computed as within-library percentiles.  These cannot be expressed as a
+#: vocabulary-length vector; :meth:`StratifiedPrior.library_column` produces them.
+LIBRARY_FEATURES: frozenset[str] = frozenset({"prior_blended"})
+
 #: The feature whose standalone validation AnDCG@100 the self-check reports.
-BEST_FEATURE = "prior_directed"
+BEST_FEATURE = "prior_blended"
 
 #: Pre-registered configuration.  Selected on validation *and* on the train-internal
-#: temporal holdout; see "WHY ASYMMETRIC" above.  The test split was never loaded.
+#: temporal holdout; see "WHY ASYMMETRIC" and "THE RANK BLEND" above.  The test split
+#: was never loaded.
 DEFAULT_CONFIG: dict[str, Any] = {
-    "evidence": "hit",
+    "evidence": "pos",
     "levels": ("direction", "pheno_direction"),
     "alphas": (30.0, 100.0, 30.0),
     "base_alpha": 300.0,
@@ -252,6 +398,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "either_contrast_weight": 0.0,
     "measured_denominator": True,
     "min_donors": 1,
+    "blend_weight": 0.5,
 }
 
 TRAIN_SPLIT = "train"
@@ -457,6 +604,36 @@ def _shrink(num: np.ndarray, den: np.ndarray, alpha: float,
     return np.where(total > 0, est, par)
 
 
+def _tied_percentile(x: np.ndarray) -> np.ndarray:
+    """Within-library percentile in ``[0, 1]``, with **tied values sharing one rank**.
+
+    Tie handling is load-bearing, not cosmetic.  The Beta-smoothed base pins every
+    gene the train split never hit to the same number -- a median 13.8% of a
+    validation library, up to 58.5% -- so a plain ``argsort`` percentile would hand
+    those tied genes *distinct* ranks in ``relevance_genes`` order and silently turn
+    the parquet's gene order into a predictor.  (That order is measured to be at
+    chance: 0.02074 forward vs 0.01880 for a constant score on validation, 0.00788 vs
+    0.01111 on the temporal holdout, against 0.01893 for random.  So it would be noise
+    rather than leakage -- but noise dressed as signal, and it would move the blend's
+    headline.  Averaging ties removes the question: ties stay ties and are broken by
+    :meth:`StratifiedPrior.rank`'s seeded jitter, exactly as in the unblended branch.)
+    """
+    n = len(x)
+    if n == 0:
+        return x.astype(np.float64)
+    order = np.argsort(x, kind="stable")
+    xs = x[order]
+    out = np.empty(n, dtype=np.float64)
+    i = 0
+    while i < n:
+        j = i + 1
+        while j < n and xs[j] == xs[i]:
+            j += 1
+        out[order[i:j]] = (i + j - 1) / 2.0
+        i = j
+    return out / max(n - 1, 1)
+
+
 @dataclass
 class _Cell:
     """Pooled evidence for one stratum: per-gene numerator and denominator."""
@@ -509,6 +686,11 @@ class StratifiedPrior:
         measured_denominator: False switches to times-*screened*, the common mistake;
             kept so the ablation is runnable.
         min_donors: skip a stratum with fewer donors than this and keep the parent.
+        blend_weight: weight on the stratum estimate inside the non-contrast branch's
+            within-library rank blend, ``0`` for the pure unstratified base (the
+            previous default, i.e. ``prior_directed``) and ``1`` for the pure stratum.
+            ``0.5`` is pre-registered; see "THE RANK BLEND" in the module docstring.
+            Affects ``prior_blended`` only.
         use_gene_mapper: normalize symbols through AssayBench's ``GeneMapper``.
 
     Deterministic and picklable after :meth:`fit`.
@@ -526,6 +708,7 @@ class StratifiedPrior:
         either_contrast_weight: float = DEFAULT_CONFIG["either_contrast_weight"],
         measured_denominator: bool = DEFAULT_CONFIG["measured_denominator"],
         min_donors: int = DEFAULT_CONFIG["min_donors"],
+        blend_weight: float = DEFAULT_CONFIG["blend_weight"],
         use_gene_mapper: bool = True,
     ) -> None:
         if evidence not in EVIDENCE:
@@ -552,6 +735,9 @@ class StratifiedPrior:
         self.either_contrast_weight = float(either_contrast_weight)
         self.measured_denominator = bool(measured_denominator)
         self.min_donors = int(min_donors)
+        if not 0.0 <= float(blend_weight) <= 1.0:
+            raise ValueError(f"blend_weight must be in [0, 1], got {blend_weight}")
+        self.blend_weight = float(blend_weight)
         self._norm = _Normalizer(use_gene_mapper)
         self.fitted = False
 
@@ -829,6 +1015,49 @@ class StratifiedPrior:
             "gene_never_hit": ((m >= _NEVER_HIT_MIN_MEASURED) & (h == 0)).astype(np.float64),
         }
 
+    def library_column(self, screen: Mapping[str, Any], idx: np.ndarray,
+                       name: str = "prior_blended") -> np.ndarray:
+        """One library-length column for a feature in :data:`LIBRARY_FEATURES`.
+
+        ``idx`` is the screen's vocab indices from :meth:`_library_index` (``-1`` for a
+        symbol the train split never assayed).  The return value is aligned with it.
+
+        ``prior_blended`` keeps the ``increases`` contrast branch exactly as
+        :meth:`feature_vectors` builds it and replaces the other branch with a rank
+        blend of the unstratified base and the stratum estimate::
+
+            increases:  pct( p_stratum(g) - lam * p_stratum_mirrored(g) )
+            otherwise:  (1-w) * pct( p_base(g) )  +  w * pct( p_stratum(g) )
+
+        Both branches come out as within-library percentiles in ``[0, 1]``, so the
+        feature is on one comparable scale across screens -- which a downstream ranker
+        needs and which the raw probabilities, whose scale shifts with the stratum's
+        own hit rate, do not provide.  Wrapping the contrast branch in ``pct`` is a
+        monotone transform, so it leaves that branch's ranking (and therefore its
+        AnDCG) bit-identical; the self-check asserts this.
+        """
+        self._require()
+        if name not in LIBRARY_FEATURES:
+            raise ValueError(f"{name!r} is not a library feature; use feature_vectors()")
+        vecs = self.feature_vectors(screen)
+        safe = np.maximum(idx, 0)
+        known = idx >= 0
+        pooled = self.pooled_rate
+
+        def col(vec: np.ndarray, oov: float) -> np.ndarray:
+            return np.where(known, vec[safe], oov)
+
+        d = direction_of(screen)
+        if d in self.contrast_directions and mirror_screen(screen) is not None:
+            raw = col(vecs["prior_directed"], pooled * (1.0 - self.contrast_weight))
+            return _tied_percentile(raw)
+        base = _tied_percentile(col(vecs["prior_global"], pooled))
+        if self.blend_weight <= 0.0:
+            return base
+        stratum = _tied_percentile(col(vecs["prior_stratum"], pooled))
+        w = self.blend_weight
+        return (1.0 - w) * base + w * stratum
+
     def gene_index(self, gene: str) -> int:
         """Vocab index for a symbol, or ``-1`` when the train split never assayed it."""
         self._require()
@@ -843,6 +1072,11 @@ class StratifiedPrior:
         pooled rate put through the same arithmetic the screen's branch uses -- which is
         why this has to know the screen's direction.
         """
+        if name in LIBRARY_FEATURES:
+            raise ValueError(
+                f"{name!r} is library-dependent; its out-of-vocabulary value is folded "
+                "into library_column(), which percentiles the whole library at once"
+            )
         p = self.pooled_rate
         if name in ("prior_global_raw", "prior_pheno_exact",
                     "gene_log_times_measured", "gene_never_hit"):
@@ -881,18 +1115,11 @@ class StratifiedPrior:
         names = self._check_features(features)
         out: dict[str, dict[str, dict[str, float]]] = {}
         for s in screens:
-            vecs = self.feature_vectors(s)
-            idx, genes = self._library_index(s)
-            fb = {n: self._out_of_vocab(n, s) for n in names}
-            cols = {n: vecs[n] for n in names}
-            per_gene: dict[str, dict[str, float]] = {}
-            for pos, gene in enumerate(genes):
-                j = int(idx[pos])
-                if j >= 0:
-                    per_gene[gene] = {n: float(v[j]) for n, v in cols.items()}
-                else:
-                    per_gene[gene] = dict(fb)
-            out[str(s["dataset_name"])] = per_gene
+            genes, cols = self._columns(s, names)
+            out[str(s["dataset_name"])] = {
+                gene: {n: float(cols[n][i]) for n in names}
+                for i, gene in enumerate(genes)
+            }
         return out
 
     def transform_dense(
@@ -907,13 +1134,10 @@ class StratifiedPrior:
         names = self._check_features(features)
         out: dict[str, tuple[list[str], np.ndarray]] = {}
         for s in screens:
-            vecs = self.feature_vectors(s)
-            idx, genes = self._library_index(s)
-            safe = np.maximum(idx, 0)
-            known = idx >= 0
+            genes, cols = self._columns(s, names)
             mat = np.empty((len(genes), len(names)), dtype=np.float64)
             for c, n in enumerate(names):
-                mat[:, c] = np.where(known, vecs[n][safe], self._out_of_vocab(n, s))
+                mat[:, c] = cols[n]
             out[str(s["dataset_name"])] = (genes, mat)
         return out
 
@@ -931,16 +1155,35 @@ class StratifiedPrior:
         systematic edge to whatever order the parquet happens to store.
         """
         self._require()
-        vecs = self.feature_vectors(screen)
-        idx, genes = self._library_index(screen)
-        v = vecs[feature]
-        score = np.where(idx >= 0, v[np.maximum(idx, 0)],
-                         self._out_of_vocab(feature, screen))
+        genes, cols = self._columns(screen, [feature])
+        score = cols[feature]
         jitter = np.random.default_rng(seed).permutation(len(genes)).astype(np.float64)
         order = np.lexsort((jitter, -score))
         if k is not None:
             order = order[:k]
         return [genes[i] for i in order]
+
+    def _columns(self, screen: Mapping[str, Any], names: Sequence[str]
+                 ) -> tuple[list[str], dict[str, np.ndarray]]:
+        """Deduped library symbols and one library-length column per feature.
+
+        The single place that knows how a vocabulary-length feature and a
+        library-dependent one (:data:`LIBRARY_FEATURES`) are both turned into a column,
+        so :meth:`transform`, :meth:`transform_dense` and :meth:`rank` cannot drift.
+        """
+        idx, genes = self._library_index(screen)
+        safe = np.maximum(idx, 0)
+        known = idx >= 0
+        cols: dict[str, np.ndarray] = {}
+        vecs: dict[str, np.ndarray] | None = None
+        for n in names:
+            if n in LIBRARY_FEATURES:
+                cols[n] = self.library_column(screen, idx, n)
+                continue
+            if vecs is None:
+                vecs = self.feature_vectors(screen)
+            cols[n] = np.where(known, vecs[n][safe], self._out_of_vocab(n, screen))
+        return genes, cols
 
     def _check_features(self, features: Iterable[str] | None) -> list[str]:
         names = list(features) if features is not None else list(FEATURE_NAMES)
@@ -1040,15 +1283,24 @@ def _main() -> int:
     prior = StratifiedPrior().fit(train)
     print(f"  config: evidence={prior.evidence} levels={prior.levels} "
           f"alphas={prior.alphas} base_alpha={prior.base_alpha:g}")
-    print(f"          contrast={prior.contrast_weight:g} on {prior.contrast_directions}")
+    print(f"          contrast={prior.contrast_weight:g} on {prior.contrast_directions}, "
+          f"blend_weight={prior.blend_weight:g}")
     print(f"  vocabulary {len(prior.vocab)} genes, pooled hit rate {prior.pooled_rate:.5f}")
 
     order = ["prior_global_raw", "prior_pheno_exact", "prior_global", "prior_direction",
-             "prior_stratum", "prior_contrast_sym", "prior_directed"]
+             "prior_stratum", "prior_contrast_sym", "prior_directed", "prior_blended"]
     per: dict[str, np.ndarray] = {}
     for name in order:
         per[name] = validation_andcg(prior, name, val)
         print(f"    {name:<24} validation AnDCG@100 = {per[name].mean():.5f}")
+
+    # The contrast branch is wrapped in a monotone percentile, so on `increases`
+    # screens prior_blended and prior_directed must rank identically.
+    inc = [s for s in val if direction_of(s) in prior.contrast_directions]
+    same_rank = all(prior.rank(s, "prior_blended") == prior.rank(s, "prior_directed")
+                    for s in inc)
+    print(f"  contrast branch unchanged by the percentile wrap "
+          f"({len(inc)} inc screens rank identically): {same_rank}")
 
     best = max(per, key=lambda n: float(per[n].mean()))
     print(f"\n  BEST SINGLE FEATURE: {best}  validation AnDCG@100 = {per[best].mean():.5f}")

@@ -61,6 +61,9 @@ data/lake/
 
 # Stray analysis caches. Scripts that need one write it to the scratchpad.
 *.npy
+*.pkl
+engine/analysis/**/cache/
+engine/analysis/**/*.log
 
 # Temporary measurement routes. Agents create these to measure geometry; they
 # are never part of the app.

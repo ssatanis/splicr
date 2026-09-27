@@ -52,6 +52,18 @@ export const FDR_THRESHOLD = 0.1;
 /** Where "likely real" is drawn. One constant, so no two pages count it differently. */
 export const LIKELY_REAL_THRESHOLD = 0.6;
 
+/**
+ * Half-width of the calibration interval on chance real.
+ *
+ * It was written out as "±0.06" in four unrelated files, which is four chances
+ * for the printed band to drift away from the one the score is actually
+ * calibrated to. It matters more than a tidy-up: the top twenty rows of the
+ * candidate table span 96% to 88%, entirely inside this band, so any page that
+ * ranks by chance real is ordering the head of its list by noise and has to say
+ * so beside the column.
+ */
+export const CALIBRATION_BAND = 0.06;
+
 /** Public screens in the Atlas. The per-gene denominators are subsets of this. */
 export const ATLAS_SCREENS_TOTAL = 2_217;
 export const ATLAS_HITS_WITH_OUTCOMES = 1_840;
@@ -797,7 +809,7 @@ const STAGE_TEMPLATES: StageTemplate[] = [
     durationSec: 34,
     tool: "splicr.score v0.3",
     detail: (_s, hits) =>
-      `${hits.filter((h) => h.chance >= LIKELY_REAL_THRESHOLD).length} candidates at chance real ${LIKELY_REAL_THRESHOLD.toFixed(2)} or above; calibration band ±0.06`,
+      `${hits.filter((h) => h.chance >= LIKELY_REAL_THRESHOLD).length} candidates at chance real ${LIKELY_REAL_THRESHOLD.toFixed(2)} or above; calibration band ±${CALIBRATION_BAND.toFixed(2)}`,
   },
   {
     key: "report",

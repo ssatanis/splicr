@@ -153,14 +153,15 @@ def main() -> int:
     if writer:
         writer.close()
 
-    missing = sorted(wanted - {int(x) for x in []}) if kept != len(wanted) else []
     print(
         f"screens requested={len(wanted)} written={kept} refused={refused} "
         f"{time.time() - t0:.0f}s -> {a.out}"
     )
     if kept != len(wanted):
-        print(f"WARNING: {len(wanted) - kept} requested screens were not found in the archive")
-        _ = missing
+        # A requested screen absent from the archive means the boundary file and the
+        # archive are from different releases. Fail rather than ship a partial cache
+        # that would silently give a baseline NaN features for some units.
+        print(f"ERROR: {len(wanted) - kept} requested screens were not found in the archive")
         return 1
     return 0
 

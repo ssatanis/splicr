@@ -12,6 +12,7 @@
  * builder does not care which one it was handed. Nothing here is a measurement,
  * so nothing here changes when a screen changes.
  */
+import { CALIBRATION_BAND } from "@/lib/mock/data";
 
 export const PIPELINE = {
   name: "splicr-pipeline",
@@ -74,7 +75,11 @@ export const PARAMETERS: ParameterRecord[] = [
   { label: "Zero-count guide ceiling", value: "5% of the library" },
   { label: "Skew ratio ceiling", value: "10 (90th over 10th percentile)" },
   { label: "Bottlenecked replicate policy", value: "Down-weighted, not dropped" },
-  { label: "Calibration band", value: "Plus or minus 0.06 on chance real" },
+  {
+    label: "Calibration band",
+    value: `Plus or minus ${CALIBRATION_BAND.toFixed(2)} on chance real`,
+    note: "The top of any list ranked by chance real is ordered inside this band, so its order is not evidence",
+  },
 ];
 
 /**

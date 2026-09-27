@@ -5,7 +5,7 @@ tried, built as strong as the data on disk allows. They exist so that any claim
 SplicR makes about ranking a screen's hits by replication probability is stated
 against the best available alternative rather than against a straw man.
 
-Four families, and the argument each one makes.
+Five families, and the argument each one makes.
 
 ``lit_``
     A literature prior. Heavily studied genes hit more often and get reported
@@ -13,8 +13,11 @@ Four families, and the argument each one makes.
     might do well. This is the closest thing on disk to what a language model
     brings to the task, and the AssayBench analysis showed that a
     literature-recall method wins where the label is a published hit list. Built
-    from PubTator3 paper counts, Open Targets disease associations, and
-    annotation depth.
+    from PubTator3 paper counts, Open Targets disease associations, Open Targets
+    associations restricted to cancer terms, and annotation depth. The cancer
+    restriction is there because a generic fame count is the weak form of the
+    argument on a proliferation benchmark, and the weak form is not worth
+    beating.
 
 ``net_``
     A network prior. Two arguments: a gene's connectivity predicts essentiality
@@ -23,17 +26,39 @@ Four families, and the argument each one makes.
 
 ``multi_``
     Published multi-hit reasoning: a hit is more credible when it recurs across
-    screens. Built ONLY over :func:`dataset.allowed_background_screens`, so the
-    corpus it is fitted on cannot contain the target screen, the target
-    publication, or any screen in the pair's cell line.
+    screens. Two forms: recurrence across the whole allowed background, and
+    recurrence restricted to the background screens whose hit set most resembles
+    screen A's, which is the stronger version of the claim. Built ONLY over
+    :func:`dataset.allowed_background_screens`, so the corpus it is fitted on
+    cannot contain the target screen, the target publication, or any screen in
+    the pair's cell line.
+
+``dep_``
+    A DepMap lookup table: what fraction of about 1,178 cell lines depend on this
+    gene. No screen is opened at all. It rests on the benchmark's one explicit
+    judgement about cell-line-independent DepMap products, so it is kept in its
+    own family and a ``learned_no_depmap`` ablation is reported beside it.
 
 ``a_``
     Screen A's own signal. ``a_effect`` is the published margin to beat: mean AP
     0.2517 on the development primary space, against a 0.0453 floor.
 
+``rerank_*`` asks the fairer question for a gene-level prior: given A's hit list,
+does the prior order it well. Every hit stays above every non-hit and the prior
+only reorders within each block, which is what a language model is actually asked
+to do at the product level, so a prior with any information about which of A's
+hits replicate beats ``a_hit`` here even when it is worthless as a cold ranking.
+
 And ``learned_*``, a logistic regression and a gradient-boosted tree over every
 label-free feature above, to establish what a competent ML baseline reaches with
 no SplicR pipeline signal at all. That is the number the method has to beat.
+Ablations drop one family at a time, because a prior can be worthless alone and
+still carry information at the margin, and only the ablation tells the two apart.
+
+:func:`diagnostics` answers the objections that the winning baselines invite:
+whether they are just recovering essentiality, whether they need a large
+background corpus, whether they are redundant with each other, and which sign the
+literature prior actually carries.
 
 Leakage. Every unit-specific feature reads either screen A alone or the allowed
 background set. No feature reads screen B, B's publication, or any screen in the
@@ -43,6 +68,16 @@ cannot have seen a held-out label. The literature prior uses a PubTator count
 built with the benchmark's own 14 publications excluded, because otherwise a
 gene named in Behan 2019's abstract earns a mention from the paper whose hit
 calls are the label.
+
+One residual is left and it is closed by measurement rather than by argument. A
+held-out unit's own features are clean, but the learned models are fitted on
+development units, and a development unit's allowed background excludes only its
+own publications and cell line, so 32.3% of it is held-out screens. No per-gene
+held-out label can travel that path, but the rule's wording covers it, so
+``run(train_background_ban="evaluated_split")`` refits with every held-out
+publication banned from the training-side background and the two numbers are
+reported together. A background with all 14 benchmark publications removed is not
+an option: 761 of the 795 eligible screens belong to them.
 
 Usage::
 
@@ -619,10 +654,48 @@ def _beta_moment_prior(n_hit: np.ndarray, n_meas: np.ndarray) -> tuple[float, fl
 MULTI_SIM_FRACTIONS = (0.10, 0.25, 0.50)
 
 
+#: Why there is no "background corpus with every benchmark publication removed".
+#: Measured, not assumed: the eligible corpus is 795 screens over 24
+#: publications, and 761 of those screens belong to the benchmark's own 14
+#: publications, because Meyers 2017 deposits 340 screens and Behan 2019 deposits
+#: 325. Banning all 14 leaves 34 screens, which is below the coverage any
+#: recurrence estimate needs. So the per-unit
+#: :func:`dataset.allowed_background_screens` set is the only workable
+#: construction, and it is the correct one at the unit level: a unit's own
+#: background never contains its B, its publications or its cell line.
+#: ``ban_publications`` exists for the one residual this leaves, which
+#: :func:`run` closes as a sensitivity rather than argue about. See
+#: :data:`TRAIN_BACKGROUND_BAN_NOTE`.
+_BENCHMARK_CORPUS_NOTE = (
+    "795 eligible screens over 24 publications; 761 of them belong to the "
+    "benchmark's own 14 publications (Meyers 2017: 340, Behan 2019: 325)"
+)
+
+#: The residual the per-unit background leaves, stated so it can be tested.
+#:
+#: A held-out unit's own features are clean. But the learned models are FITTED on
+#: development units, and a development unit's allowed background excludes only
+#: its own publications and cell line, so it does contain held-out screens: 32.3%
+#: of every development unit's background on average, including every screen that
+#: supplies a held-out label. No per-gene held-out label can travel that path,
+#: because the feature is an average over hundreds of screens and the fit is 45
+#: coefficients, but "a prior fitted on data containing B" is exactly the wording
+#: of the rule, one level removed. ``run(train_background_ban="evaluated_split")``
+#: removes it outright: training-side recurrence features are then built over a
+#: background with every publication of the evaluated split banned, so not one
+#: screen from a held-out paper touches the fit. It costs coverage, which is why
+#: it is reported beside the main number and not instead of it.
+TRAIN_BACKGROUND_BAN_NOTE = (
+    "training-side recurrence features built with every publication of the "
+    "evaluated split banned from the background corpus"
+)
+
+
 def multi_hit_features(
     unit: dataset.ReplicationPair,
     genes: Sequence[str],
     a_hit: np.ndarray | None = None,
+    ban_publications: frozenset[str] = frozenset(),
 ) -> dict[str, np.ndarray]:
     """Published multi-hit reasoning, fitted ONLY on the allowed background.
 
@@ -649,9 +722,17 @@ def multi_hit_features(
     removes both pair screens, both publications and every screen in the pair's
     cell line. So nothing here can read B, a same-paper sibling of B, or a third
     lab's screen of B's cell line.
+
+    ``ban_publications`` narrows that set further, by ``SOURCE_ID``. It is not
+    needed for a unit's own honesty, which the allowed set already secures; it
+    exists so the fit itself can be rebuilt over a background that has never seen
+    a screen from the evaluated split. See :data:`TRAIN_BACKGROUND_BAN_NOTE`.
     """
     screen_ids, corpus_genes, measured, hit = background_matrix()
     allowed = set(dataset.allowed_background_screens(unit))
+    idx_meta = dataset.screen_index()
+    if ban_publications:
+        allowed = {s for s in allowed if idx_meta[int(s)]["SOURCE_ID"] not in ban_publications}
     rows = np.array([i for i, s in enumerate(screen_ids) if int(s) in allowed], dtype=np.int64)
     if rows.size == 0:
         raise RuntimeError(f"{unit.unit_id}: no allowed background screens")
@@ -659,6 +740,24 @@ def multi_hit_features(
     n_meas = measured[rows].sum(axis=0).astype(float)
     n_hit = hit[rows].sum(axis=0).astype(float)
     alpha, beta = _beta_moment_prior(n_hit, n_meas)
+
+    # The same argument counted by PUBLICATION rather than by screen, which is
+    # the form the multi-hit literature actually makes: a gene hit in five
+    # screens from one paper has recurred once, not five times. The background
+    # corpus carries several screens per publication, so the screen-level count
+    # overweights prolific papers. A gene counts as measured by a publication if
+    # any of its screens measured it and as hit if any called it a hit.
+    by_pub: dict[str, list[int]] = collections.defaultdict(list)
+    for i in rows:
+        by_pub[idx_meta[int(screen_ids[i])]["SOURCE_ID"]].append(int(i))
+    p_meas = np.zeros(measured.shape[1], dtype=float)
+    p_hit = np.zeros(measured.shape[1], dtype=float)
+    for grp in by_pub.values():
+        g = np.asarray(grp, dtype=np.int64)
+        p_meas += measured[g].any(axis=0)
+        p_hit += hit[g].any(axis=0)
+    pa, pb = _beta_moment_prior(p_hit, p_meas)
+    pub_shrunk = (p_hit + pa) / (p_meas + pa + pb)
 
     with np.errstate(invalid="ignore", divide="ignore"):
         raw = np.where(n_meas > 0, n_hit / n_meas, np.nan)
@@ -678,7 +777,15 @@ def multi_hit_features(
         "multi_n_hit": np.log1p(pick(n_hit, 0.0)),
         "multi_n_measured": np.log1p(pick(n_meas, 0.0)),
         "multi_well_covered": pick(n_meas >= MULTI_MIN_MEASURED, 0.0).astype(float),
-        "_prior": np.array([alpha, beta, float(rows.size)]),
+        "multi_pub_rate_shrunk": pick(pub_shrunk, pa / (pa + pb)),
+        "multi_n_pub_hit": np.log1p(pick(p_hit, 0.0)),
+        "multi_n_pub_measured": np.log1p(pick(p_meas, 0.0)),
+        # The classic categorical form of the published argument, stated as a
+        # ranking: hit in at least two independent publications, then at least
+        # one, then none. Contained in the continuous rate above, and reported so
+        # the continuous form can be shown to dominate it rather than asserted to.
+        "multi_pub_at_least_2": pick((p_hit >= 2).astype(float), 0.0),
+        "_prior": np.array([alpha, beta, float(rows.size), float(len(by_pub))]),
     }
 
     if a_hit is None:
@@ -760,11 +867,16 @@ def _rank01(x: np.ndarray) -> np.ndarray:
 FEATURE_FAMILIES = ("lit", "net", "multi", "a")
 
 
-def unit_features(unit: dataset.ReplicationPair):
+def unit_features(unit: dataset.ReplicationPair, ban_publications: frozenset[str] = frozenset()):
     """Every baseline feature for one unit, in the gene order the loader returns.
 
     Returns a pandas DataFrame with ``gene``, ``is_common_essential``, and one
     column per feature. Nothing in it reads screen B.
+
+    ``ban_publications`` is passed through to :func:`multi_hit_features` and
+    narrows the background corpus. It changes only the ``multi_`` family and the
+    ``net_*_nbr_multi_rate`` columns derived from it; every other feature is
+    gene-level and unit-independent.
     """
     import pandas as pd
 
@@ -773,7 +885,7 @@ def unit_features(unit: dataset.ReplicationPair):
     a_hit = inputs["a_hit"].to_numpy().astype(float)
     a_score1 = inputs["a_score1"].to_numpy().astype(float)
 
-    multi = multi_hit_features(unit, genes, a_hit=a_hit)
+    multi = multi_hit_features(unit, genes, a_hit=a_hit, ban_publications=ban_publications)
     prior = multi.pop("_prior")
     sim = multi.pop("_sim", np.array([float("nan")] * 3))
     feats: dict[str, np.ndarray] = {}
@@ -788,17 +900,25 @@ def unit_features(unit: dataset.ReplicationPair):
     feats["a_effect"] = sign * a_score1 if sign else np.zeros(len(genes))
     feats["a_effect_known"] = np.full(len(genes), 1.0 if sign else 0.0)
 
-    df = pd.DataFrame(feats)
+    # float32 throughout: 276 units x 18,000 genes x 45 features is 1.8 GB in
+    # float64 and this machine has 17 GB, so the held-out pass would swap. Every
+    # feature is rank-normalised within the unit before any model sees it, so
+    # float32 precision is far finer than the ranking needs.
+    df = pd.DataFrame({k: np.asarray(v, dtype=np.float32) for k, v in feats.items()})
     df.insert(0, "gene", genes)
     df.insert(1, "is_common_essential", inputs["is_common_essential"].to_numpy())
     df.attrs["multi_prior"] = {
         "alpha": float(prior[0]),
         "beta": float(prior[1]),
         "n_background_screens": int(prior[2]),
+        "n_background_publications": int(prior[3]),
         "max_jaccard_to_a": float(sim[0]),
         "median_jaccard_to_a": float(sim[1]),
     }
     df.attrs["unit_id"] = unit.unit_id
+    # Recorded so a run's provenance says which background the frame was built
+    # over, rather than leaving it to be inferred from the call site.
+    df.attrs["banned_publications"] = sorted(ban_publications)
     return df
 
 
@@ -847,6 +967,10 @@ SINGLE_BASELINES: dict[str, tuple[str, float]] = {
     "multi_sim_rate_q10": ("multi_sim_rate_q10", 1.0),
     "multi_sim_rate_q25": ("multi_sim_rate_q25", 1.0),
     "multi_sim_rate_q50": ("multi_sim_rate_q50", 1.0),
+    # Counted by publication rather than by screen, plus the classic categorical
+    # form of the same argument.
+    "multi_pub_rate_shrunk": ("multi_pub_rate_shrunk", 1.0),
+    "multi_pub_at_least_2": ("multi_pub_at_least_2", 1.0),
     # The literature prior with the sign flipped. Included because if fame is
     # anti-predictive on this task that is a result, not a bug, and reporting only
     # the positive direction would hide it.
@@ -897,7 +1021,7 @@ COMBO_BASELINES: dict[str, tuple[str, ...]] = {
         "+net_reactome_best_a_hit_frac",
     ),
     # Multi-hit reasoning with its coverage caveat folded in.
-    "multi_composite": ("+multi_hit_rate_shrunk", "+multi_n_hit"),
+    "multi_composite": ("+multi_hit_rate_shrunk", "+multi_n_hit", "+multi_pub_rate_shrunk"),
     # The obvious strong hybrid a reviewer would ask for: A's effect size plus
     # the recurrence prior, equally weighted.
     "a_effect_plus_multi": ("+a_effect", "+multi_hit_rate_shrunk"),
@@ -984,6 +1108,10 @@ LEARNED_FEATURES: tuple[str, ...] = (
     "multi_sim_rate_q10",
     "multi_sim_rate_q25",
     "multi_sim_rate_q50",
+    "multi_pub_rate_shrunk",
+    "multi_n_pub_hit",
+    "multi_n_pub_measured",
+    "multi_pub_at_least_2",
     "dep_mean_effect",
     "dep_q10_effect",
     "dep_frac_dep",
@@ -1090,8 +1218,14 @@ def _predict(model, X: np.ndarray) -> np.ndarray:
 # Evaluation driver
 # ---------------------------------------------------------------------------
 
-def _frames(split: str) -> dict[str, "object"]:
-    return {u.unit_id: unit_features(u) for u in dataset.pairs(split)}
+def _frames(split: str, ban_publications: frozenset[str] = frozenset()) -> dict[str, "object"]:
+    return {u.unit_id: unit_features(u, ban_publications=ban_publications) for u in dataset.pairs(split)}
+
+
+def split_publications(split: str) -> frozenset[str]:
+    """Every ``SOURCE_ID`` that appears on either side of any pair in ``split``."""
+    us = dataset.pairs(split)
+    return frozenset({u.query_publication for u in us} | {u.target_publication for u in us})
 
 
 def _labels(split: str, evaluating: bool, frames=None):
@@ -1138,6 +1272,7 @@ def run(
     space: str = dataset.PRIMARY_SPACE,
     learned_from: str | None = None,
     learned_sets: Sequence[str] | None = None,
+    train_background_ban: str | None = None,
     verbose: bool = True,
 ) -> dict:
     """Score every baseline on ``split`` and paired-test each against A's effect size.
@@ -1149,8 +1284,23 @@ def run(
     * ``"development"``: fit once on all development units and predict. This is
       the only sanctioned way to score held out, and it is why held out is
       touched once.
+
+    ``train_background_ban="evaluated_split"`` rebuilds the TRAINING frames with
+    every publication of ``split`` banned from the background corpus, so the fit
+    cannot have been computed over any screen of the split it is scored on. It
+    applies only when ``learned_from`` is set, since leave-one-pair-out has no
+    separate training split to rebuild. See :data:`TRAIN_BACKGROUND_BAN_NOTE` for
+    the objection it closes and what it costs.
     """
     import pandas as pd
+
+    if train_background_ban not in (None, "evaluated_split"):
+        raise ValueError(f"unknown train_background_ban: {train_background_ban!r}")
+    if train_background_ban and learned_from is None:
+        raise ValueError(
+            "train_background_ban needs learned_from: leave-one-pair-out has no "
+            "separate training split whose background could be rebuilt"
+        )
 
     frames = _frames(split)
     labels = _labels(split, evaluating=evaluating, frames=frames)
@@ -1191,7 +1341,8 @@ def run(
                         preds[u] = _predict(model, design_matrix(frames[u], feats))
                 scores[f"{tag}_{kind}"] = preds
     else:
-        src_frames = _frames(learned_from)
+        ban = split_publications(split) if train_background_ban == "evaluated_split" else frozenset()
+        src_frames = _frames(learned_from, ban_publications=ban)
         src_labels = _labels(learned_from, evaluating=False, frames=src_frames)
         for tag, feats in feature_sets.items():
             Xtr, ytr = [], []
@@ -1231,10 +1382,109 @@ def run(
             print(f"\n=== {split}  space={space}  n_units={len(uids)}  "
                   f"n_pairs={len({unit_pair[u] for u in uids})}")
             print(f"    learned_from={learned_from or 'leave-one-pair-out'}  "
-                  f"pubtator_leak_free={pubtator_excludes_benchmark()}")
+                  f"pubtator_leak_free={pubtator_excludes_benchmark()}  "
+                  f"train_background_ban={train_background_ban or 'none'}")
             print(table.to_string(index=False, float_format=lambda v: f"{v:.4f}"))
 
     return {"table": table, "aps": aps, "frames": frames, "labels": labels, "scores": scores}
+
+
+# ---------------------------------------------------------------------------
+# Adversarial diagnostics: the questions a hostile reader asks about the
+# baselines that actually won
+# ---------------------------------------------------------------------------
+
+def diagnostics(split: str = "development", evaluating: bool = False, verbose: bool = True) -> dict:
+    """What a winning gene-level prior is actually picking up, and whether it is fragile.
+
+    Four questions, each one an objection that would otherwise be raised after
+    publication rather than before.
+
+    ``essentiality``
+        "It only works on essentials." The primary space already excludes DepMap
+        common essentials, so this asks the residual version: are the genes the
+        recurrence prior ranks highest simply the ones just below that list? The
+        answer is the DepMap cross-line dependency fraction of each prior's top
+        decile, against the space mean.
+
+    ``corpus_size``
+        Does the recurrence prior depend on having a large background corpus? Per
+        unit AP against the number of allowed background screens, which varies
+        from about 130 to 786 depending on how well covered the pair's cell line
+        is. A prior that only works at 786 is a prior that will not transfer.
+
+    ``redundancy``
+        Spearman correlation between the strongest priors, per unit and averaged.
+        Two baselines at the same AP that rank the same genes are one baseline.
+
+    ``lit_direction``
+        Whether fame is positively or negatively associated with replication,
+        measured as the Spearman correlation of the literature prior with B's hit
+        call. Reported with its sign so the write-up cannot round an
+        anti-correlation down to "no signal".
+    """
+    import pandas as pd
+    from scipy.stats import spearmanr
+
+    frames = _frames(split)
+    labels = _labels(split, evaluating=evaluating, frames=frames)
+    uids = sorted(frames)
+    dep = depmap_gene_summary()
+
+    priors = ("multi_hit_rate_shrunk", "multi_sim_rate_q25", "dep_frac_dep",
+              "a_effect", "lit_papers", "lit_ot_cancer_evidence")
+
+    ess_rows, red_rows, size_rows, dir_rows = [], [], [], []
+    for uid in uids:
+        df = frames[uid]
+        m = _primary_mask(df)
+        genes = df["gene"].astype(str).to_numpy()[m]
+        y = labels[uid][m]
+        fd = np.array([dep.get(g, {}).get("frac_dep", np.nan) for g in genes], dtype=float)
+        n_top = max(int(round(0.10 * m.sum())), 1)
+        for p in priors:
+            v = np.asarray(df[p].to_numpy(), dtype=float)[m]
+            order = np.argsort(-np.nan_to_num(v, nan=-np.inf), kind="stable")[:n_top]
+            ess_rows.append({
+                "unit_id": uid, "prior": p,
+                "top_decile_depmap_frac_dep": float(np.nanmean(fd[order])),
+                "space_mean_depmap_frac_dep": float(np.nanmean(fd)),
+                "top_decile_replication_rate": float(y[order].mean()),
+                "space_replication_rate": float(y.mean()),
+            })
+            rho = spearmanr(np.nan_to_num(v, nan=float(np.nanmedian(v))), y).statistic
+            dir_rows.append({"unit_id": uid, "prior": p, "spearman_with_b_hit": float(rho)})
+        for i, p in enumerate(priors):
+            for q in priors[i + 1:]:
+                a = np.nan_to_num(np.asarray(df[p].to_numpy(), float)[m])
+                b = np.nan_to_num(np.asarray(df[q].to_numpy(), float)[m])
+                red_rows.append({"unit_id": uid, "a": p, "b": q,
+                                 "spearman": float(spearmanr(a, b).statistic)})
+        size_rows.append({
+            "unit_id": uid,
+            "n_background_screens": int(df.attrs["multi_prior"]["n_background_screens"]),
+            "median_jaccard_to_a": float(df.attrs["multi_prior"]["median_jaccard_to_a"]),
+        })
+
+    ess = pd.DataFrame(ess_rows).groupby("prior").mean(numeric_only=True)
+    red = pd.DataFrame(red_rows).groupby(["a", "b"]).mean(numeric_only=True)
+    direction = pd.DataFrame(dir_rows).groupby("prior").mean(numeric_only=True)
+    size = pd.DataFrame(size_rows).set_index("unit_id")
+
+    out = {"essentiality": ess, "redundancy": red, "lit_direction": direction, "corpus_size": size,
+           "frames": frames, "labels": labels}
+    if verbose:
+        with pd.option_context("display.width", 200, "display.max_columns", 20):
+            print(f"\n=== diagnostics  {split}  n_units={len(uids)}")
+            print("\n-- top decile of each prior, DepMap dependency and replication rate")
+            print(ess.to_string(float_format=lambda v: f"{v:.4f}"))
+            print("\n-- Spearman of each prior with B's hit call (sign matters)")
+            print(direction.to_string(float_format=lambda v: f"{v:.4f}"))
+            print("\n-- redundancy between priors")
+            print(red.to_string(float_format=lambda v: f"{v:.4f}"))
+            print("\n-- background corpus size per unit")
+            print(size.describe().to_string(float_format=lambda v: f"{v:.1f}"))
+    return out
 
 
 def _main() -> None:
@@ -1250,13 +1500,29 @@ def _main() -> None:
         default=None,
         help="comma-separated learned feature sets to fit; default all of " + ",".join(FEATURE_SETS),
     )
+    ap.add_argument(
+        "--train-background-ban",
+        default=None,
+        choices=[None, "evaluated_split"],
+        help="rebuild the training frames with every publication of the evaluated "
+             "split banned from the background corpus; needs --learned-from",
+    )
+    ap.add_argument(
+        "--diagnostics",
+        action="store_true",
+        help="run the adversarial diagnostics instead of scoring the baselines",
+    )
     args = ap.parse_args()
+    if args.diagnostics:
+        diagnostics(split=args.split, evaluating=args.evaluating)
+        return
     run(
         split=args.split,
         evaluating=args.evaluating,
         space=args.space,
         learned_from=args.learned_from,
         learned_sets=args.sets.split(",") if args.sets else None,
+        train_background_ban=args.train_background_ban,
     )
 
 

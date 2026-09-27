@@ -22,6 +22,7 @@ import {
   DenseTable,
   Empty,
   Panel,
+  PANEL_CHROME,
   PanelLink,
   ROW_HIT,
   Segmented,
@@ -31,6 +32,7 @@ import {
 } from "@/components/dashboard/ui";
 import { cn, formatNumber } from "@/lib/utils";
 
+import { useFitRows } from "./fit-rows";
 import type { RunRow } from "./types";
 import { usePanelSort, usePanelUrl, type Cell } from "./url-state";
 
@@ -86,8 +88,13 @@ export function RunsPanel({
     [],
   );
 
+  // Whole rows only, so the cut never lands through the middle of a status chip.
+  const { ref, maxRows } = useFitRows({ rowPx: PANEL_CHROME.rowCompact });
+
   return (
     <Panel
+      id="panel-runs"
+      sectionRef={ref}
       title={flagged.length > 0 ? "Runs needing a look" : "Runs"}
       count={
         <span className="hidden sm:inline">
@@ -128,7 +135,7 @@ export function RunsPanel({
           />
         </div>
       ) : (
-        <DenseTable compact minWidth={400}>
+        <DenseTable compact maxRows={maxRows} minWidth={400}>
           <thead>
             <tr>
               <SortTh
@@ -188,7 +195,11 @@ export function RunsPanel({
                       </button>
                       <Link
                         href={`/dashboard/screens/${run.id}`}
-                        className="truncate font-medium text-ink transition-colors duration-[var(--dur-1)] hover:text-orange-500 motion-reduce:transition-none"
+                        /* orange-600, not 500: the row tints to mist-soft on
+                           hover, where orange-500 measures 4.11:1 at this size
+                           and weight, under the 4.5 the house rules require.
+                           This pair measures 5.26:1. */
+                        className="truncate font-medium text-ink transition-colors duration-[var(--dur-1)] hover:text-orange-600 motion-reduce:transition-none"
                       >
                         {run.name}
                         <span className="sr-only">, open this screen</span>

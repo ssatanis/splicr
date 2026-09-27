@@ -131,11 +131,6 @@ npm run typecheck && npm run lint && npm run build
 engine/.tools/env/bin/python engine/tests/integration_test.py
 ```
 
-## Configuration
-
-Copy `.env.example` to `.env` and fill it in. The web app reads
-`apps/web/.env.local`. Nothing in either file is committed.
-
 ## Licence
 
 MIT for the code. Data keeps the licence of whoever published it.

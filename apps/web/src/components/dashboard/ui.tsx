@@ -294,6 +294,35 @@ export function panelSpan(span: PanelSpan): string {
   return PANEL_SPAN[span];
 }
 
+/**
+ * Jump links into the panels of a page, for the keyboard.
+ *
+ * WHY THIS EXISTS. The overview's primary table holds seventy-six rows and each
+ * row carries two focus stops, so the panel beside it was measured at 176 Tab
+ * presses from the top of the page and the one under that at 190. That is not a
+ * long route, it is an unreachable one, and WCAG 2.4.1 asks for a way past a
+ * repeated block for exactly this case.
+ *
+ * Hidden until focused, because a visible row of jump links would spend 28px of
+ * a page whose whole constraint is height, and because every reader who is not
+ * on a keyboard already has the panels in front of them. The first Tab press on
+ * the page reveals them.
+ */
+export function SkipLinks({ label = "Skip to a panel", links }: {
+  label?: string;
+  links: { id: string; label: string }[];
+}) {
+  return (
+    <nav aria-label={label} className="contents">
+      {links.map((link) => (
+        <a key={link.id} href={`#${link.id}`} className="skip-link">
+          {link.label}
+        </a>
+      ))}
+    </nav>
+  );
+}
+
 /** A column of panels occupying one span of the page grid. */
 export function PanelStack({ span = 6, className, children }: {
   span?: PanelSpan;
@@ -308,10 +337,13 @@ export function PanelStack({ span = 6, className, children }: {
 export function Panel({
   title,
   count,
+  caveat,
   control,
   footer,
   body = "pad",
   span = 12,
+  id,
+  sectionRef,
   className,
   bodyClassName,
   children,
@@ -323,6 +355,13 @@ export function Panel({
    * the control slot.
    */
   count?: React.ReactNode;
+  /**
+   * A caveat that applies to every figure in the panel, on one line directly
+   * under the header. Not a tooltip and not a footnote: a reader who is about to
+   * spend six weeks of bench time on these rows has to meet the reason to
+   * distrust them before the rows, not after.
+   */
+  caveat?: React.ReactNode;
   /**
    * At most one, right aligned, from the closed set below: Segmented,
    * SegmentedLinks, PanelSelect, PanelAction, PanelLink. Never an orange button
@@ -339,12 +378,25 @@ export function Panel({
   /** `flush` when the child draws its own gutter, which a DenseTable does. */
   body?: "pad" | "flush";
   span?: PanelSpan;
+  /** The anchor a page's skip links jump to. Focusable, so the jump lands. */
+  id?: string;
+  /**
+   * The panel element itself, for the one thing a panel cannot compute: how many
+   * whole rows fit in the height a grid track handed it. See `useFitRows`.
+   */
+  sectionRef?: React.Ref<HTMLElement>;
   className?: string;
   bodyClassName?: string;
   children: React.ReactNode;
 }) {
   return (
     <section
+      id={id}
+      ref={sectionRef}
+      // -1, not absent. A skip link that points at a non-focusable element moves
+      // the scroll position but leaves focus at the top of the page, so the next
+      // Tab press goes back to stop two and the link has bought nothing.
+      tabIndex={id ? -1 : undefined}
       // A string title names the region, so a screen reader user can jump
       // between panels instead of walking a dense table to reach the next one.
       aria-label={typeof title === "string" ? title : undefined}
@@ -370,7 +422,7 @@ export function Panel({
       // page that scrolls a little, so the floor wins and the page overflows
       // instead. Header, one row, and the footer when there is one.
       style={{
-        minHeight: `calc(var(--panel-head-h) + var(--row-h)${footer ? " + var(--panel-foot-h)" : ""})`,
+        minHeight: `calc(var(--panel-head-h) + var(--row-h)${footer ? " + var(--panel-foot-h)" : ""}${caveat ? " + var(--panel-caveat-h)" : ""})`,
       }}
     >
       {/* Fixed height, so a row of panels has its titles on one baseline no
@@ -387,6 +439,12 @@ export function Panel({
         )}
         {control && <div className="ml-auto flex shrink-0 items-center gap-1.5">{control}</div>}
       </header>
+
+      {caveat && (
+        <div className="flex h-[var(--panel-caveat-h)] shrink-0 items-center gap-1.5 border-b border-line bg-orange-50 px-[var(--panel-gutter)] text-[11px] leading-none text-orange-700">
+          {caveat}
+        </div>
+      )}
 
       <div
         className={cn(
@@ -707,8 +765,26 @@ export function DenseTable({ children, compact = false, maxRows, minWidth, class
   );
 }
 
-/** Measured: `.dense-table thead th` is 1.75rem. */
-const THEAD_H = 28;
+/**
+ * Panel chrome, in pixels, mirroring the tokens in globals.css.
+ *
+ * They are duplicated here because arithmetic is the only way a page can know
+ * how many whole rows a panel will hold before the browser has laid it out, and
+ * `getComputedStyle` on a custom property returns a string in whatever unit the
+ * author wrote. Keep them in step with `--panel-head-h`, `--panel-foot-h`,
+ * `--panel-caveat-h`, `--row-h` and `--row-h-compact`.
+ */
+export const PANEL_CHROME = {
+  head: 40,
+  foot: 36,
+  caveat: 22,
+  /** Measured: `.dense-table thead th` is 1.75rem. */
+  thead: 28,
+  row: 32,
+  rowCompact: 26,
+} as const;
+
+const THEAD_H = PANEL_CHROME.thead;
 
 /**
  * The height a capped table panel needs, so a page can budget before it renders

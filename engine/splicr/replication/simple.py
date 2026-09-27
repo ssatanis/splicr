@@ -1020,15 +1020,23 @@ def run(
         }
         summary[name]["n_units"] = len(vals)
 
-    tests = {}
+    # Paired tests on average precision, which is primary, and on precision@10 and
+    # @50, which are the decision-relevant metrics. A baseline that wins on AP and
+    # loses at the top of the list is not the better baseline for a lab with a
+    # 10-gene budget, so both are tested rather than one being assumed to follow
+    # from the other.
+    tested_metrics = ("average_precision", "p_at_10", "p_at_50")
+    tests: dict[str, dict] = {}
     for ref in {reference, "effect_score1"}:
-        ref_ap = {u: r["average_precision"] for u, r in per_unit[ref].items()}
         tests[ref] = {}
         for name, rows in per_unit.items():
             if name == ref:
                 continue
-            ap = {u: r["average_precision"] for u, r in rows.items()}
-            tests[ref][name] = dataset.paired_test(ap, ref_ap)
+            tests[ref][name] = {
+                m: dataset.paired_test({u: r[m] for u, r in rows.items()},
+                                       {u: r[m] for u, r in per_unit[ref].items()})
+                for m in tested_metrics
+            }
 
     # Baselines that cannot be computed on every unit have to be measured where
     # they CAN be computed, or their mean is a mixture of the baseline and the
@@ -1120,16 +1128,35 @@ def _fmt(res: dict, top: int = 40) -> str:
             f"{s['p_at_10']:>7.3f} {s['p_at_20']:>7.3f} {s['p_at_50']:>7.3f}"
         )
     for ref, block in res["paired_tests"].items():
-        lines += ["", f"  paired AP difference against {ref} (bootstrap by screen pair):"]
-        for name in order:
-            if name not in block:
-                continue
-            t = block[name]
-            mark = "*" if t["significant"] else " "
-            lines.append(
-                f"  {mark} {name:<26} {t['mean_difference']:+.4f}  "
-                f"CI [{t['ci95'][0]:+.4f}, {t['ci95'][1]:+.4f}]  p={t['wilcoxon_p']:.2g}"
-            )
+        for metric in ("average_precision", "p_at_10"):
+            lines += ["", f"  paired {metric} difference against {ref} "
+                          f"(bootstrap by screen pair, n={res['n_screen_pairs']}):"]
+            for name in order:
+                if name not in block:
+                    continue
+                t = block[name][metric]
+                mark = "*" if t["significant"] else " "
+                lines.append(
+                    f"  {mark} {name:<26} {t['mean_difference']:+.4f}  "
+                    f"CI [{t['ci95'][0]:+.4f}, {t['ci95'][1]:+.4f}]  p={t['wilcoxon_p']:.2g}"
+                )
+    for sub, blk in res["restricted"].items():
+        if not blk.get("n_units"):
+            lines += ["", f"  subset {sub}: no unit in this split supports it"]
+            continue
+        lines += ["", f"  subset {sub}: {blk['n_units']} units, "
+                      f"{blk['n_screen_pairs']} screen pairs"]
+        sub_order = sorted(blk["summary"], key=lambda n: -blk["summary"][n]["average_precision"])
+        for name in sub_order:
+            s = blk["summary"][name]
+            tt = blk["vs_effect"].get(name)
+            tail = ""
+            if tt:
+                tail = (f"  vs effect {tt['mean_difference']:+.4f} "
+                        f"[{tt['ci95'][0]:+.4f}, {tt['ci95'][1]:+.4f}]"
+                        f"{'*' if tt['significant'] else ''}")
+            lines.append(f"    {name:<28} AP {s['average_precision']:.4f} "
+                         f"AUC {s['auc']:.4f} P@10 {s['p_at_10']:.3f}{tail}")
     return "\n".join(lines)
 
 
@@ -1153,9 +1180,8 @@ def _main() -> None:
     res = run(a.split, evaluating=a.evaluating, space=a.space, fitted=fitted)
     print(_fmt(res))
     if a.json:
-        thin = {k: v for k, v in res.items() if k != "per_unit"}
         with open(a.json, "w") as fh:
-            json.dump(thin, fh, indent=1, default=float)
+            json.dump(res, fh, indent=1, default=float)
         print(f"\nwrote {a.json}")
 
 

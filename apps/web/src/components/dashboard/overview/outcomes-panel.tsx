@@ -21,6 +21,7 @@ import {
   FootNote,
   NotRecorded,
   Panel,
+  PANEL_CHROME,
   PanelLink,
   ROW_HIT,
   SortTh,
@@ -29,6 +30,7 @@ import {
 } from "@/components/dashboard/ui";
 import { cn, formatNumber } from "@/lib/utils";
 
+import { useFitRows } from "./fit-rows";
 import type { OutcomeRow } from "./types";
 import { usePanelSort, type Cell } from "./url-state";
 
@@ -41,21 +43,18 @@ const RESULT_ORDER: Record<OutcomeRow["result"], number> = {
 };
 
 /**
- * `grow basis-auto` rather than `flex-1`: this panel takes the space the runs
- * panel above it does not want, and when the column is a few pixels short of
- * both, the shortfall is shared in proportion to what each one asked for rather
- * than landing entirely on the neighbour. `flex-1` sets the basis to zero, which
- * makes a shrinking column collapse the runs panel and leave this one untouched.
+ * This panel no longer grows.
+ *
+ * It used to carry `grow basis-auto` and take the slack in the right-hand column,
+ * which put a measured 282px of empty white inside it at 1728 wide, 168px at 1440
+ * and 68px at 1280, directly beside a table that was hiding fifty-four rows. The
+ * slack belongs to the round panel under it, which gets longer as a reader picks.
+ * So this one is as tall as its rows and no taller, and `min-h-0` is what lets it
+ * give height back when the column is short rather than pushing a neighbour out.
  */
-const FILL = "min-h-0 grow basis-auto";
+const FILL = "min-h-0 shrink";
 
-/**
- * Below this the table scrolls sideways rather than dropping a digit off the
- * percentage. The rows themselves are the full 32px, not the compact 26px the
- * runs list above uses: this is the panel that takes the slack in the column,
- * and seven short rows adrift in a 460px box read as a table with something
- * missing from it.
- */
+/** Below this the table scrolls sideways rather than dropping a digit off a percentage. */
 const MIN_WIDTH = 400;
 
 const cellOf = (row: OutcomeRow, key: string): Cell => {
@@ -86,8 +85,14 @@ export function OutcomesPanel({
   const resolved = outcomes.filter((row) => row.result !== "pending");
   const right = resolved.filter((row) => row.result === "validated").length;
 
+  // Whole rows only. The rows are compact now: this panel stopped being the one
+  // that absorbs the column's slack, so the argument for taller rows went with it.
+  const { ref, maxRows } = useFitRows({ rowPx: PANEL_CHROME.rowCompact, footer: true });
+
   return (
     <Panel
+      id="panel-outcomes"
+      sectionRef={ref}
       title="Bench outcomes"
       count={`${formatNumber(outcomes.length)} logged`}
       span={6}
@@ -118,7 +123,7 @@ export function OutcomesPanel({
           />
         </div>
       ) : (
-        <DenseTable minWidth={MIN_WIDTH}>
+        <DenseTable compact maxRows={maxRows} minWidth={MIN_WIDTH}>
           <thead>
             <tr>
               <SortTh
@@ -157,7 +162,10 @@ export function OutcomesPanel({
                   {row.screenId ? (
                     <Link
                       href={`/dashboard/screens/${row.screenId}?tab=validation`}
-                      className="truncate font-medium text-ink transition-colors duration-[var(--dur-1)] hover:text-orange-500 motion-reduce:transition-none"
+                      /* orange-600, not 500: on the row's mist-soft hover tint
+                         orange-500 measures 4.11:1, under the 4.5 the house
+                         rules require. This pair measures 5.26:1. */
+                      className="truncate font-medium text-ink transition-colors duration-[var(--dur-1)] hover:text-orange-600 motion-reduce:transition-none"
                     >
                       {row.gene}
                       <span className="sr-only">, open the screen this outcome belongs to</span>

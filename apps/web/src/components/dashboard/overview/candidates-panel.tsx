@@ -10,14 +10,30 @@
  * three constraints at once, and every column here is one of those constraints:
  *
  *   real        chance real, guides agree, and the flag marker on the call
- *   interesting the call itself, and the Atlas history in the evidence drawer
+ *   interesting the call, and novelty: how little of the Atlas has called it
  *   testable    which screen it came from, and that screen's re-test assay
  *
- * So the table is the interface, not a fallback: sticky header, every column
- * sortable, numeric columns right aligned on tabular figures, nothing truncated,
- * and as many rows as the panel can hold. Sort and filter state live in the URL
- * because the view has to be sendable. The checkbox is the thing the page was
- * missing entirely: a way to actually pick one.
+ * WHAT CHANGED, AND WHAT IT COST
+ *
+ * Novelty is a column now. It is one of the three constraints and it was on
+ * neither the row nor the drawer, so the panel could not express "real but a core
+ * essential", which is the commonest reason to drop a candidate. The seventh
+ * column it would have needed does not fit: the table measures 480px inside a
+ * 490px panel at 1280, so a seventh column puts the whole table into sideways
+ * scroll at every desktop width. FDR gave up its place instead. Every row here is
+ * already past the cut, the cut is named in the footer, and the q-value is still
+ * in the drawer, in the export and on the screen's own Hits tab, so what is lost
+ * is a digit a reader was not deciding on. Novelty is not available anywhere else
+ * on this page.
+ *
+ * The Real column carries its calibration band in the heading. The band is ±0.06
+ * and rows one to twenty span 96% to 88%, so the default order is noise at the
+ * top of the list and a column that prints an integer percent without saying so
+ * is claiming precision the score does not have.
+ *
+ * The header carries the QC verdict of the screen the rows came from, and the
+ * caveat line under it says what that verdict means, because every row on this
+ * panel can come from one screen and that screen can be a warned one.
  */
 
 import { ArrowUpRight, TriangleAlert } from "lucide-react";
@@ -28,19 +44,21 @@ import { ModalDrawer } from "@/components/dashboard/drawer";
 import {
   DenseTable,
   Empty,
-  FootLink,
   FootNote,
   NotRecorded,
   Panel,
+  PANEL_CHROME,
+  PanelSelect,
   ROW_HIT,
-  Segmented,
   SortTh,
   Th,
 } from "@/components/dashboard/ui";
-import type { Verdict } from "@/lib/mock/data";
+import { CALIBRATION_BAND, type Verdict } from "@/lib/mock/data";
 import { cn, formatNumber } from "@/lib/utils";
 
-import { useShortlist } from "./shortlist";
+import { candidatesCsv, downloadCsv } from "./export-rows";
+import { useFitRows } from "./fit-rows";
+import { pickGene, pickKey, useShortlist } from "./shortlist";
 import type { CandidateRow } from "./types";
 import { usePanelSort, usePanelUrl, type Cell } from "./url-state";
 
@@ -58,7 +76,7 @@ const CALL_SHORT: Record<Verdict, string> = {
 
 /**
  * The chip is tinted rather than dotted. A dot plus its gap cost twelve pixels
- * of a column that has to fit six others in 490px, and the tint carries the same
+ * of a column that has to fit five others in 490px, and the tint carries the same
  * grouping. The word is always there, so a colour-blind reader loses nothing.
  */
 const CALL_TONE: Record<Verdict, string> = {
@@ -69,16 +87,100 @@ const CALL_TONE: Record<Verdict, string> = {
   Uncertain: "bg-mist-soft text-muted",
 };
 
-type View = "all" | "clean" | "picked";
+/**
+ * The views, as a closed set with a predicate each.
+ *
+ * WHY THIS IS A SELECT AND NOT A SEGMENTED CONTROL. There were three views: All,
+ * No flags, Picked. The workflow is a sequence of filters and three of them is
+ * not a sequence, so a reader could not ask the two questions they actually ask
+ * next, which are "only the new ones" and "only the ones I would defend". A
+ * segmented control cannot hold nine options in the 110px a 40px header can spare
+ * beside a title and a count; a native select can, and it is the one control that
+ * is already keyboard and screen reader correct on every platform.
+ *
+ * Every predicate is a filter on evidence the row already shows, so a reader can
+ * always see why a row survived the filter.
+ */
+interface ViewSpec {
+  value: string;
+  label: string;
+  group: string;
+  /** Spelled out for the export preamble, which has to say what subset it is. */
+  described: string;
+  keep: (row: CandidateRow, picked: readonly string[]) => boolean;
+}
 
-const VIEWS: { value: View; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "clean", label: "No flags" },
-  { value: "picked", label: "Picked" },
+const VIEWS: ViewSpec[] = [
+  {
+    value: "all",
+    label: "All candidates",
+    group: "Everything",
+    described: "all candidates",
+    keep: () => true,
+  },
+  {
+    value: "clean",
+    label: "No artifact flags",
+    group: "How defensible",
+    described: "candidates carrying no artifact flag",
+    keep: (row) => row.flags.length === 0,
+  },
+  {
+    value: "agree",
+    label: "All guides agree",
+    group: "How defensible",
+    described: "candidates whose every guide moves the same way",
+    keep: (row) =>
+      row.guides !== null && row.guidesAgree !== null && row.guidesAgree === row.guides,
+  },
+  {
+    value: "c90",
+    label: "Chance real 90% or more",
+    group: "How defensible",
+    described: "candidates at chance real 0.90 or above",
+    keep: (row) => row.chance !== null && row.chance >= 0.9,
+  },
+  {
+    value: "c80",
+    label: "Chance real 80% or more",
+    group: "How defensible",
+    described: "candidates at chance real 0.80 or above",
+    keep: (row) => row.chance !== null && row.chance >= 0.8,
+  },
+  {
+    value: "new",
+    label: "Called: real and new",
+    group: "How interesting",
+    described: "candidates the artifact stage called real and new",
+    keep: (row) => row.verdict === "Real and new",
+  },
+  {
+    value: "known",
+    label: "Called: real and known",
+    group: "How interesting",
+    described: "candidates the artifact stage called real and known",
+    keep: (row) => row.verdict === "Real and known",
+  },
+  {
+    value: "n70",
+    label: "Novelty 70% or more",
+    group: "How interesting",
+    described: "candidates at novelty 0.70 or above",
+    keep: (row) => row.novelty !== null && row.novelty >= 0.7,
+  },
+  {
+    value: "picked",
+    label: "Picked for this round",
+    group: "This round",
+    described: "the candidates on the shortlist",
+    keep: (row, picked) => picked.includes(pickKey(row.screenId, row.gene)),
+  },
 ];
 
-const asView = (value: string): View =>
-  value === "clean" || value === "picked" ? value : "all";
+const VIEW_GROUPS = [...new Set(VIEWS.map((view) => view.group))];
+
+const asView = (value: string): ViewSpec =>
+  VIEWS.find((view) => view.value === value) ?? VIEWS[0];
 
 const cellOf = (row: CandidateRow, key: string): Cell => {
   switch (key) {
@@ -89,8 +191,8 @@ const cellOf = (row: CandidateRow, key: string): Cell => {
     case "lfc":
       // Direction is read off the sign in the cell; ranking is by size of effect.
       return row.lfc === null ? null : Math.abs(row.lfc);
-    case "fdr":
-      return row.fdr;
+    case "novelty":
+      return row.novelty;
     case "guides":
       return row.guidesAgree;
     default:
@@ -98,39 +200,62 @@ const cellOf = (row: CandidateRow, key: string): Cell => {
   }
 };
 
+/** What each sort key is called in a sentence, for the export preamble. */
+const SORT_LABEL: Record<string, string> = {
+  gene: "gene symbol",
+  chance: "chance real",
+  lfc: "size of effect",
+  novelty: "novelty",
+  guides: "guides agreeing",
+  fdr: "FDR",
+};
+
 /** Signed, because which arm a gene came out of is half of what it means. */
 const lfc = (value: number) => `${value > 0 ? "+" : ""}${value.toFixed(2)}`;
+
+const pct = (value: number) => `${Math.round(value * 100)}%`;
+
+/** The calibration interval, as the two ends a reader would quote. */
+function interval(chance: number): string {
+  return `${pct(Math.max(0, chance - CALIBRATION_BAND))} to ${pct(Math.min(1, chance + CALIBRATION_BAND))}`;
+}
 
 export function CandidatesPanel({
   rows,
   ranked,
-  count,
+  total,
+  unit,
   provenance,
-  exportHref,
+  qc,
   emptyBody,
+  sample,
   className,
 }: {
   rows: CandidateRow[];
   /** What the list is ordered by before anybody picks a column. */
   ranked: "chance" | "fdr";
-  /** The panel's denominator, with its unit spelled out. */
-  count: string;
+  /** The panel's denominator: how many candidates exist before any filter. */
+  total: number;
+  /** What one row is, spelled out, because a bare count is a marketing number. */
+  unit: string;
   /** Tool version, thresholds and library, for the footer. */
   provenance: string;
-  /** The CSV of the rows behind these figures, or null when there is not one. */
-  exportHref: string | null;
+  /**
+   * The QC verdict of the screen these rows came from, and what it means. Null
+   * only when every screen behind the rows passed, which is the one case where
+   * silence is honest.
+   */
+  qc: { verdict: "warn" | "fail" | "pending"; note: string; href: string } | null;
   emptyBody: string;
+  /** True in the sample workspace. The export says so in its own preamble. */
+  sample: boolean;
   className?: string;
 }) {
   const { get, set } = usePanelUrl("c");
   const view = asView(get("view"));
-  const { picked, toggle } = useShortlist();
+  const { picked, toggle } = useShortlist(get, set);
 
-  const shown = useMemo(() => {
-    if (view === "clean") return rows.filter((row) => row.flags.length === 0);
-    if (view === "picked") return rows.filter((row) => picked.includes(row.gene));
-    return rows;
-  }, [rows, view, picked]);
+  const shown = useMemo(() => rows.filter((row) => view.keep(row, picked)), [rows, view, picked]);
 
   const fallback = useMemo(
     () => ({ key: ranked, dir: ranked === "chance" ? ("desc" as const) : ("asc" as const) }),
@@ -138,29 +263,86 @@ export function CandidatesPanel({
   );
   const { sorted, key, dir, toggle: sort } = usePanelSort(shown, "c", fallback, cellOf);
 
+  // How many whole rows the height this panel was handed will hold. Without it
+  // the bottom row was cut through the middle of its digits at three of the four
+  // desktop sizes measured.
+  const { ref, maxRows } = useFitRows({
+    rowPx: PANEL_CHROME.rowCompact,
+    footer: true,
+    caveat: qc !== null,
+  });
+
   const [openId, setOpenId] = useState<string | null>(null);
   const close = useCallback(() => setOpenId(null), []);
   const open = rows.find((row) => row.id === openId) ?? null;
 
-  const pickedHere = rows.filter((row) => picked.includes(row.gene)).length;
+  const pickedHere = rows.filter((row) => picked.includes(pickKey(row.screenId, row.gene))).length;
+
+  const onExport = useCallback(() => {
+    const csv = candidatesCsv(sorted, {
+      filter: view.described,
+      sort: `${SORT_LABEL[key] ?? key}, ${dir === "asc" ? "ascending" : "descending"}`,
+      provenance,
+      caveat: qc === null ? null : qc.note,
+      sample,
+      band: CALIBRATION_BAND,
+      picked,
+      keyOf: (row) => pickKey(row.screenId, row.gene),
+    });
+    downloadCsv(`splicr-candidates-${view.value}-${sorted.length}-rows.csv`, csv);
+  }, [sorted, view, key, dir, provenance, qc, sample, picked]);
 
   return (
     <Panel
+      id="panel-candidates"
+      sectionRef={ref}
       title="Validate next"
-      /* Hidden on a phone, where the title, the denominator and a three way
-         control cannot share 343px without the title becoming "Validate n...".
-         The same figure is in the strip above, with its denominator. */
-      count={<span className="hidden sm:inline">{count}</span>}
+      /* "N of M", not M. Measured before this: the header read "76 candidates"
+         while the body held 43 rows, so the panel's own denominator disagreed
+         with the panel. Hidden below xl, where the title, a denominator and a
+         nine-option filter cannot share 362px. */
+      count={
+        <span className="hidden xl:inline">
+          {sorted.length === total
+            ? `${formatNumber(total)} ${unit}`
+            : `${formatNumber(sorted.length)} of ${formatNumber(total)} ${unit}`}
+        </span>
+      }
+      caveat={
+        qc === null ? undefined : (
+          <>
+            <TriangleAlert className="h-3 w-3 shrink-0" aria-hidden="true" />
+            <span className="min-w-0 truncate">{qc.note}</span>
+            <Link
+              href={qc.href}
+              className="shrink-0 underline decoration-orange-300 underline-offset-2 hover:decoration-orange-700"
+            >
+              QC
+            </Link>
+          </>
+        )
+      }
       span={6}
       body="flush"
       className={className}
       control={
-        <Segmented
-          label="Filter candidates"
-          value={view}
-          options={VIEWS}
-          onChange={(next) => set({ view: next === "all" ? null : next })}
-        />
+        <PanelSelect
+          label="Which candidates to list"
+          value={view.value}
+          onChange={(event) =>
+            set({ view: event.target.value === "all" ? null : event.target.value })
+          }
+        >
+          {VIEW_GROUPS.map((group) => (
+            <optgroup key={group} label={group}>
+              {VIEWS.filter((option) => option.group === group).map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </PanelSelect>
       }
       footer={
         <>
@@ -169,9 +351,16 @@ export function CandidatesPanel({
             <span className="num" aria-live="polite">
               {pickedHere === 0 ? "None picked" : `${formatNumber(pickedHere)} picked`}
             </span>
-            {exportHref && (
-              <FootLink href={exportHref}>Export rows (CSV)</FootLink>
-            )}
+            {/* A button, not a link: the file is the rows on screen, built here,
+                so there is no URL that would produce it. */}
+            <button
+              type="button"
+              onClick={onExport}
+              disabled={sorted.length === 0}
+              className="shrink-0 text-[11px] text-cyan-600 underline decoration-line-strong underline-offset-2 hover:decoration-cyan-600 disabled:text-muted disabled:no-underline"
+            >
+              Export these {formatNumber(sorted.length)} rows (CSV)
+            </button>
           </span>
         </>
       }
@@ -179,18 +368,18 @@ export function CandidatesPanel({
       {sorted.length === 0 ? (
         <div className="px-[var(--panel-gutter)] py-3.5">
           <Empty
-            title={view === "all" ? "No candidates to show" : "Nothing in this view"}
+            title={view.value === "all" ? "No candidates to show" : "Nothing in this view"}
             body={
-              view === "all"
+              view.value === "all"
                 ? emptyBody
-                : view === "picked"
-                  ? "Tick a gene in the All view to put it on the shortlist."
-                  : "Every candidate here carries at least one artifact flag."
+                : view.value === "picked"
+                  ? "Tick a gene in any other view to put it on the shortlist. The picks go into this page's address, so the view you are looking at is the view you can send."
+                  : `No candidate here is ${view.described.replace(/^(the )?candidates? /, "")}. Switch the filter back to all candidates.`
             }
           />
         </div>
       ) : (
-        <DenseTable minWidth={460}>
+        <DenseTable compact maxRows={maxRows} minWidth={460}>
           <thead>
             <tr>
               <SortTh
@@ -202,12 +391,23 @@ export function CandidatesPanel({
               />
               <Th>Call</Th>
               <SortTh
-                label="Real"
+                /* The band is in the heading, not only in a tooltip. Rows one to
+                   twenty span 96% to 88%, which is inside ±0.06, so a reader who
+                   cannot see the band reads the order at the top of the list as
+                   a ranking when it is noise. */
+                label={
+                  <>
+                    Real
+                    <span className="ml-0.5 font-normal normal-case tracking-normal opacity-70">
+                      ±{Math.round(CALIBRATION_BAND * 100)}
+                    </span>
+                  </>
+                }
                 align="right"
                 active={key === "chance"}
                 dir={dir}
                 onToggle={() => sort("chance", "desc")}
-                title="Calibrated probability the hit is real, in percent, net of any flag."
+                title={`Calibrated probability the hit is real, in percent, net of any flag. Calibrated to plus or minus ${Math.round(CALIBRATION_BAND * 100)} points, so two rows within that are not ordered by evidence.`}
               />
               <SortTh
                 label="LFC"
@@ -218,12 +418,12 @@ export function CandidatesPanel({
                 title="log2 fold change at the endpoint against T0. Positive is the enriched arm."
               />
               <SortTh
-                label="FDR"
+                label="New"
                 align="right"
-                active={key === "fdr"}
+                active={key === "novelty"}
                 dir={dir}
-                onToggle={() => sort("fdr", "asc")}
-                title="Benjamini-Hochberg q-value, to one significant figure."
+                onToggle={() => sort("novelty", "desc")}
+                title="Novelty: how little of the Atlas has called this gene. Low means a core essential or a frequent hitter, which is real but not worth a bench slot."
               />
               <SortTh
                 label="Agree"
@@ -237,7 +437,8 @@ export function CandidatesPanel({
           </thead>
           <tbody>
             {sorted.map((row) => {
-              const on = picked.includes(row.gene);
+              const pick = pickKey(row.screenId, row.gene);
+              const on = picked.includes(pick);
               return (
                 <tr key={row.id} className={ROW_HIT}>
                   <td>
@@ -248,7 +449,7 @@ export function CandidatesPanel({
                       <input
                         type="checkbox"
                         checked={on}
-                        onChange={() => toggle(row.gene)}
+                        onChange={() => toggle(pick)}
                         aria-label={`Shortlist ${row.gene}`}
                         className="h-3.5 w-3.5 shrink-0 accent-teal-800"
                       />
@@ -257,7 +458,11 @@ export function CandidatesPanel({
                         onClick={() => setOpenId(row.id)}
                         aria-haspopup="dialog"
                         aria-expanded={openId === row.id}
-                        className="truncate font-medium text-ink transition-colors duration-[var(--dur-1)] hover:text-orange-500 motion-reduce:transition-none"
+                        /* orange-600, not 500. The row tints to mist-soft on
+                           hover and focus, where orange-500 measured 4.11:1 at
+                           13px and 500 weight, under the 4.5 the house rules
+                           require. This pair measures 5.26:1. */
+                        className="truncate font-medium text-ink transition-colors duration-[var(--dur-1)] hover:text-orange-600 motion-reduce:transition-none"
                       >
                         {row.gene}
                         <span className="sr-only">, open the evidence for this hit</span>
@@ -270,12 +475,12 @@ export function CandidatesPanel({
                       {row.flags.length > 0 && <FlagMark flags={row.flags} />}
                     </span>
                   </td>
-                  <td className="num-col">
-                    {row.chance !== null ? `${Math.round(row.chance * 100)}%` : <NotRecorded />}
+                  <td className="num-col" title={row.chance === null ? undefined : interval(row.chance)}>
+                    {row.chance !== null ? pct(row.chance) : <NotRecorded />}
                   </td>
                   <td className="num-col">{row.lfc !== null ? lfc(row.lfc) : <NotRecorded />}</td>
                   <td className="num-col">
-                    {row.fdr !== null ? row.fdr.toExponential(1) : <NotRecorded />}
+                    {row.novelty !== null ? pct(row.novelty) : <NotRecorded />}
                   </td>
                   <td className="num-col">
                     {row.guidesAgree !== null && row.guides !== null ? (
@@ -294,8 +499,10 @@ export function CandidatesPanel({
       {open && (
         <Evidence
           row={open}
-          picked={picked.includes(open.gene)}
-          onPick={() => toggle(open.gene)}
+          qc={qc}
+          sample={sample}
+          picked={picked.includes(pickKey(open.screenId, open.gene))}
+          onPick={() => toggle(pickKey(open.screenId, open.gene))}
           onClose={close}
         />
       )}
@@ -319,7 +526,7 @@ function Call({ verdict, full = false }: { verdict: Verdict; full?: boolean }) {
 }
 
 /**
- * Artifact flags, as a mark rather than a column. The seventh column cost more
+ * Artifact flags, as a mark rather than a column. A seventh column cost more
  * width than the panel has, so the row keeps the signal and the drawer names the
  * flags themselves, which is where the reader is actually deciding.
  */
@@ -344,33 +551,74 @@ function FlagMark({ flags }: { flags: string[] }) {
  * One click from the number to what produced it. Every figure in the drawer
  * carries its definition next to it, because a figure this audience cannot trace
  * to a measurement is the thing they find embarrassing.
+ *
+ * What is deliberately not here: the four guide-level log2 values behind the
+ * chance. There is no guide table behind these rows, and the project's standing
+ * decision is to say so rather than invent one, which is the same reason the
+ * plate order file carries no oligos. The drawer links out to the screen's own
+ * Hits tab and to the Atlas record instead, which are the two places the
+ * underlying rows actually live.
  */
 function Evidence({
   row,
+  qc,
+  sample,
   picked,
   onPick,
   onClose,
 }: {
   row: CandidateRow;
+  qc: { verdict: string; note: string; href: string } | null;
+  sample: boolean;
   picked: boolean;
   onPick: () => void;
   onClose: () => void;
 }) {
+  const onExport = useCallback(() => {
+    const csv = candidatesCsv([row], {
+      filter: `the single candidate ${row.gene}`,
+      sort: "not applicable, one row",
+      provenance: row.screenName ?? row.screenId,
+      caveat: qc === null ? null : qc.note,
+      sample,
+      band: CALIBRATION_BAND,
+      picked: picked ? [pickKey(row.screenId, row.gene)] : [],
+      keyOf: (candidate) => pickKey(candidate.screenId, candidate.gene),
+    });
+    downloadCsv(`splicr-${row.gene}.csv`, csv);
+  }, [row, qc, sample, picked]);
+
   return (
     <ModalDrawer eyebrow="Evidence" title={row.gene} onClose={onClose} closeLabel="Close evidence">
-      {row.verdict && (
-        <div className="mt-3">
-          <Call verdict={row.verdict} full />
-        </div>
-      )}
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {row.verdict && <Call verdict={row.verdict} full />}
+        {/* Repeated here on purpose. The header chip is easy to walk past, and
+            this is the moment a reader decides to spend six weeks on the row. */}
+        {qc !== null && (
+          <Link
+            href={qc.href}
+            className="inline-flex items-center gap-1 rounded-[4px] bg-orange-50 px-1.5 py-0.5 text-[11px] text-orange-700 underline decoration-orange-300 underline-offset-2 hover:decoration-orange-700"
+          >
+            <TriangleAlert className="h-2.5 w-2.5" aria-hidden="true" />
+            QC {qc.verdict} on this screen
+          </Link>
+        )}
+      </div>
+
+      {qc !== null && <p className="mt-2 text-[11px] leading-snug text-orange-700">{qc.note}</p>}
 
       {row.why && <p className="mt-3 text-[13px] leading-relaxed text-body">{row.why}</p>}
 
       <dl className="mt-4 divide-y divide-line border-y border-line text-[13px]">
         <Fact
           term="Chance real"
-          value={row.chance !== null ? `${Math.round(row.chance * 100)}%` : null}
-          note="Calibrated probability from the scoring stage, net of every flag below."
+          value={row.chance !== null ? `${pct(row.chance)}, calibrated to ${interval(row.chance)}` : null}
+          note={`Calibrated probability from the scoring stage, net of every flag below. The band is plus or minus ${Math.round(CALIBRATION_BAND * 100)} points, so two candidates inside it are not ranked by evidence.`}
+        />
+        <Fact
+          term="Novelty"
+          value={row.novelty !== null ? pct(row.novelty) : null}
+          note="How little of the Atlas has called this gene. Low novelty on a high chance is a core essential: real, and a wasted bench slot."
         />
         <Fact
           term="Effect size"
@@ -380,7 +628,12 @@ function Evidence({
         <Fact
           term="FDR"
           value={row.fdr !== null ? row.fdr.toExponential(2) : null}
-          note="Benjamini-Hochberg q-value, from the hit-calling stage."
+          note="Benjamini-Hochberg q-value, from the hit-calling stage. Every row on this panel is already past the cut, which is why it is not a column."
+        />
+        <Fact
+          term="Bayes factor"
+          value={row.bayes !== null ? row.bayes.toFixed(1) : null}
+          note="BAGEL2, against the core-essential and non-essential reference sets. Evidence the score is built from, not a restatement of it."
         />
         <Fact
           term="Guide agreement"
@@ -389,7 +642,7 @@ function Evidence({
               ? `${row.guidesAgree} of ${row.guides} guides`
               : null
           }
-          note="sgRNAs against this gene moving in the same direction."
+          note="sgRNAs against this gene moving in the same direction. The per-guide fold changes are on the screen's Hits tab; there is no guide table behind these rows, so none is drawn here."
         />
         <Fact
           term="Atlas context"
@@ -399,6 +652,8 @@ function Evidence({
               : null
           }
           note="Atlas screens that assayed this gene, which is a subset of the corpus, not its size."
+          href={`/dashboard/atlas?gene=${encodeURIComponent(row.gene)}`}
+          hrefLabel="Open the Atlas record"
         />
         <Fact
           term="Re-test it would take"
@@ -435,10 +690,7 @@ function Evidence({
           type="button"
           onClick={onPick}
           aria-pressed={picked}
-          className={cn(
-            "btn btn-sm rounded-lg",
-            picked ? "btn-teal" : "btn-ghost",
-          )}
+          className={cn("btn btn-sm rounded-lg", picked ? "btn-teal" : "btn-ghost")}
         >
           {picked ? "On the shortlist" : "Add to shortlist"}
         </button>
@@ -449,17 +701,43 @@ function Evidence({
           {row.screenName ? `Open ${row.screenName}` : "Open the screen"}
           <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
         </Link>
+        <button type="button" onClick={onExport} className="btn btn-ghost btn-sm rounded-lg">
+          This gene (CSV)
+        </button>
       </div>
     </ModalDrawer>
   );
 }
 
-function Fact({ term, value, note }: { term: string; value: string | null; note: string }) {
+function Fact({ term, value, note, href, hrefLabel }: {
+  term: string;
+  value: string | null;
+  note: string;
+  /** Where the rows behind this one figure are, when there is such a place. */
+  href?: string;
+  hrefLabel?: string;
+}) {
   return (
     <div className="py-2.5">
       <dt className="text-[11px] uppercase tracking-[0.06em] text-muted">{term}</dt>
       <dd className="num mt-0.5 text-ink">{value ?? <NotRecorded />}</dd>
-      <dd className="mt-0.5 text-[11px] leading-snug text-muted">{note}</dd>
+      <dd className="mt-0.5 text-[11px] leading-snug text-muted">
+        {note}
+        {href && value !== null && (
+          <>
+            {" "}
+            <Link
+              href={href}
+              className="text-cyan-600 underline decoration-line-strong underline-offset-2 hover:decoration-cyan-600"
+            >
+              {hrefLabel ?? "Open"}
+            </Link>
+          </>
+        )}
+      </dd>
     </div>
   );
 }
+
+/** Exported for the page's shortlist summary, which counts the same keys. */
+export { pickGene, pickKey };

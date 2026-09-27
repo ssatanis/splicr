@@ -30,6 +30,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 
 import {
+  CALIBRATION_BAND,
   FDR_THRESHOLD,
   libraries,
   LIKELY_REAL_THRESHOLD,
@@ -397,7 +398,7 @@ export function ScreensTable() {
         >
           <DefRow term="Counting" value={toolFor("count")} />
           <DefRow term="Hit calling" value={toolFor("hits")} />
-          <DefRow term="Score" value={toolFor("score")} note="Calibration band ±0.06" />
+          <DefRow term="Score" value={toolFor("score")} note={`Calibration band ±${CALIBRATION_BAND.toFixed(2)}`} />
           <DefRow
             term="Candidate cut"
             value={`BH FDR ${FDR_THRESHOLD.toFixed(2)}`}
