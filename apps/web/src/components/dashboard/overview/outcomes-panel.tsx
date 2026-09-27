@@ -40,6 +40,15 @@ const RESULT_ORDER: Record<OutcomeRow["result"], number> = {
   validated: 3,
 };
 
+/**
+ * `grow basis-auto` rather than `flex-1`: this panel takes the space the runs
+ * panel above it does not want, and when the column is a few pixels short of
+ * both, the shortfall is shared in proportion to what each one asked for rather
+ * than landing entirely on the neighbour. `flex-1` sets the basis to zero, which
+ * makes a shrinking column collapse the runs panel and leave this one untouched.
+ */
+const FILL = "min-h-0 grow basis-auto";
+
 const cellOf = (row: OutcomeRow, key: string): Cell => {
   switch (key) {
     case "gene":
@@ -74,7 +83,7 @@ export function OutcomesPanel({
       count={`${formatNumber(outcomes.length)} logged`}
       span={6}
       body="flush"
-      className={cn("min-h-0 flex-1", className)}
+      className={cn(FILL, className)}
       control={<PanelLink href="/dashboard/validation">Truth Loop</PanelLink>}
       footer={
         <>

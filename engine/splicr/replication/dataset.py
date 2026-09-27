@@ -20,15 +20,16 @@ built artifact so the funnel can be audited. ``docs/07-replication-benchmark.md`
 argues each choice and lists the objections that remain.
 
 The one judgement that is not mechanical is the restriction to unperturbed
-proliferation screens. ORCS PHENOTYPE is a 22-term vocabulary and outside
-proliferation it is far too coarse to establish that two screens measure the
-same thing: four screens in HEK293T all carry PHENOTYPE "protein/peptide
-accumulation" while actually reading out GFP-PARKIN levels, ERAD of a CYP51A1
-reporter, autophagic flux, and readthrough translation of an AMD1 reporter. The
-assay identity lives in the free-text NOTES field, which cannot be matched at
-scale. Pairing on the vocabulary alone would have produced 22 pairs of screens
-that measure unrelated things and would have destroyed the meaning of the label.
-See ``EXCLUDED_PHENOTYPE_NOTE``.
+proliferation screens. The ORCS PHENOTYPE vocabulary is too coarse outside
+proliferation to establish that two screens measure the same thing: five screens
+in HEK293T all carry PHENOTYPE "protein/peptide accumulation" while, per their
+own NOTES, reading out GFP-PARKIN levels, ERAD of a GFP-CYP51A1TM substrate,
+autophagy deficiency, the GFP-LC3-RFP autophagic flux reporter, and readthrough
+translation of an AMD1 reporter. The assay identity lives in the free-text NOTES
+field, which cannot be matched at scale. Pairing on the vocabulary alone would
+have admitted 136 further pairs of screens that measure unrelated things and
+would have destroyed the meaning of the label. See ``EXCLUDED_PHENOTYPE_NOTE``
+and :func:`excluded_phenotype_audit`, which re-derives that count.
 
 LEAKAGE
 
@@ -44,7 +45,7 @@ by convention:
    every screen from either publication, and every screen in the pair's cell
    line. A frequency prior fitted over that set cannot contain B.
    :func:`forbidden_external` names the DepMap models that are off limits for
-   the same reason: 129 of the 131 cell lines here are in DepMap, and DepMap
+   the same reason: 130 of the 133 cell lines here are in DepMap, and DepMap
    CRISPRGeneEffect *is* the Broad Avana experiment, so for a pair whose B side
    is a Broad Avana screen the DepMap column for that cell line is the label in
    a later release.
@@ -138,8 +139,31 @@ MIN_SHARED_COVERAGE = 0.60
 #: Both sides need enough hits inside the shared space for the task to be
 #: rankable and for the label to have enough positives. 50 positives puts the
 #: standard error of average precision at roughly 0.05, which is the resolution
-#: any claim here would be made at. Also a guard rather than an active filter:
-#: the smallest side of any candidate pair already has 61.
+#: any claim here would be made at.
+#:
+#: This is enforced on BOTH gene spaces, and in particular on
+#: :data:`PRIMARY_SPACE`, because a guard that does not bind where the headline
+#: is computed is not a guard. On the full space it never binds: the smallest
+#: side of any candidate pair has 61 hits. On the primary space it removes 6 of
+#: the 181 candidate pairs, whose weaker side calls only 15, 29, 30, 30, 32 and
+#: 15 non-common-essential hits (S16-S1075, S29-S629, S281-S629, S349-S1076,
+#: S783-S1075, S852-S1076). Average precision over 15 positives is not a
+#: measurement.
+#:
+#: Like every other filter it is applied BEFORE the split, so it is not a choice
+#: about which split loses pairs. Removing those 6 does change the publication
+#: graph, and therefore the split: the hub rule then strands fewer pairs across
+#: the two sides, 37 instead of 45, so the benchmark ends up with 138 pairs
+#: rather than 136 and the held-out side with 124 rather than 120. That is a
+#: consequence of the rule and not a tuning knob, and it is recorded here because
+#: a reader comparing two builds is entitled to know why the totals moved.
+#:
+#: WHICH LABEL-DERIVED QUANTITIES MAY GATE A PAIR. This filter reads each side's
+#: own marginal hit count, which is unavoidable: a ranking task with no positives
+#: cannot be scored. It must never read ``n_both``, the agreement between the two
+#: sides, because agreement is the quantity the benchmark measures and selecting
+#: pairs on it would manufacture the result. No filter in this module touches
+#: ``n_both``; the funnel in the built artifact is the audit of that claim.
 MIN_SHARED_HITS = 50
 
 #: The phenotype restriction. See the module docstring.
@@ -150,15 +174,24 @@ SCREEN_TYPE = "Negative Selection"
 
 EXCLUDED_PHENOTYPE_NOTE = (
     "Screens outside PHENOTYPE='cell proliferation' / EXPERIMENTAL_SETUP='Timecourse' / "
-    "CONDITION_NAME='-' are excluded because ORCS metadata does not identify the assay. "
-    "Applying the same pairing rule to them yields 22 protein/peptide-accumulation pairs "
-    "whose reporters are unrelated (GFP-PARKIN vs a CYP51A1 ERAD substrate vs autophagic "
-    "flux vs AMD1 readthrough) and 7 response-to-chemicals pairs of which 6 pair a "
-    "venetoclax sensitivity screen in MOLM-13 against a re-sensitization screen in the "
-    "venetoclax-resistant derivative MOLM13-R1, which ORCS also records as MOLM-13. "
-    "One genuine perturbed pair survives inspection (olaparib in HeLa, Zimmermann 2018 "
-    "against Clements 2020). One pair is not a benchmark, and hand-picking it after "
-    "reading the notes is the 'you chose the pairs' objection in its purest form."
+    "CONDITION_NAME='-' are excluded because the ORCS PHENOTYPE vocabulary does not "
+    "identify the assay, so a phenotype match does not establish that two screens measure "
+    "the same thing. Relaxing the restriction to a PHENOTYPE match alone, with every other "
+    "rule unchanged, admits 136 further pairs: 101 'response to chemicals', 29 "
+    "'protein/peptide accumulation' and 6 'response to virus'. Inspection of the free-text "
+    "NOTES and CONDITION_NAME shows those pairs compare unrelated experiments. Five "
+    "HEK293T screens all carry 'protein/peptide accumulation' while reading out, per their "
+    "own NOTES, GFP-PARKIN levels (screen 182), ERAD of a GFP-CYP51A1TM substrate (1461), "
+    "autophagy deficiency (1618), the GFP-LC3-RFP autophagic flux reporter (1686) and "
+    "readthrough translation of an AMD1 reporter (2134); screen 182 pairs with all four of "
+    "the others. The perturbed pairs match phenotype while comparing different "
+    "perturbations: GSK983 against formaldehyde, resveratrol against ONC201, cisplatin "
+    "against olaparib, SARS-CoV-2 against influenza A. Non-replication in such a pair means "
+    "the two labs did different experiments, not that a hit was an artifact, which is "
+    "precisely the meaning the label must carry. Salvaging the handful of pairs that do "
+    "survive a reading of the notes would mean hand-picking pairs after seeing them, which "
+    "is the 'you chose the pairs' objection in its purest form. "
+    "Re-derive these counts with excluded_phenotype_audit()."
 )
 
 #: SCORE.1 sign convention, keyed by the ORCS SCORE.1_TYPE string. This is read
@@ -183,6 +216,38 @@ SCORE1_DIRECTION = {
 }
 
 SPLITS = ("development", "heldout")
+
+#: The gene space the headline number is computed over, and the single most
+#: important design decision after the pairing rule.
+#:
+#: Measured on development, average precision over the FULL shared space is
+#: 0.4750 for a ranking by screen A's own effect size and 0.4366 for a ranking
+#: by "is this gene on the CEGv2 / DepMap common-essential list", a lookup table
+#: that never opens the screen. The difference is not significant: +0.0383, 95%
+#: CI [-0.0255, +0.0989], Wilcoxon p = 0.30 over 14 screen pairs. The reason is
+#: that common essentials are 58% of development query hits and 72% of held-out
+#: query hits, and they replicate almost unconditionally: in that stratum
+#: development precision is 0.709 against a marginal of 0.637, a lift of 1.11,
+#: and held out 0.827 against 0.774, a lift of 1.07.
+#:
+#: So a headline computed over the full space would be mostly a test of whether
+#: a method can recall a published gene list, and any method that consults one
+#: would score well without saying anything about whether a hit is real.
+#:
+#: Restricted to non-common-essential genes the shortcut dies, exactly as it
+#: must: the lookup table scores 0.0436 against a random 0.0453, while A's
+#: effect size scores 0.2517, beating random by +0.2065, CI [0.1465, 0.2670],
+#: and beating A's own binary hit call by +0.0827, CI [0.0445, 0.1187]. Lift in
+#: this stratum is 8.1 on development and 11.2 held out. That is where the
+#: benchmark has headroom and where being right about artifacts can pay, so that
+#: is the primary space. The full-space number is reported alongside it, never
+#: instead of it.
+#:
+#: Every number in this note is development-only and is reproduced by
+#: ``docs/07-replication-benchmark.md``; none of it was computed on held-out
+#: pairs.
+PRIMARY_SPACE = "non_common_essential"
+GENE_SPACES = ("non_common_essential", "all")
 
 GENESET_DIR = os.environ.get(
     "SPLICR_GENESET_DIR",
@@ -686,6 +751,10 @@ def build(path: str = ARTIFACT) -> dict:
         if min(stats["a_hits"], stats["b_hits"]) < MIN_SHARED_HITS:
             continue
         step(f"O3 >={MIN_SHARED_HITS} hits per side in shared space")
+        # The same guard on the primary space, where the headline is computed.
+        if min(stats["a_hits_nce"], stats["b_hits_nce"]) < MIN_SHARED_HITS:
+            continue
+        step(f"O4 >={MIN_SHARED_HITS} hits per side in {PRIMARY_SPACE} space")
         kept.append((key, stats))
 
     pair_pubs = [(idx[a]["SOURCE_ID"], idx[b]["SOURCE_ID"]) for (a, b), _ in kept]
@@ -748,6 +817,7 @@ def build(path: str = ARTIFACT) -> dict:
         "orcs_release": "2.0.18",
         "orcs_exclusion_policy": orcs_safe.POLICY,
         "n_safe_screens": len(idx),
+        "deduplication": dedup_cost(),
         "eligibility_funnel": e_funnel,
         "pairing_funnel": p_funnel,
         "overlap_funnel": o_funnel,
@@ -825,10 +895,16 @@ def _assert_shared_space(df, unit: ReplicationPair, what: str) -> None:
 def load_pair_inputs(unit: ReplicationPair):
     """Everything a predictor may see for this unit, as a pandas DataFrame.
 
-    Columns: ``gene``, ``a_hit``, ``a_score1``. Restricted to the shared gene
-    space, which is the space the unit is scored over. ``gene`` is unique, so
-    merging this against :func:`load_pair_labels` on ``gene`` is safe and the
-    row count equals ``unit.n_shared_genes``.
+    Columns: ``gene``, ``a_hit``, ``a_score1``, ``is_common_essential``.
+    Restricted to the shared gene space, which is the space the unit is scored
+    over. ``gene`` is unique, so merging this against :func:`load_pair_labels`
+    on ``gene`` is safe and the row count equals ``unit.n_shared_genes``.
+
+    ``is_common_essential`` is supplied so a caller can restrict to
+    :data:`PRIMARY_SPACE` without rebuilding the gene list. It is a gene-level,
+    cell-line-independent public list and is not derived from either screen, so
+    it is an input and not a label. See :data:`PRIMARY_SPACE` for why the
+    restriction matters.
 
     The query reads rows for ``unit.query_screen`` and joins against the gene
     list of ``unit.target_screen`` to get the shared space. It selects no column
@@ -849,6 +925,8 @@ def load_pair_inputs(unit: ReplicationPair):
         [unit.query_screen, unit.target_screen],
     ).fetchdf()
     _assert_shared_space(df, unit, "inputs")
+    ce = common_essentials()
+    df["is_common_essential"] = [g in ce for g in df["gene"]]
     return df
 
 
@@ -917,8 +995,8 @@ def forbidden_external(unit: ReplicationPair) -> dict:
     """External resources that would be reading the label for this unit.
 
     ``depmap_models``: DepMap CRISPRGeneEffect and CRISPRGeneDependency are the
-    Broad Avana experiment. 129 of the 131 cell lines in this benchmark are
-    DepMap models and 268 of the 272 units resolve to one, so for almost every
+    Broad Avana experiment. 130 of the 133 cell lines in this benchmark are
+    DepMap models and 270 of the 276 units resolve to one, so for almost every
     unit DepMap holds a fitness measurement
     of the same cell line, and where the target screen is a Broad Avana screen
     (Meyers 2017, Aguirre 2016) it is a later release of that same screen. Any
@@ -1009,6 +1087,201 @@ def base_rates(split: str | None = None, units: Iterable[ReplicationPair] | None
     }
 
 
+def excluded_phenotype_audit() -> dict:
+    """Re-derive the cost of the unperturbed-proliferation restriction.
+
+    Applies the eligibility rules and the whole pairing rule but matches on
+    PHENOTYPE alone, dropping the EXPERIMENTAL_SETUP, CONDITION_NAME and
+    SCREEN_TYPE requirements. Returns the pairs that a looser phenotype rule
+    would have admitted, grouped by phenotype, with each side's condition and
+    NOTES so a reader can check for themselves that they are not comparable.
+
+    This exists so :data:`EXCLUDED_PHENOTYPE_NOTE` is a claim anyone can check
+    rather than a number in a comment.
+    """
+    idx = screen_index()
+    counts = _screen_counts()
+    base = []
+    for sid, meta in sorted(idx.items()):
+        n, h = counts.get(sid, (0, 0))
+        if meta["THROUGHPUT"] != "High Throughput" or meta["SCREEN_FORMAT"] != "Pool":
+            continue
+        if meta["FULL_SIZE_AVAILABLE"] != "Yes" or n < MIN_MEASURED_GENES:
+            continue
+        if h < MIN_HITS or h / n > MAX_HIT_FRACTION:
+            continue
+        base.append(sid)
+
+    by_phenotype: dict[str, list[dict]] = collections.defaultdict(list)
+    for a, b in itertools.combinations(base, 2):
+        ma, mb = idx[a], idx[b]
+        if ma["PHENOTYPE"] != mb["PHENOTYPE"] or ma["PHENOTYPE"] == PHENOTYPE:
+            continue
+        if ma["SOURCE_ID"] == mb["SOURCE_ID"]:
+            continue
+        if first_author_key(ma["AUTHOR"]) == first_author_key(mb["AUTHOR"]):
+            continue
+        if ma["LIBRARY_TYPE"] != mb["LIBRARY_TYPE"] or ma["LIBRARY"] == mb["LIBRARY"]:
+            continue
+        if cell_line_key(ma["CELL_LINE"]) != cell_line_key(mb["CELL_LINE"]):
+            continue
+        by_phenotype[ma["PHENOTYPE"]].append({
+            "screens": [a, b],
+            "cell_line": ma["CELL_LINE"],
+            "authors": [ma["AUTHOR"], mb["AUTHOR"]],
+            "conditions": [ma["CONDITION_NAME"], mb["CONDITION_NAME"]],
+            "notes": [(ma.get("NOTES") or "")[:200], (mb.get("NOTES") or "")[:200]],
+        })
+    return {
+        "n_additional_pairs": sum(len(v) for v in by_phenotype.values()),
+        "by_phenotype": {k: len(v) for k, v in sorted(
+            by_phenotype.items(), key=lambda kv: -len(kv[1]))},
+        "pairs": dict(by_phenotype),
+    }
+
+
+# ---------------------------------------------------------------------------
+# The paired test every claim on this benchmark has to pass
+# ---------------------------------------------------------------------------
+
+def paired_test(
+    scores_a: dict[str, float],
+    scores_b: dict[str, float],
+    n_boot: int = 10_000,
+    seed: int = 0,
+) -> dict:
+    """Compare two methods over the same units, resampling by SCREEN PAIR.
+
+    ``scores_a`` and ``scores_b`` map ``unit_id`` to that unit's score, higher
+    being better. Both must cover the same units.
+
+    The bootstrap resamples ``pair_key``, not ``unit_id``, because the two
+    directions of one screen pair are the same experiment scored twice and are
+    strongly dependent. Resampling units would roughly halve the interval and
+    overstate significance. The Wilcoxon signed-rank test is likewise run on the
+    per-pair mean of the two directions, so n is the number of screen pairs.
+
+    Returns the mean difference, a percentile bootstrap CI, and the Wilcoxon p.
+    A difference whose CI crosses zero is not an improvement.
+    """
+    import random as _random
+
+    import numpy as np
+
+    if set(scores_a) != set(scores_b):
+        raise ValueError("the two methods must be scored on exactly the same units")
+    by_pair = load()
+    unit_pair = {u.unit_id: u.pair_key for u in by_pair.all_units}
+    missing = sorted(set(scores_a) - set(unit_pair))
+    if missing:
+        raise KeyError(f"unknown unit ids: {missing[:5]}")
+
+    grouped: dict[str, list[float]] = collections.defaultdict(list)
+    for uid, va in scores_a.items():
+        grouped[unit_pair[uid]].append(va - scores_b[uid])
+    keys = sorted(grouped)
+    per_pair = np.array([float(np.mean(grouped[k])) for k in keys])
+
+    rng = _random.Random(seed)
+    n = len(per_pair)
+    boots = np.empty(n_boot)
+    for i in range(n_boot):
+        pick = [rng.randrange(n) for _ in range(n)]
+        boots[i] = per_pair[pick].mean()
+    lo, hi = float(np.percentile(boots, 2.5)), float(np.percentile(boots, 97.5))
+
+    try:
+        from scipy.stats import wilcoxon
+
+        p = float(wilcoxon(per_pair).pvalue) if n > 0 and per_pair.any() else 1.0
+    except Exception:
+        p = float("nan")
+
+    return {
+        "n_screen_pairs": n,
+        "n_units": len(scores_a),
+        "mean_difference": float(per_pair.mean()),
+        "ci95": [lo, hi],
+        "wilcoxon_p": p,
+        "significant": bool(lo > 0 or hi < 0),
+        "resampling_unit": "pair_key",
+    }
+
+
+def average_precision(y_true, score) -> float:
+    """Average precision of ``score`` against binary ``y_true``, higher better.
+
+    Ties are broken by the order the caller supplies, which is gene-alphabetical
+    as the loaders return it. A method that emits many tied scores is therefore
+    scored on an arbitrary but fixed and method-independent tie order, rather
+    than on a favourable one.
+    """
+    import numpy as np
+
+    y = np.asarray(y_true, dtype=float)
+    s = np.asarray(score, dtype=float)
+    if y.shape != s.shape:
+        raise ValueError(f"shape mismatch: labels {y.shape} vs scores {s.shape}")
+    if y.sum() == 0:
+        return float("nan")
+    order = np.argsort(-s, kind="stable")
+    y = y[order]
+    prec = np.cumsum(y) / np.arange(1, len(y) + 1)
+    return float((prec * y).sum() / y.sum())
+
+
+def evaluate(
+    unit: ReplicationPair,
+    score,
+    space: str = PRIMARY_SPACE,
+    evaluating: bool = False,
+) -> dict:
+    """Score one unit's prediction, restricted to ``space``.
+
+    ``score`` is one number per gene, in the gene order that
+    :func:`load_pair_inputs` returned, higher meaning more likely to replicate.
+    The restriction to ``space`` is applied here rather than by the caller, so
+    the headline cannot drift back to the full gene space by accident.
+
+    Returns the method's average precision alongside the two baselines any claim
+    has to clear: a random ranking, and screen A's own binary hit call.
+    """
+    import numpy as np
+
+    if space not in GENE_SPACES:
+        raise ValueError(f"unknown space {space!r}; choose from {GENE_SPACES}")
+    inputs = load_pair_inputs(unit)
+    labels = load_pair_labels(unit, evaluating=evaluating)
+    s = np.asarray(score, dtype=float)
+    if len(s) != len(inputs):
+        raise ValueError(
+            f"{unit.unit_id}: got {len(s)} scores for {len(inputs)} genes; score must be "
+            f"in the gene order load_pair_inputs returned"
+        )
+    merged = inputs.merge(labels, on="gene", validate="one_to_one")
+    sel = np.ones(len(merged), bool) if space == "all" else ~merged["is_common_essential"].to_numpy()
+    y = merged["b_hit"].to_numpy()[sel]
+    return {
+        "unit_id": unit.unit_id,
+        "pair_key": unit.pair_key,
+        "space": space,
+        "n_genes": int(sel.sum()),
+        "n_positives": int(y.sum()),
+        "average_precision": average_precision(y, s[sel]),
+        "baseline_random": float(y.mean()),
+        "baseline_a_hit": average_precision(y, merged["a_hit"].to_numpy().astype(float)[sel]),
+    }
+
+
+def marginal_baseline(unit: ReplicationPair) -> float:
+    """Average precision of a random ranking: the floor any method must clear.
+
+    For a ranking with no information, expected average precision is the
+    positive rate, which here is ``unit.target_hit_rate``.
+    """
+    return unit.target_hit_rate
+
+
 def describe() -> str:
     """A human-readable audit of the built benchmark."""
     b = load()
@@ -1041,13 +1314,22 @@ def describe() -> str:
             f"publications {len(pubs):>3}  cell lines {len(lines):>3}"
         )
         r = base_rates(split)
-        for name in ("all_genes", "non_common_essential_genes"):
+        for name in ("non_common_essential_genes", "all_genes"):
             blk = r[name]
+            tag = name + (" [PRIMARY]" if name.startswith("non_common") else "")
             out.append(
-                f"      {name:<28} marginal {blk['marginal']['mean']:.4f}  "
+                f"      {tag:<38} marginal {blk['marginal']['mean']:.4f}  "
                 f"precision {blk['precision']['mean']:.4f}  lift {blk['lift']['mean']:.2f}  "
                 f"positives {blk['n_positives']['mean']:.0f}"
             )
+    d = m.get("deduplication")
+    if d:
+        out.append(
+            f"  one row per (screen, gene): {d['n_screen_gene_groups']:,} genes from "
+            f"{d['n_orcs_rows']:,} ORCS rows; {d['n_groups_with_repeats']:,} repeated, "
+            f"{d['n_groups_contradicting_themselves']:,} dropped for contradicting themselves"
+        )
+    out.append(f"  primary gene space: {PRIMARY_SPACE}")
     return "\n".join(out)
 
 

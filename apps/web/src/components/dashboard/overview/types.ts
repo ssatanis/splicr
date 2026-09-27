@@ -38,8 +38,6 @@ export interface CandidateRow {
 export interface RunRow {
   id: string;
   name: string;
-  /** Cell line and modality, the one line of context the name needs. */
-  context: string;
   status: ScreenStatus;
   qc: "pass" | "warn" | "fail" | "pending";
   /** Stages finished out of nine, or null when no run has started. */
@@ -48,7 +46,7 @@ export interface RunRow {
   realHits: number | null;
   /** Why this run wants a look today, or null when it does not. */
   attention: string | null;
-  /** What the expanded row adds: phenotype, library, owner, created. */
+  /** What the expanded row adds: phenotype, library, model, owner, created. */
   detail: string;
 }
 

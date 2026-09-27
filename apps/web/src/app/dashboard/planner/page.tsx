@@ -1,13 +1,12 @@
 import { Planner } from "@/components/dashboard/planner";
-import { PageHeader } from "@/components/dashboard/ui";
 
 export const metadata = { title: "Screen Planner" };
 
+/**
+ * The page is the planner. Its own title line is inside the component, beside the
+ * sample-data label, because the form and the figures it moves have to share one
+ * screen and a 145px page header is four fields of the form.
+ */
 export default function PlannerPage() {
-  return (
-    <div>
-      <PageHeader eyebrow="Screen Planner" title="Screen smarter, not bigger" body="A focused library from past screens like yours, plus the coverage, replicates and cost the screen needs to actually work." />
-      <Planner />
-    </div>
-  );
+  return <Planner />;
 }

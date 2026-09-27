@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Bell,
   Cable,
   CheckCircle2,
   Compass,
@@ -170,7 +169,16 @@ export function DashboardShell({ user, children }: { user: ShellUser; children: 
             itself, 100% height plus padding overflowed by exactly the padding,
             which is how a page that fits still scrolled 40px. */}
         <main className="thin-scroll flex-1 overflow-y-auto">
-          <div className="flex min-h-full flex-col gap-3 px-4 py-4 md:px-6 md:py-5">{children}</div>
+          {/* h-full, not min-h-full. A minimum leaves the wrapper's height
+              indefinite, so a child asking for `flex-1` gets no definite basis
+              and a `1fr` grid track inside it degenerates to max-content.
+              Measured on the overview: the track resolved to 2547px and main
+              scrolled 2794px into an 800px viewport. With a definite height the
+              same track resolves to 552px, main is 800px with nothing to
+              scroll, and the candidate table absorbs its own overflow. Content
+              taller than the viewport still overflows this box and main still
+              scrolls it, so the short-page case is unchanged. */}
+          <div className="flex h-full flex-col gap-3 px-4 py-4 md:px-6 md:py-5">{children}</div>
         </main>
       </div>
 
@@ -207,16 +215,13 @@ function Sidebar({
 
   return (
     <div className="flex h-full w-full min-h-0 flex-col">
+      {/* The bell that used to sit here opened nothing and there is no
+          notification store behind it. A control that does nothing is the one
+          thing this audience reads as a mock-up rather than an instrument, and
+          the rail is where they would look first. */}
       <div className="flex shrink-0 items-center gap-2 px-4 pb-3 pt-4">
         <Logo tone="light" href="/dashboard" size="sm" />
         <div className="flex-1" />
-        <button
-          type="button"
-          className="flex h-7 w-7 items-center justify-center rounded-md text-white/75 transition-colors duration-[120ms] hover:bg-white/10 hover:text-white motion-reduce:transition-none"
-          aria-label="Notifications"
-        >
-          <Bell className="h-4 w-4" aria-hidden="true" />
-        </button>
         {onClose && (
           <button
             className="flex h-7 w-7 items-center justify-center rounded-md text-white/90 hover:bg-white/10 lg:hidden"

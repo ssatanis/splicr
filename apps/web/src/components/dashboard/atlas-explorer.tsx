@@ -37,11 +37,10 @@ import {
 } from "@/lib/mock/data";
 import { formatNumber } from "@/lib/utils";
 
-import { DefRow, SampleNote } from "./console";
+import { SampleNote } from "./console";
 import { FilterBar, FilterField, useUrlSort, useUrlState, type Cell } from "./console-controls";
 import {
   DenseTable,
-  Empty,
   FootNote,
   KpiStrip,
   KpiTile,
@@ -154,13 +153,13 @@ export function AtlasExplorer() {
       <KpiStrip
         title="Corpus"
         count={`${formatNumber(ATLAS_SCREENS_TOTAL)} screens indexed`}
-        footer={<FootNote>Monthly refresh. Last one Sep 2026, from the sample manifest</FootNote>}
+        footer={<FootNote>Monthly refresh, last Sep 2026, from the sample manifest</FootNote>}
       >
         <KpiTile
           label="Screens indexed"
           value={formatNumber(ATLAS_SCREENS_TOTAL)}
           denominator="metadata only"
-          definition="BioGRID ORCS, DepMap and Project Score records."
+          definition="BioGRID ORCS, DepMap, Project Score."
         />
         {/* A target is not a measurement, so it says which it is beside the figure
             rather than in a hint below a number that reads as progress. */}
@@ -168,30 +167,32 @@ export function AtlasExplorer() {
           label="Re-run from raw reads"
           value={formatNumber(ATLAS_RERUN_FROM_RAW)}
           denominator={`of ${formatNumber(ATLAS_SCREENS_TOTAL)}`}
-          definition="Atlas v0 target is 50 to 100. A plan, not a count."
+          definition="Target 50 to 100. A plan, not a count."
           tone="cyan"
         />
         <KpiTile
           label="Hits with a logged outcome"
           value={formatNumber(ATLAS_HITS_WITH_OUTCOMES)}
           denominator="pilot answer key"
-          definition="Re-tests recorded against an indexed hit."
+          definition="Re-tests against an indexed hit."
           tone="orange"
         />
         <KpiTile
           label="Screens in the sample list"
           value={formatNumber(atlasScreensList.length)}
           denominator={`${formatNumber(sorted.length)} shown`}
-          definition="The only rows this build can actually browse."
+          definition="The rows this build can browse."
         />
       </KpiStrip>
 
-      {/* The corpus is the page. Gene history sits beside it rather than above,
-          because a reader arrives either to browse or to look one symbol up and
-          neither question should push the other off the screen. */}
-      <div className="grid min-h-0 grid-cols-12 gap-4 lg:flex-1 lg:grid-rows-[minmax(0,1fr)]">
+      {/* The corpus is the page, so the table gets the full width: eight columns
+          of nowrap metadata in an 8-of-12 panel needed 956px of a 657px panel,
+          which put the library, the phenotype and the year past the right edge.
+          The gene lookup is a strip underneath, where it costs 110px instead of
+          a third of every row. */}
+      <div className="grid min-h-0 grid-cols-12 gap-4 lg:flex-1 lg:grid-rows-[minmax(0,1fr)_auto]">
         <Panel
-          span={8}
+          span={12}
           className="min-h-[340px]"
           title="Screens in the Atlas"
           count={`${formatNumber(sorted.length)} of ${formatNumber(atlasScreensList.length)} listed`}
@@ -218,7 +219,7 @@ export function AtlasExplorer() {
                 onChange={(event) =>
                   set({ [key]: event.target.value === ANY ? null : event.target.value })
                 }
-                className="min-w-0 flex-1"
+                className="min-w-0 max-w-[200px] flex-1"
               >
                 {FILTERS[key].options.map((option) => (
                   <option key={option} value={option}>
@@ -227,6 +228,9 @@ export function AtlasExplorer() {
                 ))}
               </PanelSelect>
             ))}
+            <span className="ml-auto hidden shrink-0 text-[11px] text-muted lg:block">
+              Every column sorts. The facets and the sort are in this page&apos;s address.
+            </span>
           </FilterBar>
 
           <DenseTable minWidth={880}>
@@ -251,8 +255,13 @@ export function AtlasExplorer() {
                   {/* The title is the row's identity and the accession is the key
                       a reader quotes, so the accession is the cell's title rather
                       than a column of its own. */}
-                  <td className="max-w-[300px] truncate text-ink" title={`${screen.title} (${screen.id})`}>
-                    {screen.title}
+                  <td>
+                    <span
+                      className="block max-w-[300px] truncate text-ink"
+                      title={`${screen.title} (${screen.id})`}
+                    >
+                      {screen.title}
+                    </span>
                   </td>
                   <td className="text-muted">{screen.source}</td>
                   <td>{screen.cellLine}</td>
@@ -274,56 +283,83 @@ export function AtlasExplorer() {
           </DenseTable>
         </Panel>
 
+        {/* One row, not a column: the lookup is a field and four figures, and
+            four figures stacked vertically is 300px for what fits on one line. */}
         <Panel
-          span={4}
-          className="min-h-[300px] [animation-delay:60ms]"
+          span={12}
+          className="[animation-delay:60ms]"
           title="Gene history"
-          count={hit ? hit.gene : `${formatNumber(demoHits.length)} genes searchable`}
+          count={hit ? hit.gene : `${formatNumber(demoHits.length)} genes in the sample hit table`}
           footer={
             <FootNote>
               Counted in the sample hit table for the demo screen, not in the corpus
             </FootNote>
           }
-          bodyClassName="py-3"
+          bodyClassName="py-2.5"
         >
-          <FilterField
-            label="Gene symbol"
-            value={gene}
-            onChange={(value) => set({ gene: value })}
-            placeholder={`Gene symbol, for instance ${examples}`}
-          />
-
-          {hit ? (
-            <div className="mt-3">
-              <DefRow
-                term="Called in"
-                value={`${hit.atlasHits} of ${formatNumber(hit.atlasScreens)}`}
-                note="Screens that assayed this gene"
-              />
-              <DefRow
-                term="Frequent hitter"
-                value={hit.flags.includes("Frequent hitter") ? "Yes" : "No"}
-                note="Called in an implausible share of unrelated screens"
-                tone={hit.flags.includes("Frequent hitter") ? "orange" : "ink"}
-              />
-              <DefRow term="Re-tests elsewhere" value="Not recorded" note="Not in this dataset" />
-              <DefRow term="Cell contexts" value="Not recorded" note="Not in this dataset" />
-              <p className="mt-2 text-[11px] leading-snug text-muted">
-                The per-screen breakdown, the cell contexts and other labs&apos; re-tests are what
-                the Atlas is being built to hold. The sample dataset carries a count and nothing
-                else, so nothing else is shown rather than being derived from this screen&apos;s own
-                score.
-              </p>
-            </div>
-          ) : (
-            <Empty
-              className="mt-3"
-              title={gene === "" ? "No gene looked up yet" : `No record for ${gene.trim()}`}
-              body={`Type a symbol from the demo screen, for instance ${examples}.`}
+          <div className="flex flex-wrap items-start gap-x-6 gap-y-2">
+            <FilterField
+              label="Gene symbol"
+              value={gene}
+              onChange={(value) => set({ gene: value })}
+              placeholder={`Gene symbol, for instance ${examples}`}
+              className="w-full max-w-[260px]"
             />
-          )}
+
+            {hit ? (
+              <dl className="flex min-w-0 flex-1 flex-wrap items-start gap-x-6 gap-y-2">
+                <GeneFact
+                  term="Called in"
+                  value={`${hit.atlasHits} of ${formatNumber(hit.atlasScreens)}`}
+                  note="Screens that assayed it"
+                />
+                <GeneFact
+                  term="Frequent hitter"
+                  value={hit.flags.includes("Frequent hitter") ? "Yes" : "No"}
+                  note="Called in unrelated screens"
+                  tone={hit.flags.includes("Frequent hitter") ? "orange" : "ink"}
+                />
+                <GeneFact term="Re-tests elsewhere" value="Not recorded" note="Not in this dataset" />
+                <GeneFact term="Cell contexts" value="Not recorded" note="Not in this dataset" />
+              </dl>
+            ) : (
+              <p className="min-w-0 flex-1 py-1 text-[12px] leading-snug text-muted">
+                {gene === ""
+                  ? `Type a symbol from the demo screen, for instance ${examples}, to see how often it was called and in how many screens that assayed it.`
+                  : `No record for ${gene.trim()} in the sample hit table. Try ${examples}.`}
+              </p>
+            )}
+          </div>
         </Panel>
       </div>
+    </div>
+  );
+}
+
+/**
+ * One figure of a gene's history, on a line rather than in a stack. The note is
+ * the denominator: "3 of 41" means nothing without "screens that assayed it".
+ */
+function GeneFact({
+  term,
+  value,
+  note,
+  tone = "ink",
+}: {
+  term: string;
+  value: string;
+  note: string;
+  tone?: "ink" | "orange";
+}) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-[11px] leading-none text-muted">{term}</dt>
+      <dd
+        className={`num mt-1 text-[13px] leading-none ${tone === "orange" ? "text-orange-600" : "text-ink"}`}
+      >
+        {value}
+      </dd>
+      <dd className="mt-1 text-[11px] leading-none text-muted">{note}</dd>
     </div>
   );
 }

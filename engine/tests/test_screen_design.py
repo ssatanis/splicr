@@ -34,7 +34,13 @@ ENDPOINTS = ["D21_A", "D21_B", "D21_C"]
 # simulated.
 # ---------------------------------------------------------------------------
 
-N_ESSENTIAL, N_NONESSENTIAL, N_OTHER = 60, 90, 150
+# Gene counts chosen so the essential FRACTION resembles a genome-wide screen:
+# CEGv2 is about 5% of the genes in Brunello. An earlier version of this fixture
+# used 60/90/150, which made a fifth of all guides drop five- to twenty-fold and
+# pushed the endpoint arms' 90th/10th percentile skew to 15, over Joung's limit
+# of 10. That is a property of the fixture, not of the engine, and it made a
+# healthy screen warn.
+N_ESSENTIAL, N_NONESSENTIAL, N_OTHER = 60, 90, 850
 MEAN_READS_PER_GUIDE = 248.0      # the depth the reported scenario was built at
 
 

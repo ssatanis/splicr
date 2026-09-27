@@ -748,7 +748,11 @@ export function SortTh({ label, active, dir, onToggle, align = "left", width, cl
         onClick={onToggle}
         title={title}
         className={cn(
-          "inline-flex w-full items-center gap-1 rounded-sm uppercase tracking-[0.06em]",
+          // h-7 matches the 1.75rem thead cell. Measured without it the button
+          // was 13px tall inside a 28px header, so more than half of a column
+          // heading looked clickable and did nothing, and the target was well
+          // under any usable size for a tap.
+          "inline-flex h-7 w-full items-center gap-1 rounded-sm uppercase tracking-[0.06em]",
           align === "right" ? "justify-end" : "justify-start",
           active ? "text-ink" : "text-muted hover:text-ink",
         )}

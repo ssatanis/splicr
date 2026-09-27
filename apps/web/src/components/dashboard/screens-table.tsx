@@ -40,8 +40,15 @@ import {
 } from "@/lib/mock/data";
 import { cn, formatDate, formatNumber } from "@/lib/utils";
 
-import { ABOVE_ROW_LINK, DefRow, ROW_LINK, SampleNote } from "./console";
-import { FilterBar, FilterField, useUrlSort, useUrlState, type Cell } from "./console-controls";
+import { DefRow, ROW_LINK, SampleNote } from "./console";
+import {
+  CsvFootLink,
+  FilterBar,
+  FilterField,
+  useUrlSort,
+  useUrlState,
+  type Cell,
+} from "./console-controls";
 import {
   DenseTable,
   FootNote,
@@ -53,10 +60,26 @@ import {
   SortTh,
   StatusChip,
   statusTone,
-  Th,
 } from "./ui";
 
 const STATUSES = ["Any", "complete", "running", "queued", "failed"] as const;
+
+/** The export's header row. Every column the table shows, in the order it shows them. */
+const SCREEN_COLUMNS = [
+  "screen_id",
+  "name",
+  "phenotype",
+  "cell_line",
+  "organism",
+  "modality",
+  "library",
+  "status",
+  "qc",
+  "likely_real_hits",
+  "candidates_called",
+  "owner",
+  "created_at",
+] as const;
 
 /**
  * The height of the three panels under the table. Fixed, and the same for all
@@ -64,6 +87,15 @@ const STATUSES = ["Any", "complete", "running", "queued", "failed"] as const;
  * in it scrolls itself rather than pushing the table off the screen.
  */
 const SIDE_PANEL_H = "h-[160px]";
+
+/**
+ * The caps on the three prose columns. Without them the ten columns want
+ * 1,175px, which is 181px more than the panel has at 1280 and puts the date and
+ * the export beyond the right edge.
+ */
+const NAME_W = "max-w-[150px]";
+const TEXT_W = "max-w-[116px]";
+const LIB_W = "max-w-[100px]";
 
 /** Day and month in a column; the full date stays on the cell as its title. */
 const shortDate = (iso: string) =>
@@ -169,10 +201,39 @@ export function ScreensTable() {
               Hits: chance real {LIKELY_REAL_THRESHOLD.toFixed(2)} or above, over candidates past BH
               FDR {FDR_THRESHOLD.toFixed(2)}
             </FootNote>
-            <span aria-live="polite" className="num shrink-0">
-              {sorted.length === screens.length
-                ? "No filter applied"
-                : `${formatNumber(screens.length - sorted.length)} hidden by this filter`}
+            <span className="flex shrink-0 items-center gap-3">
+              <span aria-live="polite" className="num">
+                {sorted.length === screens.length
+                  ? "No filter applied"
+                  : `${formatNumber(screens.length - sorted.length)} hidden by this filter`}
+              </span>
+              {/* The export belongs to the panel, not to each row: a csv link in
+                  every row cost 71px of a table that had none to spare, and the
+                  file a reader actually wants is the filtered view they are
+                  looking at. A screen's own report is on the screen's page. */}
+              <CsvFootLink
+                filename="splicr-sample-screens.csv"
+                columns={SCREEN_COLUMNS}
+                rows={sorted.map((screen) => [
+                  screen.id,
+                  screen.name,
+                  screen.phenotype,
+                  screen.cellLine,
+                  screen.organism,
+                  screen.modality,
+                  screen.library,
+                  screen.status,
+                  screen.qc,
+                  // An unfinished screen has not called hits, so the cell is
+                  // empty rather than a zero somebody could plot.
+                  screen.status === "complete" ? screen.realHits : "",
+                  screen.status === "complete" ? screen.hits : "",
+                  screen.owner,
+                  screen.createdAt,
+                ])}
+              >
+                Export CSV
+              </CsvFootLink>
             </span>
           </>
         }
@@ -210,7 +271,6 @@ export function ScreensTable() {
               />
               <SortTh label="Owner" {...sortProps("owner")} />
               <SortTh label="Created" {...sortProps("created", "desc")} />
-              <Th>Export</Th>
             </tr>
           </thead>
           <tbody>
@@ -219,24 +279,44 @@ export function ScreensTable() {
                 <td>
                   {/* The id is the join key an export carries, so it stays
                       reachable, but as the link's title rather than 55px of
-                      every row. */}
+                      every row.
+
+                      Capped and clipped, with the full string on the cell: ten
+                      columns of nowrap text needed 1,175px at 1280, which put
+                      Created and the export off the right edge of the panel.
+                      A name a reader can hover for is a better trade than an
+                      export they have to scroll sideways to find. Figures are
+                      never capped, only prose. */}
                   <Link
                     href={`/dashboard/screens/${screen.id}`}
-                    title={screen.id}
-                    className={cn("font-medium text-ink hover:text-orange-600", ROW_LINK)}
+                    title={`${screen.name} (${screen.id})`}
+                    className={cn("block truncate font-medium text-ink hover:text-orange-600", NAME_W, ROW_LINK)}
                   >
                     {screen.name}
                     <span className="sr-only">, {screen.id}, open this screen</span>
                   </Link>
                 </td>
-                <td>{screen.phenotype}</td>
                 <td>
-                  {screen.cellLine}
-                  <span className="ml-1.5 text-[11px] text-muted">
-                    {screen.organism} · {screen.modality}
+                  <span className={cn("block truncate", TEXT_W)} title={screen.phenotype}>
+                    {screen.phenotype}
                   </span>
                 </td>
-                <td>{screen.library}</td>
+                <td>
+                  <span
+                    className={cn("block truncate", TEXT_W)}
+                    title={`${screen.cellLine}, ${screen.organism}, ${screen.modality}`}
+                  >
+                    {screen.cellLine}
+                    <span className="ml-1.5 text-[11px] text-muted">
+                      {screen.organism} · {screen.modality}
+                    </span>
+                  </span>
+                </td>
+                <td>
+                  <span className={cn("block truncate", LIB_W)} title={screen.library}>
+                    {screen.library}
+                  </span>
+                </td>
                 <td>
                   <StatusChip tone={statusTone(screen.status)} spinning={screen.status === "running"}>
                     {screen.status}
@@ -257,30 +337,11 @@ export function ScreensTable() {
                 </td>
                 <td>{screen.owner}</td>
                 <td title={formatDate(screen.createdAt)}>{shortDate(screen.createdAt)}</td>
-                <td>
-                  {/* CSV here because that is the file that opens in R, Excel
-                      and Prism. JSON and the PDF are one click further, on the
-                      screen's own Report tab, rather than 60px of every row. */}
-                  {screen.status === "complete" ? (
-                    <a
-                      href={`/api/report/${screen.id}?format=csv`}
-                      className={cn(
-                        "rounded-sm text-[11px] uppercase text-cyan-600 underline decoration-line-strong underline-offset-2 hover:decoration-cyan-600",
-                        ABOVE_ROW_LINK,
-                      )}
-                    >
-                      csv
-                      <span className="sr-only"> export for {screen.name}</span>
-                    </a>
-                  ) : (
-                    <span className="text-[11px] text-muted">None yet</span>
-                  )}
-                </td>
               </tr>
             ))}
             {sorted.length === 0 && (
               <tr>
-                <td colSpan={10} className="px-4 py-8 text-center text-muted">
+                <td colSpan={9} className="px-4 py-8 text-center text-muted">
                   No screen matches this filter. Clear the text filter or set the status back to
                   any.
                 </td>

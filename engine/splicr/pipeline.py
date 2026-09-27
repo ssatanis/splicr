@@ -65,6 +65,18 @@ class PipelineResult:
             lines.append(f"  {s.stage:<10} {mark:<8} {s.duration_sec:6.1f}s  {s.detail}")
         for note in (self.design.notes if self.design else []):
             lines.append(f"  design: {note}")
+        # A verdict with no reason attached is not actionable, and on the
+        # persist=False path there is nowhere else for the reason to live: it
+        # would otherwise exist only inside the qc stage's metrics dict, which
+        # nothing prints. The real olaparib screen fails QC on one arm mapping
+        # at 48%, and the summary used to say only "fail".
+        if self.qc is not None and self.qc.verdict != "pass":
+            for note in self.qc.notes:
+                lines.append(f"  qc: {note}")
+            for s in self.qc.samples:
+                if s.verdict != "pass":
+                    for note in s.notes:
+                        lines.append(f"  qc {s.label} ({s.verdict}): {note}")
         if self.hits:
             sig = self.hits.significant(0.1)
             lines.append(f"  {len(self.hits.genes)} genes scored, {len(sig)} significant at FDR 0.1")
