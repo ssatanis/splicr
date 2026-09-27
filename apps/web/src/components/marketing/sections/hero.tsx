@@ -36,47 +36,36 @@ export function Hero() {
 
       <motion.div
         style={{ y: copyY }}
-        className="relative z-10 flex-1 flex flex-col justify-center container-x py-16 md:py-24"
+        className="relative z-10 flex-1 flex flex-col justify-center items-center
+                   text-center container-x py-16 md:py-24"
       >
-        <div className="max-w-4xl">
-          <motion.h1
-            initial="hidden"
-            animate="show"
-            className="font-serif text-ink leading-[0.95] tracking-[-0.02em]
-                       text-[clamp(2.9rem,8.5vw,7rem)]"
-          >
-            <motion.span custom={0} variants={line} className="block">
-              The answer key
-            </motion.span>
-            <motion.span custom={1} variants={line} className="block">
-              for <span className="text-orange-500">CRISPR</span> screens
-            </motion.span>
-          </motion.h1>
+        <motion.h1
+          initial="hidden"
+          animate="show"
+          className="font-serif text-ink leading-[0.95] tracking-[-0.02em]
+                     text-[clamp(2.6rem,8vw,6.5rem)] text-balance"
+        >
+          <motion.span custom={0} variants={line} className="block">
+            The answer key
+          </motion.span>
+          <motion.span custom={1} variants={line} className="block">
+            for <span className="text-orange-500">CRISPR</span> screens
+          </motion.span>
+        </motion.h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.42, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-8 max-w-xl text-lg md:text-xl leading-relaxed text-body"
-          >
-            Every hit comes back with a calibrated chance it is real, the reason
-            behind it, and what to do next.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.55, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-10 flex flex-wrap items-center gap-3"
-          >
-            <LinkButton href="/login" tone="teal" size="lg" icon="none">
-              Open the console
-            </LinkButton>
-            <LinkButton href="/technology" tone="ghost" size="lg" icon="none">
-              How it works
-            </LinkButton>
-          </motion.div>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.42, ease: [0.22, 1, 0.36, 1] }}
+          className="mt-10 md:mt-12 flex flex-wrap items-center justify-center gap-3"
+        >
+          <LinkButton href="/login" tone="teal" size="lg" icon="none">
+            Open the console
+          </LinkButton>
+          <LinkButton href="/technology" tone="ghost" size="lg" icon="none">
+            How it works
+          </LinkButton>
+        </motion.div>
       </motion.div>
 
       <motion.div

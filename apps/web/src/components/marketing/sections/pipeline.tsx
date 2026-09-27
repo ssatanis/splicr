@@ -37,7 +37,10 @@ export function PipelineSection() {
         <MarkerPill value="9%" tone="cyan" className="left-[68%] top-[56%]" flip />
       </div>
 
-      <div className="container-x mt-4 grid lg:grid-cols-[40px_1fr_1fr_auto] gap-6 lg:gap-8 items-center">
+      {/* Three columns for three children. This declared four, the first of them
+          40px wide, so the heading was laid out in a 40px track and wrapped one
+          character per line. */}
+      <div className="container-x mt-4 grid lg:grid-cols-[1.1fr_1fr_auto] gap-6 lg:gap-10 items-center">
         <Reveal>
           <h2 className="display text-ink text-3xl md:text-4xl lg:text-5xl">
             One pipeline.

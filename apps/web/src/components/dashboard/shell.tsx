@@ -18,9 +18,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 import { Logo } from "@/components/brand/logo";
+import { CommandPalette, useCommandPalette } from "@/components/dashboard/command-palette";
 import { initials } from "@/lib/utils";
 
 const nav = [
@@ -40,12 +41,24 @@ const nav = [
   ]},
 ];
 
+/** Platform never changes within a session, so there is nothing to subscribe to. */
+const subscribePlatform = () => () => {};
+const macSnapshot = () =>
+  /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent) ? "\u2318" : "Ctrl ";
+const serverSnapshot = () => "Ctrl ";
+
 export type ShellUser = { name: string; email: string; org: string; demo: boolean };
 
 export function DashboardShell({ user, children }: { user: ShellUser; children: React.ReactNode }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
+  const { open: paletteOpen, setOpen: setPaletteOpen } = useCommandPalette();
+
+  // The server does not know the viewer's platform, so the glyph is read as
+  // external state with a server snapshot. Rendering it directly would mismatch
+  // on hydration; correcting it in an effect would render the wrong key first.
+  const modifier = useSyncExternalStore(subscribePlatform, macSnapshot, serverSnapshot);
 
   const sidebar = (
     <div className="flex flex-col h-full">
@@ -130,14 +143,30 @@ export function DashboardShell({ user, children }: { user: ShellUser; children: 
             <button className="lg:hidden icon-btn w-9 h-9" onClick={() => setOpen(true)} aria-label="Open menu">
               <Menu className="w-4 h-4" />
             </button>
-            <label className="hidden sm:flex items-center gap-2.5 flex-1 max-w-md rounded-lg bg-white border border-line px-3 py-1.5 text-muted focus-within:border-cyan-400 transition-colors">
+            {/* A button, not an input: the palette owns the text field, so a
+                second one here would be a decoy that swallows the first
+                keystroke and does nothing with it. */}
+            <button
+              type="button"
+              onClick={() => setPaletteOpen(true)}
+              className="hidden sm:flex items-center gap-2.5 flex-1 max-w-md rounded-lg bg-white
+                         border border-line px-3 py-1.5 text-muted hover:border-cyan-400
+                         focus-visible:border-cyan-400 transition-colors text-left"
+            >
               <Search className="w-3.5 h-3.5 shrink-0" />
-              <input
-                className="bg-transparent outline-none text-sm w-full text-ink placeholder:text-muted"
-                placeholder="Search screens or genes"
-              />
-              <kbd className="hidden md:inline text-[10px] border border-line rounded px-1 py-0.5 text-muted">⌘K</kbd>
-            </label>
+              <span className="flex-1 text-sm">Search screens, genes and commands</span>
+              <kbd className="hidden md:inline text-[10px] border border-line rounded px-1 py-0.5">
+                {modifier}K
+              </kbd>
+            </button>
+            <button
+              type="button"
+              onClick={() => setPaletteOpen(true)}
+              className="sm:hidden icon-btn w-9 h-9"
+              aria-label="Search"
+            >
+              <Search className="w-4 h-4" />
+            </button>
             <div className="flex-1 sm:hidden" />
             {user.demo && <span className="chip bg-orange-50 text-orange-700 text-[11px] py-1">Demo data</span>}
             <button className="icon-btn w-9 h-9" aria-label="Notifications">
@@ -147,6 +176,8 @@ export function DashboardShell({ user, children }: { user: ShellUser; children: 
         </header>
         <main className="flex-1 px-4 md:px-7 py-5 md:py-7">{children}</main>
       </div>
+
+      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
     </div>
   );
 }
