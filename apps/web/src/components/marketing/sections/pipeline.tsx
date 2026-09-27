@@ -1,5 +1,5 @@
 import { WaveRibbons } from "@/components/three";
-import { Dots, LinkButton, MarkerPill } from "@/components/ui/bits";
+import { LinkButton, MarkerPill } from "@/components/ui/bits";
 import { Reveal } from "@/components/ui/reveal";
 import { pipelineStages } from "@/lib/content";
 
@@ -38,7 +38,6 @@ export function PipelineSection() {
       </div>
 
       <div className="container-x mt-4 grid lg:grid-cols-[40px_1fr_1fr_auto] gap-6 lg:gap-8 items-center">
-        <Dots className="hidden lg:flex" />
         <Reveal>
           <h2 className="display text-ink text-3xl md:text-4xl lg:text-5xl">
             One pipeline.

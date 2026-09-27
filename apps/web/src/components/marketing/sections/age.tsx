@@ -1,5 +1,5 @@
 import { SideCoil } from "@/components/three";
-import { Dots, LinkButton } from "@/components/ui/bits";
+import { LinkButton } from "@/components/ui/bits";
 import { Reveal } from "@/components/ui/reveal";
 
 export function AgeSection() {
@@ -15,7 +15,6 @@ export function AgeSection() {
             </h2>
           </Reveal>
           <div className="mt-10 flex gap-6">
-            <Dots className="mt-2 hidden sm:flex" />
             <div className="max-w-md space-y-5 text-body leading-relaxed">
               <Reveal delay={0.1}>
                 <p>

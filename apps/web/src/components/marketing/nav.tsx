@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutGrid, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -11,8 +11,8 @@ import { cn } from "@/lib/utils";
 
 /**
  * Two looks, both from the reference set:
- *  - "pill": a floating dark pill on light pages
- *  - "bar":  a transparent bar on dark heroes
+ *   "pill" a floating dark pill on light pages
+ *   "bar"  a transparent bar on dark heroes
  */
 export function MarketingNav({ variant = "pill" }: { variant?: "pill" | "bar" }) {
   const pathname = usePathname();
@@ -26,17 +26,18 @@ export function MarketingNav({ variant = "pill" }: { variant?: "pill" | "bar" })
       <div className="container-x">
         <div
           className={cn(
-            "flex items-center justify-between",
+            "flex items-center justify-between gap-4",
             isPill
-              ? "rounded-full bg-teal-800 text-white pl-6 pr-2 py-2 shadow-float"
+              ? "rounded-full bg-teal-800 text-white pl-6 pr-2.5 py-2.5 shadow-float"
               : "text-white",
           )}
         >
-          <Logo tone="light" />
+          <Logo tone="light" size="lg" />
 
           <nav className="hidden lg:flex items-center gap-9 text-[0.95rem]">
             {marketingNav.map((item) => {
-              const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+              const active =
+                item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
               return (
                 <Link
                   key={item.href}
@@ -56,27 +57,21 @@ export function MarketingNav({ variant = "pill" }: { variant?: "pill" | "bar" })
             <Link
               href="/login"
               className={cn(
-                "hidden md:inline-flex items-center rounded-full px-5 py-2.5 text-sm transition-colors",
-                isPill ? "text-white/90 hover:text-white" : "border border-white/30 hover:bg-white/10",
+                "inline-flex items-center justify-center rounded-full bg-orange-500 text-white",
+                "px-7 py-3 text-[0.95rem] font-normal transition-colors hover:bg-orange-600",
               )}
             >
-              Sign in
-            </Link>
-            <Link
-              href="/dashboard"
-              aria-label="Open dashboard"
-              className={cn(
-                "inline-flex items-center justify-center rounded-full w-11 h-11 transition-transform hover:scale-105",
-                isPill ? "bg-orange-500 text-white" : "border border-white/40 text-white",
-              )}
-            >
-              <LayoutGrid className="w-4.5 h-4.5" strokeWidth={1.8} />
+              Console
             </Link>
             <button
               type="button"
               aria-label="Toggle menu"
+              aria-expanded={open}
               onClick={() => setOpen((v) => !v)}
-              className="lg:hidden inline-flex items-center justify-center rounded-full w-11 h-11 text-white"
+              className={cn(
+                "lg:hidden inline-flex items-center justify-center rounded-full w-11 h-11",
+                isPill ? "text-white" : "text-white",
+              )}
             >
               {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -85,13 +80,13 @@ export function MarketingNav({ variant = "pill" }: { variant?: "pill" | "bar" })
 
         {open && (
           <div className="lg:hidden mt-3 rounded-3xl bg-teal-800 text-white p-6 shadow-float">
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col">
               {marketingNav.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={close}
-                  className="py-3 text-lg border-b border-white/10 last:border-0"
+                  className="py-3 text-lg border-b border-white/10"
                 >
                   {item.label}
                 </Link>
@@ -99,8 +94,8 @@ export function MarketingNav({ variant = "pill" }: { variant?: "pill" | "bar" })
               <Link href="/careers" onClick={close} className="py-3 text-lg border-b border-white/10">
                 Careers
               </Link>
-              <Link href="/login" onClick={close} className="py-3 text-lg">
-                Sign in
+              <Link href="/login" onClick={close} className="py-3 text-lg text-orange-300">
+                Console
               </Link>
             </div>
           </div>

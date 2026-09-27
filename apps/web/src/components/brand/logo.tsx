@@ -5,9 +5,10 @@ import { cn } from "@/lib/utils";
 const WORDMARK = "/brand/splicr-wordmark.png";
 
 const sizes = {
-  sm: "h-5",
-  md: "h-6",
-  lg: "h-9",
+  sm: "h-6",
+  md: "h-8",
+  lg: "h-10",
+  xl: "h-14",
 } as const;
 
 /**

@@ -1,48 +1,92 @@
-import { Wordmark } from "@/components/brand/logo";
+"use client";
+
+import { motion, useScroll, useTransform } from "motion/react";
+import { useRef } from "react";
+
 import { MarketingNav } from "@/components/marketing/nav";
 import { HeroField } from "@/components/three";
 import { LinkButton, ScrollCue } from "@/components/ui/bits";
-import { Reveal } from "@/components/ui/reveal";
+
+const line = {
+  hidden: { opacity: 0, y: 28 },
+  show: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.8, delay: 0.1 + i * 0.09, ease: [0.22, 1, 0.36, 1] as const },
+  }),
+};
 
 export function Hero() {
+  const ref = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
+
+  // The artwork drifts and fades as the page moves, so the headline stays the
+  // subject rather than competing with it.
+  const artY = useTransform(scrollYProgress, [0, 1], ["0%", "18%"]);
+  const artOpacity = useTransform(scrollYProgress, [0, 0.75], [1, 0]);
+  const copyY = useTransform(scrollYProgress, [0, 1], ["0%", "-12%"]);
+
   return (
-    <section className="relative min-h-[88vh] flex flex-col">
-      <HeroField className="absolute inset-0" />
+    <section ref={ref} className="relative min-h-[92vh] flex flex-col overflow-hidden">
+      <motion.div style={{ y: artY, opacity: artOpacity }} className="absolute inset-0">
+        <HeroField className="absolute inset-0" />
+      </motion.div>
 
       <MarketingNav variant="pill" />
 
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center container-x py-16 md:py-20">
-        <Reveal>
-          <span className="chip chip-dot text-orange-600 bg-cream">The answer key for CRISPR screens</span>
-        </Reveal>
+      <motion.div
+        style={{ y: copyY }}
+        className="relative z-10 flex-1 flex flex-col justify-center container-x py-16 md:py-24"
+      >
+        <div className="max-w-4xl">
+          <motion.h1
+            initial="hidden"
+            animate="show"
+            className="font-serif text-ink leading-[0.95] tracking-[-0.02em]
+                       text-[clamp(2.9rem,8.5vw,7rem)]"
+          >
+            <motion.span custom={0} variants={line} className="block">
+              The answer key
+            </motion.span>
+            <motion.span custom={1} variants={line} className="block">
+              for <span className="text-orange-500">CRISPR</span> screens
+            </motion.span>
+          </motion.h1>
 
-        <Reveal delay={0.1} className="w-full">
-          <Wordmark
-            tone="ink"
-            className="mt-8 h-20 sm:h-28 md:h-36 lg:h-44 mx-auto max-w-[min(90vw,42rem)]"
-          />
-          <span className="sr-only">SplicR</span>
-        </Reveal>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.42, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-8 max-w-xl text-lg md:text-xl leading-relaxed text-body"
+          >
+            Every hit comes back with a calibrated chance it is real, the reason
+            behind it, and what to do next.
+          </motion.p>
 
-        <Reveal delay={0.2}>
-          <p className="mt-8 max-w-xl text-lg md:text-xl leading-relaxed text-body text-balance">
-            Know which hits are real before you spend months finding out.
-          </p>
-        </Reveal>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.55, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-10 flex flex-wrap items-center gap-3"
+          >
+            <LinkButton href="/login" tone="teal" size="lg" icon="none">
+              Open the console
+            </LinkButton>
+            <LinkButton href="/technology" tone="ghost" size="lg" icon="none">
+              How it works
+            </LinkButton>
+          </motion.div>
+        </div>
+      </motion.div>
 
-        <Reveal delay={0.3} className="mt-10 flex flex-wrap items-center justify-center gap-3">
-          <LinkButton href="/login" tone="teal" size="lg" icon="play">
-            Try for free
-          </LinkButton>
-          <LinkButton href="/technology" tone="ghost" size="lg" icon="none">
-            How it works
-          </LinkButton>
-        </Reveal>
-
-        <Reveal delay={0.4} className="mt-12">
-          <ScrollCue />
-        </Reveal>
-      </div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.1, duration: 0.8 }}
+        className="relative z-10 container-x pb-10"
+      >
+        <ScrollCue />
+      </motion.div>
     </section>
   );
 }

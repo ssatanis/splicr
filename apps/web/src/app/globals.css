@@ -8,6 +8,7 @@
 @theme {
   --font-sans: var(--font-outfit), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --font-serif: var(--font-instrument), ui-serif, Georgia, serif;
 
   --color-teal-950: #0b2f3b;
   --color-teal-900: #113d4c;

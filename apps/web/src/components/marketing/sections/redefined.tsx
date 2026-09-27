@@ -32,9 +32,8 @@ export function RedefinedSection() {
             </h2>
           </Reveal>
 
-          <div className="flex flex-col items-center gap-3 py-8">
+          <div className="flex justify-center py-8">
             <DragControl onChange={setSpin} label="Drag to rotate the model" />
-            <span className="text-xs text-white/60">Drag to rotate</span>
           </div>
 
           <div>

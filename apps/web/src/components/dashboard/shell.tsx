@@ -50,7 +50,7 @@ export function DashboardShell({ user, children }: { user: ShellUser; children: 
   const sidebar = (
     <div className="flex flex-col h-full">
       <div className="px-5 pt-5 pb-4 flex items-center justify-between">
-        <Logo tone="light" href="/dashboard" size="sm" />
+        <Logo tone="light" href="/dashboard" size="md" />
         <button className="lg:hidden text-white/70 p-1" onClick={close} aria-label="Close menu">
           <X className="w-5 h-5" />
         </button>

@@ -4,7 +4,7 @@ import { Minus, Plus, ArrowUpRight } from "lucide-react";
 import { MarketingNav } from "@/components/marketing/nav";
 import { CtaSection } from "@/components/marketing/sections/cta";
 import { SideCoil, AccentCoil } from "@/components/three";
-import { Dots, LinkButton, MarkerPill, ScrollCue, SectionHeading } from "@/components/ui/bits";
+import { LinkButton, MarkerPill, ScrollCue, SectionHeading } from "@/components/ui/bits";
 import { Orb } from "@/components/ui/orb";
 import { Reveal, Stagger, StaggerItem } from "@/components/ui/reveal";
 import { benchmark, benchmarkCite, discoveryQuadrants, moatLayers, modules } from "@/lib/content";
@@ -264,7 +264,6 @@ export default function TechnologyPage() {
             </div>
           </div>
           <div className="mt-10 flex items-center gap-4">
-            <Dots />
             <a href="/pipeline" className="inline-flex items-center gap-2 text-ink underline underline-offset-4">
               Read the full pipeline <ArrowUpRight className="w-4 h-4" />
             </a>
