@@ -41,6 +41,19 @@ Applies every migration in `supabase/migrations` in order and records it the
 same way the Supabase CLI does. `npm run db:status` prints what is actually in
 the database: tables, row-level security, policies and scheduled jobs.
 
+## Analysis engine
+
+```bash
+bash engine/setup.sh
+export PATH="engine/.tools/env/bin:$PATH"
+python engine/tests/smoke_test.py
+```
+
+Installs MAGeCK, BAGEL2, bowtie, cutadapt, fastp, seqkit and samtools into a
+local environment, then verifies each one runs. The smoke test builds a count
+table from real Brunello guides and checks both hit callers recover known
+essential genes. See `docs/05-engine.md`.
+
 ## Reference data
 
 ```bash
