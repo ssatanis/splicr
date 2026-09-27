@@ -70,6 +70,12 @@ thresholds.
 
 Every metric is also compared against the Atlas distribution **for the same
 library**, so "high" means high for that library rather than in the abstract.
+This matters more than it sounds: across cell lines screened with more than one
+library, library choice has been reported to outweigh both cell line and
+culture medium in its effect on gene scores, and guides that were
+under-represented in the plasmid pool produce more extreme and more variable
+results (*BMC Genomics* 2026). Per-guide plasmid abundance is therefore carried
+forward as a scoring covariate, not just used as a QC filter.
 
 ## 05 Call hits
 
@@ -119,9 +125,22 @@ Calibration is the point. When the model says 80%, about 8 in 10 of those hits
 should validate. The model is trained on outcomes labs logged, and retrained as
 more arrive. A score without a calibration curve is not shipped.
 
+**Validation probability is conditional, not a single number.** An LDL-uptake
+screen found that the secondary-screen validation rate was strongly correlated
+with the strength of the primary signal, reported stratified by FDR tier
+(*PLoS Genet* 2021, PMC7875399). So the model fits a curve against primary
+effect size and FDR, never one global rate. Published rates vary widely for
+exactly this reason: 66% in an arrayed dynein-transport screen against 50% for
+a prior screen using a subset of the same library (*J Cell Biol* 2024,
+PMC10916854), and 88% for HIV-1 host factors (*mBio* 2023, PMC9973025).
+
 The honest baseline to beat: between two well-run genome-wide screens of the
 same gene in the same cell line, a dependency called by one is confirmed by the
-other only about a quarter of the time at matched recall.
+other only about a quarter of the time at matched recall (precision 0.255 at
+recall 0.781, Cohen's kappa 0.737 over 1,031 jointly called dependencies).
+That is a *marginal* figure across all effect sizes. The conditional curve is
+what the model actually fits, and it sits well above that floor at the top of
+the ranking.
 
 ## 09 Report
 
