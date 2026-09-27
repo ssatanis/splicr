@@ -26,45 +26,42 @@ export const metadata: Metadata = {
 export default function TechnologyPage() {
   return (
     <main className="sheet">
-      <MarketingNav variant="pill" />
+      {/* Same dark treatment as the About Us hero, mirrored: art on the left,
+          copy on the right. Scoped to this section only, same as About. */}
+      <section className="relative bg-teal-800 text-white overflow-hidden rounded-b-[2rem]">
+        <MarketingNav variant="bar" />
+        <SideCoil mirror className="hidden lg:block absolute inset-y-0 left-0 w-[52%] pointer-events-none" />
 
-      {/* Split hero: artwork left, copy right.
-          Three marker pills reading 82%, 11% and 71% used to float over the
-          ribbon, next to a zoom rail that zoomed nothing. On a page whose
-          subject is a calibrated chance a hit is real, three loose percentages
-          read as three scores, and they were not measurements of anything. The
-          artwork carries the section on its own. */}
-      <section className="grid lg:grid-cols-[1.15fr_1fr] min-h-[600px]">
-        <div className="relative min-h-[460px] overflow-hidden">
-          <SideCoil className="absolute inset-0" mirror />
-        </div>
-
-        <div className="container-x lg:pl-14 py-14 lg:py-20 flex flex-col justify-between">
-          <div>
+        <div className="relative container-x pt-10 pb-16 lg:pt-16 lg:pb-24">
+          <div className="lg:max-w-[46%] lg:ml-auto">
             <Reveal>
-              <h1 className="display text-ink text-4xl sm:text-5xl lg:text-[4.2rem]">
+              <h1 className="display text-white text-4xl sm:text-5xl lg:text-[4.2rem]">
                 Screens, meet
                 <br />
                 the answer key.
               </h1>
             </Reveal>
             <Reveal delay={0.1}>
-              <p className="mt-8 max-w-md text-lg text-body leading-relaxed">
+              <p className="mt-6 max-w-md text-lg text-white/90 leading-relaxed">
                 Precision statistics, plus the record of what actually validated.
               </p>
             </Reveal>
           </div>
-          <div className="mt-16 flex items-end justify-between gap-8">
-            <div className="flex gap-12">
-              <div>
-                <div className="text-4xl md:text-5xl font-medium text-orange-500 tracking-tight">2,217</div>
-                <div className="mt-1 text-body">Published screens in BioGRID ORCS</div>
+
+          <div className="relative lg:hidden h-52 my-8">
+            <SideCoil mirror className="absolute inset-0" />
+          </div>
+
+          <div className="mt-10 lg:mt-16 lg:ml-auto lg:max-w-[46%] flex flex-wrap gap-y-5 divide-x divide-white/20">
+            {[
+              ["2,217", "Published screens in BioGRID ORCS"],
+              ["1 pipeline", "Every screen, same way"],
+            ].map(([v, l]) => (
+              <div key={l} className="px-6 first:pl-0">
+                <div className="text-2xl md:text-3xl font-medium tabular-nums text-orange-400">{v}</div>
+                <div className="text-white/90 text-xs md:text-sm mt-1">{l}</div>
               </div>
-              <div>
-                <div className="text-4xl md:text-5xl font-medium text-orange-500 tracking-tight">1 pipeline</div>
-                <div className="mt-1 text-body">Every screen, same way</div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -139,11 +136,6 @@ export default function TechnologyPage() {
                 }
                 body="Tools built on published literature push famous genes up. Our scores come from measured outcomes, so a never-studied gene can still be called real."
               />
-            </Reveal>
-            <Reveal delay={0.1} className="mt-8">
-              <LinkButton href="/dashboard/screens/scr_demo?tab=map" tone="cyan">
-                See it in the dashboard
-              </LinkButton>
             </Reveal>
           </div>
           <Reveal delay={0.1}>

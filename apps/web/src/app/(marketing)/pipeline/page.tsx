@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { MarketingNav } from "@/components/marketing/nav";
 import { PipelineDiagram } from "@/components/marketing/pipeline-diagram";
 import { CtaSection } from "@/components/marketing/sections/cta";
-import { WaveRibbons } from "@/components/three";
+import { SideCoil, WaveRibbons } from "@/components/three";
 import { LinkButton, MarkerPill } from "@/components/ui/bits";
 import { Reveal } from "@/components/ui/reveal";
 
@@ -24,33 +24,39 @@ export default function PipelinePage() {
     <main className="sheet">
       <MarketingNav variant="pill" />
 
-      <section className="container-x pt-12 md:pt-20 pb-10">
-        <Reveal>
-          <h1 className="font-serif text-ink leading-[0.95] tracking-[-0.02em] text-[clamp(2.6rem,7vw,5.5rem)] max-w-3xl">
-            From reads to a
-            <br />
-            calibrated answer
-          </h1>
-        </Reveal>
-        <Reveal delay={0.1}>
-          <p className="mt-6 max-w-xl text-lg text-body leading-relaxed">
-            One pipeline runs on your screen and on every screen in the Atlas. That is
-            what makes the numbers comparable.
-          </p>
-        </Reveal>
+      <section className="container-x pt-12 md:pt-20 pb-10 grid lg:grid-cols-[1.1fr_0.9fr] gap-10 items-center">
+        <div>
+          <Reveal>
+            <h1 className="font-serif text-ink leading-[0.95] tracking-[-0.02em] text-[clamp(2.6rem,7vw,5.5rem)] max-w-3xl">
+              From reads to a
+              <br />
+              calibrated answer
+            </h1>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <p className="mt-6 max-w-xl text-lg text-body leading-relaxed">
+              One pipeline runs on your screen and on every screen in the Atlas. That is
+              what makes the numbers comparable.
+            </p>
+          </Reveal>
 
-        <Reveal delay={0.2}>
-          <div className="mt-10 flex flex-wrap gap-x-12 gap-y-5 border-y border-line py-6">
-            {numbers.map((n) => (
-              <div key={n.label}>
-                <div className="text-3xl md:text-4xl font-medium text-ink tabular-nums">
-                  {n.value}
+          <Reveal delay={0.2}>
+            <div className="mt-10 flex flex-wrap gap-x-12 gap-y-5 border-y border-line py-6">
+              {numbers.map((n) => (
+                <div key={n.label}>
+                  <div className="text-3xl md:text-4xl font-medium text-ink tabular-nums">
+                    {n.value}
+                  </div>
+                  <div className="mt-1 text-sm text-body">{n.label}</div>
                 </div>
-                <div className="mt-1 text-sm text-body">{n.label}</div>
-              </div>
-            ))}
-          </div>
-        </Reveal>
+              ))}
+            </div>
+          </Reveal>
+        </div>
+
+        <div className="relative hidden lg:block h-[420px]">
+          <SideCoil className="absolute inset-0" />
+        </div>
       </section>
 
       <div className="relative h-[240px] sm:h-[320px] md:h-[400px] overflow-hidden">

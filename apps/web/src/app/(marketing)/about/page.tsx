@@ -83,7 +83,7 @@ export default function AboutPage() {
                 </FounderLink>{" "}
                 and{" "}
                 <FounderLink href="https://ishaansamantray.com/">
-                  Ishaan Samantaray
+                  Ishaan Samantray
                 </FounderLink>{" "}
                 turn the world&apos;s CRISPR screens into ground truth for the next one.
               </p>
