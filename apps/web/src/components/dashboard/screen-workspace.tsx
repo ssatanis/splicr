@@ -317,7 +317,7 @@ export function ScreenWorkspace({ screen, tab }: { screen: Screen; tab: string }
               Gene-level statistics were computed with MAGeCK RRA and MLE, BAGEL2 (CEGv2 and NEGv1 reference sets) and
               CRISPRcleanR copy-number correction. Artifacts were flagged by positional clustering, guide concordance and
               off-target counts. Confidence scores were produced by SplicR score v0.3, calibrated on logged validation
-              outcomes, with Atlas context from BioGRID ORCS and DepMap 26Q1.
+              outcomes, with Atlas context from BioGRID ORCS and DepMap 24Q4.
             </p>
             <p className="mt-3 text-xs text-muted">Versions and parameters are recorded on the run and exported with the report.</p>
           </Card>

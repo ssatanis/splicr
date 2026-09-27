@@ -141,9 +141,10 @@ if [ "$ALL" = 1 ]; then
         "orcs/orcs-mouse-2.0.18.screens.tar.gz" "mouse, 57 MB"
 
   log ""
-  log "7. DepMap 26Q1 (CC BY 4.0). Large files, --all only."
-  warn "   DepMap is served from Figshare with per-release ids. Set DEPMAP_FIGSHARE_ID"
-  warn "   from https://depmap.org/portal/data_page/?tab=allData, then re-run."
+  log "7. DepMap (CC BY 4.0). Large files, --all only."
+  warn "   24Q4 is the newest complete release on Figshare; later ones are portal only,"
+  warn "   and the portal answers 200 with a Cloudflare challenge page. Set"
+  warn "   DEPMAP_FIGSHARE_ID from https://depmap.org/portal/data_page/?tab=allData."
   if [ -n "${DEPMAP_FIGSHARE_ID:-}" ]; then
     api="https://api.figshare.com/v2/articles/$DEPMAP_FIGSHARE_ID/files?page_size=500"
     log "   listing $api"

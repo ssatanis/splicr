@@ -150,6 +150,13 @@ class LibrarySpec:
     chrom_col: str | None = None
     pos_col: str | None = None
     strand_col: str | None = None
+    # Brie's non-targeting controls ship as their own file rather than as rows
+    # in the main table. Without merging them the library looks like it has no
+    # controls at all, and every QC check that needs a null distribution has
+    # nothing to compare against.
+    controls_file: str | None = None
+    controls_seq_col: str = "Target Sequence"
+    controls_id_col: str | None = "Public ID"
 
 
 LIBRARY_SPECS: tuple[LibrarySpec, ...] = (
@@ -162,7 +169,8 @@ LIBRARY_SPECS: tuple[LibrarySpec, ...] = (
                 "sgRNA Target Sequence", "Target Gene Symbol", taxid=10090,
                 chrom_col="Genomic Sequence",
                 pos_col="Position of Base After Cut (1-based)",
-                strand_col="Strand"),
+                strand_col="Strand",
+                controls_file="brie-controls.csv"),
     LibrarySpec("gattinara", "Gattinara", "gattinara.txt",
                 "Barcode Sequence", "Annotated Gene Symbol"),
     LibrarySpec("calabrese-a", "Calabrese Set A", "calabrese-a.txt",
@@ -251,7 +259,41 @@ def _parse_delimited(path: Path, spec: LibrarySpec) -> Library:
 
     if not guides:
         raise ValueError(f"{path.name}: parsed 0 guides")
+
+    if spec.controls_file:
+        guides.extend(_parse_controls(LIBRARIES_DIR / spec.controls_file, spec,
+                                      seen={g.sequence for g in guides}))
+
     return Library(spec.slug, spec.name, guides, source_file=path, taxid=spec.taxid)
+
+
+def _parse_controls(path: Path, spec: LibrarySpec, seen: set[str]) -> list[Guide]:
+    """Non-targeting controls from a sidecar file, skipping any already present."""
+    if not path.exists():
+        return []
+    lines = [l for l in read_text_any(path).split("\n") if l.strip()]
+    if not lines:
+        return []
+    reader = csv.reader(io.StringIO("\n".join(lines)), delimiter=sniff_delimiter(lines[0]))
+    header = [h.strip().strip('"') for h in next(reader)]
+    index = {name: i for i, name in enumerate(header)}
+    si = index.get(spec.controls_seq_col)
+    if si is None:
+        return []
+    ii = index.get(spec.controls_id_col) if spec.controls_id_col else None
+
+    out: list[Guide] = []
+    for n, row in enumerate(reader):
+        if len(row) <= si:
+            continue
+        seq = row[si].strip().strip('"').upper()
+        if not seq or set(seq) - VALID_BASES or seq in seen:
+            continue
+        seen.add(seq)
+        gid = row[ii].strip().strip('"') if ii is not None and ii < len(row) else ""
+        out.append(Guide(guide_id=gid or f"{spec.slug}:control:{n}", sequence=seq,
+                         gene=None, is_control=True))
+    return out
 
 
 REFSEQ_CHROM = re.compile(r"^NC_0*(\d+)\.\d+$")

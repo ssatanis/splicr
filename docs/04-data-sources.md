@@ -17,7 +17,8 @@
 | `libraries/*.txt`, `*.csv`, `*.xlsx` | Addgene / Broad GPP | 24 MB | Terms of use | **No** |
 | `opentargets/*.parquet` | Open Targets 26.09 | 1 MB | CC0 | Yes |
 | `orcs/*.tar.gz` (`--all`) | BioGRID ORCS 2.0.18 | 718 MB | MIT | Yes |
-| DepMap 26Q1 (`--all`, needs an id) | Broad DepMap | GBs | CC BY 4.0 | Yes, with attribution |
+| `depmap/*.csv` (DepMap 24Q4) | Broad DepMap | 3.6 GB | CC BY 4.0 | Yes, with attribution |
+| `depmap/26Q1/*.csv` (Chronos only) | Broad DepMap | 444 MB | CC BY 4.0 | Yes, with attribution |
 
 **Three sources may not be redistributed.** Addgene forbids reproducing their
 content commercially. Sanger's Project Score is licensed for internal research
@@ -83,8 +84,14 @@ files.
 - Ensembl: release 116 is the last numbered release. Newer data is
   date-versioned, and filenames no longer carry the assembly, so record the
   accession yourself.
-- DepMap: 26Q1 changed Chronos library correction, so gene effects differ from
-  25Q3. Never mix releases inside one Atlas build.
+- DepMap: 24Q4 is the newest COMPLETE release on Figshare. Later releases go
+  through the portal only, which is behind a Cloudflare challenge that answers
+  200 with an HTML page, so a naive fetcher saves the challenge as a CSV. For
+  26Q1 only the Chronos model output was deposited, in `depmap/26Q1/`. The
+  engine reads common essentials and copy number from the 24Q4 files. The two
+  releases have different gene and model sets (18,531 and 1,208 for 26Q1
+  against 17,916 and 1,178 for 24Q4), so never join them without reindexing on
+  the intersection. See `depmap/26Q1/SOURCES.txt`.
 - BioGRID ORCS: 2.0.18 dated September 2025 is current.
 
 ## One caution about ORCS

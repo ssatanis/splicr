@@ -1,0 +1,861 @@
+{
+  "generated_utc": "2026-09-27T08:03:35Z",
+  "bucket": "splicr",
+  "file_count": 117,
+  "total_bytes": 7811100646,
+  "files": [
+    {
+      "key": "reference/annotation/Homo_sapiens.GRCh38.116.chr.gtf.gz",
+      "bytes": 141042687,
+      "source": "data/references/annotation/Homo_sapiens.GRCh38.116.chr.gtf.gz"
+    },
+    {
+      "key": "reference/annotation/Homo_sapiens.gene_info.gz",
+      "bytes": 5190133,
+      "source": "data/references/annotation/Homo_sapiens.gene_info.gz"
+    },
+    {
+      "key": "reference/annotation/Mus_musculus.GRCm39.116.chr.gtf.gz",
+      "bytes": 107945350,
+      "source": "data/references/annotation/Mus_musculus.GRCm39.116.chr.gtf.gz"
+    },
+    {
+      "key": "reference/annotation/Mus_musculus.gene_info.gz",
+      "bytes": 3932148,
+      "source": "data/references/annotation/Mus_musculus.gene_info.gz"
+    },
+    {
+      "key": "reference/annotation/hgnc_complete_set.txt",
+      "bytes": 16947244,
+      "source": "data/references/annotation/hgnc_complete_set.txt"
+    },
+    {
+      "key": "reference/annotation/human_mouse_hcop.txt.gz",
+      "bytes": 3454647,
+      "source": "data/references/annotation/human_mouse_hcop.txt.gz"
+    },
+    {
+      "key": "reference/assaybench/snapshot/.cache/huggingface/CACHEDIR.TAG",
+      "bytes": 191,
+      "source": "data/references/assaybench/snapshot/.cache/huggingface/CACHEDIR.TAG"
+    },
+    {
+      "key": "reference/assaybench/snapshot/.cache/huggingface/download/LaTest/train-00000-of-00001.parquet.metadata",
+      "bytes": 124,
+      "source": "data/references/assaybench/snapshot/.cache/huggingface/download/LaTest/train-00000-of-00001.parquet.metadata"
+    },
+    {
+      "key": "reference/assaybench/snapshot/.cache/huggingface/download/README.md.metadata",
+      "bytes": 100,
+      "source": "data/references/assaybench/snapshot/.cache/huggingface/download/README.md.metadata"
+    },
+    {
+      "key": "reference/assaybench/snapshot/.cache/huggingface/download/biogrid/train-00000-of-00001.parquet.metadata",
+      "bytes": 124,
+      "source": "data/references/assaybench/snapshot/.cache/huggingface/download/biogrid/train-00000-of-00001.parquet.metadata"
+    },
+    {
+      "key": "reference/assaybench/snapshot/.cache/huggingface/download/croissant.json.metadata",
+      "bytes": 101,
+      "source": "data/references/assaybench/snapshot/.cache/huggingface/download/croissant.json.metadata"
+    },
+    {
+      "key": "reference/assaybench/snapshot/.cache/huggingface/trees/bc37bf8f4842b43abcd6e9f781423d478b9aee4b.json",
+      "bytes": 978,
+      "source": "data/references/assaybench/snapshot/.cache/huggingface/trees/bc37bf8f4842b43abcd6e9f781423d478b9aee4b.json"
+    },
+    {
+      "key": "reference/assaybench/snapshot/LaTest/train-00000-of-00001.parquet",
+      "bytes": 4588072,
+      "source": "data/references/assaybench/snapshot/LaTest/train-00000-of-00001.parquet"
+    },
+    {
+      "key": "reference/assaybench/snapshot/README.md",
+      "bytes": 11914,
+      "source": "data/references/assaybench/snapshot/README.md"
+    },
+    {
+      "key": "reference/assaybench/snapshot/biogrid/train-00000-of-00001.parquet",
+      "bytes": 266368547,
+      "source": "data/references/assaybench/snapshot/biogrid/train-00000-of-00001.parquet"
+    },
+    {
+      "key": "reference/assaybench/snapshot/croissant.json",
+      "bytes": 44059,
+      "source": "data/references/assaybench/snapshot/croissant.json"
+    },
+    {
+      "key": "reference/cells/cellosaurus.txt",
+      "bytes": 122297334,
+      "source": "data/references/cells/cellosaurus.txt"
+    },
+    {
+      "key": "reference/cells/sanger_model_list.csv.gz",
+      "bytes": 145029,
+      "source": "data/references/cells/sanger_model_list.csv.gz"
+    },
+    {
+      "key": "reference/coordinates/AVANA_Library.RData",
+      "bytes": 3867072,
+      "source": "data/references/coordinates/AVANA_Library.RData"
+    },
+    {
+      "key": "reference/coordinates/AvanaGuideMap.csv",
+      "bytes": 15972027,
+      "source": "data/references/coordinates/AvanaGuideMap.csv"
+    },
+    {
+      "key": "reference/coordinates/Brunello_Library.RData",
+      "bytes": 3228245,
+      "source": "data/references/coordinates/Brunello_Library.RData"
+    },
+    {
+      "key": "reference/coordinates/CCLE.gisticCNA.RData",
+      "bytes": 115430,
+      "source": "data/references/coordinates/CCLE.gisticCNA.RData"
+    },
+    {
+      "key": "reference/coordinates/GDSC.geneLevCNA.RData",
+      "bytes": 260628,
+      "source": "data/references/coordinates/GDSC.geneLevCNA.RData"
+    },
+    {
+      "key": "reference/coordinates/GeCKO_Library_v2.RData",
+      "bytes": 4634200,
+      "source": "data/references/coordinates/GeCKO_Library_v2.RData"
+    },
+    {
+      "key": "reference/coordinates/HumagneGuideMap.csv",
+      "bytes": 5595009,
+      "source": "data/references/coordinates/HumagneGuideMap.csv"
+    },
+    {
+      "key": "reference/coordinates/KYGuideMap.csv",
+      "bytes": 5939867,
+      "source": "data/references/coordinates/KYGuideMap.csv"
+    },
+    {
+      "key": "reference/coordinates/KY_Library_v1.0.RData",
+      "bytes": 3695458,
+      "source": "data/references/coordinates/KY_Library_v1.0.RData"
+    },
+    {
+      "key": "reference/coordinates/KY_Library_v1.1.RData",
+      "bytes": 3920583,
+      "source": "data/references/coordinates/KY_Library_v1.1.RData"
+    },
+    {
+      "key": "reference/coordinates/MiniLibCas9_Library.RData",
+      "bytes": 3208217,
+      "source": "data/references/coordinates/MiniLibCas9_Library.RData"
+    },
+    {
+      "key": "reference/coordinates/Whitehead_Library.RData",
+      "bytes": 4730889,
+      "source": "data/references/coordinates/Whitehead_Library.RData"
+    },
+    {
+      "key": "reference/coordinates/tsv/AVANA_Library.coords.tsv",
+      "bytes": 6612910,
+      "source": "data/references/coordinates/tsv/AVANA_Library.coords.tsv"
+    },
+    {
+      "key": "reference/coordinates/tsv/Brunello_Library.coords.tsv",
+      "bytes": 5999497,
+      "source": "data/references/coordinates/tsv/Brunello_Library.coords.tsv"
+    },
+    {
+      "key": "reference/coordinates/tsv/GeCKO_Library_v2.coords.tsv",
+      "bytes": 7737016,
+      "source": "data/references/coordinates/tsv/GeCKO_Library_v2.coords.tsv"
+    },
+    {
+      "key": "reference/coordinates/tsv/KY_Library_v1.0.coords.tsv",
+      "bytes": 8920933,
+      "source": "data/references/coordinates/tsv/KY_Library_v1.0.coords.tsv"
+    },
+    {
+      "key": "reference/coordinates/tsv/KY_Library_v1.1.coords.tsv",
+      "bytes": 9524284,
+      "source": "data/references/coordinates/tsv/KY_Library_v1.1.coords.tsv"
+    },
+    {
+      "key": "reference/coordinates/tsv/MiniLibCas9_Library.coords.tsv",
+      "bytes": 2407926,
+      "source": "data/references/coordinates/tsv/MiniLibCas9_Library.coords.tsv"
+    },
+    {
+      "key": "reference/coordinates/tsv/Whitehead_Library.coords.tsv",
+      "bytes": 11030885,
+      "source": "data/references/coordinates/tsv/Whitehead_Library.coords.tsv"
+    },
+    {
+      "key": "reference/depmap/26Q1/SOURCES.txt",
+      "bytes": 2649,
+      "source": "data/references/depmap/26Q1/SOURCES.txt"
+    },
+    {
+      "key": "reference/depmap/26Q1/gene_effect.csv",
+      "bytes": 413544937,
+      "source": "data/references/depmap/26Q1/gene_effect.csv"
+    },
+    {
+      "key": "reference/depmap/26Q1/guide_efficacy.csv",
+      "bytes": 12346288,
+      "source": "data/references/depmap/26Q1/guide_efficacy.csv"
+    },
+    {
+      "key": "reference/depmap/26Q1/library_effect.csv",
+      "bytes": 2420581,
+      "source": "data/references/depmap/26Q1/library_effect.csv"
+    },
+    {
+      "key": "reference/depmap/26Q1/replicate_efficacy.csv",
+      "bytes": 261345,
+      "source": "data/references/depmap/26Q1/replicate_efficacy.csv"
+    },
+    {
+      "key": "reference/depmap/26Q1/t0_offset.csv",
+      "bytes": 15693805,
+      "source": "data/references/depmap/26Q1/t0_offset.csv"
+    },
+    {
+      "key": "reference/depmap/AchillesCommonEssentialControls.csv",
+      "bytes": 17015,
+      "source": "data/references/depmap/AchillesCommonEssentialControls.csv"
+    },
+    {
+      "key": "reference/depmap/AchillesHighVarianceGeneControls.csv",
+      "bytes": 7067,
+      "source": "data/references/depmap/AchillesHighVarianceGeneControls.csv"
+    },
+    {
+      "key": "reference/depmap/AchillesNonessentialControls.csv",
+      "bytes": 11490,
+      "source": "data/references/depmap/AchillesNonessentialControls.csv"
+    },
+    {
+      "key": "reference/depmap/AchillesScreenQCReport.csv",
+      "bytes": 327473,
+      "source": "data/references/depmap/AchillesScreenQCReport.csv"
+    },
+    {
+      "key": "reference/depmap/AvanaGuideMap.csv",
+      "bytes": 15972027,
+      "source": "data/references/depmap/AvanaGuideMap.csv"
+    },
+    {
+      "key": "reference/depmap/CRISPRInferredCommonEssentials.csv",
+      "bytes": 20795,
+      "source": "data/references/depmap/CRISPRInferredCommonEssentials.csv"
+    },
+    {
+      "key": "reference/depmap/CRISPRScreenMap.csv",
+      "bytes": 36443,
+      "source": "data/references/depmap/CRISPRScreenMap.csv"
+    },
+    {
+      "key": "reference/depmap/HumagneGuideMap.csv",
+      "bytes": 5595009,
+      "source": "data/references/depmap/HumagneGuideMap.csv"
+    },
+    {
+      "key": "reference/depmap/KYGuideMap.csv",
+      "bytes": 5939867,
+      "source": "data/references/depmap/KYGuideMap.csv"
+    },
+    {
+      "key": "reference/depmap/Model.csv",
+      "bytes": 645696,
+      "source": "data/references/depmap/Model.csv"
+    },
+    {
+      "key": "reference/depmap/README.txt",
+      "bytes": 43103,
+      "source": "data/references/depmap/README.txt"
+    },
+    {
+      "key": "reference/depmap/ScreenSequenceMap.csv",
+      "bytes": 346653,
+      "source": "data/references/depmap/ScreenSequenceMap.csv"
+    },
+    {
+      "key": "reference/genesets/CEG_mouse.txt",
+      "bytes": 3729,
+      "source": "data/references/genesets/CEG_mouse.txt"
+    },
+    {
+      "key": "reference/genesets/CEGv2.txt",
+      "bytes": 15088,
+      "source": "data/references/genesets/CEGv2.txt"
+    },
+    {
+      "key": "reference/genesets/NEG_mouse.txt",
+      "bytes": 3324,
+      "source": "data/references/genesets/NEG_mouse.txt"
+    },
+    {
+      "key": "reference/genesets/NEGv1.txt",
+      "bytes": 21712,
+      "source": "data/references/genesets/NEGv1.txt"
+    },
+    {
+      "key": "reference/literature/cellline2pubtator3.gz",
+      "bytes": 71358909,
+      "source": "data/references/literature/cellline2pubtator3.gz"
+    },
+    {
+      "key": "reference/literature/crispr_screen_papers.jsonl",
+      "bytes": 8429576,
+      "source": "data/references/literature/crispr_screen_papers.jsonl"
+    },
+    {
+      "key": "reference/literature/mutation2pubtator3.gz",
+      "bytes": 115991110,
+      "source": "data/references/literature/mutation2pubtator3.gz"
+    },
+    {
+      "key": "reference/literature/pubtator3_README.txt",
+      "bytes": 7024,
+      "source": "data/references/literature/pubtator3_README.txt"
+    },
+    {
+      "key": "reference/literature/relation2pubtator3.gz",
+      "bytes": 297478945,
+      "source": "data/references/literature/relation2pubtator3.gz"
+    },
+    {
+      "key": "reference/morphic/README.md",
+      "bytes": 1672,
+      "source": "data/references/morphic/README.md"
+    },
+    {
+      "key": "reference/morphic/data/MSKCC_Pooled_scRNAseq/processed/processed_v1/counts/A_star_unfiltered_features.h5ad",
+      "bytes": 357584592,
+      "source": "data/references/morphic/data/MSKCC_Pooled_scRNAseq/processed/processed_v1/counts/A_star_unfiltered_features.h5ad"
+    },
+    {
+      "key": "reference/morphic/data/MSKCC_Pooled_scRNAseq/processed/processed_v1/counts/B_star_unfiltered_features.h5ad",
+      "bytes": 345725476,
+      "source": "data/references/morphic/data/MSKCC_Pooled_scRNAseq/processed/processed_v1/counts/B_star_unfiltered_features.h5ad"
+    },
+    {
+      "key": "reference/morphic/data/MSKCC_Pooled_scRNAseq/processed/processed_v1/counts/C_star_unfiltered_features.h5ad",
+      "bytes": 321480705,
+      "source": "data/references/morphic/data/MSKCC_Pooled_scRNAseq/processed/processed_v1/counts/C_star_unfiltered_features.h5ad"
+    },
+    {
+      "key": "reference/morphic/data/MSKCC_Pooled_scRNAseq/processed/processed_v1/counts/D_star_unfiltered_features.h5ad",
+      "bytes": 293075939,
+      "source": "data/references/morphic/data/MSKCC_Pooled_scRNAseq/processed/processed_v1/counts/D_star_unfiltered_features.h5ad"
+    },
+    {
+      "key": "reference/morphic/data/MSKCC_Pooled_scRNAseq/processed/processed_v1/counts/E_star_unfiltered_features.h5ad",
+      "bytes": 308489685,
+      "source": "data/references/morphic/data/MSKCC_Pooled_scRNAseq/processed/processed_v1/counts/E_star_unfiltered_features.h5ad"
+    },
+    {
+      "key": "reference/morphic/data/MSKCC_Pooled_scRNAseq/processed/processed_v1/counts/F_star_unfiltered_features.h5ad",
+      "bytes": 313406164,
+      "source": "data/references/morphic/data/MSKCC_Pooled_scRNAseq/processed/processed_v1/counts/F_star_unfiltered_features.h5ad"
+    },
+    {
+      "key": "reference/morphic/data/MSKCC_Pooled_scRNAseq/processed/processed_v1/counts/G_1_star_unfiltered_features.h5ad",
+      "bytes": 409740326,
+      "source": "data/references/morphic/data/MSKCC_Pooled_scRNAseq/processed/processed_v1/counts/G_1_star_unfiltered_features.h5ad"
+    },
+    {
+      "key": "reference/morphic/data/MSKCC_Pooled_scRNAseq/processed/processed_v1/counts/G_2_star_unfiltered_features.h5ad",
+      "bytes": 304670741,
+      "source": "data/references/morphic/data/MSKCC_Pooled_scRNAseq/processed/processed_v1/counts/G_2_star_unfiltered_features.h5ad"
+    },
+    {
+      "key": "reference/morphic/data/MSKCC_Pooled_scRNAseq/processed/processed_v1/counts/H_star_unfiltered_features.h5ad",
+      "bytes": 368059790,
+      "source": "data/references/morphic/data/MSKCC_Pooled_scRNAseq/processed/processed_v1/counts/H_star_unfiltered_features.h5ad"
+    },
+    {
+      "key": "reference/morphic/data/MSKCC_Pooled_scRNAseq/processed/processed_v1/counts/I_star_unfiltered_features.h5ad",
+      "bytes": 337503593,
+      "source": "data/references/morphic/data/MSKCC_Pooled_scRNAseq/processed/processed_v1/counts/I_star_unfiltered_features.h5ad"
+    },
+    {
+      "key": "reference/morphic/data/MSKCC_Pooled_scRNAseq/processed/processed_v1/counts/J_star_unfiltered_features.h5ad",
+      "bytes": 317064753,
+      "source": "data/references/morphic/data/MSKCC_Pooled_scRNAseq/processed/processed_v1/counts/J_star_unfiltered_features.h5ad"
+    },
+    {
+      "key": "reference/morphic/data/MSKCC_Pooled_scRNAseq/processed/processed_v1/counts/L_1_star_unfiltered_features.h5ad",
+      "bytes": 303814051,
+      "source": "data/references/morphic/data/MSKCC_Pooled_scRNAseq/processed/processed_v1/counts/L_1_star_unfiltered_features.h5ad"
+    },
+    {
+      "key": "reference/morphic/data/MSKCC_Pooled_scRNAseq/processed/processed_v1/counts/L_2_star_unfiltered_features.h5ad",
+      "bytes": 284782520,
+      "source": "data/references/morphic/data/MSKCC_Pooled_scRNAseq/processed/processed_v1/counts/L_2_star_unfiltered_features.h5ad"
+    },
+    {
+      "key": "reference/morphic/data/UCSF_Perturbseq/analysis/analysis_v1-processed_v1/README.txt",
+      "bytes": 107,
+      "source": "data/references/morphic/data/UCSF_Perturbseq/analysis/analysis_v1-processed_v1/README.txt"
+    },
+    {
+      "key": "reference/morphic/global-metadata/MANIFEST.tsv",
+      "bytes": 7736,
+      "source": "data/references/morphic/global-metadata/MANIFEST.tsv"
+    },
+    {
+      "key": "reference/morphic/global-metadata/MD5SUMS",
+      "bytes": 116844,
+      "source": "data/references/morphic/global-metadata/MD5SUMS"
+    },
+    {
+      "key": "reference/morphic/releases/release1.0/MANIFEST.tsv",
+      "bytes": 2943,
+      "source": "data/references/morphic/releases/release1.0/MANIFEST.tsv"
+    },
+    {
+      "key": "reference/morphic/releases/release1.0/MD5SUMS",
+      "bytes": 11413,
+      "source": "data/references/morphic/releases/release1.0/MD5SUMS"
+    },
+    {
+      "key": "reference/morphic/releases/release4.0/MANIFEST.tsv",
+      "bytes": 2406,
+      "source": "data/references/morphic/releases/release4.0/MANIFEST.tsv"
+    },
+    {
+      "key": "reference/morphic/releases/release4.0/MD5SUMS",
+      "bytes": 94705,
+      "source": "data/references/morphic/releases/release4.0/MD5SUMS"
+    },
+    {
+      "key": "reference/offtarget/fortin2019_af10_gene_summary_tkov3.csv",
+      "bytes": 671458,
+      "source": "data/references/offtarget/fortin2019_af10_gene_summary_tkov3.csv"
+    },
+    {
+      "key": "reference/offtarget/fortin2019_af4_alignments_geckov2.csv",
+      "bytes": 186628755,
+      "source": "data/references/offtarget/fortin2019_af4_alignments_geckov2.csv"
+    },
+    {
+      "key": "reference/offtarget/fortin2019_af5_alignments_brunello.csv",
+      "bytes": 33063905,
+      "source": "data/references/offtarget/fortin2019_af5_alignments_brunello.csv"
+    },
+    {
+      "key": "reference/offtarget/fortin2019_af6_alignments_tkov3.csv",
+      "bytes": 15561999,
+      "source": "data/references/offtarget/fortin2019_af6_alignments_tkov3.csv"
+    },
+    {
+      "key": "reference/offtarget/fortin2019_af7_gene_summary_avana.csv",
+      "bytes": 665072,
+      "source": "data/references/offtarget/fortin2019_af7_gene_summary_avana.csv"
+    },
+    {
+      "key": "reference/offtarget/fortin2019_af8_gene_summary_geckov2.csv",
+      "bytes": 829082,
+      "source": "data/references/offtarget/fortin2019_af8_gene_summary_geckov2.csv"
+    },
+    {
+      "key": "reference/offtarget/fortin2019_af9_gene_summary_brunello.csv",
+      "bytes": 715186,
+      "source": "data/references/offtarget/fortin2019_af9_gene_summary_brunello.csv"
+    },
+    {
+      "key": "reference/opentargets/disease/00000000.parquet",
+      "bytes": 6346458,
+      "source": "data/references/opentargets/disease/00000000.parquet"
+    },
+    {
+      "key": "reference/opentargets/evidence_crispr.parquet",
+      "bytes": 49090,
+      "source": "data/references/opentargets/evidence_crispr.parquet"
+    },
+    {
+      "key": "reference/opentargets/evidence_crispr_screen.parquet",
+      "bytes": 939664,
+      "source": "data/references/opentargets/evidence_crispr_screen.parquet"
+    },
+    {
+      "key": "reference/opentargets/target/part-00000-ddfc1f8c-60a1-40fe-885a-2c1dd3f9a9c1-c000.zstd.parquet",
+      "bytes": 7165956,
+      "source": "data/references/opentargets/target/part-00000-ddfc1f8c-60a1-40fe-885a-2c1dd3f9a9c1-c000.zstd.parquet"
+    },
+    {
+      "key": "reference/opentargets/target/part-00001-ddfc1f8c-60a1-40fe-885a-2c1dd3f9a9c1-c000.zstd.parquet",
+      "bytes": 7196171,
+      "source": "data/references/opentargets/target/part-00001-ddfc1f8c-60a1-40fe-885a-2c1dd3f9a9c1-c000.zstd.parquet"
+    },
+    {
+      "key": "reference/opentargets/target/part-00002-ddfc1f8c-60a1-40fe-885a-2c1dd3f9a9c1-c000.zstd.parquet",
+      "bytes": 7270990,
+      "source": "data/references/opentargets/target/part-00002-ddfc1f8c-60a1-40fe-885a-2c1dd3f9a9c1-c000.zstd.parquet"
+    },
+    {
+      "key": "reference/opentargets/target_essentiality/part-00000-da3383ef-095e-40de-bb45-30e9e20c27bc-c000.zstd.parquet",
+      "bytes": 60828972,
+      "source": "data/references/opentargets/target_essentiality/part-00000-da3383ef-095e-40de-bb45-30e9e20c27bc-c000.zstd.parquet"
+    },
+    {
+      "key": "reference/opentargets/target_essentiality/part-00001-da3383ef-095e-40de-bb45-30e9e20c27bc-c000.zstd.parquet",
+      "bytes": 62206587,
+      "source": "data/references/opentargets/target_essentiality/part-00001-da3383ef-095e-40de-bb45-30e9e20c27bc-c000.zstd.parquet"
+    },
+    {
+      "key": "reference/opentargets/target_essentiality/part-00002-da3383ef-095e-40de-bb45-30e9e20c27bc-c000.zstd.parquet",
+      "bytes": 60966582,
+      "source": "data/references/opentargets/target_essentiality/part-00002-da3383ef-095e-40de-bb45-30e9e20c27bc-c000.zstd.parquet"
+    },
+    {
+      "key": "reference/opentargets/target_essentiality/part-00003-da3383ef-095e-40de-bb45-30e9e20c27bc-c000.zstd.parquet",
+      "bytes": 62594294,
+      "source": "data/references/opentargets/target_essentiality/part-00003-da3383ef-095e-40de-bb45-30e9e20c27bc-c000.zstd.parquet"
+    },
+    {
+      "key": "reference/orcs/orcs-fly.tar.gz",
+      "bytes": 755206,
+      "source": "data/references/orcs/orcs-fly.tar.gz"
+    },
+    {
+      "key": "reference/orcs/orcs-green-monkey.tar.gz",
+      "bytes": 4008298,
+      "source": "data/references/orcs/orcs-green-monkey.tar.gz"
+    },
+    {
+      "key": "reference/orcs/orcs-mouse.tar.gz",
+      "bytes": 57383951,
+      "source": "data/references/orcs/orcs-mouse.tar.gz"
+    },
+    {
+      "key": "reference/orcs/orcs-yeast.tar.gz",
+      "bytes": 3214226,
+      "source": "data/references/orcs/orcs-yeast.tar.gz"
+    },
+    {
+      "key": "testdata/GSE145743/counts/GSE145743_my_counts_anno_merged.txt.gz",
+      "bytes": 1531146,
+      "source": "data/testdata/GSE145743/counts/GSE145743_my_counts_anno_merged.txt.gz"
+    },
+    {
+      "key": "testdata/GSE145743/fastq/SRR11144451_libA_olaparib_rep1.fastq.gz",
+      "bytes": 152325251,
+      "source": "data/testdata/GSE145743/fastq/SRR11144451_libA_olaparib_rep1.fastq.gz"
+    },
+    {
+      "key": "testdata/GSE145743/fastq/SRR11144452_libA_olaparib_rep2.fastq.gz",
+      "bytes": 206528330,
+      "source": "data/testdata/GSE145743/fastq/SRR11144452_libA_olaparib_rep2.fastq.gz"
+    },
+    {
+      "key": "testdata/GSE145743/fastq/SRR11144453_libA_DMSO_rep1.fastq.gz",
+      "bytes": 279026701,
+      "source": "data/testdata/GSE145743/fastq/SRR11144453_libA_DMSO_rep1.fastq.gz"
+    },
+    {
+      "key": "testdata/GSE145743/fastq/SRR11144454_libB_T0_input.fastq.gz",
+      "bytes": 220895031,
+      "source": "data/testdata/GSE145743/fastq/SRR11144454_libB_T0_input.fastq.gz"
+    },
+    {
+      "key": "testdata/GSE145743/fastq/SRR11144456_libB_olaparib_rep2.fastq.gz",
+      "bytes": 155899105,
+      "source": "data/testdata/GSE145743/fastq/SRR11144456_libB_olaparib_rep2.fastq.gz"
+    },
+    {
+      "key": "testdata/GSE145743/fastq/SRR12401850_libA_plasmid.fastq.gz",
+      "bytes": 105266536,
+      "source": "data/testdata/GSE145743/fastq/SRR12401850_libA_plasmid.fastq.gz"
+    },
+    {
+      "key": "testdata/GSE145743/fastq/SRR12401851_libB_plasmid.fastq.gz",
+      "bytes": 98675891,
+      "source": "data/testdata/GSE145743/fastq/SRR12401851_libB_plasmid.fastq.gz"
+    },
+    {
+      "key": "testdata/GSE145743/metadata/GSE145743_geo_brief.txt",
+      "bytes": 332216,
+      "source": "data/testdata/GSE145743/metadata/GSE145743_geo_brief.txt"
+    },
+    {
+      "key": "testdata/GSE145743/metadata/ena_filereport_PRJNA608032.tsv",
+      "bytes": 3001,
+      "source": "data/testdata/GSE145743/metadata/ena_filereport_PRJNA608032.tsv"
+    },
+    {
+      "key": "testdata/README.md",
+      "bytes": 7857,
+      "source": "data/testdata/README.md"
+    }
+  ],
+  "excluded": [
+    {
+      "path": "data/references/assaybench/hf_cache/hub/datasets--Genentech--assaybench/refs/main",
+      "reason": "local HuggingFace cache, not source data"
+    },
+    {
+      "path": "data/references/assaybench/hf_cache/xet/logs/xet_20260927T022319558-0400_24809.log",
+      "reason": "local HuggingFace cache, not source data"
+    },
+    {
+      "path": "data/references/assaybench/snapshot/.cache/huggingface/download/LaTest/train-00000-of-00001.parquet.lock",
+      "reason": "empty file"
+    },
+    {
+      "path": "data/references/assaybench/snapshot/.cache/huggingface/download/README.md.lock",
+      "reason": "empty file"
+    },
+    {
+      "path": "data/references/assaybench/snapshot/.cache/huggingface/download/biogrid/train-00000-of-00001.parquet.lock",
+      "reason": "empty file"
+    },
+    {
+      "path": "data/references/assaybench/snapshot/.cache/huggingface/download/croissant.json.lock",
+      "reason": "empty file"
+    },
+    {
+      "path": "data/references/depmap/CRISPRGeneDependency.csv",
+      "reason": "larger than 400.0MB, use --all"
+    },
+    {
+      "path": "data/references/depmap/CRISPRGeneEffect.csv",
+      "reason": "larger than 400.0MB, use --all"
+    },
+    {
+      "path": "data/references/depmap/OmicsCNGene.csv",
+      "reason": "larger than 400.0MB, use --all"
+    },
+    {
+      "path": "data/references/libraries/bassik-human-composition.xlsx",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/brie-controls.csv",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/brie-kinome.xlsx",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/brie.txt",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/brunello.txt",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/calabrese-a.txt",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/calabrese-b.txt",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/caprano-a.txt",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/caprano-b.txt",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/dolcetto-a.txt",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/dolcetto-b.txt",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/dolomiti-a.txt",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/dolomiti-b.txt",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/gattinara.txt",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/geckov2-a.csv",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/geckov2-b.csv",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/gouda.txt",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/humagne-c-scores.csv",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/humagne-c.csv",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/humagne-d-scores.csv",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/humagne-d.csv",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/inzolia-rda052-counts.zip",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/inzolia-rda550-counts.zip",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/inzolia.csv",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/julianna.csv",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/minlibcas9-counts.xlsx",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/minlibcas9.xlsx",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/mouse-geckov2-a.csv",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/mouse-geckov2-b.csv",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/mtko.xlsx",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/tkov1-base-90k.gz",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/tkov1-supp-85k.gz",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/tkov3.xlsx",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/whitehead-counts.txt",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/whitehead-hl3c9-counts.xlsx",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/whitehead.xlsx",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/yusa-v1.0.xlsx",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/yusa-v1.1.RData",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/libraries/yusa-v1.1.csv",
+      "reason": "Addgene terms forbid reproduction or redistribution"
+    },
+    {
+      "path": "data/references/literature/disease2pubtator3.gz",
+      "reason": "larger than 400.0MB, use --all"
+    },
+    {
+      "path": "data/references/literature/gene2pubtator3.gz",
+      "reason": "larger than 400.0MB, use --all"
+    },
+    {
+      "path": "data/references/morphic/data/MSKCC_Pooled_scRNAseq/processed/processed_v1/counts/G_1_star_unfiltered_counts.h5ad",
+      "reason": "larger than 400.0MB, use --all"
+    },
+    {
+      "path": "data/references/orcs/orcs-human.tar.gz",
+      "reason": "larger than 400.0MB, use --all"
+    },
+    {
+      "path": "data/references/projectscore/LICENSE.md",
+      "reason": "Sanger Project Score is licensed for internal research only"
+    },
+    {
+      "path": "data/references/projectscore/MANIFEST.md",
+      "reason": "Sanger Project Score is licensed for internal research only"
+    },
+    {
+      "path": "data/references/projectscore/Project_score_archive_data.zip",
+      "reason": "Sanger Project Score is licensed for internal research only"
+    },
+    {
+      "path": "data/references/projectscore/Project_score_raw_counts.zip",
+      "reason": "Sanger Project Score is licensed for internal research only"
+    },
+    {
+      "path": "data/references/projectscore/binaryDepScores.tsv.zip",
+      "reason": "Sanger Project Score is licensed for internal research only"
+    },
+    {
+      "path": "data/references/projectscore/cmp_api_datasets.jsonl",
+      "reason": "Sanger Project Score is licensed for internal research only"
+    },
+    {
+      "path": "data/references/projectscore/cmp_api_genes.jsonl",
+      "reason": "Sanger Project Score is licensed for internal research only"
+    },
+    {
+      "path": "data/references/projectscore/cmp_api_models.jsonl",
+      "reason": "Sanger Project Score is licensed for internal research only"
+    },
+    {
+      "path": "data/references/projectscore/essentiality_matrices.zip",
+      "reason": "Sanger Project Score is licensed for internal research only"
+    },
+    {
+      "path": "data/references/projectscore/gene_identifiers_latest.csv.gz",
+      "reason": "Sanger Project Score is licensed for internal research only"
+    },
+    {
+      "path": "data/references/projectscore/model_list_latest.csv.gz",
+      "reason": "Sanger Project Score is licensed for internal research only"
+    },
+    {
+      "path": "data/testdata/GSE145743/fastq/SRR11144449_libA_T0_input.fastq.gz",
+      "reason": "larger than 400.0MB, use --all"
+    }
+  ],
+  "licences": {
+    "reference/genesets": "Hart lab reference sets, open",
+    "reference/annotation": "HGNC CC0, NCBI public domain, Ensembl unrestricted",
+    "reference/cells": "Cellosaurus CC BY 4.0",
+    "reference/depmap": "DepMap CC BY 4.0, attribution required",
+    "reference/offtarget": "Fortin et al. 2019, Genome Biology, CC BY",
+    "reference/opentargets": "Open Targets CC0",
+    "reference/orcs": "BioGRID ORCS MIT",
+    "testdata": "GSE145743, Juhasz et al. Science Advances 2020"
+  }
+}
