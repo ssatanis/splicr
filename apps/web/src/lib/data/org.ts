@@ -540,14 +540,68 @@ const EMPTY_STATS: WorkspaceStats = {
   members: 0,
 };
 
+/** PostgREST serves at most 1000 rows per request, so the sum below pages. */
+const SCREEN_PAGE_SIZE = 1000;
+/** Safety stop. Twenty pages is 20,000 screens, well past any real workspace. */
+const MAX_SCREEN_PAGES = 20;
+
+type ServerClient = Awaited<ReturnType<typeof createClient>>;
+
 /**
- * Counts for the workspace header. Five `head: true` counts in parallel, so no
- * rows travel over the wire.
+ * Total hits in a workspace, summed from `screens.n_hits`.
  *
- * `hits` has no org_id of its own, so it is counted through an inner join on
- * `screens`. That filter matters for more than tidiness: the "read hits" policy
- * also exposes hits belonging to public screens in other organizations, and
- * this count must only ever be the workspace's own.
+ * Counting `public.hits` directly is the obvious implementation and it does not
+ * work here. The "read hits" policy is
+ * `private.can_read_screen(hits.screen_id)`, which takes the row's own column,
+ * so Postgres cannot hoist it out of the scan and runs it once per candidate
+ * row. Measured against this project's database, one screen with 19,115 hits
+ * costs 3.5s of server time and 76,000 buffer hits, and the same request over
+ * PostgREST returns 500 with 57014, statement timeout. The `authenticated` role
+ * has `statement_timeout=8s`, so the count starts failing outright at roughly
+ * twice today's data, and it can never be a blocking dashboard read.
+ *
+ * `screens.n_hits` is the same number by construction: the engine sets it in
+ * the same statement that finishes a run, from
+ * `count(*) from hits where run_id = <run>` (engine/splicr/db.py). Reading it
+ * touches one row per screen instead of one function call per hit. Where a
+ * screen has been re-run, this is also the more truthful figure, because it
+ * counts the current hits rather than every superseded run as well.
+ */
+async function sumScreenHits(supabase: ServerClient, orgId: string): Promise<number> {
+  let total = 0;
+
+  for (let page = 0; page < MAX_SCREEN_PAGES; page += 1) {
+    const from = page * SCREEN_PAGE_SIZE;
+    const { data, error } = await supabase
+      .from("screens")
+      .select("n_hits")
+      .eq("org_id", orgId)
+      .order("id", { ascending: true })
+      .range(from, from + SCREEN_PAGE_SIZE - 1);
+
+    if (error) {
+      noteFailure("getWorkspaceStats hits", error);
+      return total;
+    }
+
+    const rows = asRows<{ n_hits: number | null }>(data);
+    for (const row of rows) total += row.n_hits ?? 0;
+    if (rows.length < SCREEN_PAGE_SIZE) break;
+  }
+
+  return total;
+}
+
+/**
+ * Counts for the workspace header, gathered in parallel.
+ *
+ * Four of the five are `head: true` counts, so no rows travel over the wire.
+ * Hits are summed from `screens.n_hits` instead of counted, for the reason
+ * documented on `sumScreenHits`.
+ *
+ * Every figure is scoped to `org_id`. That matters for more than tidiness: the
+ * screens policy also exposes public screens belonging to other organizations,
+ * and these numbers must only ever be the workspace's own.
  */
 export async function getWorkspaceStats(orgId: string): Promise<WorkspaceStats> {
   if (!isQueryableOrgId(orgId)) return EMPTY_STATS;
@@ -560,10 +614,7 @@ export async function getWorkspaceStats(orgId: string): Promise<WorkspaceStats> 
         .select("id", { count: "exact", head: true })
         .eq("org_id", orgId),
       supabase.from("runs").select("id", { count: "exact", head: true }).eq("org_id", orgId),
-      supabase
-        .from("hits")
-        .select("id, screens!inner(org_id)", { count: "exact", head: true })
-        .eq("screens.org_id", orgId),
+      sumScreenHits(supabase, orgId),
       supabase
         .from("validation_outcomes")
         .select("id", { count: "exact", head: true })
@@ -577,7 +628,6 @@ export async function getWorkspaceStats(orgId: string): Promise<WorkspaceStats> 
     for (const [scope, result] of [
       ["screens", screens],
       ["runs", runs],
-      ["hits", hits],
       ["outcomes", outcomes],
       ["members", members],
     ] as const) {
@@ -587,7 +637,7 @@ export async function getWorkspaceStats(orgId: string): Promise<WorkspaceStats> 
     return {
       screens: screens.count ?? 0,
       runs: runs.count ?? 0,
-      hits: hits.count ?? 0,
+      hits,
       outcomes: outcomes.count ?? 0,
       members: members.count ?? 0,
     };

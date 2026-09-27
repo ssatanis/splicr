@@ -14,10 +14,45 @@ This module has three parts:
 
 2. Baselines (:class:`RandomBaseline`, :class:`GeneFrequencyPrior`,
    :class:`OracleKNN`) so a SplicR number is comparable rather than
-   free-floating.  ``GeneFrequencyPrior`` follows upstream's ``global-hit-freq``
-   baseline exactly (published AnDCG@100 = 0.1334 on the ``yearfold0`` test
-   split); ``OracleKNN`` follows upstream's ``knn_test.py`` oracle (published
-   0.2918) and **reads test labels**, so it is a ceiling, not a method.
+   free-floating.  ``OracleKNN`` follows upstream's ``knn_test.py`` oracle and
+   **reads test labels**, so it is a ceiling, not a method; it reproduces the
+   published 0.2918 exactly.  ``GeneFrequencyPrior`` covers upstream's
+   ``*-hit-freq`` family.  Which member of that family is the published 0.1334
+   turned out to matter -- see :data:`PUBLISHED` and the note below.
+
+Which baseline is 0.1334 -- measured, not assumed
+--------------------------------------------------
+The reference number 0.1334 was described to us as "rank genes by how often they
+are a hit across the training screens".  Implemented literally
+(``hits[g] / measured[g]`` over the 1349 ``yearfold0`` training screens) that
+measures **0.1217** here, not 0.1334, and the gap is stable across tie-break
+seeds so it is not noise.
+
+Rather than assume a dataset difference, the gap was localised.
+:class:`OracleKNN` reproduces its own published number, 0.2918, *exactly* -- so
+the snapshot, the split, the candidate pool, the symbol normalization and the
+metric are all correct, and the discrepancy has to live in the prior's
+definition.  Sweeping upstream's published baseline family on this split:
+
+.. code-block:: text
+
+    global-hit-freq                                 0.1217
+    phenotype-hit-freq      (screen_rationale)      0.1241
+    library-type-hit-freq                           0.1259
+    screen-type-hit-freq                            0.1292
+    experimental-setup-hit-freq                     0.1304
+    coarse-phenotype-hit-freq (cleaned_phenotype)   0.1329   <- 0.1334
+
+So 0.1334 is upstream's ``coarse-phenotype-hit-freq``: hit frequency stratified
+by the five-category ``cleaned_phenotype``, with no backoff.  Over eight
+tie-break seeds it measures 0.1329 in the range [0.1324, 0.1338], which contains
+0.1334.  **The frequency-prior baseline a SplicR scorer has to beat on this split
+is therefore 0.1329, not 0.1217.**  Other candidate explanations were each
+measured and rejected: priors fit on train+validation (0.1221), a global rather
+than per-gene denominator (0.1232), counting both directions as hits (0.1226),
+forward/reverse example expansion (0.1214), relevance-weighted counts (0.1209),
+Beta smoothing from s=5 to s=200 (0.1212--0.1215), and the alternative
+``year_match_val_testfold0`` split (0.1400 unstratified).
 
 3. SplicR scorers (:class:`RetrievalKNN`, :class:`HybridScorer`,
    :class:`GBMRanker`) which are fit on train only, tuned on validation only.
@@ -69,10 +104,56 @@ information an LLM prompted only with the screen description does not get.
 ranker may only emit genes seen in training, and the metric's condensed step
 then charges you for every gene the screen did not measure.
 
+Where the SplicR scorers actually stand -- measured, on validation
+------------------------------------------------------------------
+The benchmark test split has **not** been run for the SplicR scorers.  What
+follows is the 218-screen ``yearfold0`` validation split, fitting on all 1349
+training screens.  Validation is easier than test (the frequency prior scores
+0.177 here against 0.122 on test), so these numbers are **not** comparable to the
+published table -- only to each other.
+
+.. code-block:: text
+
+    random                                       0.0232 +/- 0.0037
+    gene_frequency_prior (unstratified)          0.1767 +/- 0.0192
+    gene_frequency_prior (coarse-phenotype)      0.1690 +/- 0.0169
+    gene_frequency_prior + smoothing + neg       0.1747 +/- 0.0190
+    retrieval_knn                                0.1761 +/- 0.0187
+    hybrid (alpha = 0.70, tuned on validation)   0.1776 +/- 0.0190
+    gbm_lambdarank                               0.1334 +/- 0.0141
+
+**No SplicR scorer here beats the gene-frequency prior yet.**  Stated precisely,
+because the difference is small enough that only a paired test can settle it:
+hybrid minus prior on the same 218 screens is +0.0010 (69 screens better, 55
+worse, 94 exactly tied), Wilcoxon p = 0.336, paired bootstrap 95% CI
+[-0.0010, +0.0029].  The interval contains zero, so this is not a real gain.
+:class:`RetrievalKNN` alone (0.1761) is marginally *below* the prior (0.1767),
+and :class:`GBMRanker` (0.1334) is clearly below it.
+
+Two structural reasons, both consequences of the metric rather than of tuning:
+
+* The clamp at zero means losses floor at 0 for every method, so the 94 tied
+  screens are mostly screens where both methods are at or below chance.  There is
+  no credit available for being less-bad, only for being strictly better.
+* Relevance is near-flat across a screen's hits, so AnDCG@100 is close to a
+  log-discounted precision@100.  The prior already captures most of what
+  metadata retrieval can add, because which genes are *ever* hits dominates
+  which screen you are looking at.
+
+The honest headroom estimate is :class:`OracleKNN` at 0.2918: a single training
+screen chosen with perfect hindsight more than doubles the prior, so the signal
+exists -- the metadata similarity function here is simply not sharp enough to
+find it.  Sharpening that, not further blending, is where the next gain has to
+come from.
+
 Leakage rules honoured by this module
 -------------------------------------
 * Gene priors, stratified priors, the TF-IDF vocabulary and IDF weights, and all
   neighbour statistics are fit on the **train** split only.
+* Neighbour retrieval excludes training screens from the query's own publication
+  (``source_id``), so a training screen cannot retrieve itself or its
+  same-paper near-duplicates.  See :class:`RetrievalKNN` -- without this, a
+  feature trained on neighbour statistics is trained on a leaked label.
 * ``alpha`` and the other blend/aggregation hyperparameters are selected on the
   **validation** split only (:meth:`HybridScorer.tune`).
 * DepMap common-essential flags are **external knowledge, not leakage**: they
@@ -97,8 +178,9 @@ Usage::
 
 Self-test::
 
-    engine/.tools/env/bin/python -m splicr.benchmark          # synthetic only
-    engine/.tools/env/bin/python -m splicr.benchmark --real    # + upstream parity
+    engine/.tools/env/bin/python -m splicr.benchmark              # synthetic only
+    engine/.tools/env/bin/python -m splicr.benchmark --real       # + upstream parity
+    engine/.tools/env/bin/python -m splicr.benchmark --reproduce  # + published calibration
 """
 
 from __future__ import annotations
@@ -1271,8 +1353,31 @@ class RetrievalKNN(Scorer):
     method degrades gracefully to :class:`GeneFrequencyPrior` rather than
     collapsing when retrieval is poor.
 
+    Group-aware retrieval (``exclude_same_group``), and why it is on by default
+    --------------------------------------------------------------------------
+    The 1349 ``yearfold0`` training screens come from only **134 distinct
+    papers** (``source_id``), and 1302 of them share a paper with at least one
+    other training screen.  The temporal split, meanwhile, leaves **zero**
+    ``source_id`` overlap between train and validation.  So if neighbours are
+    drawn without restriction:
+
+    * a *training* screen retrieves itself at cosine similarity 1.0, plus a
+      handful of same-paper screens with near-identical metadata and
+      near-identical hits;
+    * a *validation* screen's best neighbour sits at about 0.14.
+
+    Any model trained on those features sees a neighbour signal that is almost
+    the label, then meets a far weaker one at evaluation time.  Measured on the
+    218 validation screens, that shift dropped :class:`GBMRanker` to 0.0810
+    against a 0.1767 frequency prior.  Excluding the query's own ``source_id``
+    group makes train-time and evaluation-time features identically distributed,
+    and costs nothing at evaluation time because there is nothing to exclude.
+
     Args:
         n_neighbors: neighbourhood size.
+        exclude_same_group: drop training screens sharing the query's
+            ``group_field`` value.  Leave ``True``.
+        group_field: the grouping key; ``source_id`` is the publication.
         sim_power: sharpening exponent on the similarity weights.
         smoothing: pseudo-count pulling toward the global training prior.
         prior_smoothing: smoothing used *inside* that global prior.
@@ -1301,7 +1406,11 @@ class RetrievalKNN(Scorer):
         k: int = DEFAULT_K,
         tie_break: str = "random",
         seed: int = 42,
+        exclude_same_group: bool = True,
+        group_field: str = "source_id",
     ) -> None:
+        self.exclude_same_group = exclude_same_group
+        self.group_field = group_field
         self.n_neighbors = n_neighbors
         self.sim_power = sim_power
         self.smoothing = smoothing
@@ -1317,6 +1426,7 @@ class RetrievalKNN(Scorer):
         self.seed = seed
         self._train: list[Mapping[str, Any]] = []
         self._train_matrix: Any = None
+        self._train_groups: np.ndarray | None = None
         self._universe: list[str] | None = None
         self._neighbor_cache: dict[str, tuple[np.ndarray, np.ndarray]] = {}
 
@@ -1334,6 +1444,9 @@ class RetrievalKNN(Scorer):
         if not self.corpus.fitted:
             self.corpus.fit(self._train)
         self._train_matrix = self.corpus.transform(self._train)
+        self._train_groups = np.asarray(
+            [_clean(s.get(self.group_field)) for s in self._train], dtype=object
+        )
         if self.candidates == CANDIDATES_TRAIN_UNION:
             self._universe = self.stats.universe()
         self._neighbor_cache.clear()
@@ -1342,7 +1455,13 @@ class RetrievalKNN(Scorer):
     # -- retrieval --------------------------------------------------------- #
 
     def neighbors(self, screen: Mapping[str, Any]) -> tuple[np.ndarray, np.ndarray]:
-        """Indices into the training list and their weights, most similar first."""
+        """Indices into the training list and their weights, most similar first.
+
+        Training screens sharing the query's ``group_field`` value are removed
+        first when ``exclude_same_group`` is set, which also removes the query
+        itself when the query is a training screen.  See the class docstring for
+        why that matters.
+        """
         key = str(screen["dataset_name"])
         cached = self._neighbor_cache.get(key)
         if cached is not None:
@@ -1350,6 +1469,10 @@ class RetrievalKNN(Scorer):
         assert self.corpus is not None and self._train_matrix is not None
         query = self.corpus.transform([screen])
         sims = np.asarray((query @ self._train_matrix.T).todense()).ravel()
+        if self.exclude_same_group and self._train_groups is not None:
+            group = _clean(screen.get(self.group_field))
+            if group:
+                sims = np.where(self._train_groups == group, -np.inf, sims)
         order = np.argsort(-sims, kind="stable")[: self.n_neighbors]
         order = order[sims[order] > self.min_similarity]
         weights = np.maximum(sims[order], 0.0) ** self.sim_power
@@ -1780,7 +1903,6 @@ class GBMRanker(Scorer):
         self.model = lgb.LGBMRanker(
             objective="lambdarank",
             metric="ndcg",
-            eval_at=[self.k],
             n_estimators=self.n_estimators,
             learning_rate=self.learning_rate,
             num_leaves=self.num_leaves,
@@ -1789,7 +1911,12 @@ class GBMRanker(Scorer):
             n_jobs=-1,
             verbose=-1,
         )
-        kwargs: dict[str, Any] = {"group": g_train, "feature_name": list(self.FEATURE_NAMES)}
+        # eval_at belongs on fit(), not the constructor: passing it to the
+        # constructor lands it in **params and then collides with fit's own
+        # argument.  feature_name is deliberately omitted -- naming columns at
+        # fit time but predicting on a bare ndarray makes sklearn warn on every
+        # predict, and FEATURE_NAMES already documents the column order.
+        kwargs: dict[str, Any] = {"group": g_train, "eval_at": [self.k]}
         if validation:
             x_val, y_val, g_val = self._rows_for(validation, random.Random(self.seed + 1))
             kwargs["eval_set"] = [(x_val, y_val)]
@@ -1812,7 +1939,11 @@ class GBMRanker(Scorer):
         return [genes[int(i)] for i in order]
 
     def importances(self) -> list[tuple[str, float]]:
-        """Feature importances, most important first."""
+        """Feature importances, most important first.
+
+        Names come from :attr:`FEATURE_NAMES` by position, which is the same
+        order :meth:`features` writes the columns in.
+        """
         if self.model is None:
             raise RuntimeError("GBMRanker.fit() must be called first")
         pairs = list(zip(self.FEATURE_NAMES, self.model.feature_importances_.tolist()))
