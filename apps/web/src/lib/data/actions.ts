@@ -42,7 +42,6 @@ import {
   ROLE_RANK,
   actionFailed,
   applySettingsPatch,
-  workspaceSettingsPatchSchema,
   type ActionFailure,
   type ActionResult,
   type ActionResultWith,
@@ -54,6 +53,8 @@ import {
   type WorkspaceSettingsPatch,
   type WorkspaceSettingsSection,
 } from "./types";
+
+import { workspaceSettingsPatchSchema } from "./schemas";
 
 // ---------------------------------------------------------------------------
 // Shared plumbing

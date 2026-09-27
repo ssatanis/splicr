@@ -7,7 +7,15 @@ import { SideCoil, AccentCoil } from "@/components/three";
 import { LinkButton, MarkerPill, SectionHeading } from "@/components/ui/bits";
 import { Orb } from "@/components/ui/orb";
 import { Reveal, Stagger, StaggerItem } from "@/components/ui/reveal";
-import { benchmark, benchmarkCite, discoveryQuadrants, moatLayers, modules } from "@/lib/content";
+import {
+  benchmark,
+  benchmarkCite,
+  comparison,
+  comparisonCaveats,
+  discoveryQuadrants,
+  modules,
+  verifiedClaims,
+} from "@/lib/content";
 import { Cite } from "@/components/ui/cite";
 import { cn } from "@/lib/utils";
 
@@ -210,15 +218,15 @@ export default function TechnologyPage() {
             <Reveal>
               <SectionHeading
                 tone="dark"
-                eyebrow="Data beats a smarter AI"
+                eyebrow="Where we stand today"
                 title={
                   <>
-                    The gap is
+                    Predicting a new screen,
                     <br />
-                    the opportunity.
+                    including our own score.
                   </>
                 }
-                body="How well each method predicts a new screen's hits. The answer usually sits in an older screen, and text search cannot find it."
+                body="How well each method ranks a new screen's hits from its description alone. The frontier models are ahead of us here, and the top row is an oracle that reads the answers, so it is a ceiling rather than a result."
               />
             </Reveal>
             <p className="mt-6 text-sm text-white/80">
@@ -249,42 +257,127 @@ export default function TechnologyPage() {
         </div>
       </section>
 
-      {/* Moat */}
+      {/* What we measured that the alternatives do not do */}
       <section className="py-16 md:py-24 relative overflow-hidden">
         <AccentCoil className="absolute -right-24 top-0 w-[520px] h-[520px] opacity-90 hidden lg:block" />
         <div className="container-x relative">
           <Reveal>
             <SectionHeading
-              eyebrow="Why it is hard to copy"
+              eyebrow="What we measured"
               title={
                 <>
-                  Anyone can copy an app.
+                  Seven things we can
                   <br />
-                  Nobody can copy the record.
+                  show you the number for.
                 </>
               }
-              body="Labs upload screens and log which hits held up. The record grows, the scores sharpen, and more labs join."
+              body="Each of these is reproducible from this codebase, and the file that produces it is named. Where a figure comes from one screen we say so, because one screen is one screen."
             />
           </Reveal>
-          <div className="mt-12 grid md:grid-cols-[1fr_auto] gap-10 items-start">
-            <div className="divide-y divide-line border-y border-line">
-              {moatLayers.map((m) => (
-                <div key={m.layer} className="grid md:grid-cols-[1fr_1fr] gap-4 py-5">
-                  <div className="text-ink font-medium">{m.layer}</div>
-                  <div className="text-body">{m.copy}</div>
-                </div>
-              ))}
-            </div>
-            <div className="flex items-center gap-4">
-              <Orb size={120} />
-              <Orb size={80} tone="cyan" />
-            </div>
-          </div>
+          <ol className="mt-12 divide-y divide-line border-y border-line">
+            {verifiedClaims.map((c, i) => (
+              <Reveal key={c.id} delay={0.04 * i}>
+                <li className="grid md:grid-cols-[1fr_1.6fr] gap-4 md:gap-10 py-6">
+                  <h3 className="text-ink font-medium leading-snug">{c.claim}</h3>
+                  <div>
+                    <p className="text-body leading-relaxed">{c.measured}</p>
+                    <p className="mt-2 text-sm text-muted font-mono">{c.checkedIn}</p>
+                  </div>
+                </li>
+              </Reveal>
+            ))}
+          </ol>
           <div className="mt-10 flex items-center gap-4">
             <a href="/pipeline" className="inline-flex items-center gap-2 text-ink underline underline-offset-4">
               Read the full pipeline <ArrowUpRight className="w-4 h-4" />
             </a>
           </div>
+        </div>
+      </section>
+
+      {/* The alternatives, each on its own terms */}
+      <section className="py-16 md:py-24 bg-mist-soft">
+        <div className="container-x">
+          <Reveal>
+            <SectionHeading
+              eyebrow="The alternatives"
+              title={
+                <>
+                  What else a lab
+                  <br />
+                  would reasonably use.
+                </>
+              }
+              body="Most of these are free, and three of them run inside our own pipeline. The point of listing what each one is good at is that it is the only way the previous section means anything."
+            />
+          </Reveal>
+
+          {/* Cards rather than a four-column table: the same content reflows to
+              one column on a phone without changing markup, so the row and
+              field association a table would carry is not something a screen
+              reader loses at a breakpoint. Each field keeps its own <dt>, so
+              "Good at" is read out with its answer either way. */}
+          <div className="mt-14 grid md:grid-cols-2 xl:grid-cols-3 gap-5">
+            {comparison.map((row, i) => (
+              <Reveal key={row.id} delay={0.03 * i}>
+                <article className="h-full rounded-[1.5rem] bg-white shadow-card p-7 flex flex-col">
+                  <div className="eyebrow eyebrow-orange">{row.kind}</div>
+                  <h3 className="mt-3 text-xl font-medium text-ink tracking-tight">{row.name}</h3>
+                  <dl className="mt-5 space-y-4 text-sm leading-relaxed flex-1">
+                    <div>
+                      <dt className="text-ink font-medium">Good at</dt>
+                      <dd className="mt-1 text-body">{row.good}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-ink font-medium">Does not do</dt>
+                      <dd className="mt-1 text-body">{row.gap}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-ink font-medium">Cost</dt>
+                      <dd className="mt-1 text-body">{row.cost}</dd>
+                    </div>
+                  </dl>
+                  <p className="mt-6 pt-4 border-t border-line text-sm text-muted">
+                    <Cite cite={row.cite} />
+                  </p>
+                </article>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Where the other tool is the right answer */}
+      <section className="py-16 md:py-24 bg-teal-800 text-white">
+        <div className="container-x grid lg:grid-cols-[1fr_1.2fr] gap-14">
+          <div>
+            <Reveal>
+              <SectionHeading
+                tone="dark"
+                eyebrow="Use something else"
+                title={
+                  <>
+                    Six cases where
+                    <br />
+                    we are not the answer.
+                  </>
+                }
+                body="If any of these is your question, the tool named will serve you better than we will, and two of them are about us rather than about you."
+              />
+            </Reveal>
+            <Reveal delay={0.1} className="mt-8 flex items-center gap-4">
+              <Orb size={110} />
+              <Orb size={74} tone="cyan" />
+            </Reveal>
+          </div>
+          <Stagger className="space-y-5">
+            {comparisonCaveats.map((c) => (
+              <StaggerItem key={c.title} className="rounded-2xl bg-white/10 p-6">
+                <h3 className="font-medium text-white">{c.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-white/90">{c.body}</p>
+              </StaggerItem>
+            ))}
+          </Stagger>
         </div>
       </section>
 

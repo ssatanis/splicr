@@ -28,7 +28,6 @@ import {
   isOrgRole,
   isPlanTier,
   isUuid,
-  parseWorkspaceSettings,
   type ApiKey,
   type ApiKeyStatus,
   type OrgInvite,
@@ -41,6 +40,8 @@ import {
   type WorkspaceSettings,
   type WorkspaceStats,
 } from "./types";
+
+import { parseWorkspaceSettings } from "./schemas";
 
 export type {
   ApiKey,
