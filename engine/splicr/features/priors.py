@@ -6,93 +6,205 @@ For every (screen, gene) pair this module emits a small set of *label-free* prio
 scores: "given only this screen's metadata and its library, how likely is this gene
 to be one of its top hits?".  Everything is estimated from the AssayBench **train**
 split (``yearfold0 == "train"``, 1349 screens) by hierarchical empirical-Bayes
-pooling.  Nothing here ever reads validation or test labels; :func:`fit` refuses a
-fitting set that contains a non-train screen.
+pooling.  Nothing here ever reads validation or test labels; :meth:`StratifiedPrior.fit`
+refuses a fitting set that contains a non-train screen.
 
-WHY IT IS BUILT THIS WAY (all numbers are standalone validation AnDCG@100, 218
-screens, scored with ``assaybench.benchmark.metrics.RankingMetrics``)::
+THE ONE IDEA THAT MATTERS
+-------------------------
+AssayBench's ``phenotype`` field always opens with one of five verbs --
+``decreases`` / ``increases`` / ``either`` / ``impacts`` -- and that verb says which
+way the screen's own hits point.  It covers 100% of train and validation and is the
+most shifted axis between the splits::
 
-    upstream global-hit-freq          hits/measured, unsmoothed          0.17662
-    upstream coarse-phenotype-hit-freq  cleaned_phenotype, no backoff    0.16918
-    + relevance-rank evidence         instead of the binary hit flag     0.18453
-    + direction stratum               "decreases X" vs "increases X"     0.19090
-    + (phenotype x direction) level   hierarchical EB shrinkage          0.20470
-    + opposite-direction contrast     subtract the mirrored prior        0.21418
+    direction   train              validation
+    decreases    975 (72.3%)        67 (30.7%)
+    increases    256 (19.0%)       100 (45.9%)
+    either        74 ( 5.5%)        42 (19.3%)
+    impacts       44 ( 3.3%)         9 ( 4.1%)
 
-Four findings drove the design.
+A hit-frequency prior pooled over all of train is therefore, in effect, an
+*essentiality* prior -- and on an ``increases`` screen essentiality is close to the
+worst ranking available, because a gene whose knockout kills the cell cannot be
+enriched.  Upstream's global-hit-freq scores **0.02536** on the 100 ``increases``
+screens in validation, against 0.25691 on the 67 ``decreases`` ones.  That one
+subgroup is where the entire headroom of this family lives.
 
-1. **Direction is the dominant stratum, and it is free.**  AssayBench's
-   ``phenotype`` field always opens with one of ``decreases`` / ``increases`` /
-   ``either`` / ``impacts`` (100% of train and validation).  That verb says which
-   way the screen's own hits point, and it is the most shifted axis between the
-   splits: train is 72% ``decreases``, validation is 31% ``decreases`` / 46%
-   ``increases``.  An unstratified prior is therefore mostly an *essentiality*
-   prior, which is close to the worst possible ranking for an ``increases``
-   screen.  Stratifying on the verb is worth more than stratifying on phenotype,
-   cell type, screen type, library type or assay setup -- each of which we
-   measured separately (see ``WHAT DID NOT WORK`` below).
+So the estimator is deliberately asymmetric:
 
-2. **The opposite direction is a better negative than the global average.**
-   ``decreases`` and ``increases`` records built from the same BioGRID screen have
-   *disjoint* positive sets (median Jaccard 0.000 over the 116 sibling pairs in
-   train+validation) and each carries the other's hits as *negative* relevance.
-   The metric's numerator does not clip negatives, so ranking an
-   opposite-direction gene actively subtracts.  Scoring
-   ``p(g | direction) - lam * p(g | flipped direction)`` is the single largest
-   gain in the family (+0.017 on validation, paired Wilcoxon p < 1e-8).
+    score(g | decreases / either / impacts) = p_base(g)
+    score(g | increases)                    = p_inc(g) - lam * p_dec(g)
 
-3. **Magnitude beats the binary hit flag.**  Relevance is ``|effect|`` for
-   significant genes, and nDCG is dominated by the top few, so pooling each donor
-   screen's *within-screen relevance percentile* rather than its 0/1 hit flag is
-   worth about +0.008.
+``p_base`` is the unstratified, Beta-smoothed hit rate -- essentially the upstream
+baseline, which is already near-optimal for ``decreases`` screens.  The
+``increases`` branch is the hierarchical prior for that direction *minus* the
+opposite-direction prior: ``decreases`` and ``increases`` records built from the same
+BioGRID screen have disjoint positive sets (median Jaccard 0.000 over the 116 sibling
+pairs in train+validation) and each carries the other's hits as *negative* relevance,
+which the metric's numerator does not clip.  Subtracting the opposite direction both
+demotes the wrong genes and avoids the active subtraction.
 
-4. **Per-screen mass normalisation is actively harmful.**  Down-weighting a donor
-   by its hit count (so a 5000-hit fitness screen cannot outvote a 16-hit drug
-   screen) *cost* 0.04 AnDCG.  Raw pooling wins; see ``WHAT DID NOT WORK``.
+WHY ASYMMETRIC, AND HOW IT WAS SELECTED
+---------------------------------------
+Selecting on the 218 validation screens alone gives a different and *worse* answer.
+Every configuration was therefore scored on two splits at once:
+
+* **validation** -- 218 screens, ``yearfold0 == "validation"`` (2021),
+* **internal temporal holdout** -- fit on the 625 train screens from <=2018, score the
+  724 train screens from 2019-2020.  This costs nothing (it lives entirely inside
+  train) and it is dec-dominated like train, so it catches damage that validation's
+  inc-heavy mix hides.
+
+The selection rule, fixed in advance: among configurations that beat upstream
+global-hit-freq on **both** splits, take the best sum of the two means.
+
+That rule overturned two choices that validation alone had endorsed:
+
+1. *Symmetric contrast.*  Applying the contrast to ``decreases`` screens too scored
+   0.21309 on validation -- higher than the gated version -- but **lost** on the
+   holdout (0.48827 vs upstream's 0.49578), with a tight negative CI on the dec
+   subgroup (-0.00705 [-0.00858, -0.00556]).  The opposite of ``decreases`` is the
+   thin ``increases`` stratum (256 train screens); subtracting it is mostly
+   subtracting noise.  Gate the contrast to ``increases``, where the subtrahend is
+   estimated from 975 screens, and both splits improve.
+2. *Relevance-rank evidence.*  Pooling each donor's within-screen relevance
+   percentile instead of its binary hit flag is worth +0.0064 on validation
+   (0.18302 vs 0.17662) and **-0.0073 on the holdout** (0.48852 vs 0.49578).  It does
+   not replicate, so the pre-registered config uses the binary flag.  ``evidence=
+   "relrank"`` remains available; inside the final gated design it scores 0.20829 on
+   validation, i.e. it is no longer even a validation win.
+
+Zero of the 210 symmetric-contrast variants beat upstream on both splits.  1255 of the
+1260 direction-gated variants do.  The difference is the gate, not the tuning.
+
+MEASURED RESULTS (mean AnDCG@100, from ``assaybench.benchmark.metrics.RankingMetrics``)
+--------------------------------------------------------------------------------------
+::
+
+    feature                                  validation(218)   holdout(724)
+    prior_global_raw   upstream global-hit-freq   0.17662          0.49567
+    prior_pheno_exact  upstream coarse-phenotype  0.16907            --
+    prior_global       + Beta smoothing a=300     0.17713          0.50089
+    prior_direction    + direction stratum        0.17966            --
+    prior_stratum      + (phenotype x direction)  0.19370          0.49679
+    prior_contrast_sym ungated symmetric contrast 0.21069          0.44647
+    prior_directed     PRE-REGISTERED DEFAULT     0.21112          0.50904
+
+    prior_directed vs upstream global-hit-freq
+      validation   delta=+0.03450  95% CI [+0.01832,+0.05306]  Wilcoxon p=1.6e-05
+      holdout      delta=+0.01337  95% CI [+0.00752,+0.01933]  Wilcoxon p=4.2e-13
+    prior_directed vs upstream coarse-phenotype-hit-freq
+      validation   delta=+0.04205  95% CI [+0.01871,+0.06709]  Wilcoxon p=3.0e-02
+
+    per direction        validation                     holdout
+                      ours     upstream            ours     upstream
+      decreases      0.25814    0.25691  (n=67)   0.72054    0.71425  (n=471)
+      increases      0.09990    0.02536  (n=100)  0.06887    0.03303  (n=168)
+      either         0.43605    0.43653  (n=42)   0.19694    0.18960  (n=59)
+      impacts        0.04718    0.04666  (n=9)    0.22996    0.22006  (n=26)
+
+The ``increases`` subgroup is where all of it comes from: 3.9x on validation, 2.1x on
+the holdout.  Every other subgroup is a tie on validation and a small win on the
+holdout; validation ``either`` is -0.00048 (CI [-0.00435, +0.00331]).
+57 of the 218 validation screens are still clamped to 0 by the metric, so a quarter of
+the split contributes nothing to anyone's mean.
+
+**The gate costs nothing and buys nothing on validation -- it buys robustness.**
+``prior_contrast_sym``, the ungated symmetric version, scores 0.21069 against the
+gated 0.21112: delta +0.00043, CI [-0.00466, +0.00577], Wilcoxon p = 0.82.  Validation
+cannot tell them apart.  On the temporal holdout the same pair is 0.44647 vs 0.50904,
+delta +0.0626, p = 2e-75.  So validation alone would have licensed a configuration that
+is catastrophically wrong under a dec-dominated mix, and would have reported it as the
+same number.  That asymmetry -- invisible upside, visible downside -- is the whole
+argument for the second split.
 
 WHAT DID NOT WORK (measured, not assumed)
 -----------------------------------------
-* ``mass=1/n_hits`` (equal per-screen mass): 0.16095 vs 0.19090.  Also
-  ``1/sqrt(n_hits)``: ~0.189, i.e. no better than raw.  Screens with many hits
-  really are more informative about which genes hit.
-* Stratifying on ``cell_type`` (99 levels), ``cell_line`` (681), ``library_type``,
-  ``library_methodology``, ``screen_category`` or ``experimental_setup``: every
-  one landed within 0.0002 of the *unstratified* prior once shrinkage was fitted.
-  They add nothing the direction verb and the coarse phenotype do not already
-  carry.  A third hierarchy level on top of (phenotype x direction) is worth
-  <0.0002 and its fitted shrinkage goes to 100-300, i.e. the level is shrunk
-  almost entirely back into its parent.
-* **The library-restriction correction is right but not significant here.**
-  Dividing by *times measured* rather than *times screened* is worth +0.003 to
-  +0.004, but the paired bootstrap CI crosses zero on 218 screens
-  (p = 0.17-0.38).  It is kept because it is the correct estimator, not because
-  the validation set can prove it.
-* Time-decay weighting of donors by publication year and soft strata weighted by
-  query/donor library overlap: see ``WEIGHTED_VARIANTS`` in this module's
-  ``__main__`` output -- neither cleared its CI.
-* Beta-Binomial MLE shrinkage fitted on train alone gives ``alpha_global = 4.8``,
-  ``alpha_direction = 13.0`` and 0.18825 with *zero* validation tuning, against
-  0.18586 at the nearest hand-picked grid point.  The fit is sound; the
-  validation-optimal alphas are larger (30-100) because the metric cares only
-  about the top 100, where over-shrinking rare genes is cheap.  Pass
-  ``alphas="eb"`` for the untuned estimator.
+* **Per-screen mass normalisation.**  Down-weighting a donor by its hit count, so a
+  5000-hit fitness screen cannot outvote a 16-hit drug screen, cost 0.030 AnDCG on
+  validation (0.16095 vs 0.19090 at the same structure); ``1/sqrt(n_hits)`` was a
+  wash.  Screens with many hits genuinely are more informative about which genes hit.
+  Normalising *within* the screen instead (evidence divided by the screen's own hit
+  fraction, so every donor's mean evidence is 1) was also no better.
+* **Every stratum axis other than direction.**  ``cell_type`` (99 levels),
+  ``cell_line`` (681), ``library_type``, ``library_methodology``,
+  ``screen_category``, ``experimental_setup``, ``screen_type`` -- each landed within
+  0.002 of the *unstratified* prior once shrinkage was fitted, and each is available
+  in :data:`LEVEL_KEYS` if you want to re-measure.  A third hierarchy level on
+  (phenotype x direction x cell_type) gained +0.0024 on validation with a bootstrap CI
+  of [+0.00051, +0.00453] but Wilcoxon p = 0.25 -- the gain sits on a handful of
+  screens, so it is not shipped.
+* **Time-decay weighting** of donors by publication year (parsed from ``author``):
+  monotonically worse as the decay sharpens -- 0.21418 at no decay, 0.21241 at a
+  10-year constant, 0.20095 at 1 year.  There is no usable recency signal here.
+* **Library-overlap soft strata.**  Weighting donors by Jaccard overlap between the
+  query's library and the donor's, which is legitimate (the library is the candidate
+  pool the metric restricts to) and which neighbour-selection analysis suggested
+  should help, hurt monotonically: 0.20169 at ``jaccard^1``, 0.17557 at ``jaccard^4``,
+  against 0.21418 unweighted.  Restricting to the top-100 most library-similar donors
+  was worse still (0.19470).  Down-weighting the genome-wide screens throws away most
+  of the counting evidence.
+* **The library-restriction correction is right but makes no measurable difference.**
+  Dividing by *times measured* rather than *times screened* is worth +0.003 to +0.004
+  at an unstratified, unsmoothed structure, but the paired bootstrap CI crosses zero
+  (p = 0.17-0.38); and inside the shipped design it is a dead wash --
+  ``measured_denominator=False`` scores 0.21180 against the default's 0.21112, delta
+  -0.00068 [-0.00397, +0.00263].  With Beta smoothing at alpha=300 the two
+  denominators differ only for genes with almost no data, whose estimates are pinned to
+  the parent either way.  It stays the default because it is the correct estimator, not
+  because either split can tell the difference.
+* **Asymmetric contrast weights per direction** beyond the on/off gate: sweeping
+  ``lam_dec`` and ``lam_inc`` independently bought +0.0007 over the gate on
+  validation, inside the noise, so the gate is binary.
+* **Beta-Binomial MLE shrinkage works, and is barely worse than tuning.**  Fitted on
+  train alone the marginal likelihood gives ``alpha_global = 4.805``,
+  ``alpha_direction = 13.002``, ``alpha_pheno_direction = 5.147``.  Inside the shipped
+  gated design that scores **0.21035** on validation against the tuned 0.21112 --
+  delta +0.00077 [-0.00187, +0.00330], a tie.  So the headline does not depend on
+  having tuned the alphas at all: pass ``alphas="eb"`` and you get the same number
+  from an estimator that never saw validation.  (The AnDCG-optimal alphas are still an
+  order of magnitude larger, because the metric only looks at the top 100, where
+  over-shrinking rare genes is nearly free.)
+* **Lifting ``either`` / ``impacts`` screens off the base** with
+  ``either_contrast_weight=0.25`` costs 0.005 on validation (0.20633).  Those screens
+  count both directions as positive, so there is nothing to subtract.
+* **Out-of-vocabulary genes are a non-issue, and were briefly a bug.**  Only 326 of the
+  2,077,228 validation (screen, gene) rows name a gene the train split never assayed
+  (0.016%; worst single screen 3.24%), so the choice of fallback moves the headline by
+  ~0.0006 -- tie-break noise.  An earlier revision scaled the fallback by
+  ``1 - contrast_weight`` even on screens that take the uncontrasted base branch, which
+  scored 0.0006 *higher*; the shipped value is the consistent one (a gene with zero
+  counts shrinks to the pooled rate at every level), not the higher one.
 
 HONEST TUNING NOTE
 ------------------
-The default hyperparameters were selected on the 218 validation screens.  A
-split-half check (tune on 109, score the other 109, 400 resamples) puts the
-honestly-held-out value of that selection at **0.2082 +/- 0.0186** against the
-0.21418 tuned on all 218 -- so roughly 0.006 of the headline is selection
-optimism, and the top of the surface is flat (21 of 2160 configurations lie
-within 0.002 of the best).
+Hyperparameters were selected on validation plus the train-internal holdout; the test
+split was never loaded.  A split-half check on validation (tune the whole 1260-variant
+grid on 109 screens, score the other 109, 600 resamples) puts the honestly-held-out
+value of a validation-only selection at **0.2071 +/- 0.0188** against a full-validation
+tuned maximum of 0.21276 -- so roughly 0.005 of any validation-tuned headline is
+selection optimism.  Two things bound that risk here: the winning region is broad
+(1255 of 1260 direction-gated variants beat upstream on both splits, spanning
+0.1779-0.2128 on validation and 0.4959-0.5096 on the holdout), and the untuned
+``alphas="eb"`` estimator lands within 0.0008 of the tuned default.
+
+The shipped default is not literally the argmax of the selection rule.  The rule's
+argmax mixes hierarchy depths -- own estimate at the direction level, subtrahend at
+(phenotype x direction) -- for 0.21157 / 0.50867 in the sweep harness.  The shipped
+uniform-depth configuration measures 0.21112 / 0.50904, i.e. 0.0005 lower on validation
+and 0.0004 higher on the holdout, which is a tie on the selection criterion with one
+fewer structural degree of freedom.  ``contrast_own_depth`` exists if you want the
+mixed-depth form.  The deviation is recorded here rather than quietly taken.
+
+Nothing in this module has ever been evaluated on ``yearfold0 == "test"``.  The
+numbers above are the complete set of splits this family has been scored on.
 
 USAGE
 -----
     from splicr.features.priors import screen_gene_priors, FEATURE_NAMES
-    feats = screen_gene_priors(my_screens)          # fits on train automatically
-    feats["U_1234_dec"]["POLR2A"]["prior_contrast"] # -> float
+    feats = screen_gene_priors(my_screens)            # fits on train automatically
+    feats["U_1234_dec"]["POLR2A"]["prior_directed"]   # -> float
 
-    python -m splicr.features.priors                # self-check on validation
+    python -m splicr.features.priors                  # self-check on validation
 """
 
 from __future__ import annotations
@@ -100,7 +212,7 @@ from __future__ import annotations
 import math
 import os
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Callable, Iterable, Mapping, Sequence
 
 import numpy as np
@@ -111,31 +223,33 @@ import numpy as np
 
 #: Every feature this module emits, in a stable order.
 FEATURE_NAMES: list[str] = [
+    "prior_directed",            # THE feature: direction-gated prior (see BEST_FEATURE)
     "prior_global_raw",          # upstream global-hit-freq: hits / times_measured
+    "prior_global",              # the same, Beta-smoothed -- the `p_base` branch
     "prior_pheno_exact",         # upstream coarse-phenotype-hit-freq (no backoff)
-    "prior_global",              # EB-smoothed global prior, relevance-rank evidence
-    "prior_direction",           # + direction stratum
-    "prior_direction_opposite",  # the same level at the flipped direction verb
-    "prior_stratum",             # full hierarchy at the screen's own key
-    "prior_stratum_opposite",    # full hierarchy at the mirrored key
-    "prior_lift",                # prior_stratum - lift_weight * prior_global
-    "prior_contrast",            # the family's best single feature (see BEST_FEATURE)
+    "prior_direction",           # hierarchy at the screen's own direction
+    "prior_direction_opposite",  # hierarchy at the flipped direction verb
+    "prior_stratum",             # hierarchy at (direction, phenotype x direction)
+    "prior_stratum_opposite",    # the same, mirrored
+    "prior_contrast_sym",        # symmetric contrast: better on validation, worse elsewhere
     "gene_log_times_measured",   # log1p(train screens that assayed the gene)
     "gene_never_hit",            # 1.0 when assayed >= 20 times and never a hit
 ]
 
 #: The feature whose standalone validation AnDCG@100 the self-check reports.
-BEST_FEATURE = "prior_contrast"
+BEST_FEATURE = "prior_directed"
 
-#: Pre-registered configuration.  Selected on validation only; see the module
-#: docstring's HONEST TUNING NOTE for the split-half correction.
+#: Pre-registered configuration.  Selected on validation *and* on the train-internal
+#: temporal holdout; see "WHY ASYMMETRIC" above.  The test split was never loaded.
 DEFAULT_CONFIG: dict[str, Any] = {
-    "evidence": "relrank",
+    "evidence": "hit",
     "levels": ("direction", "pheno_direction"),
-    "alphas": (30.0, 100.0, 100.0),
-    "contrast_weight": 0.65,
-    "lift_weight": 0.0,
-    "either_union": False,
+    "alphas": (30.0, 100.0, 30.0),
+    "base_alpha": 300.0,
+    "contrast_weight": 0.8,
+    "contrast_directions": ("inc",),
+    "contrast_own_depth": None,
+    "either_contrast_weight": 0.0,
     "measured_denominator": True,
     "min_donors": 1,
 }
@@ -154,6 +268,8 @@ _DIRECTION_VERB = {
 }
 #: Canonical verb to write back when mirroring a screen's direction.
 _FLIP_VERB = {"dec": "increases", "inc": "decreases"}
+_CANON_VERB = {"dec": "decreases", "inc": "increases",
+               "either": "either", "impacts": "impacts"}
 
 
 class LeakageError(RuntimeError):
@@ -180,9 +296,10 @@ def _field(screen: Mapping[str, Any], name: str) -> str:
 def direction_of(screen: Mapping[str, Any]) -> str:
     """Which way the screen's own hits point: ``dec`` / ``inc`` / ``either`` / ``impacts``.
 
-    Read off the first word of ``phenotype``, which AssayBench always fills with one
-    of five verbs.  This is ordinary metadata -- the same string the LLM baselines
-    are shown -- and covers 100% of the train and validation splits.
+    Read off the first word of ``phenotype``, which AssayBench always fills with one of
+    five verbs.  Ordinary metadata -- the same string the LLM baselines are shown --
+    and it covers 100% of the train and validation splits.  ``"na"`` when the field is
+    empty or the verb is unrecognised; such screens take the unstratified branch.
     """
     parts = _clean(screen.get("phenotype")).lower().split()
     if not parts:
@@ -191,11 +308,10 @@ def direction_of(screen: Mapping[str, Any]) -> str:
 
 
 def mirror_screen(screen: Mapping[str, Any], verb: str | None = None) -> dict | None:
-    """The same screen with its direction verb flipped, or ``None`` if it has no opposite.
+    """The same screen with its direction verb replaced, or ``None`` if it has none.
 
-    Only ``phenotype`` changes, so every other stratum key is preserved -- the
-    mirrored screen lands in the *same* phenotype/cell/library cell of the
-    hierarchy, one direction over.
+    Only ``phenotype`` changes, so every other stratum key is preserved: the mirrored
+    screen lands in the *same* phenotype cell of the hierarchy, one direction over.
     """
     target = verb or _FLIP_VERB.get(direction_of(screen))
     if target is None:
@@ -217,6 +333,8 @@ LEVEL_KEYS: dict[str, Callable[[Mapping[str, Any]], tuple]] = {
         _field(s, "cleaned_phenotype"), direction_of(s), _field(s, "cell_type")),
     "pheno_direction_libmeth": lambda s: (
         _field(s, "cleaned_phenotype"), direction_of(s), _field(s, "library_methodology")),
+    "pheno_direction_setup": lambda s: (
+        _field(s, "cleaned_phenotype"), direction_of(s), _field(s, "experimental_setup")),
 }
 
 
@@ -225,12 +343,12 @@ LEVEL_KEYS: dict[str, Callable[[Mapping[str, Any]], tuple]] = {
 # --------------------------------------------------------------------------- #
 
 def _ev_hit(rel: np.ndarray, hit: np.ndarray) -> np.ndarray:
-    """Upstream's binary significance flag."""
+    """Upstream's binary significance flag.  The pre-registered choice."""
     return hit.astype(np.float64)
 
 
 def _ev_pos(rel: np.ndarray, hit: np.ndarray) -> np.ndarray:
-    """1 where relevance is positive (same-direction hit)."""
+    """1 where relevance is positive (a same-direction hit)."""
     return (rel > 0.0).astype(np.float64)
 
 
@@ -238,10 +356,11 @@ def _ev_relrank(rel: np.ndarray, hit: np.ndarray) -> np.ndarray:
     """Within-screen percentile of positive relevance, 0 for non-hits.
 
     Scale-free: AssayBench relevance is ``|effect|`` in each screen's own units
-    (Z-score, CRISPR score, -log10 p, ...), so raw magnitudes are not comparable
-    across screens but their within-screen ranks are.  nDCG is dominated by the
-    highest-relevance genes, so preserving *which* hits were the strongest is what
-    this buys over the binary flag.
+    (Z-score, CRISPR score, -log10 p, ...), so magnitudes are not comparable across
+    screens but within-screen ranks are.  nDCG is dominated by the highest-relevance
+    genes, so this preserves *which* hits were strongest.  Worth +0.006 on validation
+    and -0.007 on the temporal holdout, i.e. it does not replicate; see the module
+    docstring.
     """
     out = np.zeros(len(rel), dtype=np.float64)
     pos = rel > 0.0
@@ -277,9 +396,9 @@ EVIDENCE: dict[str, Callable[[np.ndarray, np.ndarray], np.ndarray]] = {
 class _Normalizer:
     """Upper-cases and synonym-maps gene symbols, memoised.
 
-    Uses ``assaybench.utils.gene_mapper.GeneMapper`` when available -- the same
-    mapper the metric applies to both sides -- so a train screen's ``KIAA0101``
-    and a test screen's ``PCLAF`` pool into one gene.  Falls back to upper-casing.
+    Uses ``assaybench.utils.gene_mapper.GeneMapper`` when importable -- the same mapper
+    the metric applies to both sides -- so a train screen's ``KIAA0101`` and a test
+    screen's ``PCLAF`` pool into one gene.  Falls back to upper-casing.
     """
 
     def __init__(self, use_gene_mapper: bool = True) -> None:
@@ -293,7 +412,7 @@ class _Normalizer:
                 from assaybench.utils.gene_mapper import GeneMapper
 
                 self._mapper = GeneMapper(verbose=False)
-            except Exception:                              # pragma: no cover
+            except Exception:                                    # pragma: no cover
                 self._want = False
                 self._mapper = None
         return self._mapper
@@ -308,7 +427,7 @@ class _Normalizer:
         if mapper is not None:
             try:
                 mapped = mapper.map_gene(upper)
-            except Exception:                              # pragma: no cover
+            except Exception:                                    # pragma: no cover
                 mapped = None
             if mapped:
                 out = mapped
@@ -321,18 +440,21 @@ class _Normalizer:
 # --------------------------------------------------------------------------- #
 
 def _shrink(num: np.ndarray, den: np.ndarray, alpha: float,
-            parent: np.ndarray) -> np.ndarray:
+            parent: np.ndarray | float) -> np.ndarray:
     """``(num + alpha*parent) / (den + alpha)``, falling back to ``parent`` with no data.
 
     The fallback matters: with ``alpha == 0`` a gene the stratum never assayed gives
-    ``0/0``.  Upstream's stratified baselines resolve that to ``0.0``, which throws
-    the gene to the bottom of the ranking on no evidence at all; backing off to the
-    parent estimate is the better estimator and is what this family uses.
+    ``0/0``.  Upstream's stratified baselines resolve that to ``0.0``, which throws the
+    gene to the bottom of the ranking on no evidence at all; backing off to the parent
+    estimate is the better estimator and is what this family uses.
     """
+    par = np.asarray(parent, dtype=np.float64)
+    if par.ndim == 0:
+        par = np.full(len(num), float(par))
     total = den + alpha
     with np.errstate(divide="ignore", invalid="ignore"):
-        est = (num + alpha * parent) / np.where(total > 0, total, 1.0)
-    return np.where(total > 0, est, parent)
+        est = (num + alpha * par) / np.where(total > 0, total, 1.0)
+    return np.where(total > 0, est, par)
 
 
 @dataclass
@@ -345,38 +467,51 @@ class _Cell:
 
 
 class StratifiedPrior:
-    """Hierarchical empirical-Bayes hit-frequency prior over genes, per screen.
+    """Direction-gated hierarchical empirical-Bayes hit-frequency prior over genes.
 
-    The estimator is a chain of Beta shrinkages, coarse to fine::
+    The pooling is a chain of Beta shrinkages, coarse to fine::
 
-        p_root(g)      = (sum_s e_s(g)      + a_0 * pooled) / (sum_s m_s(g)      + a_0)
-        p_level(g|key) = (sum_{s in key} e_s(g) + a_l * p_parent(g)) / (sum_{s in key} m_s(g) + a_l)
+        p_global(g)    = (sum_s e_s(g) + a_0 * pooled) / (sum_s m_s(g) + a_0)
+        p_level(g|key) = (sum_{s in key} e_s(g) + a_l * p_parent(g))
+                         / (sum_{s in key} m_s(g) + a_l)
 
-    where ``e_s(g)`` is the donor's evidence for gene ``g`` (see :data:`EVIDENCE`)
-    and ``m_s(g)`` is 1 **iff donor s measured g** -- the library-restriction
-    correction: a gene cannot hit in a screen that never assayed it, so the
-    denominator is times-measured, not times-screened.
+    where ``e_s(g)`` is donor ``s``'s evidence for gene ``g`` (see :data:`EVIDENCE`) and
+    ``m_s(g)`` is 1 **iff donor s measured g** -- the library-restriction correction: a
+    gene cannot hit in a screen that never assayed it, so the denominator is
+    times-measured, not times-screened.
+
+    The final score is gated on the screen's direction verb::
+
+        direction in contrast_directions:  p_stratum(g) - lam * p_stratum_mirrored(g)
+        otherwise:                         p_base(g)        [unstratified, smoothed]
+
+    See the module docstring for why that asymmetry is the shipped default and what the
+    symmetric alternative costs.
 
     Args:
-        evidence: key into :data:`EVIDENCE`. ``"relrank"`` (default) pools each
-            donor's within-screen relevance percentile; ``"hit"`` reproduces
-            upstream's binary counting.
-        levels: stratum keys from :data:`LEVEL_KEYS`, coarse to fine.  Each must
-            refine the previous one.
-        alphas: ``len(levels) + 1`` Beta pseudo-counts; ``alphas[0]`` shrinks the
-            global prior toward the pooled scalar rate and ``alphas[i+1]`` shrinks
-            level ``i`` toward level ``i-1``.  Pass the string ``"eb"`` to fit them
-            on train alone by Beta-Binomial marginal likelihood instead.
-        contrast_weight: ``lam`` in ``p(g|key) - lam * p(g|mirrored key)``.  0 disables.
-        lift_weight: ``gamma`` in ``... - gamma * p_global(g)``.  0 disables.
-        either_union: when True, ``either``/``impacts`` screens are scored with the
-            mean of the ``dec`` and ``inc`` strata rather than their own thin one.
-        measured_denominator: False switches to times-*screened*, which is the
-            common mistake; kept so the ablation is runnable.
+        evidence: key into :data:`EVIDENCE`.  ``"hit"`` (default, pre-registered)
+            reproduces upstream's binary counting; ``"relrank"`` pools each donor's
+            within-screen relevance percentile -- better on validation, worse on the
+            temporal holdout.
+        levels: stratum keys from :data:`LEVEL_KEYS`, coarse to fine.  Each must refine
+            the previous one.
+        alphas: ``len(levels) + 1`` Beta pseudo-counts.  ``alphas[0]`` shrinks the
+            global prior toward the pooled scalar rate; ``alphas[i+1]`` shrinks level
+            ``i`` toward level ``i-1``.  Pass the string ``"eb"`` to fit them on train
+            alone by Beta-Binomial marginal likelihood instead.
+        base_alpha: shrinkage for the unstratified ``p_base`` branch.  Kept separate
+            because that branch is the whole prediction for ``decreases`` screens.
+        contrast_weight: ``lam``.  0 disables the contrast entirely.
+        contrast_directions: which direction verbs get the contrast.  ``("inc",)`` is
+            the pre-registered gate; ``("inc", "dec")`` is the symmetric variant.
+        either_contrast_weight: optional lift applied to ``either`` / ``impacts``
+            screens, which otherwise take ``p_base`` unchanged.
+        measured_denominator: False switches to times-*screened*, the common mistake;
+            kept so the ablation is runnable.
         min_donors: skip a stratum with fewer donors than this and keep the parent.
         use_gene_mapper: normalize symbols through AssayBench's ``GeneMapper``.
 
-    The object is deterministic and picklable after :meth:`fit`.
+    Deterministic and picklable after :meth:`fit`.
     """
 
     def __init__(
@@ -384,9 +519,11 @@ class StratifiedPrior:
         evidence: str = DEFAULT_CONFIG["evidence"],
         levels: Sequence[str] = DEFAULT_CONFIG["levels"],
         alphas: Sequence[float] | str = DEFAULT_CONFIG["alphas"],
+        base_alpha: float = DEFAULT_CONFIG["base_alpha"],
         contrast_weight: float = DEFAULT_CONFIG["contrast_weight"],
-        lift_weight: float = DEFAULT_CONFIG["lift_weight"],
-        either_union: bool = DEFAULT_CONFIG["either_union"],
+        contrast_directions: Sequence[str] = DEFAULT_CONFIG["contrast_directions"],
+        contrast_own_depth: int | None = DEFAULT_CONFIG["contrast_own_depth"],
+        either_contrast_weight: float = DEFAULT_CONFIG["either_contrast_weight"],
         measured_denominator: bool = DEFAULT_CONFIG["measured_denominator"],
         min_donors: int = DEFAULT_CONFIG["min_donors"],
         use_gene_mapper: bool = True,
@@ -396,12 +533,23 @@ class StratifiedPrior:
         bad = [lv for lv in levels if lv not in LEVEL_KEYS]
         if bad:
             raise ValueError(f"unknown level(s) {bad}; choose from {sorted(LEVEL_KEYS)}")
+        bad_dir = [d for d in contrast_directions if d not in _FLIP_VERB]
+        if bad_dir:
+            raise ValueError(
+                f"contrast_directions must be a subset of {sorted(_FLIP_VERB)}, got {bad_dir}"
+            )
         self.evidence = evidence
         self.levels = tuple(levels)
         self.alphas_spec = alphas
+        self.base_alpha = float(base_alpha)
         self.contrast_weight = float(contrast_weight)
-        self.lift_weight = float(lift_weight)
-        self.either_union = bool(either_union)
+        self.contrast_directions = tuple(contrast_directions)
+        if contrast_own_depth is not None and not 0 <= contrast_own_depth <= len(levels):
+            raise ValueError(
+                f"contrast_own_depth must be in 0..{len(levels)}, got {contrast_own_depth}"
+            )
+        self.contrast_own_depth = contrast_own_depth
+        self.either_contrast_weight = float(either_contrast_weight)
         self.measured_denominator = bool(measured_denominator)
         self.min_donors = int(min_donors)
         self._norm = _Normalizer(use_gene_mapper)
@@ -417,7 +565,7 @@ class StratifiedPrior:
         self._times_measured: np.ndarray | None = None
         self._times_hit: np.ndarray | None = None
         self._pheno_exact: dict[str, np.ndarray] = {}
-        self._score_cache: dict[tuple, np.ndarray] = {}
+        self._cache: dict[tuple, np.ndarray] = {}
 
     # -- fitting ----------------------------------------------------------- #
 
@@ -426,10 +574,11 @@ class StratifiedPrior:
         """Pool the training screens.  Train split only.
 
         Args:
-            train: AssayBench records.  ``None`` loads ``yearfold0 == "train"``
-                from the local parquet snapshot.
-            allow_non_train: bypass the split guard.  Only for deliberate
-                experiments on a re-split corpus; never for a benchmark run.
+            train: AssayBench records.  ``None`` loads ``yearfold0 == "train"`` from the
+                local parquet snapshot.
+            allow_non_train: bypass the split guard.  Only for deliberate experiments on
+                a re-split corpus (e.g. the train-internal temporal holdout used to
+                select the defaults); never for a benchmark run.
 
         Raises:
             LeakageError: if any record is marked validation or test.
@@ -452,29 +601,21 @@ class StratifiedPrior:
 
         ev_fn = EVIDENCE[self.evidence]
         self.vocab = {}
-        rows: list[tuple[np.ndarray, np.ndarray, Mapping[str, Any]]] = []
+        rows: list[tuple[np.ndarray, np.ndarray, np.ndarray, Mapping[str, Any]]] = []
         for s in train:
-            gi, ev = self._encode_donor(s, ev_fn)
-            rows.append((gi, ev, s))
+            gi, ev, hitv = self._encode_donor(s, ev_fn)
+            rows.append((gi, ev, hitv, s))
         nv = len(self.vocab)
         self.n_train = len(rows)
 
         root_num = np.zeros(nv)
         root_den = np.zeros(nv)
-        measured = np.zeros(nv)
         hits = np.zeros(nv)
-        for gi, ev, s in rows:
+        for gi, ev, hitv, _s in rows:
             np.add.at(root_num, gi, ev)
             np.add.at(root_den, gi, 1.0)
-            np.add.at(measured, gi, 1.0)
-            np.add.at(hits, gi, np.asarray(s["hit"], dtype=bool)[: len(gi)].astype(float)
-                      if len(s["hit"]) == len(gi) else 0.0)
-        # `hit` is per raw symbol; recompute it on the deduped/normalised axis
-        hits = np.zeros(nv)
-        for gi, _ev, s in rows:
-            hv = self._encode_hits(s)
-            np.add.at(hits, gi, hv)
-        self._times_measured = measured
+            np.add.at(hits, gi, hitv)
+        self._times_measured = root_den.copy()
         self._times_hit = hits
         self.pooled_rate = float(root_num.sum() / max(root_den.sum(), 1e-12))
         if not self.measured_denominator:
@@ -485,7 +626,7 @@ class StratifiedPrior:
         for name in self.levels:
             keyfn = LEVEL_KEYS[name]
             cells: dict[tuple, _Cell] = {}
-            for gi, ev, s in rows:
+            for gi, ev, _hitv, s in rows:
                 key = keyfn(s)
                 cell = cells.get(key)
                 if cell is None:
@@ -500,12 +641,12 @@ class StratifiedPrior:
 
         # upstream's coarse-phenotype-hit-freq, for reference and for ensembling
         pheno: dict[str, list[np.ndarray]] = {}
-        for gi, _ev, s in rows:
+        for gi, _ev, hitv, s in rows:
             key = _field(s, "cleaned_phenotype")
             acc = pheno.get(key)
             if acc is None:
                 acc = pheno[key] = [np.zeros(nv), np.zeros(nv)]
-            np.add.at(acc[0], gi, self._encode_hits(s))
+            np.add.at(acc[0], gi, hitv)
             np.add.at(acc[1], gi, 1.0)
         self._pheno_exact = {
             k: np.divide(h, m, out=np.zeros(nv), where=m > 0) for k, (h, m) in pheno.items()
@@ -519,13 +660,18 @@ class StratifiedPrior:
                 f"need {len(self.levels)+1} alphas for {len(self.levels)} level(s), "
                 f"got {len(self.alphas)}"
             )
-        self._score_cache = {}
+        self._cache = {}
         self.fitted = True
         return self
 
-    def _encode_donor(self, s: Mapping[str, Any],
-                      ev_fn: Callable) -> tuple[np.ndarray, np.ndarray]:
-        """Normalised gene indices and evidence for one donor, deduped later-wins."""
+    def _encode_donor(self, s: Mapping[str, Any], ev_fn: Callable
+                      ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Normalised gene indices, evidence and hit flags for one donor.
+
+        Duplicate symbols are collapsed later-wins, exactly as the metric's
+        ``dict(zip(normalized_gt, relevance_scores))`` does, so pooling and scoring
+        agree on what "one gene" means.
+        """
         rel_table: dict[str, float] = {}
         hit_table: dict[str, bool] = {}
         for g, r, h in zip(s["relevance_genes"], s["relevance_scores"], s["hit"]):
@@ -539,23 +685,15 @@ class StratifiedPrior:
         gi = np.fromiter((self.vocab[n] for n in names), dtype=np.int64, count=len(names))
         rel = np.fromiter((rel_table[n] for n in names), dtype=np.float64, count=len(names))
         hit = np.fromiter((hit_table[n] for n in names), dtype=bool, count=len(names))
-        return gi, ev_fn(rel, hit)
-
-    def _encode_hits(self, s: Mapping[str, Any]) -> np.ndarray:
-        """Binary hit vector on the same deduped axis :meth:`_encode_donor` produces."""
-        table: dict[str, bool] = {}
-        for g, h in zip(s["relevance_genes"], s["hit"]):
-            table[self._norm(g)] = bool(h)
-        return np.fromiter((table[n] for n in table), dtype=np.float64, count=len(table))
+        return gi, ev_fn(rel, hit), hit.astype(np.float64)
 
     def _fit_alphas_eb(self, cap: float = 1e5) -> list[float]:
         """Fit one shrinkage strength per level by Beta-Binomial marginal likelihood.
 
         Train only.  Uses the binary hit counts, for which the Beta-Binomial is the
-        exact marginal; non-integer evidence would need a continuous analogue, so the
-        alphas fitted here are reused for whichever evidence is configured.  On the
-        AssayBench train split this returns ``alpha_global ~= 4.8`` and
-        ``alpha_direction ~= 13.0``.
+        exact marginal; non-integer evidence would need a continuous analogue, so these
+        alphas are reused for whichever evidence is configured.  On the AssayBench train
+        split this returns ``[4.805, 13.002, 5.147]`` for the default two-level chain.
         """
         from scipy.optimize import minimize_scalar
         from scipy.special import gammaln
@@ -565,11 +703,10 @@ class StratifiedPrior:
 
         def mle(num: np.ndarray, den: np.ndarray, parent: np.ndarray) -> float:
             m = np.round(den).astype(float)
-            h = np.round(num).astype(float)
+            h = np.minimum(np.round(num).astype(float), m)
             keep = m > 0
             m, h = m[keep], np.clip(h[keep], 0.0, None)
             pi = np.clip(np.asarray(parent, float)[keep], 1e-6, 1 - 1e-6)
-            h = np.minimum(h, m)
 
             def nll(log_a: float) -> float:
                 a = math.exp(log_a)
@@ -584,13 +721,16 @@ class StratifiedPrior:
 
         pooled = float(self._times_hit.sum() / max(self._times_measured.sum(), 1e-12))
         a0 = mle(self._times_hit, self._times_measured, np.full(nv, pooled))
-        parent = _shrink(self._times_hit, self._times_measured, a0, np.full(nv, pooled))
+        parent = _shrink(self._times_hit, self._times_measured, a0, pooled)
         out = [a0]
         for cells in self._cells:
-            nums = np.concatenate([c.num for c in cells.values()]) if cells else np.zeros(0)
-            dens = np.concatenate([c.den for c in cells.values()]) if cells else np.zeros(0)
-            pars = np.concatenate([parent] * len(cells)) if cells else np.zeros(0)
-            out.append(mle(nums, dens, pars) if cells else 0.0)
+            if not cells:
+                out.append(0.0)
+                continue
+            nums = np.concatenate([c.num for c in cells.values()])
+            dens = np.concatenate([c.den for c in cells.values()])
+            pars = np.concatenate([parent] * len(cells))
+            out.append(mle(nums, dens, pars))
         return out
 
     # -- scoring ----------------------------------------------------------- #
@@ -599,86 +739,125 @@ class StratifiedPrior:
         if not self.fitted:
             raise RuntimeError("StratifiedPrior.fit() must be called first (train only)")
 
-    def _global_vector(self) -> np.ndarray:
+    def _global_vector(self, alpha: float) -> np.ndarray:
         assert self._root is not None
-        key = ("global",)
-        got = self._score_cache.get(key)
+        key = ("global", alpha)
+        got = self._cache.get(key)
         if got is None:
-            nv = len(self._times_measured)  # type: ignore[arg-type]
-            got = _shrink(self._root.num, self._root.den, self.alphas[0],
-                          np.full(nv, self.pooled_rate))
-            self._score_cache[key] = got
+            got = _shrink(self._root.num, self._root.den, alpha, self.pooled_rate)
+            self._cache[key] = got
         return got
 
     def _level_vector(self, screen: Mapping[str, Any], depth: int) -> np.ndarray:
         """Hierarchy estimate after shrinking through the first ``depth`` levels."""
         chain = tuple(LEVEL_KEYS[name](screen) for name in self.levels[:depth])
         key = ("level", depth, chain)
-        got = self._score_cache.get(key)
+        got = self._cache.get(key)
         if got is not None:
             return got
-        cur = self._global_vector()
+        cur = self._global_vector(self.alphas[0])
         for lv in range(depth):
             cell = self._cells[lv].get(chain[lv])
             if cell is None or cell.n_donors < self.min_donors:
                 continue
             cur = _shrink(cell.num, cell.den, self.alphas[lv + 1], cur)
-        self._score_cache[key] = cur
+        self._cache[key] = cur
         return cur
 
     def _pheno_exact_vector(self, screen: Mapping[str, Any]) -> np.ndarray:
         got = self._pheno_exact.get(_field(screen, "cleaned_phenotype"))
         if got is None:
             m, h = self._times_measured, self._times_hit
-            got = np.divide(h, m, out=np.zeros(len(m)), where=m > 0)  # type: ignore[arg-type]
+            assert m is not None and h is not None
+            got = np.divide(h, m, out=np.zeros(len(m)), where=m > 0)
         return got
 
     def feature_vectors(self, screen: Mapping[str, Any]) -> dict[str, np.ndarray]:
-        """All features for one screen as vocab-length vectors (the fast path)."""
+        """All features for one screen as vocab-length vectors (the fast path).
+
+        Reads ``phenotype`` and the other :data:`LEVEL_KEYS` fields.  Never touches
+        ``relevance_scores`` or ``hit`` on the passed screen.
+        """
         self._require()
-        m = self._times_measured
-        h = self._times_hit
+        m, h = self._times_measured, self._times_hit
         assert m is not None and h is not None
         nv = len(m)
-        glob = self._global_vector()
         depth = len(self.levels)
+        base = self._global_vector(self.base_alpha)
+        glob = self._global_vector(self.alphas[0])
         stratum = self._level_vector(screen, depth)
-        dirn_only = self._level_vector(screen, 1) if depth >= 1 else glob
+        dirn = self._level_vector(screen, 1) if depth >= 1 else glob
 
         mir = mirror_screen(screen)
         if mir is None:
-            stratum_opp = np.zeros(nv)
-            dirn_opp = np.zeros(nv)
+            # `either` / `impacts` / `na` screens have no opposite direction.  The
+            # neutral value is the unstratified base, not 0 -- a 0 would read as
+            # "never a hit anywhere" to a downstream ranker.
+            stratum_opp = base
+            dirn_opp = base
         else:
             stratum_opp = self._level_vector(mir, depth)
             dirn_opp = self._level_vector(mir, 1) if depth >= 1 else glob
 
-        if self.either_union and direction_of(screen) in ("either", "impacts", "na"):
-            lo = self._level_vector(mirror_screen(screen, "decreases"), depth)
-            hi = self._level_vector(mirror_screen(screen, "increases"), depth)
-            base = 0.5 * (lo + hi)
-            contrast = base - self.lift_weight * glob
+        d = direction_of(screen)
+        if d in self.contrast_directions and mir is not None:
+            own = (stratum if self.contrast_own_depth is None
+                   else self._level_vector(screen, self.contrast_own_depth))
+            directed = own - self.contrast_weight * stratum_opp
+        elif d in ("either", "impacts") and self.either_contrast_weight:
+            directed = stratum - self.either_contrast_weight * base
         else:
-            base = stratum
-            contrast = base - self.contrast_weight * stratum_opp - self.lift_weight * glob
+            directed = base
+
+        # The symmetric variant, for the ablation: contrast on every screen that has an
+        # opposite direction at all, i.e. `dec` as well as `inc`.  Screens with no
+        # opposite keep the plain stratum estimate, exactly as measured.
+        contrast_sym = (stratum - self.contrast_weight * stratum_opp
+                        if mir is not None else stratum)
 
         return {
+            "prior_directed": directed,
             "prior_global_raw": np.divide(h, m, out=np.zeros(nv), where=m > 0),
+            "prior_global": base,
             "prior_pheno_exact": self._pheno_exact_vector(screen),
-            "prior_global": glob,
-            "prior_direction": dirn_only,
+            "prior_direction": dirn,
             "prior_direction_opposite": dirn_opp,
             "prior_stratum": stratum,
             "prior_stratum_opposite": stratum_opp,
-            "prior_lift": stratum - self.lift_weight * glob,
-            "prior_contrast": contrast,
+            "prior_contrast_sym": contrast_sym,
             "gene_log_times_measured": np.log1p(m),
             "gene_never_hit": ((m >= _NEVER_HIT_MIN_MEASURED) & (h == 0)).astype(np.float64),
         }
 
     def gene_index(self, gene: str) -> int:
-        """Vocab index for a symbol, or ``-1`` when the train split never saw it."""
+        """Vocab index for a symbol, or ``-1`` when the train split never assayed it."""
+        self._require()
         return self.vocab.get(self._norm(gene), -1)
+
+    def _out_of_vocab(self, name: str, screen: Mapping[str, Any]) -> float:
+        """Value for a gene the train split never assayed, for this screen.
+
+        Every prior backs off to its own parent estimate rather than to a hard 0, so an
+        unseen gene sits mid-ranking instead of at the bottom.  A gene with zero counts
+        everywhere shrinks to the pooled rate at every level, so the fallback is the
+        pooled rate put through the same arithmetic the screen's branch uses -- which is
+        why this has to know the screen's direction.
+        """
+        p = self.pooled_rate
+        if name in ("prior_global_raw", "prior_pheno_exact",
+                    "gene_log_times_measured", "gene_never_hit"):
+            return 0.0
+        d = direction_of(screen)
+        has_mirror = d in _FLIP_VERB
+        if name == "prior_directed":
+            if d in self.contrast_directions and has_mirror:
+                return p * (1.0 - self.contrast_weight)
+            if d in ("either", "impacts") and self.either_contrast_weight:
+                return p * (1.0 - self.either_contrast_weight)
+            return p
+        if name == "prior_contrast_sym":
+            return p * (1.0 - self.contrast_weight) if has_mirror else p
+        return p
 
     def transform(
         self,
@@ -688,32 +867,31 @@ class StratifiedPrior:
         """``{dataset_name: {gene_symbol: {feature_name: value}}}``.
 
         Keys are each screen's own symbols exactly as they appear in
-        ``relevance_genes`` (so the caller can rank the screen's library directly);
-        the lookup itself happens on the normalized symbol.  Genes the train split
-        never assayed fall back to the parent estimate, which is finite and
-        well-defined, never 0-by-accident.
+        ``relevance_genes`` (so the caller can rank the screen's library directly); the
+        lookup itself happens on the normalized symbol, and symbols that normalize
+        together appear once.
 
-        Labels are not read: only ``dataset_name``, ``relevance_genes`` and the
-        metadata fields in :data:`LEVEL_KEYS` are touched.
+        Labels are not read: only ``dataset_name``, ``relevance_genes`` and the metadata
+        fields in :data:`LEVEL_KEYS`.  Safe on validation and test records.
+
+        For large libraries prefer :meth:`transform_dense`, which holds the same values
+        in about 1% of the memory.
         """
         self._require()
-        names = list(features) if features is not None else list(FEATURE_NAMES)
-        unknown = [n for n in names if n not in FEATURE_NAMES]
-        if unknown:
-            raise ValueError(f"unknown feature(s) {unknown}")
+        names = self._check_features(features)
         out: dict[str, dict[str, dict[str, float]]] = {}
         for s in screens:
             vecs = self.feature_vectors(s)
             idx, genes = self._library_index(s)
-            per_gene: dict[str, dict[str, float]] = {}
+            fb = {n: self._out_of_vocab(n, s) for n in names}
             cols = {n: vecs[n] for n in names}
+            per_gene: dict[str, dict[str, float]] = {}
             for pos, gene in enumerate(genes):
-                j = idx[pos]
+                j = int(idx[pos])
                 if j >= 0:
                     per_gene[gene] = {n: float(v[j]) for n, v in cols.items()}
                 else:
-                    per_gene[gene] = {n: float(_OUT_OF_VOCAB[n](self, vecs))
-                                      for n in names}
+                    per_gene[gene] = dict(fb)
             out[str(s["dataset_name"])] = per_gene
         return out
 
@@ -722,21 +900,20 @@ class StratifiedPrior:
     ) -> dict[str, tuple[list[str], np.ndarray]]:
         """``{dataset_name: (gene_symbols, array[n_genes, n_features])}``.
 
-        Same values as :meth:`transform` without the per-gene dicts -- use this when
-        feeding a ranker, where the dict form costs ~100x the memory.
+        Same values and column order as :meth:`transform`; use this when feeding a
+        ranker.  Column order is ``features`` if given, else :data:`FEATURE_NAMES`.
         """
         self._require()
-        names = list(features) if features is not None else list(FEATURE_NAMES)
+        names = self._check_features(features)
         out: dict[str, tuple[list[str], np.ndarray]] = {}
         for s in screens:
             vecs = self.feature_vectors(s)
             idx, genes = self._library_index(s)
+            safe = np.maximum(idx, 0)
+            known = idx >= 0
             mat = np.empty((len(genes), len(names)), dtype=np.float64)
             for c, n in enumerate(names):
-                v = vecs[n]
-                fb = float(_OUT_OF_VOCAB[n](self, vecs))
-                col = np.where(idx >= 0, v[np.maximum(idx, 0)], fb)
-                mat[:, c] = col
+                mat[:, c] = np.where(known, vecs[n][safe], self._out_of_vocab(n, s))
             out[str(s["dataset_name"])] = (genes, mat)
         return out
 
@@ -744,55 +921,43 @@ class StratifiedPrior:
              k: int | None = 100, seed: int = 42) -> list[str]:
         """The screen's own library ranked by one feature, best first.
 
-        Library-restricted by construction, which is a real structural advantage
-        under this metric: a gene outside the screen's library consumes a top-100
-        slot and is then deleted by the condensed evaluation.
+        Library-restricted by construction, which is a real structural advantage under
+        this metric: a predicted gene outside the screen's library consumes a top-100
+        slot and is then deleted by the condensed evaluation, so a library-restricted
+        predictor gets 100 scoring slots where an unrestricted one gets fewer.
 
-        Ties are broken by a fixed permutation of the vocabulary (seeded, so runs
-        are reproducible) rather than by symbol order, which would otherwise give
-        alphabetically-early genes a systematic edge.
+        Ties are broken by a fixed permutation of the library (seeded, so runs are
+        reproducible) rather than by input order, which would otherwise hand a
+        systematic edge to whatever order the parquet happens to store.
         """
         self._require()
         vecs = self.feature_vectors(screen)
         idx, genes = self._library_index(screen)
         v = vecs[feature]
-        fb = float(_OUT_OF_VOCAB[feature](self, vecs))
-        score = np.where(idx >= 0, v[np.maximum(idx, 0)], fb)
-        rng = np.random.default_rng(seed)
-        jitter = rng.permutation(len(genes)).astype(np.float64)
+        score = np.where(idx >= 0, v[np.maximum(idx, 0)],
+                         self._out_of_vocab(feature, screen))
+        jitter = np.random.default_rng(seed).permutation(len(genes)).astype(np.float64)
         order = np.lexsort((jitter, -score))
         if k is not None:
             order = order[:k]
         return [genes[i] for i in order]
 
+    def _check_features(self, features: Iterable[str] | None) -> list[str]:
+        names = list(features) if features is not None else list(FEATURE_NAMES)
+        unknown = [n for n in names if n not in FEATURE_NAMES]
+        if unknown:
+            raise ValueError(f"unknown feature(s) {unknown}; choose from {FEATURE_NAMES}")
+        return names
+
     def _library_index(self, s: Mapping[str, Any]) -> tuple[np.ndarray, list[str]]:
-        """Deduped library symbols (raw spelling) and their vocab indices."""
+        """Deduped library symbols (raw spelling, first occurrence) and vocab indices."""
         seen: dict[str, str] = {}
         for g in s["relevance_genes"]:
-            n = self._norm(g)
-            seen.setdefault(n, g)
+            seen.setdefault(self._norm(g), g)
         genes = list(seen.values())
         idx = np.fromiter((self.vocab.get(self._norm(g), -1) for g in genes),
                           dtype=np.int64, count=len(genes))
         return idx, genes
-
-
-#: Value used for a gene the train split never assayed, per feature.  Every prior
-#: backs off to the relevant parent estimate rather than to a hard 0.
-_OUT_OF_VOCAB: dict[str, Callable[[StratifiedPrior, dict[str, np.ndarray]], float]] = {
-    "prior_global_raw": lambda p, v: 0.0,
-    "prior_pheno_exact": lambda p, v: 0.0,
-    "prior_global": lambda p, v: p.pooled_rate,
-    "prior_direction": lambda p, v: p.pooled_rate,
-    "prior_direction_opposite": lambda p, v: p.pooled_rate,
-    "prior_stratum": lambda p, v: p.pooled_rate,
-    "prior_stratum_opposite": lambda p, v: p.pooled_rate,
-    "prior_lift": lambda p, v: p.pooled_rate * (1.0 - p.lift_weight),
-    "prior_contrast": lambda p, v: p.pooled_rate * (
-        1.0 - p.contrast_weight - p.lift_weight),
-    "gene_log_times_measured": lambda p, v: 0.0,
-    "gene_never_hit": lambda p, v: 0.0,
-}
 
 
 # --------------------------------------------------------------------------- #
@@ -809,22 +974,23 @@ def screen_gene_priors(
     """Prior features for a list of AssayBench screen records.
 
     Args:
-        screens: records to featurise.  Only ``dataset_name``, ``relevance_genes``
-            and metadata are read -- never ``relevance_scores`` or ``hit``.  Safe to
-            call on validation or test records.
+        screens: records to featurise.  Only ``dataset_name``, ``relevance_genes`` and
+            metadata are read -- never ``relevance_scores`` or ``hit``.  Safe to call on
+            validation or test records.
         train: fitting corpus.  ``None`` loads the ``train`` split from the local
             parquet snapshot.  Non-train records raise :class:`LeakageError`.
         features: subset of :data:`FEATURE_NAMES`; ``None`` means all of them.
-        dense: return ``{name: (genes, array)}`` instead of nested dicts.
-        **config: overrides for :class:`StratifiedPrior` (see
-            :data:`DEFAULT_CONFIG`), e.g. ``alphas="eb"`` for untuned shrinkage.
+        dense: return ``{dataset_name: (genes, array)}`` instead of nested dicts.
+        **config: overrides for :class:`StratifiedPrior` (see :data:`DEFAULT_CONFIG`),
+            e.g. ``alphas="eb"`` for untuned shrinkage or
+            ``contrast_directions=("inc", "dec")`` for the symmetric variant.
 
     Returns:
         ``{dataset_name: {gene_symbol: {feature_name: value}}}``, or the dense form.
 
     Deterministic: the same records and config always produce the same floats.
     """
-    prior = StratifiedPrior(**{**{k: v for k, v in DEFAULT_CONFIG.items()}, **config})
+    prior = StratifiedPrior(**{**DEFAULT_CONFIG, **config})
     prior.fit(train)
     return (prior.transform_dense(screens, features) if dense
             else prior.transform(screens, features))
@@ -834,70 +1000,96 @@ def screen_gene_priors(
 # self-check
 # --------------------------------------------------------------------------- #
 
-def _validation_andcg(prior: StratifiedPrior, feature: str,
-                      screens: Sequence[Mapping[str, Any]]) -> np.ndarray:
-    """Per-screen AnDCG@100 using the upstream metric, never a reimplementation."""
+def validation_andcg(prior: StratifiedPrior, feature: str,
+                     screens: Sequence[Mapping[str, Any]], k: int = 100) -> np.ndarray:
+    """Per-screen AnDCG@k from the upstream metric -- never a reimplementation."""
     from assaybench.benchmark.metrics import RankingMetrics
 
-    metric = RankingMetrics(k_values=[100], metric_groups=["adjusted_ndcg"])
+    metric = RankingMetrics(k_values=[k], metric_groups=["adjusted_ndcg"])
     vals = []
     for s in screens:
-        genes = prior.rank(s, feature=feature, k=100)
-        res = metric.evaluate(predicted_genes=genes,
+        res = metric.evaluate(predicted_genes=prior.rank(s, feature=feature, k=k),
                               ground_truth_genes=s["relevance_genes"],
                               relevance_scores=s["relevance_scores"])
-        vals.append(res["adjusted_ndcg@100"])
+        vals.append(res[f"adjusted_ndcg@{k}"])
     return np.asarray(vals, dtype=np.float64)
+
+
+def _paired(a: np.ndarray, b: np.ndarray, seed: int = 0, n: int = 10000):
+    d = a - b
+    rng = np.random.default_rng(seed)
+    boot = d[rng.integers(0, len(d), size=(n, len(d)))].mean(axis=1)
+    lo, hi = np.percentile(boot, [2.5, 97.5])
+    try:
+        from scipy.stats import wilcoxon
+
+        p = float(wilcoxon(a, b, zero_method="wilcox").pvalue)
+    except Exception:                                            # pragma: no cover
+        p = float("nan")
+    return float(d.mean()), float(lo), float(hi), p
 
 
 def _main() -> int:
     from splicr.assaybench_io import load_split
 
-    print("splicr.features.priors -- self-check (validation only, test never loaded)")
+    print("splicr.features.priors -- self-check (validation only; test never loaded)")
     train = load_split(TRAIN_SPLIT)
     val = load_split("validation")
     print(f"  train {len(train)} screens, validation {len(val)} screens")
 
     prior = StratifiedPrior().fit(train)
-    print(f"  evidence={prior.evidence} levels={prior.levels} alphas={prior.alphas} "
-          f"contrast={prior.contrast_weight} lift={prior.lift_weight}")
-    print(f"  vocabulary {len(prior.vocab)} genes, pooled rate {prior.pooled_rate:.5f}")
+    print(f"  config: evidence={prior.evidence} levels={prior.levels} "
+          f"alphas={prior.alphas} base_alpha={prior.base_alpha:g}")
+    print(f"          contrast={prior.contrast_weight:g} on {prior.contrast_directions}")
+    print(f"  vocabulary {len(prior.vocab)} genes, pooled hit rate {prior.pooled_rate:.5f}")
 
     order = ["prior_global_raw", "prior_pheno_exact", "prior_global", "prior_direction",
-             "prior_stratum", "prior_lift", "prior_contrast"]
+             "prior_stratum", "prior_contrast_sym", "prior_directed"]
     per: dict[str, np.ndarray] = {}
     for name in order:
-        per[name] = _validation_andcg(prior, name, val)
-        print(f"    {name:<26} validation AnDCG@100 = {per[name].mean():.5f}")
+        per[name] = validation_andcg(prior, name, val)
+        print(f"    {name:<24} validation AnDCG@100 = {per[name].mean():.5f}")
 
-    best = max(per, key=lambda n: per[n].mean())
+    best = max(per, key=lambda n: float(per[n].mean()))
     print(f"\n  BEST SINGLE FEATURE: {best}  validation AnDCG@100 = {per[best].mean():.5f}")
     if best != BEST_FEATURE:
-        print(f"  NOTE: BEST_FEATURE is declared as {BEST_FEATURE!r}")
+        print(f"  NOTE: BEST_FEATURE is declared as {BEST_FEATURE!r} "
+              f"({per[BEST_FEATURE].mean():.5f}); it is the pre-registered choice and was "
+              "selected on validation AND the train-internal temporal holdout, so a "
+              "validation-only winner here does not override it.")
 
-    ref = per["prior_global_raw"]
-    d = per[best] - ref
-    rng = np.random.default_rng(0)
-    boot = d[rng.integers(0, len(d), size=(10000, len(d)))].mean(axis=1)
-    lo, hi = np.percentile(boot, [2.5, 97.5])
-    try:
-        from scipy.stats import wilcoxon
+    d, lo, hi, p = _paired(per[BEST_FEATURE], per["prior_global_raw"])
+    print(f"  {BEST_FEATURE} vs upstream global-hit-freq: delta={d:+.5f} "
+          f"95% CI [{lo:+.5f}, {hi:+.5f}]  Wilcoxon p={p:.3e}")
+    d, lo, hi, p = _paired(per[BEST_FEATURE], per["prior_pheno_exact"])
+    print(f"  {BEST_FEATURE} vs upstream coarse-phenotype:  delta={d:+.5f} "
+          f"95% CI [{lo:+.5f}, {hi:+.5f}]  Wilcoxon p={p:.3e}")
 
-        p = float(wilcoxon(per[best], ref, zero_method="wilcox").pvalue)
-    except Exception:                                        # pragma: no cover
-        p = float("nan")
-    print(f"  vs upstream global-hit-freq: delta={d.mean():+.5f} "
-          f"95% CI [{lo:+.5f}, {hi:+.5f}] Wilcoxon p={p:.3e}")
-    print(f"  screens clamped to 0 by the metric: {int((per[best] == 0).sum())}/{len(val)}")
+    dirs = np.array([direction_of(s) for s in val])
+    print("\n  per-direction breakdown (this is where the family's gain lives)")
+    for g in ("dec", "inc", "either", "impacts", "na"):
+        m = dirs == g
+        if not m.any():
+            continue
+        print(f"    {g:<9} n={int(m.sum()):>4}  ours={per[BEST_FEATURE][m].mean():.5f}  "
+              f"upstream={per['prior_global_raw'][m].mean():.5f}")
+    print(f"  screens the metric clamps to 0: "
+          f"{int((per[BEST_FEATURE] == 0).sum())}/{len(val)}")
 
-    dense = prior.transform_dense(val[:3])
     nested = prior.transform(val[:1])
     name0 = str(val[0]["dataset_name"])
     g0 = next(iter(nested[name0]))
-    print(f"  transform() sample: {name0} / {g0} -> "
-          f"{ {k: round(v, 5) for k, v in nested[name0][g0].items()} }")
-    print(f"  transform_dense() shapes: "
-          f"{[(k, v[1].shape) for k, v in dense.items()]}")
+    print(f"\n  transform() sample: {name0} / {g0}")
+    for kk, vv in nested[name0][g0].items():
+        print(f"      {kk:<26} {vv:+.6f}")
+    dense = prior.transform_dense(val[:3])
+    print(f"  transform_dense() shapes: {[(k, v[1].shape) for k, v in dense.items()]}")
+
+    # determinism
+    again = StratifiedPrior().fit(train).transform(val[:1])
+    same = all(abs(again[name0][g][f] - nested[name0][g][f]) == 0.0
+               for g in nested[name0] for f in FEATURE_NAMES)
+    print(f"  determinism (refit + retransform bit-identical): {same}")
     return 0
 
 

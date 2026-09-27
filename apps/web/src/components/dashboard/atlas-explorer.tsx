@@ -8,7 +8,8 @@
  * Three of the four selects did nothing. Only `library` reached the filter, so a
  * reader could set Organism to Mouse, watch a list of human screens stay exactly
  * where it was, and conclude the Atlas had no mouse screens. All four filter now,
- * and the list says how many rows a filter removed.
+ * they filter from the query string so a filtered corpus can be sent to somebody
+ * else, and the panel says how many rows a filter removed.
  *
  * "Validated elsewhere" printed "3 of 4 re-tests" or "0 of 2 re-tests" from
  * `chance > 0.6`, which is the model's own score wearing the clothes of an
@@ -18,10 +19,13 @@
  *
  * The KPI row read as facts about a real corpus on a page with no sample-data
  * label, and one of the four was a roadmap target rendered as a measurement.
+ *
+ * The corpus is a list of screens a reader compares, so it is a table on the
+ * console's one dense table, not a stack of list items: eight columns that all
+ * sort beats two lines of prose per row that sort not at all.
  */
 
-import { Info, Search } from "lucide-react";
-import { useId, useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import {
   ATLAS_HITS_WITH_OUTCOMES,
@@ -29,33 +33,80 @@ import {
   ATLAS_SCREENS_TOTAL,
   atlasScreensList,
   demoHits,
+  type AtlasScreen,
 } from "@/lib/mock/data";
 import { formatNumber } from "@/lib/utils";
 
-import { Card, Chance, Kpi } from "./ui";
+import { DefRow, SampleNote } from "./console";
+import { FilterBar, FilterField, useUrlSort, useUrlState, type Cell } from "./console-controls";
+import {
+  DenseTable,
+  Empty,
+  FootNote,
+  KpiStrip,
+  KpiTile,
+  PageHeader,
+  Panel,
+  PanelSelect,
+  SortTh,
+} from "./ui";
 
+/**
+ * The four facets, each with the query-string key it writes to. They are in the
+ * body rather than the header because a panel header holds one control, and
+ * because four selects on one line is the affordance a reader is looking for.
+ */
 const FILTERS = {
   organism: { label: "Organism", options: ["Any", "Human", "Mouse"] },
   modality: { label: "Modality", options: ["Any", "Knockout", "CRISPRi", "CRISPRa"] },
-  library: { label: "Library", options: ["Any", "Brunello", "GeCKOv2", "TKOv3", "Avana", "Dolcetto", "Calabrese", "Brie"] },
-  source: { label: "Source", options: ["Any", "BioGRID ORCS", "DepMap", "Project Score", "GEO/SRA re-run"] },
+  library: {
+    label: "Library",
+    options: ["Any", "Brunello", "GeCKOv2", "TKOv3", "Avana", "Dolcetto", "Calabrese", "Brie"],
+  },
+  source: {
+    label: "Source",
+    options: ["Any", "BioGRID ORCS", "DepMap", "Project Score", "GEO/SRA re-run"],
+  },
 } as const;
 
 type FilterKey = keyof typeof FILTERS;
 
 const ANY = "Any";
 
+/** One cell reader, so a column sorts on exactly the value it prints. */
+const cellOf = (screen: AtlasScreen, key: string): Cell => {
+  switch (key) {
+    case "title":
+      return screen.title;
+    case "source":
+      return screen.source;
+    case "model":
+      return screen.cellLine;
+    case "organism":
+      return screen.organism;
+    case "modality":
+      return screen.modality;
+    case "library":
+      return screen.library;
+    case "phenotype":
+      return screen.phenotype;
+    case "year":
+      return screen.year;
+    default:
+      return null;
+  }
+};
+
 export function AtlasExplorer() {
-  const [gene, setGene] = useState("");
-  const [sel, setSel] = useState<Record<FilterKey, string>>({
-    organism: ANY,
-    modality: ANY,
-    library: ANY,
-    source: ANY,
-  });
-  const geneId = useId();
-  const filterIdBase = useId();
-  const hit = useMemo(() => demoHits.find((h) => h.gene.toLowerCase() === gene.trim().toLowerCase()), [gene]);
+  const { get, set } = useUrlState();
+  const gene = get("gene");
+  const selected = (key: FilterKey) => get(key, ANY);
+
+  const hit = useMemo(
+    () => demoHits.find((h) => h.gene.toLowerCase() === gene.trim().toLowerCase()),
+    [gene],
+  );
+
   // Taken from the demo table rather than written into the placeholder, so the
   // symbols it suggests are always symbols the search can actually find.
   const examples = useMemo(
@@ -68,148 +119,210 @@ export function AtlasExplorer() {
     [],
   );
 
+  const organism = selected("organism");
+  const modality = selected("modality");
+  const library = selected("library");
+  const source = selected("source");
+
   const rows = useMemo(
     () =>
       atlasScreensList.filter(
         (a) =>
-          (sel.organism === ANY || a.organism === sel.organism) &&
-          (sel.modality === ANY || a.modality === sel.modality) &&
-          (sel.library === ANY || a.library.startsWith(sel.library)) &&
-          (sel.source === ANY || a.source === sel.source),
+          (organism === ANY || a.organism === organism) &&
+          (modality === ANY || a.modality === modality) &&
+          (library === ANY || a.library.startsWith(library)) &&
+          (source === ANY || a.source === source),
       ),
-    [sel],
+    [organism, modality, library, source],
   );
 
-  return (
-    <div className="space-y-4">
-      <p className="flex items-start gap-2 rounded-2xl border border-orange-100 bg-orange-50 px-4 py-3 text-sm text-orange-700">
-        <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-        <span>
-          Sample data. The corpus figures below and the {atlasScreensList.length} screens listed are invented to show
-          the layout. The Atlas is not built yet, so none of this is a count of anything.
-        </span>
-      </p>
+  const { sorted, sortProps } = useUrlSort(rows, { key: "year", dir: "desc" }, cellOf);
+  const hidden = atlasScreensList.length - sorted.length;
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Kpi label="Screens indexed" value={formatNumber(ATLAS_SCREENS_TOTAL)} hint="BioGRID ORCS, DepMap and re-runs" />
-        {/* A target is not a measurement, so it is labelled as one rather than
-            sitting in the hint slot beside a figure that reads as progress. */}
-        <Kpi
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <PageHeader
+        dense
+        title="Atlas"
+        body="Public CRISPR screens, re-run through one pipeline, plus the record of which hits held up."
+      />
+      <SampleNote>
+        Sample data. The corpus figures and the {atlasScreensList.length} screens listed are invented
+        to show the layout. The Atlas is not built yet, so none of this is a count of anything.
+      </SampleNote>
+
+      <KpiStrip
+        title="Corpus"
+        count={`${formatNumber(ATLAS_SCREENS_TOTAL)} screens indexed`}
+        footer={<FootNote>Monthly refresh. Last one Sep 2026, from the sample manifest</FootNote>}
+      >
+        <KpiTile
+          label="Screens indexed"
+          value={formatNumber(ATLAS_SCREENS_TOTAL)}
+          denominator="metadata only"
+          definition="BioGRID ORCS, DepMap and Project Score records."
+        />
+        {/* A target is not a measurement, so it says which it is beside the figure
+            rather than in a hint below a number that reads as progress. */}
+        <KpiTile
           label="Re-run from raw reads"
           value={formatNumber(ATLAS_RERUN_FROM_RAW)}
-          hint={`Target for Atlas v0 is 50 to 100. That is a plan, not a count.`}
+          denominator={`of ${formatNumber(ATLAS_SCREENS_TOTAL)}`}
+          definition="Atlas v0 target is 50 to 100. A plan, not a count."
           tone="cyan"
         />
-        <Kpi label="Hits with a logged outcome" value={formatNumber(ATLAS_HITS_WITH_OUTCOMES)} hint="Pilot answer key" tone="orange" />
-        <Kpi label="Last refresh" value="Sep 2026" hint="Monthly" />
-      </div>
+        <KpiTile
+          label="Hits with a logged outcome"
+          value={formatNumber(ATLAS_HITS_WITH_OUTCOMES)}
+          denominator="pilot answer key"
+          definition="Re-tests recorded against an indexed hit."
+          tone="orange"
+        />
+        <KpiTile
+          label="Screens in the sample list"
+          value={formatNumber(atlasScreensList.length)}
+          denominator={`${formatNumber(sorted.length)} shown`}
+          definition="The only rows this build can actually browse."
+        />
+      </KpiStrip>
 
-      <div className="grid lg:grid-cols-[1fr_1.3fr] gap-4">
-        <Card title="Gene history" subtitle="How often a gene was called, and in how many screens that assayed it">
-          <label htmlFor={geneId} className="block text-xs uppercase tracking-[0.06em] text-muted">
-            Gene symbol
-          </label>
-          <div className="mt-1.5 flex items-center gap-3 rounded-full border border-line px-4 py-2 focus-within:border-cyan-500">
-            <Search className="w-4 h-4 text-muted" aria-hidden="true" />
-            <input
-              id={geneId}
-              type="search"
-              value={gene}
-              onChange={(e) => setGene(e.target.value)}
-              placeholder={`Try ${examples}`}
-              className="w-full outline-none text-sm text-ink"
-            />
-          </div>
+      {/* The corpus is the page. Gene history sits beside it rather than above,
+          because a reader arrives either to browse or to look one symbol up and
+          neither question should push the other off the screen. */}
+      <div className="grid min-h-0 grid-cols-12 gap-4 lg:flex-1 lg:grid-rows-[minmax(0,1fr)]">
+        <Panel
+          span={8}
+          className="min-h-[340px]"
+          title="Screens in the Atlas"
+          count={`${formatNumber(sorted.length)} of ${formatNumber(atlasScreensList.length)} listed`}
+          body="flush"
+          footer={
+            <>
+              <FootNote>
+                Sample manifest. Source, library and year are the record&apos;s own fields
+              </FootNote>
+              <span aria-live="polite" className="num shrink-0">
+                {hidden === 0 ? "No filter applied" : `${formatNumber(hidden)} hidden by these filters`}
+              </span>
+            </>
+          }
+        >
+          {/* Wraps below sm: four selects squeezed into 343px is four selects
+              nobody can read the options of. */}
+          <FilterBar className="h-auto min-h-9 flex-wrap gap-1.5 py-1.5 sm:h-9 sm:flex-nowrap sm:py-0">
+            {(Object.keys(FILTERS) as FilterKey[]).map((key) => (
+              <PanelSelect
+                key={key}
+                label={FILTERS[key].label}
+                value={selected(key)}
+                onChange={(event) =>
+                  set({ [key]: event.target.value === ANY ? null : event.target.value })
+                }
+                className="min-w-0 flex-1"
+              >
+                {FILTERS[key].options.map((option) => (
+                  <option key={option} value={option}>
+                    {option === ANY ? `${FILTERS[key].label}: any` : option}
+                  </option>
+                ))}
+              </PanelSelect>
+            ))}
+          </FilterBar>
+
+          <DenseTable minWidth={880}>
+            <caption className="sr-only">
+              Sample Atlas screens, sortable by any column heading.
+            </caption>
+            <thead>
+              <tr>
+                <SortTh label="Screen" {...sortProps("title")} />
+                <SortTh label="Source" {...sortProps("source")} />
+                <SortTh label="Model" {...sortProps("model")} />
+                <SortTh label="Organism" {...sortProps("organism")} />
+                <SortTh label="Modality" {...sortProps("modality")} />
+                <SortTh label="Library" {...sortProps("library")} />
+                <SortTh label="Phenotype" {...sortProps("phenotype")} />
+                <SortTh label="Year" align="right" {...sortProps("year", "desc")} />
+              </tr>
+            </thead>
+            <tbody>
+              {sorted.map((screen) => (
+                <tr key={screen.id}>
+                  {/* The title is the row's identity and the accession is the key
+                      a reader quotes, so the accession is the cell's title rather
+                      than a column of its own. */}
+                  <td className="max-w-[300px] truncate text-ink" title={`${screen.title} (${screen.id})`}>
+                    {screen.title}
+                  </td>
+                  <td className="text-muted">{screen.source}</td>
+                  <td>{screen.cellLine}</td>
+                  <td>{screen.organism}</td>
+                  <td>{screen.modality}</td>
+                  <td>{screen.library}</td>
+                  <td className="text-body">{screen.phenotype}</td>
+                  <td className="num-col">{screen.year}</td>
+                </tr>
+              ))}
+              {sorted.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="px-4 py-8 text-center text-muted">
+                    No screen in the sample list matches these filters.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </DenseTable>
+        </Panel>
+
+        <Panel
+          span={4}
+          className="min-h-[300px] [animation-delay:60ms]"
+          title="Gene history"
+          count={hit ? hit.gene : `${formatNumber(demoHits.length)} genes searchable`}
+          footer={
+            <FootNote>
+              Counted in the sample hit table for the demo screen, not in the corpus
+            </FootNote>
+          }
+          bodyClassName="py-3"
+        >
+          <FilterField
+            label="Gene symbol"
+            value={gene}
+            onChange={(value) => set({ gene: value })}
+            placeholder={`Gene symbol, for instance ${examples}`}
+          />
+
           {hit ? (
-            <div className="mt-5">
-              <div className="flex items-center justify-between">
-                <div className="text-2xl text-ink font-medium">{hit.gene}</div>
-                <Chance value={hit.chance} />
-              </div>
-              <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                <div className="rounded-xl bg-mist-soft p-3">
-                  <dt className="text-xs text-muted">Called in</dt>
-                  <dd className="text-ink font-medium">
-                    {hit.atlasHits} of {formatNumber(hit.atlasScreens)} screens that assayed it
-                  </dd>
-                </div>
-                <div className="rounded-xl bg-mist-soft p-3">
-                  <dt className="text-xs text-muted">Frequent hitter</dt>
-                  <dd className="text-ink font-medium">
-                    {hit.flags.includes("Frequent hitter") ? "Yes" : "No"}
-                  </dd>
-                </div>
-                <div className="rounded-xl bg-mist-soft p-3">
-                  <dt className="text-xs text-muted">Re-tests recorded elsewhere</dt>
-                  <dd className="text-ink font-medium">Not recorded</dd>
-                </div>
-                <div className="rounded-xl bg-mist-soft p-3">
-                  <dt className="text-xs text-muted">Contexts</dt>
-                  <dd className="text-ink font-medium">Not recorded</dd>
-                </div>
-              </dl>
-              <p className="mt-3 text-xs text-muted">
-                The per-screen breakdown, the cell contexts and other labs&apos; re-tests are what the Atlas is being
-                built to hold. The sample dataset carries a count and nothing else, so nothing else is shown rather than
-                being derived from this screen&apos;s own score.
+            <div className="mt-3">
+              <DefRow
+                term="Called in"
+                value={`${hit.atlasHits} of ${formatNumber(hit.atlasScreens)}`}
+                note="Screens that assayed this gene"
+              />
+              <DefRow
+                term="Frequent hitter"
+                value={hit.flags.includes("Frequent hitter") ? "Yes" : "No"}
+                note="Called in an implausible share of unrelated screens"
+                tone={hit.flags.includes("Frequent hitter") ? "orange" : "ink"}
+              />
+              <DefRow term="Re-tests elsewhere" value="Not recorded" note="Not in this dataset" />
+              <DefRow term="Cell contexts" value="Not recorded" note="Not in this dataset" />
+              <p className="mt-2 text-[11px] leading-snug text-muted">
+                The per-screen breakdown, the cell contexts and other labs&apos; re-tests are what
+                the Atlas is being built to hold. The sample dataset carries a count and nothing
+                else, so nothing else is shown rather than being derived from this screen&apos;s own
+                score.
               </p>
             </div>
           ) : (
-            <p className="mt-4 text-sm text-muted">Type a gene symbol from the demo screen to see its history.</p>
+            <Empty
+              className="mt-3"
+              title={gene === "" ? "No gene looked up yet" : `No record for ${gene.trim()}`}
+              body={`Type a symbol from the demo screen, for instance ${examples}.`}
+            />
           )}
-        </Card>
-
-        <Card title="Browse screens">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-            {(Object.keys(FILTERS) as FilterKey[]).map((key) => (
-              // The label is a sibling with htmlFor rather than a wrapper: a
-              // label that wraps a select has every option folded into the
-              // control's accessible name, so a screen reader reads
-              // "Organism Any Human Mouse" as the name of the field.
-              <div key={key}>
-                <label
-                  htmlFor={`${filterIdBase}-${key}`}
-                  className="block text-xs uppercase tracking-[0.06em] text-muted"
-                >
-                  {FILTERS[key].label}
-                </label>
-                <select
-                  id={`${filterIdBase}-${key}`}
-                  value={sel[key]}
-                  onChange={(e) => setSel((s) => ({ ...s, [key]: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-line px-3 py-2 text-sm bg-white text-ink"
-                >
-                  {FILTERS[key].options.map((o) => (
-                    <option key={o} value={o}>
-                      {o}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ))}
-          </div>
-          {rows.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted">No screen in the sample list matches these filters.</p>
-          ) : (
-            <ul className="divide-y divide-line">
-              {rows.map((a) => (
-                <li key={a.id} className="py-3 flex items-start justify-between gap-4">
-                  <div>
-                    <div className="text-ink font-medium">{a.title}</div>
-                    <div className="text-xs text-muted mt-0.5">
-                      {a.id} · {a.source} · {a.cellLine} · {a.organism} · {a.modality} · {a.library} · {a.year}
-                    </div>
-                  </div>
-                  <span className="chip text-xs bg-mist-soft shrink-0">{a.phenotype}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-          <p aria-live="polite" className="mt-3 text-xs text-muted">
-            Showing {rows.length} of the {atlasScreensList.length} screens in the sample list. Browsing the full corpus
-            arrives with the Atlas API.
-          </p>
-        </Card>
+        </Panel>
       </div>
     </div>
   );

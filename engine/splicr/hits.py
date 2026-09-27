@@ -20,13 +20,24 @@ import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .config import BAGEL_DIR, DRUGZ_DIR, SETTINGS, tool_env
+from .config import BAGEL_DIR, DRUGZ_DIR, SETTINGS, HitThresholds, tool_env
 from .count import CountMatrix
-from .references import Library
+from .references import Library, essentials
 
 
 class ToolError(RuntimeError):
     pass
+
+
+class InvertedContrastError(ValueError):
+    """
+    The contrast was run upside down: the library reference on the numerator.
+
+    Raised after the callers have run, from the results themselves, because it
+    is detectable there with no metadata at all. Every core essential gene
+    comes out ENRICHED, which is a publication-shaped answer that happens to be
+    exactly backwards, and shipping it is worse than stopping.
+    """
 
 
 def _run(cmd: list[str], cwd: Path, what: str) -> subprocess.CompletedProcess:
@@ -80,6 +91,73 @@ class GeneResult:
 
 
 @dataclass
+class DirectionCheck:
+    """
+    Which way the known-essential genes moved.
+
+    Measured, not assumed: n_essential is how many CEGv2 core essential genes
+    reached significance at all, and enriched is how many of those came out on
+    the enriched side. Both None-free; when n_essential is too small to mean
+    anything, `powered` is False and nothing is concluded from it.
+    """
+
+    n_essential: int
+    enriched: int
+    depleted: int
+    powered: bool
+    inverted: bool
+    suspicious: bool
+    examples: list[str] = field(default_factory=list)
+
+    @property
+    def enriched_share(self) -> float | None:
+        return self.enriched / self.n_essential if self.n_essential else None
+
+    def as_dict(self) -> dict:
+        share = self.enriched_share
+        return {"n_essential_significant": self.n_essential,
+                "enriched": self.enriched, "depleted": self.depleted,
+                "enriched_share": None if share is None else round(share, 4),
+                "powered": self.powered, "inverted": self.inverted,
+                "suspicious": self.suspicious, "examples": self.examples}
+
+
+def essential_direction(
+    genes: dict[str, GeneResult],
+    taxid: int = 9606,
+    fdr: float = 0.1,
+    thresholds: HitThresholds = SETTINGS.hits,
+) -> DirectionCheck:
+    """
+    Sign test on the core essential genes that reached significance.
+
+    A correctly oriented screen depletes them or leaves them alone. Only an
+    inverted contrast enriches them as a class, because the reference pool
+    contains every guide and the endpoint has lost the ones that mattered.
+    """
+    ess = essentials(taxid)
+    hit = [g for g in genes.values()
+           if g.gene in ess and g.fdr is not None and g.fdr < fdr]
+    enriched = [g for g in hit if g.direction == "enriched"]
+    depleted = [g for g in hit if g.direction != "enriched"]
+    n = len(hit)
+    powered = n >= thresholds.min_essentials_for_direction
+    share = (len(enriched) / n) if n else 0.0
+    return DirectionCheck(
+        n_essential=n,
+        enriched=len(enriched),
+        depleted=len(depleted),
+        powered=powered,
+        inverted=powered and share >= thresholds.inverted_enriched_share,
+        suspicious=powered and thresholds.suspicious_enriched_share <= share
+                   < thresholds.inverted_enriched_share,
+        # Named so the message is checkable rather than just assertive.
+        examples=[g.gene for g in sorted(
+            enriched, key=lambda g: (g.fdr if g.fdr is not None else 1.0))[:8]],
+    )
+
+
+@dataclass
 class HitTable:
     genes: dict[str, GeneResult]
     methods: list[str]
@@ -87,6 +165,7 @@ class HitTable:
     treatment: list[str]
     control: list[str]
     warnings: list[str] = field(default_factory=list)
+    direction: DirectionCheck | None = None
 
     def ranked(self, by: str = "fdr", limit: int | None = None) -> list[GeneResult]:
         def key(g: GeneResult):
@@ -368,6 +447,7 @@ def call_hits(
     run_mle: bool = False,
     run_bagel: bool = True,
     run_drug: bool = False,
+    allow_inverted: bool = False,
 ) -> HitTable:
     """
     Run every applicable caller and merge.
@@ -375,7 +455,27 @@ def call_hits(
     A caller that fails does not abort the run: its failure is recorded as a
     warning and the remaining methods still produce a table. Losing BAGEL2 is
     much better than losing the whole screen.
+
+    Before returning, the known-essential genes are checked for which way they
+    moved, and an inverted contrast raises InvertedContrastError unless the
+    caller passes allow_inverted. That check needs no metadata, which is the
+    point: it catches a swapped --treatment/--control even when the sample
+    roles were never supplied.
     """
+    if not treatment:
+        raise ValueError(
+            "call_hits was given no treatment sample. MAGeCK is handed '-t ' with "
+            "nothing after it and exits 255 with a log tail that names MAGeCK rather "
+            "than the empty contrast."
+        )
+    if not control:
+        raise ValueError("call_hits was given no control sample.")
+    missing = [s for s in list(treatment) + list(control) if s not in matrix.samples]
+    if missing:
+        raise ValueError(
+            f"contrast names sample(s) {missing}, which are not columns of the count "
+            f"matrix. Its samples are {matrix.samples}."
+        )
     workdir.mkdir(parents=True, exist_ok=True)
     counts_file = matrix.to_mageck_tsv(workdir / "counts.txt")
 
@@ -413,6 +513,25 @@ def call_hits(
         except ToolError as exc:
             warnings.append(f"DrugZ did not run: {exc}")
 
+    direction = essential_direction(genes, library.taxid)
+    if direction.inverted and not allow_inverted:
+        raise InvertedContrastError(
+            f"the contrast looks inverted: {direction.enriched} of "
+            f"{direction.n_essential} significant CEGv2 core essential genes came out "
+            f"ENRICHED, only {direction.depleted} depleted "
+            f"(e.g. {', '.join(direction.examples[:6])}). Core essential genes cannot be "
+            "enriched by a real perturbation; they read that way when the library "
+            f"reference is on the numerator. Requested -t {','.join(treatment)} "
+            f"-c {','.join(control)}; try it the other way round. Pass "
+            "allow_inverted=True to score it as stated anyway."
+        )
+    if direction.suspicious:
+        warnings.append(
+            f"{direction.enriched} of {direction.n_essential} significant core essential "
+            "genes came out enriched, more than a correctly oriented screen produces. "
+            "Check that --treatment and --control are the way round you meant."
+        )
+
     return HitTable(
         genes=genes,
         methods=methods,
@@ -420,4 +539,5 @@ def call_hits(
         treatment=treatment,
         control=control,
         warnings=warnings,
+        direction=direction,
     )

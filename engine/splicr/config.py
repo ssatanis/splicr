@@ -110,8 +110,40 @@ class QcThresholds:
     # Originally defined with mean/SD at -1.0; Chronos moved it to median/MAD.
     nnmd_max: float = -1.25
 
-    # DepMap residual-LFC replicate correlation floor.
-    replicate_r_min: float = 0.19
+    # DepMap's residual-LFC replicate correlation floor, applied to replicate
+    # agreement in LOG FOLD CHANGE against the screen's library reference.
+    #
+    # This threshold used to be applied to the Pearson r of raw log counts,
+    # which is a different and much larger quantity: a healthy screen reads
+    # 0.84-0.98 there, so a 0.19 floor only fired once a replicate was about
+    # 80% noise. Log counts are dominated by how abundant each guide was in the
+    # pool, which every sample of a screen shares whatever happened in the
+    # experiment; the fold change is what carries the experiment.
+    replicate_lfc_r_min: float = 0.19
+
+    # Floor on the raw log-count Pearson r, kept as a coarse backstop for
+    # screens with no library reference, where no fold change can be formed.
+    # Our own convention, not a published threshold: measured healthy screens
+    # sit at 0.98 (synthetic Brunello triplicate), 0.90 (GSE145743 DMSO pair)
+    # and 0.85 (GSE145743 olaparib pair), so 0.50 is far below anything real
+    # and is deliberately not the sensitive check.
+    replicate_r_min: float = 0.50
+
+    # How far one arm's agreement with its peers may fall below the agreement
+    # its peers have with each other before the arm is called an outlier. Our
+    # own convention. This is the check with the power: a sample swap, index
+    # hopping and a mispipetted arm all present as one arm disagreeing with
+    # peers that agree with each other, and an absolute floor cannot see that
+    # at all. Measured on a genome-wide Brunello triplicate: 0.00 gap with
+    # untouched replicates, 0.20 with 20% of one arm's guide counts permuted.
+    replicate_peer_gap_max: float = 0.10
+
+    # Least share of the group's median essential-gene separation (NNMD) that
+    # one arm must retain. Our own convention, and the reason it exists is that
+    # it works with two replicates, where no peer-gap comparison is possible:
+    # an arm that has lost half its dropout signal relative to its siblings did
+    # not run the same experiment they did.
+    arm_nnmd_fraction_min: float = 0.50
 
     # A replicate losing this share of guides relative to the screen median is
     # treated as bottlenecked and down-weighted.
@@ -123,6 +155,26 @@ class QcThresholds:
     # read fraction, which must stay under 0.1. Set relative rather than
     # absolute because the baseline rate depends on the PCR protocol.
     anchor_rate_drop: float = 0.20
+
+
+@dataclass(frozen=True)
+class HitThresholds:
+    """Thresholds for sanity checks on a finished hit table."""
+
+    # An inverted contrast (the library reference on the numerator side) calls
+    # core essential genes ENRICHED, because they are present in the reference
+    # and gone by the endpoint. These two numbers decide when that pattern is
+    # called out. Our own convention, and the reasoning is in the shape of the
+    # alternative: in any correctly oriented screen the significant core
+    # essentials sit on the depleted side, so an enriched share anywhere near a
+    # half is not a noisy screen, it is an upside-down one. 20 genes is the
+    # smallest count at which the sign test has any power; below it a drug
+    # screen that simply moves no essential genes would be misread.
+    min_essentials_for_direction: int = 20
+    inverted_enriched_share: float = 0.60
+    # Below the inversion bar but still more enrichment of essentials than a
+    # correctly oriented screen produces: reported, not refused.
+    suspicious_enriched_share: float = 0.30
 
 
 @dataclass(frozen=True)
@@ -163,6 +215,7 @@ class ArtifactThresholds:
 class Settings:
     count: CountConfig = field(default_factory=CountConfig)
     qc: QcThresholds = field(default_factory=QcThresholds)
+    hits: HitThresholds = field(default_factory=HitThresholds)
     artifacts: ArtifactThresholds = field(default_factory=ArtifactThresholds)
 
     @property

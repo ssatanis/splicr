@@ -11,6 +11,11 @@ reference implementation:
   2019 definition used mean and SD with a -1.0 cutoff.
 - The 90th/10th percentile skew ratio with a limit of 10 comes from Joung
   et al. 2017, not from Broad GPP as is often claimed.
+- Replicate agreement is measured on guide-level log fold change against the
+  library reference, which is the quantity DepMap's 0.19 floor is about. The
+  same number applied to raw log counts is nearly powerless: replicates of an
+  arm sit at 0.84-0.98 there whatever happened to them, because every sample of
+  a screen inherits the same guide abundance from the pool.
 """
 
 from __future__ import annotations
@@ -21,6 +26,7 @@ from dataclasses import dataclass, field
 
 from .config import SETTINGS, QcThresholds
 from .count import CountMatrix
+from .design import REFERENCE_ROLES, looks_like_baseline
 from .references import Library, essentials, nonessentials
 
 Verdict = str  # "pass" | "warn" | "fail"
@@ -270,7 +276,21 @@ def sample_qc(
 class ReplicatePair:
     a: str
     b: str
-    r: float
+    r: float                        # Pearson r of log counts
+    r_lfc: float | None = None      # Pearson r of guide LFC vs the reference
+    role: str = ""
+
+    @property
+    def best(self) -> float:
+        """
+        The correlation to judge this pair on.
+
+        Log fold change when the screen has a library reference to form one
+        against, log counts otherwise. Log counts are dominated by the shared
+        abundance of the pool rather than by anything the experiment did, so
+        they are the fallback, not the measure.
+        """
+        return self.r if self.r_lfc is None else self.r_lfc
 
 
 @dataclass
@@ -287,6 +307,15 @@ class ScreenQc:
     n_nonessential_found: int
     bottlenecked: list[str]
     verdict: Verdict
+    # NNMD of each endpoint arm on its own against the library reference. A
+    # screen-level NNMD pools the arms, so one arm that lost its dropout signal
+    # is invisible in it; per arm it is obvious, and this works with two
+    # replicates where nothing about peer agreement can be computed.
+    # None with a reason when there is no reference to measure against.
+    nnmd_by_arm: dict[str, float | None] = field(default_factory=dict)
+    # Arms whose agreement or dropout signal disagrees with their siblings.
+    suspect_arms: list[str] = field(default_factory=list)
+    nnmd_reason: str | None = None
     notes: list[str] = field(default_factory=list)
 
     def as_dict(self) -> dict:
@@ -294,12 +323,18 @@ class ScreenQc:
             "verdict": self.verdict,
             "nnmd": None if self.nnmd is None else round(self.nnmd, 3),
             "nnmd_contrast": self.nnmd_contrast,
+            "nnmd_reason": self.nnmd_reason,
+            "nnmd_by_arm": {k: (None if v is None else round(v, 3))
+                            for k, v in self.nnmd_by_arm.items()},
             "auroc": None if self.auroc is None else round(self.auroc, 4),
             "n_essential_found": self.n_essential_found,
             "n_nonessential_found": self.n_nonessential_found,
             "bottlenecked": self.bottlenecked,
+            "suspect_arms": self.suspect_arms,
             "replicate_correlations": [
-                {"a": p.a, "b": p.b, "r": round(p.r, 4)} for p in self.replicate_pairs
+                {"a": p.a, "b": p.b, "role": p.role, "r": round(p.r, 4),
+                 "r_lfc": None if p.r_lfc is None else round(p.r_lfc, 4)}
+                for p in self.replicate_pairs
             ],
             "samples": [s.as_dict() for s in self.samples],
             "notes": self.notes,
@@ -342,6 +377,43 @@ def gene_log_fold_changes(
         per_gene.setdefault(gene, []).append(math.log2((t + 1.0) / (c + 1.0)))
 
     return {g: st.median(v) for g, v in per_gene.items()}
+
+
+def guide_lfc_vs_reference(
+    matrix: CountMatrix,
+    reference: list[str],
+) -> dict[str, list[float]]:
+    """
+    Per-sample guide-level log2 fold change against a reference pool.
+
+    Returns sample -> one value per REPRESENTED guide, in a fixed guide order
+    so two samples' lists are directly comparable. Guides with no reads
+    anywhere are dropped: they were never in the experiment, and a long run of
+    identical zeros inflates any correlation computed over them, which is the
+    other half of why replicate agreement on raw counts looked healthy no
+    matter what.
+
+    Size factors are median-ratio, so a difference in sequencing depth between
+    replicates does not become a difference in fold change.
+    """
+    idx = {s: i for i, s in enumerate(matrix.samples)}
+    ref_idx = [idx[s] for s in reference if s in idx]
+    if not ref_idx:
+        return {}
+    factors = median_ratio_size_factors(matrix)
+    rows = [row for row in matrix.matrix if any(row)]
+    if not rows:
+        return {}
+
+    out: dict[str, list[float]] = {}
+    ref_norm = [st.fmean([row[j] / factors[j] for j in ref_idx]) for row in rows]
+    for sample, j in idx.items():
+        if sample in reference:
+            continue
+        f = factors[j]
+        out[sample] = [math.log2((row[j] / f + 1.0) / (r + 1.0))
+                      for row, r in zip(rows, ref_norm)]
+    return out
 
 
 def auroc(positives: list[float], negatives: list[float]) -> float:
@@ -415,17 +487,43 @@ def dropout_contrast(
     t0 = [s for s, r in roles.items() if r == "reference"]
     reference = plasmid or t0
 
+    def is_endpoint(sample: str) -> bool:
+        """
+        Could this sample be the late arm of a dropout contrast?
+
+        Two exclusions, both of which cost a real screen when they were
+        missing. A sample carrying a reference role is the denominator, never
+        the numerator. And a sample NAMED like the screen's earliest timepoint
+        is not an endpoint whatever role it was given: writing --role T0=control
+        instead of --role T0=reference used to make QC measure T0 against
+        plasmid, find no dropout because none has happened yet, and fail a
+        genome-wide screen that reads NNMD -15 on its real endpoint. The name is
+        evidence about the sample that the role field can contradict, and when
+        the two disagree the conservative reading is to keep the sample out of
+        the numerator; screen_qc says so in a note.
+        """
+        if roles.get(sample) in REFERENCE_ROLES:
+            return False
+        return not looks_like_baseline(sample)
+
     # The role decides what counts as an endpoint, not the contrast lists. In a
     # dropout screen the T0 arms are passed as the control side of the contrast
     # while carrying the "reference" role, and measuring T0 against plasmid
     # finds no dropout because none has happened yet. In a drug screen the
     # untreated arm carries the "control" role and is the arm we want, because
     # it measures the screen without the drug's own effect.
-    endpoint = [s for s in (control or []) if roles.get(s) == "control"]
+    endpoint = [s for s in (control or []) if roles.get(s) == "control" and is_endpoint(s)]
     if not endpoint:
-        endpoint = [s for s in (treatment or []) if roles.get(s) == "treatment"]
+        endpoint = [s for s in (treatment or [])
+                    if roles.get(s) == "treatment" and is_endpoint(s)]
     if not endpoint:
-        endpoint = [s for s, r in roles.items() if r in ("control", "treatment")]
+        endpoint = [s for s, r in roles.items()
+                    if r in ("control", "treatment") and is_endpoint(s)]
+    # Last resort: the contrast lists, whatever roles say. Reached when every
+    # endpoint-roled sample is named like a baseline, which is a contradiction
+    # the caller should already have been told about.
+    if not endpoint:
+        endpoint = [s for s in (treatment or []) + (control or []) if is_endpoint(s)]
 
     if not reference or not endpoint:
         return endpoint, [], "none available"
@@ -443,22 +541,6 @@ def screen_qc(
 ) -> ScreenQc:
     samples = [sample_qc(matrix, s, roles.get(s, "treatment"), thresholds) for s in matrix.samples]
 
-    # Replicate agreement on log counts, for samples sharing a role.
-    pairs: list[ReplicatePair] = []
-    by_role: dict[str, list[str]] = {}
-    for s in matrix.samples:
-        by_role.setdefault(roles.get(s, "treatment"), []).append(s)
-    for role, group in by_role.items():
-        for i in range(len(group)):
-            for j in range(i + 1, len(group)):
-                pairs.append(
-                    ReplicatePair(
-                        group[i], group[j],
-                        pearson(log_counts(matrix.column(group[i])),
-                                log_counts(matrix.column(group[j]))),
-                    )
-                )
-
     # NNMD and AUROC measure whether the screen killed the genes it should have,
     # so both need a DROPOUT contrast: an endpoint arm against the library
     # reference. Measuring them on treatment against control gives roughly zero
@@ -470,11 +552,24 @@ def screen_qc(
     lfc = gene_log_fold_changes(matrix, dropout_t, dropout_c) if dropout_c else {}
     value, n_ess, n_non, nnmd_reason = nnmd(lfc, library.taxid)
     if not dropout_c:
-        nnmd_reason = (
-            "no plasmid or T0 reference sample was supplied, and a treatment against "
-            "control contrast cancels essentiality out, so there is nothing to measure "
-            "separation against"
-        )
+        # Say what is actually missing. This message used to assert that no
+        # plasmid or T0 sample was supplied even when both were, because the
+        # caller had labelled them with a role that is not a reference role,
+        # which blamed the user for an omission they had not made.
+        supplied = sorted({r for r in roles.values()}) or ["none"]
+        if not dropout_t:
+            nnmd_reason = (
+                "every sample in this screen is named or roled as a library reference, "
+                "so there is no endpoint arm to measure dropout in"
+            )
+        else:
+            nnmd_reason = (
+                "no sample carries the 'plasmid' or 'reference' role, so the screen has "
+                "no library reference to measure dropout against; the roles present are "
+                f"{', '.join(supplied)}. A treatment against control contrast cancels "
+                "essentiality out, so it cannot stand in. Pass --role <label>=plasmid "
+                "for the plasmid pool or --role <label>=reference for a T0 sample"
+            )
 
     area = None
     if lfc:
@@ -483,6 +578,93 @@ def screen_qc(
         neg = [-v for g, v in lfc.items() if g in non]
         if pos and neg:
             area = auroc(pos, neg)
+
+    # --- replicate agreement ------------------------------------------------
+    # Two quantities per pair. Log counts are what the pair used to be judged
+    # on alone, and they are nearly uninformative: every sample of a screen
+    # inherits the same lognormal guide abundance from the pool, so replicates
+    # of an arm correlate at 0.84-0.98 on log counts whatever happened to them,
+    # and a replicate with 40% of its guide counts randomly permuted still read
+    # 0.50 and passed. Log fold change against the library reference removes
+    # that shared abundance and leaves what the experiment did.
+    lfc_by_sample = guide_lfc_vs_reference(matrix, dropout_c) if dropout_c else {}
+    pairs: list[ReplicatePair] = []
+    by_role: dict[str, list[str]] = {}
+    for s in matrix.samples:
+        by_role.setdefault(roles.get(s, "treatment"), []).append(s)
+    for role, group in by_role.items():
+        for i in range(len(group)):
+            for j in range(i + 1, len(group)):
+                a, b = group[i], group[j]
+                r_lfc = None
+                if a in lfc_by_sample and b in lfc_by_sample:
+                    r_lfc = pearson(lfc_by_sample[a], lfc_by_sample[b])
+                pairs.append(
+                    ReplicatePair(
+                        a, b,
+                        pearson(log_counts(matrix.column(a)), log_counts(matrix.column(b))),
+                        r_lfc=r_lfc,
+                        role=role,
+                    )
+                )
+
+    # --- per-arm essential dropout -----------------------------------------
+    # NNMD of each endpoint arm on its own. The pooled screen-level NNMD hides
+    # an arm that lost its dropout signal, and unlike peer agreement this works
+    # with two replicates, which is what most labs run.
+    nnmd_by_arm: dict[str, float | None] = {}
+    if dropout_c:
+        for label in dropout_t:
+            arm_lfc = gene_log_fold_changes(matrix, [label], dropout_c)
+            nnmd_by_arm[label] = nnmd(arm_lfc, library.taxid)[0]
+
+    # --- arms that disagree with their siblings ----------------------------
+    # A sample swap, index hopping, a mispipetted arm and a scrambled
+    # demultiplex all look the same from here: one arm disagrees with peers that
+    # agree with each other. An absolute correlation floor cannot see that, so
+    # the comparison is to the peers.
+    suspect: dict[str, list[str]] = {}
+
+    def suspect_note(label: str, msg: str) -> None:
+        suspect.setdefault(label, []).append(msg)
+
+    for role, group in by_role.items():
+        if len(group) < 3:
+            continue
+        per_arm = {s: [p for p in pairs if p.role == role and s in (p.a, p.b)]
+                   for s in group}
+        for label, own in per_arm.items():
+            peers = [p for p in pairs
+                     if p.role == role and label not in (p.a, p.b)]
+            if not own or not peers:
+                continue
+            own_r = st.median([p.best for p in own])
+            peer_r = st.median([p.best for p in peers])
+            if peer_r - own_r > thresholds.replicate_peer_gap_max:
+                kind = "log fold change" if own[0].r_lfc is not None else "log counts"
+                suspect_note(
+                    label,
+                    f"agrees with its {role} replicates at r={own_r:.2f} on {kind} while "
+                    f"they agree with each other at r={peer_r:.2f}. A gap that way round "
+                    "is what a swapped, mislabelled or mispipetted sample looks like"
+                )
+
+    for role, group in by_role.items():
+        measured = {s: v for s, v in nnmd_by_arm.items() if s in group and v is not None}
+        if len(measured) < 2:
+            continue
+        med = st.median(measured.values())
+        if med >= 0:
+            continue    # no dropout anywhere in this group; the screen-level
+                        # NNMD note already covers that
+        for label, v in measured.items():
+            if v > med * thresholds.arm_nnmd_fraction_min:
+                suspect_note(
+                    label,
+                    f"separates essentials from nonessentials at NNMD {v:.2f} while its "
+                    f"{role} siblings median {med:.2f}. It kept "
+                    f"{max(0.0, v / med):.0%} of their dropout signal"
+                )
 
     # Bottleneck: a sample losing far more guides than its peers.
     median_zero = st.median([s.zero_fraction for s in samples]) if samples else 0.0
@@ -543,10 +725,43 @@ def screen_qc(
             "amplicon, so its effective depth is lower than its read count suggests."
         )
 
-    for p in pairs:
-        if p.r < thresholds.replicate_r_min:
+    # A sample whose role contradicts its name. QC has already kept it out of
+    # the dropout endpoint; this is where the lab is told, because the fix is in
+    # their metadata and not in the numbers.
+    for s in samples:
+        if looks_like_baseline(s.label) and s.role not in REFERENCE_ROLES:
             verdicts.append("warn")
-            notes.append(f"Replicates {p.a} and {p.b} correlate at r={p.r:.2f}.")
+            notes.append(
+                f"{s.label} is named like the library reference but carries role "
+                f"'{s.role}'. It is excluded from the dropout endpoint, which is "
+                f"measured on {dropout_label}. Give it --role {s.label}=reference "
+                "(or =plasmid) to make the design explicit."
+            )
+
+    for p in pairs:
+        if p.r_lfc is not None and p.r_lfc < thresholds.replicate_lfc_r_min:
+            verdicts.append("warn")
+            notes.append(
+                f"Replicates {p.a} and {p.b} agree at r={p.r_lfc:.2f} on guide log fold "
+                f"change against {dropout_label.split(' vs ')[-1]}, below DepMap's "
+                f"{thresholds.replicate_lfc_r_min} floor: they carry almost no shared "
+                "signal."
+            )
+        elif p.r_lfc is None and p.r < thresholds.replicate_r_min:
+            # No reference in this design, so no fold change exists to compare.
+            # The log-count floor is all that is left and it is coarse.
+            verdicts.append("warn")
+            notes.append(
+                f"Replicates {p.a} and {p.b} correlate at r={p.r:.2f} on log counts. "
+                "This screen has no library reference, so replicate agreement cannot "
+                "be measured on fold change, which is the sensitive version of this "
+                "check."
+            )
+
+    for label in sorted(suspect):
+        verdicts.append("warn")
+        for msg in suspect[label]:
+            notes.append(f"{label} {msg}.")
 
     for label in bottlenecked:
         verdicts.append("warn")
@@ -565,5 +780,8 @@ def screen_qc(
         n_nonessential_found=n_non,
         bottlenecked=bottlenecked,
         verdict=worst(*verdicts) if verdicts else "pass",
+        nnmd_by_arm=nnmd_by_arm,
+        suspect_arms=sorted(suspect),
+        nnmd_reason=nnmd_reason,
         notes=notes,
     )

@@ -1,4 +1,28 @@
-import { Check, CircleDashed, Clock, Loader2, XCircle } from "lucide-react";
+/**
+ * The console's visual system.
+ *
+ * Two eras live in this file. `Card`, `Kpi` and the badges below are the first
+ * pass, still used by the settings and validation pages. Everything under
+ * "Console panels" is the system the overview is built from: one `Panel`, one
+ * dense table, one KPI tile, one status chip. There is deliberately no second
+ * container and no variant that is really a different component, because the
+ * thing that made the old overview read as a pile of sections was that every
+ * block invented its own rectangle.
+ *
+ * Nothing here uses a hook, so a Server Component can render a Panel directly.
+ */
+
+import {
+  ArrowUpRight,
+  Check,
+  ChevronDown,
+  ChevronsUpDown,
+  ChevronUp,
+  CircleDashed,
+  Clock,
+  Loader2,
+  XCircle,
+} from "lucide-react";
 import Link from "next/link";
 
 import type { ScreenStatus, StageStatus, Verdict } from "@/lib/mock/data";
@@ -42,13 +66,40 @@ export function Kpi({ label, value, hint, tone = "ink" }: { label: string; value
   );
 }
 
-export function PageHeader({ eyebrow, title, body, actions }: { eyebrow?: string; title: React.ReactNode; body?: React.ReactNode; actions?: React.ReactNode }) {
+export function PageHeader({ eyebrow, title, body, actions, dense = false }: {
+  eyebrow?: string;
+  title: React.ReactNode;
+  body?: React.ReactNode;
+  actions?: React.ReactNode;
+  /**
+   * One line, no bottom margin, for a page that has to fit on one screen. The
+   * 4xl heading and its paragraph cost 145px of a 687px budget on the overview,
+   * which is a fifth of the fold spent restating the page's own name.
+   */
+  dense?: boolean;
+}) {
   return (
-    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
-      <div>
-        {eyebrow && <div className="eyebrow mb-2">{eyebrow}</div>}
-        <h1 className="text-3xl md:text-4xl text-ink font-medium tracking-tight">{title}</h1>
-        {body && <p className="mt-2 text-body max-w-2xl">{body}</p>}
+    <div
+      className={cn(
+        "flex justify-between gap-4",
+        dense
+          ? "min-w-0 flex-row flex-wrap items-center gap-x-4 gap-y-2"
+          : "mb-6 flex-col gap-4 md:flex-row md:items-end",
+      )}
+    >
+      <div className={cn(dense && "flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1")}>
+        {eyebrow && !dense && <div className="eyebrow mb-2">{eyebrow}</div>}
+        <h1
+          className={cn(
+            "font-medium tracking-tight text-ink",
+            dense ? "truncate text-lg leading-tight" : "text-3xl md:text-4xl",
+          )}
+        >
+          {title}
+        </h1>
+        {body && (
+          <p className={cn("text-body", dense ? "min-w-0 text-xs" : "mt-2 max-w-2xl")}>{body}</p>
+        )}
       </div>
       {/* Wraps, because a header with two actions ran off the right edge of a
           375px viewport where the page cannot scroll sideways to reach it. */}
@@ -168,16 +219,680 @@ export function Tabs({ tabs, active, hrefFor, label = "Sections" }: { tabs: { ke
   );
 }
 
-export function Empty({ title, body, action }: { title: string; body?: string; action?: React.ReactNode }) {
+/**
+ * The empty state. Sized to sit inside a Panel body rather than to fill a page:
+ * the old 40px padding and 24px radius made an empty panel taller than the same
+ * panel with rows in it, which is the wrong way round.
+ */
+export function Empty({ title, body, action, className }: {
+  title: string;
+  body?: string;
+  action?: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <div className="rounded-3xl border border-dashed border-line-strong p-10 text-center">
-      <div className="text-ink font-medium">{title}</div>
-      {body && <p className="text-sm text-muted mt-1 max-w-sm mx-auto">{body}</p>}
-      {action && <div className="mt-4">{action}</div>}
+    <div
+      className={cn(
+        "flex flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-line-strong px-4 py-6 text-center",
+        className,
+      )}
+    >
+      <div className="text-[13px] font-medium text-ink">{title}</div>
+      {body && <p className="mx-auto max-w-sm text-xs text-muted">{body}</p>}
+      {action && <div className="mt-2">{action}</div>}
     </div>
   );
 }
 
 export function Flag({ label }: { label: string }) {
   return <span className="inline-flex rounded-md bg-orange-50 text-orange-700 px-2 py-0.5 text-[11px] whitespace-nowrap">{label}</span>;
+}
+
+// ===========================================================================
+// Console panels
+//
+// Every rectangle on a console page is a Panel. Panels are separated by the one
+// value step between the canvas behind them and the white inside them, plus a
+// 1px line, and by nothing else: a shadow on a static panel is what makes a
+// grid of twelve panels look like twelve stickers. --shadow-float stays
+// reserved for things that overlay the page.
+//
+// A Panel has no hover state. Panels are not buttons. A panel that navigates
+// somewhere does it through a named control in its header or footer.
+// ===========================================================================
+
+/**
+ * The only widths a panel may take. Twelve, eight, six, four or three columns
+ * of the page's twelve, and full width below md, because two 3-column panels
+ * side by side on a phone is four characters per line.
+ */
+export type PanelSpan = 12 | 8 | 6 | 4 | 3;
+
+const PANEL_SPAN: Record<PanelSpan, string> = {
+  12: "col-span-12",
+  // A two-thirds panel beside a third. Written out in full for the same reason
+  // the others are: Tailwind only emits a class that appears literally in a
+  // file, so a span composed at runtime produces no CSS at all.
+  8: "col-span-12 lg:col-span-8",
+  6: "col-span-12 md:col-span-6",
+  4: "col-span-12 md:col-span-6 lg:col-span-4",
+  3: "col-span-12 md:col-span-6 xl:col-span-3",
+};
+
+/** The page grid every console page lays its panels on. */
+export const PANEL_GRID = "grid grid-cols-12 content-start gap-4";
+
+/**
+ * The span classes, for the rare cell that is not a Panel: a column that stacks
+ * two panels, for instance. Go through this rather than writing the classes by
+ * hand. A width outside the set, `lg:col-span-7`, compiles to nothing at all
+ * because no file mentions it, and the cell silently falls back to full width
+ * and pushes its neighbour onto a second row. That failure is invisible in the
+ * markup and obvious only when you measure.
+ */
+export function panelSpan(span: PanelSpan): string {
+  return PANEL_SPAN[span];
+}
+
+/** A column of panels occupying one span of the page grid. */
+export function PanelStack({ span = 6, className, children }: {
+  span?: PanelSpan;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={cn("flex min-h-0 flex-col gap-4", PANEL_SPAN[span], className)}>{children}</div>
+  );
+}
+
+export function Panel({
+  title,
+  count,
+  control,
+  footer,
+  body = "pad",
+  span = 12,
+  className,
+  bodyClassName,
+  children,
+}: {
+  title: React.ReactNode;
+  /**
+   * The panel's denominator, beside the title. Always spelled out with its
+   * unit: "1,284 genes", never "1,284". It is not a control and never sits in
+   * the control slot.
+   */
+  count?: React.ReactNode;
+  /**
+   * At most one, right aligned, from the closed set below: Segmented,
+   * SegmentedLinks, PanelSelect, PanelAction, PanelLink. Never an orange button
+   * (orange is the page's one primary action), never a search field (the shell
+   * owns search), never a second control.
+   */
+  control?: React.ReactNode;
+  /**
+   * Present in exactly two cases: the panel shows a figure whose definition,
+   * units, precision, denominator or provenance is not already written in the
+   * body, or the panel shows rows and therefore owes the reader an export.
+   */
+  footer?: React.ReactNode;
+  /** `flush` when the child draws its own gutter, which a DenseTable does. */
+  body?: "pad" | "flush";
+  span?: PanelSpan;
+  className?: string;
+  bodyClassName?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section
+      // A string title names the region, so a screen reader user can jump
+      // between panels instead of walking a dense table to reach the next one.
+      aria-label={typeof title === "string" ? title : undefined}
+      className={cn(
+        // min-h-0 as well as min-w-0: a Panel is often a flex child of a
+        // PanelStack, and without it the panel refuses to shrink below its
+        // content and pushes the fixed shell past the fold, which is the exact
+        // failure this system exists to prevent.
+        // panel-in is the only motion: 200ms, once, on mount, on the chrome.
+        // Never on a figure or a row, because motion on a number tells the
+        // reader the figure is a prop rather than a measurement.
+        "panel-in flex min-h-0 min-w-0 flex-col overflow-hidden rounded-panel border border-line bg-white",
+        PANEL_SPAN[span],
+        className,
+      )}
+    >
+      {/* Fixed height, so a row of panels has its titles on one baseline no
+          matter what the titles say. That is also why there is no subtitle: a
+          40px header cannot hold two lines and stay on the grid. */}
+      <header className="flex h-[var(--panel-head-h)] shrink-0 items-center gap-2.5 border-b border-line px-[var(--panel-gutter)]">
+        {/* h2, not h3: the page's h1 is in PageHeader, so a panel title is the
+            next level and skipping one leaves a hole in the outline. */}
+        <h2 className="truncate text-[13px] font-medium leading-none tracking-[-0.01em] text-ink">
+          {title}
+        </h2>
+        {count !== undefined && (
+          <span className="num shrink-0 text-[11px] leading-none text-muted">{count}</span>
+        )}
+        {control && <div className="ml-auto flex shrink-0 items-center gap-1.5">{control}</div>}
+      </header>
+
+      <div
+        className={cn(
+          body === "flush"
+            ? "flex min-h-0 flex-1 flex-col"
+            // A padded body scrolls itself rather than pushing the page taller.
+            // The whole point of the fixed shell is that the page does not
+            // scroll, so a panel that outgrows its row has to absorb it.
+            : "thin-scroll min-h-0 flex-1 overflow-y-auto px-[var(--panel-gutter)] py-3.5",
+          bodyClassName,
+        )}
+      >
+        {children}
+      </div>
+
+      {footer && (
+        <footer className="flex h-[var(--panel-foot-h)] shrink-0 items-center justify-between gap-3 border-t border-line px-[var(--panel-gutter)] text-[11px] text-muted">
+          {footer}
+        </footer>
+      )}
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Header controls: the closed set
+// ---------------------------------------------------------------------------
+
+/** Two or three mutually exclusive views of the same rows, held in state. */
+export function Segmented<T extends string>({ value, options, onChange, label }: {
+  value: T;
+  options: { value: T; label: string }[];
+  onChange: (value: T) => void;
+  label: string;
+}) {
+  return (
+    <div
+      role="group"
+      aria-label={label}
+      className="flex h-7 items-center gap-0.5 rounded-md bg-mist-soft p-0.5"
+    >
+      {options.map((option) => {
+        const on = option.value === value;
+        return (
+          <button
+            key={option.value}
+            type="button"
+            aria-pressed={on}
+            onClick={() => onChange(option.value)}
+            className={cn(
+              "h-6 rounded-[5px] px-2 text-[11px] font-medium leading-none transition-colors duration-[var(--dur-1)]",
+              on ? "bg-white text-ink shadow-[0_1px_1px_rgb(23_79_98/0.06)]" : "text-muted hover:text-ink",
+            )}
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * The same control when the state lives in the URL, which is where filter state
+ * belongs: the workflow is a sequence of filters and a researcher has to be
+ * able to send their PI the exact view they are looking at.
+ */
+export function SegmentedLinks({ value, options, label }: {
+  value: string;
+  options: { value: string; label: string; href: string }[];
+  label: string;
+}) {
+  return (
+    <div
+      role="group"
+      aria-label={label}
+      className="flex h-7 items-center gap-0.5 rounded-md bg-mist-soft p-0.5"
+    >
+      {options.map((option) => {
+        const on = option.value === value;
+        return (
+          <Link
+            key={option.value}
+            href={option.href}
+            scroll={false}
+            aria-current={on ? "true" : undefined}
+            className={cn(
+              "flex h-6 items-center rounded-[5px] px-2 text-[11px] font-medium leading-none transition-colors duration-[var(--dur-1)]",
+              on ? "bg-white text-ink shadow-[0_1px_1px_rgb(23_79_98/0.06)]" : "text-muted hover:text-ink",
+            )}
+          >
+            {option.label}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Four or more options. A native select, because it is the one control that is
+    already keyboard and screen reader correct on every platform. */
+export function PanelSelect({ label, className, ...rest }: React.SelectHTMLAttributes<HTMLSelectElement> & { label: string }) {
+  return (
+    <select
+      aria-label={label}
+      className={cn(
+        "h-7 rounded-md border border-line bg-white pl-2 pr-6 text-[11px] text-ink",
+        className,
+      )}
+      {...rest}
+    />
+  );
+}
+
+/**
+ * One action that acts on this panel only. A rounded rectangle, not the pill:
+ * the pill is the page-level button shape, and that difference is how a reader
+ * tells a panel action from a page action.
+ */
+export function PanelAction({ className, children, ...rest }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button
+      type="button"
+      className={cn("btn btn-ghost h-7 rounded-md px-2.5 py-0 text-[11px]", className)}
+      {...rest}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** "See all". The one way out of a panel. */
+export function PanelLink({ href, children, className }: {
+  href: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "inline-flex h-7 items-center gap-1 text-[11px] text-cyan-600 underline decoration-line-strong underline-offset-2 hover:decoration-cyan-600",
+        className,
+      )}
+    >
+      {children}
+      <ArrowUpRight className="h-3 w-3 shrink-0" aria-hidden="true" />
+    </Link>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Footer contents
+// ---------------------------------------------------------------------------
+
+/**
+ * Provenance, on one line: which tool version, which threshold, which reference
+ * release. A figure a reader cannot trace to a measurement is the thing this
+ * audience finds embarrassing, so the trace is on screen, not in a tooltip.
+ */
+export function FootNote({ children, className }: { children: React.ReactNode; className?: string }) {
+  return <span className={cn("num min-w-0 truncate text-[11px] text-muted", className)}>{children}</span>;
+}
+
+/**
+ * The export. Every panel that shows rows carries one, because the design law
+ * is that every number is one click from the rows that produced it and one
+ * click from a file that opens in R, Excel or Prism.
+ */
+export function FootLink({ href, children, download }: {
+  href: string;
+  children: React.ReactNode;
+  download?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      download={download}
+      prefetch={false}
+      className="shrink-0 text-[11px] text-cyan-600 underline decoration-line-strong underline-offset-2 hover:decoration-cyan-600"
+    >
+      {children}
+    </Link>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// KPI strip
+// ---------------------------------------------------------------------------
+
+/**
+ * The strip is one Panel with divided cells, not four panels. Four panels cost
+ * four 40px headers, and the strip is not four separate things: it is one
+ * answer to "what moved since I last looked".
+ */
+export function KpiStrip({ title, count, control, footer, span = 12, className, children }: {
+  title: React.ReactNode;
+  count?: React.ReactNode;
+  control?: React.ReactNode;
+  footer?: React.ReactNode;
+  span?: PanelSpan;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Panel title={title} count={count} control={control} footer={footer} span={span} body="flush" className={className}>
+      {/* The negative offsets pull the cells' own hairlines under the panel
+          border and the header rule, so the grid lines read as one weight. */}
+      <div className="-ml-px -mt-px grid grid-cols-2 sm:grid-cols-4">{children}</div>
+    </Panel>
+  );
+}
+
+/**
+ * A cell of the strip. The definition sits in the tile with the figure, at a
+ * weight that cannot be skipped: a count with no denominator and no threshold
+ * is a marketing number, and this audience reads it as one.
+ */
+export function KpiTile({ label, value, denominator, definition, tone = "ink", href }: {
+  label: string;
+  value: React.ReactNode;
+  /** The figure's denominator, beside it: "of 9 screens", "past FDR 0.10". */
+  denominator?: string;
+  /** What the figure counts, and over what window. */
+  definition?: string;
+  tone?: "ink" | "orange" | "cyan";
+  /** Where the rows behind the figure are. */
+  href?: string;
+}) {
+  const labelNode = href ? (
+    <Link
+      href={href}
+      className="rounded-sm text-[11px] leading-none text-cyan-600 underline decoration-line-strong underline-offset-2 hover:decoration-cyan-600"
+    >
+      {label}
+    </Link>
+  ) : (
+    <span className="text-[11px] leading-none text-muted">{label}</span>
+  );
+
+  return (
+    <div className="flex min-w-0 flex-col gap-1.5 border-l border-t border-line px-[var(--panel-gutter)] py-2.5">
+      <div className="flex min-w-0 items-baseline gap-1.5">
+        <span
+          className={cn(
+            "num text-[19px] font-medium leading-none tracking-[-0.02em]",
+            tone === "orange" ? "text-orange-500" : tone === "cyan" ? "text-cyan-600" : "text-ink",
+          )}
+        >
+          {value}
+        </span>
+        {denominator && (
+          <span className="num min-w-0 truncate text-[11px] leading-none text-muted">{denominator}</span>
+        )}
+      </div>
+      <div className="truncate">{labelNode}</div>
+      {definition && <p className="text-[11px] leading-[1.35] text-muted">{definition}</p>}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// The dense table
+//
+// The table is the primary interface wherever the task is comparing rows, not a
+// fallback for people who dislike charts. Sticky header, every column sortable,
+// numeric columns right aligned with tabular figures, no number truncated, and
+// as many rows on screen as the panel can hold.
+// ---------------------------------------------------------------------------
+
+export function DenseTable({ children, compact = false, maxRows, minWidth, className, scrollClassName }: {
+  children: React.ReactNode;
+  /** 26px rows instead of 32px, for the table that has to show 40 at 1440. */
+  compact?: boolean;
+  /**
+   * Cap the table at a whole number of rows and scroll the rest under the
+   * sticky header.
+   *
+   * Without this a flush Panel takes its content height: a 40-row table made a
+   * measured 1,811px page out of an 800px viewport, and the fixed shell has no
+   * second scroll container to absorb that. Capping here rather than at the
+   * call site does two things a height on the panel cannot. The panel's height
+   * becomes arithmetic the page can budget against, thead + rows * row height
+   * + 76px of chrome. And the cut always lands between two rows, so the reader
+   * never sees a row sliced in half and never has to wonder whether the figure
+   * they can half-see is the one they wanted.
+   */
+  maxRows?: number;
+  /** Below this the table scrolls sideways rather than wrapping a figure. */
+  minWidth?: number;
+  className?: string;
+  scrollClassName?: string;
+}) {
+  return (
+    // The scroll container, and therefore the sticky header's context. min-h-0
+    // is what stops a flex child from refusing to shrink below its content and
+    // pushing the panel past the fold.
+    <div
+      className={cn("thin-scroll min-h-0 flex-1 overflow-auto", scrollClassName)}
+      style={
+        maxRows
+          ? {
+              // THEAD_H is the one number here that is not a token, because the
+              // sticky header's height is set in the .dense-table rule and a
+              // second source for it would be a second thing to keep in step.
+              maxHeight: `calc(${THEAD_H}px + ${maxRows} * var(${compact ? "--row-h-compact" : "--row-h"}))`,
+            }
+          : undefined
+      }
+    >
+      <table
+        className={cn("dense-table", compact && "dense-table-compact", className)}
+        style={minWidth ? { minWidth } : undefined}
+      >
+        {children}
+      </table>
+    </div>
+  );
+}
+
+/** Measured: `.dense-table thead th` is 1.75rem. */
+const THEAD_H = 28;
+
+/**
+ * The height a capped table panel needs, so a page can budget before it renders
+ * rather than discovering the overflow in the browser. Chrome is the 40px
+ * header plus, when the panel carries an export or a provenance line, the 36px
+ * footer.
+ *
+ * This is the panel's own height, which is a floor and not a prediction: grid
+ * items stretch, so a row takes the height of its tallest cell. Measured, a
+ * panel wanting 572px next to a 741px stack of small panels rendered at 741px.
+ * Budget a row as the larger of its cells, not the sum of them.
+ */
+export function tablePanelHeight({ rows, compact = false, footer = true }: {
+  rows: number;
+  compact?: boolean;
+  footer?: boolean;
+}): number {
+  return 40 + (footer ? 36 : 0) + THEAD_H + rows * (compact ? 26 : 32);
+}
+
+export type SortDir = "asc" | "desc";
+
+/**
+ * The sort affordance. Presentation only: the state and the comparator stay
+ * with the table that owns the rows, so one column sorts the same way wherever
+ * a researcher meets it.
+ */
+export function SortTh({ label, active, dir, onToggle, align = "left", width, className, title }: {
+  label: React.ReactNode;
+  active: boolean;
+  dir: SortDir;
+  onToggle: () => void;
+  align?: "left" | "right";
+  width?: number;
+  className?: string;
+  /** Spelled-out definition of the column, for a header that had to abbreviate. */
+  title?: string;
+}) {
+  const Icon = !active ? ChevronsUpDown : dir === "asc" ? ChevronUp : ChevronDown;
+  return (
+    <th
+      scope="col"
+      aria-sort={active ? (dir === "asc" ? "ascending" : "descending") : "none"}
+      style={width ? { width } : undefined}
+      className={cn(align === "right" && "num-col", className)}
+    >
+      <button
+        type="button"
+        onClick={onToggle}
+        title={title}
+        className={cn(
+          "inline-flex w-full items-center gap-1 rounded-sm uppercase tracking-[0.06em]",
+          align === "right" ? "justify-end" : "justify-start",
+          active ? "text-ink" : "text-muted hover:text-ink",
+        )}
+      >
+        {label}
+        <Icon className={cn("h-3 w-3 shrink-0", active ? "opacity-100" : "opacity-45")} aria-hidden="true" />
+      </button>
+    </th>
+  );
+}
+
+/** A column head that does not sort, so it still looks like the ones that do. */
+export function Th({ children, align = "left", width, className }: {
+  children: React.ReactNode;
+  align?: "left" | "right";
+  width?: number;
+  className?: string;
+}) {
+  return (
+    <th scope="col" style={width ? { width } : undefined} className={cn(align === "right" && "num-col", className)}>
+      {children}
+    </th>
+  );
+}
+
+/**
+ * Put this on a `tr` whose row is actually a target. Hover and focus-within
+ * tint, no lift: a transform on a table row drags its borders with it. A tint
+ * on an inert row is a promise the table does not keep, which is why it is opt
+ * in rather than a rule on every row.
+ */
+export const ROW_HIT = "row-hit";
+
+/** The value a read could not supply. A dash that looks like a zero is the
+    failure this console exists to avoid. */
+export function NotRecorded() {
+  return <span className="text-muted">Not recorded</span>;
+}
+
+// ---------------------------------------------------------------------------
+// Status
+// ---------------------------------------------------------------------------
+
+export type ChipTone = "ok" | "run" | "wait" | "bad" | "idle";
+
+const CHIP_TONE: Record<ChipTone, string> = {
+  ok: "bg-cyan-50 text-cyan-700",
+  run: "bg-orange-50 text-orange-700",
+  wait: "bg-mist-soft text-body",
+  bad: "bg-red-50 text-red-700",
+  idle: "bg-mist-soft text-muted",
+};
+
+/**
+ * Status as a small coloured chip, the square-cornered dense counterpart of the
+ * pill StatusBadge the settings pages use. Colour is never the only signal: the
+ * word is always there, because five of these in a column read as five words
+ * faster than they read as five hues, and because a colour-blind reader gets
+ * nothing from the hue.
+ */
+export function StatusChip({ tone, children, spinning = false, className }: {
+  tone: ChipTone;
+  children: React.ReactNode;
+  spinning?: boolean;
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex h-[18px] max-w-full items-center gap-1 truncate rounded-[4px] px-1.5 text-[11px] leading-none",
+        CHIP_TONE[tone],
+        className,
+      )}
+    >
+      {spinning && <Loader2 className="h-2.5 w-2.5 shrink-0 animate-spin" aria-hidden="true" />}
+      {children}
+    </span>
+  );
+}
+
+/** The one mapping from a pipeline or QC state to a chip tone, so "failed"
+    never means orange on one page and red on the next. */
+export function statusTone(status: string): ChipTone {
+  switch (status) {
+    case "complete":
+    case "pass":
+    case "validated":
+      return "ok";
+    case "running":
+    case "warn":
+    case "inconclusive":
+      return "run";
+    case "failed":
+    case "fail":
+      return "bad";
+    case "queued":
+    case "pending":
+      return "wait";
+    default:
+      return "idle";
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Loading
+// ---------------------------------------------------------------------------
+
+export function Skeleton({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return <span className={cn("skeleton block h-3", className)} style={style} aria-hidden="true" />;
+}
+
+/**
+ * Rows the size of the rows that are coming, so the panel does not change
+ * height when the data lands and nothing below it jumps. Widths cycle through a
+ * fixed pattern rather than a random one, because a random width differs
+ * between the server render and the client one.
+ */
+const SKELETON_WIDTHS = ["72%", "48%", "60%", "40%", "56%"];
+
+export function TableSkeleton({ rows = 6, cols = 4, compact = false }: {
+  rows?: number;
+  cols?: number;
+  compact?: boolean;
+}) {
+  return (
+    <div className="min-h-0 flex-1 overflow-hidden" role="status" aria-label="Loading rows">
+      <table className={cn("dense-table", compact && "dense-table-compact")}>
+        <tbody>
+          {Array.from({ length: rows }, (_, row) => (
+            <tr key={row}>
+              {Array.from({ length: cols }, (_, col) => (
+                <td key={col}>
+                  {/* The last column is the numeric one, so its placeholder sits
+                      where the digits will. */}
+                  <Skeleton
+                    className={col === cols - 1 ? "ml-auto w-10" : undefined}
+                    style={col === cols - 1 ? undefined : { width: SKELETON_WIDTHS[(row + col) % SKELETON_WIDTHS.length] }}
+                  />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }

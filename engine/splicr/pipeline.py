@@ -16,7 +16,10 @@ from pathlib import Path
 
 from . import db
 from .artifacts import Flag, flag_artifacts, summarise_flags
-from .count import CountMatrix, SampleCounts, count_fastq, read_count_table
+from .count import (
+    CountMatrix, SampleCounts, count_fastq, count_table_samples, read_count_table,
+)
+from .design import Design, DesignError, build_design
 from .detect import Detection, detect_from_count_table, detect_from_fastq
 from .hits import HitTable, call_hits
 from .qc import ScreenQc, screen_qc
@@ -39,6 +42,7 @@ class StageRecord:
 class PipelineResult:
     screen_name: str
     library: Library | None = None
+    design: Design | None = None
     detection: Detection | None = None
     matrix: CountMatrix | None = None
     qc: ScreenQc | None = None
@@ -59,9 +63,18 @@ class PipelineResult:
         for s in self.stages:
             mark = {"done": "ok", "failed": "FAILED", "skipped": "skipped"}.get(s.status, s.status)
             lines.append(f"  {s.stage:<10} {mark:<8} {s.duration_sec:6.1f}s  {s.detail}")
+        for note in (self.design.notes if self.design else []):
+            lines.append(f"  design: {note}")
         if self.hits:
             sig = self.hits.significant(0.1)
             lines.append(f"  {len(self.hits.genes)} genes scored, {len(sig)} significant at FDR 0.1")
+            d = self.hits.direction
+            if d is not None and d.n_essential:
+                lines.append(f"  known essentials among them: {d.depleted} depleted, "
+                             f"{d.enriched} enriched"
+                             + ("" if d.powered else " (too few to test direction)"))
+            for w in self.hits.warnings:
+                lines.append(f"  hits warning: {w}")
         if self.flags and self.hits:
             called = [g.gene for g in self.hits.significant(0.1)]
             lines.append(f"  flags on called hits: "
@@ -134,18 +147,34 @@ def run_pipeline(
         if missing:
             raise FileNotFoundError(f"input not found: {missing}")
         total_bytes = sum(Path(p).stat().st_size for p in sources)
-        detail = f"{len(sources)} file(s), {total_bytes / 1e9:.2f} GB"
+
+        # The design is settled here, before anything expensive runs. A mistyped
+        # sample label or a swapped contrast used to survive counting and QC and
+        # then either analyse the wrong arms or fail inside MAGeCK, minutes in,
+        # with a message that named MAGeCK rather than the typo. Sample labels
+        # for an uploaded count table live only in its header, so that is read
+        # first.
+        labels = (list(spec.fastqs) if spec.fastqs
+                  else count_table_samples(Path(spec.count_table)))
+        design = build_design(labels, spec.roles, spec.treatment, spec.control)
+        result.design = design
+        roles, treat, ctrl = design.roles, design.treatment, design.control
+        for note in design.notes:
+            say(f"      design: {note}")
+        detail = (f"{len(sources)} file(s), {total_bytes / 1e9:.2f} GB, "
+                  f"{'+'.join(treat)} vs {'+'.join(ctrl)}")
 
         if persist and conn is not None:
             screen_id = db.create_screen(conn, org_id, spec.name, spec.library_slug,
                                          spec.cell_line, spec.phenotype, spec.modality,
                                          created_by)
             run_id = db.start_run(conn, screen_id, org_id,
-                                  {"treatment": spec.treatment, "control": spec.control})
+                                  {"treatment": treat, "control": ctrl,
+                                   "roles": roles, "design_notes": design.notes})
             ctx = db.RunContext(org_id, screen_id, run_id, "")
             result.screen_id, result.run_id = screen_id, run_id
             conn.commit()
-        record("ingest", "done", detail, "splicr.ingest", t)
+        record("ingest", "done", detail, "splicr.ingest", t, design.as_dict())
 
         # --- 02 detect -----------------------------------------------------
         t = time.time()
@@ -186,7 +215,7 @@ def run_pipeline(
                {"n_samples": len(matrix.samples), "n_guides": len(matrix.guide_ids)})
 
         if persist and conn is not None and ctx is not None:
-            sample_ids = db.write_samples(conn, ctx.screen_id, matrix, spec.roles)
+            sample_ids = db.write_samples(conn, ctx.screen_id, matrix, roles)
             n = db.write_guide_counts(conn, ctx, matrix, sample_ids)
             conn.commit()
             say(f"      wrote {n:,} guide count rows")
@@ -195,7 +224,7 @@ def run_pipeline(
 
         # --- 04 QC ---------------------------------------------------------
         t = time.time()
-        qc = screen_qc(matrix, spec.roles, spec.treatment, spec.control, library)
+        qc = screen_qc(matrix, roles, treat, ctrl, library)
         result.qc = qc
         nnmd = f"NNMD {qc.nnmd:.2f}" if qc.nnmd is not None else "NNMD n/a"
         record("qc", "done", f"{qc.verdict}, {nnmd}", "splicr.qc", t, qc.as_dict())
@@ -208,7 +237,7 @@ def run_pipeline(
 
         # --- 05 hits -------------------------------------------------------
         t = time.time()
-        hits = call_hits(matrix, library, spec.treatment, spec.control, workdir / "hits")
+        hits = call_hits(matrix, library, treat, ctrl, workdir / "hits")
         result.hits = hits
         sig = hits.significant(0.1)
         record("hits", "done",
@@ -220,8 +249,8 @@ def run_pipeline(
         if persist and conn is not None and ctx is not None:
             comparison_id = db.create_comparison(
                 conn, ctx.screen_id, "primary",
-                [sample_ids[s] for s in spec.treatment if s in sample_ids],
-                [sample_ids[s] for s in spec.control if s in sample_ids],
+                [sample_ids[s] for s in treat if s in sample_ids],
+                [sample_ids[s] for s in ctrl if s in sample_ids],
             )
             ctx.comparison_id = comparison_id
             conn.commit()

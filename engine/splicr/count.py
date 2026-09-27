@@ -363,6 +363,22 @@ class CountMatrix:
         )
 
 
+def count_table_samples(path: Path) -> list[str]:
+    """
+    Sample labels from a count table's header, without parsing the body.
+
+    The design has to be validated before anything expensive runs, and for an
+    uploaded count table the sample labels only exist in the file. Reading the
+    header is cheap; reading a genome-wide table twice is not.
+    """
+    with (gzip.open(path, "rt", errors="replace") if str(path).endswith(".gz")
+          else open(path, "r", errors="replace")) as fh:
+        first = fh.readline()
+    first = first.replace("\r\n", "\n").replace("\r", "\n").split("\n")[0]
+    delim = "\t" if first.count("\t") >= first.count(",") else ","
+    return [h.strip() for h in first.split(delim)[2:] if h.strip()]
+
+
 def read_count_table(path: Path, library: Library | None = None) -> CountMatrix:
     """
     Read an existing count table (sgRNA, Gene, samples...).

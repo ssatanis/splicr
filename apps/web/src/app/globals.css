@@ -60,17 +60,47 @@
   --radius-sheet: 2rem;
   --radius-card: 1.5rem;
   --radius-pill: 999px;
+  /* The console reads as an instrument, so its panels are 12px. The 24px
+     marketing radius stays on --radius-card for the marketing pages, where a
+     soft rectangle is the point. */
+  --radius-panel: 0.75rem;
 
   --shadow-soft: 0 10px 40px -12px rgb(23 79 98 / 0.18);
   --shadow-card: 0 1px 2px rgb(23 79 98 / 0.04), 0 8px 24px -12px rgb(23 79 98 / 0.14);
   --shadow-float: 0 24px 60px -20px rgb(23 79 98 / 0.35);
 
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Entrances use --ease-out-soft. Exits leave quickly, because a control that
+     lingers on the way out feels slower than one that snaps. */
+  --ease-in-quick: cubic-bezier(0.4, 0, 1, 1);
 }
 
 :root {
   --sheet-margin: 0.75rem;
   color-scheme: light;
+
+  /* Console panel geometry. These are plain custom properties rather than
+     @theme entries because they are one-off measurements, not a scale anyone
+     should be generating utilities from: a panel header is 40px everywhere or
+     the titles in a row of panels stop sharing a baseline. */
+  --panel-head-h: 2.5rem; /* 40px */
+  --panel-foot-h: 2.25rem; /* 36px */
+  --panel-gutter: 1rem; /* The single horizontal gutter. Head, body, foot and
+                           the outer table cells all align to it, so a flush
+                           table lines up with a padded sibling panel. */
+  --row-h: 2rem; /* 32px, the default data row */
+  --row-h-compact: 1.625rem; /* 26px, for the tables that need 40 rows visible */
+
+  --dur-1: 120ms; /* state tint */
+  --dur-2: 160ms; /* control */
+  --dur-3: 200ms; /* overlay entrance, disclosure */
+
+  /* Repeated from @theme on purpose. Tailwind drops a theme variable nothing
+     references, and this one is usually reached through var() inside an
+     arbitrary value, which the scanner does not count as a reference. The
+     @theme entry is what gives the `ease-in-quick` utility; this line is what
+     guarantees the value exists either way. */
+  --ease-in-quick: cubic-bezier(0.4, 0, 1, 1);
 }
 
 @media (min-width: 768px) {
@@ -558,11 +588,128 @@
     height: 100%;
     border-radius: 999px;
   }
+
+  /* ----------------------------------------------------------------
+     Console: figures and the dense table.
+
+     Every figure in the console uses .num. Columns of numbers that do not
+     share a glyph width cannot be compared down the column, which is the one
+     thing a screening scientist does with them.
+  ---------------------------------------------------------------- */
+  .num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+
+  /* The dense table. Rows are --row-h, not the 47px the first pass used, so a
+     reader sees the rows they are comparing instead of scrolling between them.
+     Cell padding is derived from --panel-gutter on the outer cells only, which
+     is what lets a flush panel body hold a table whose first column sits on the
+     same vertical line as a padded panel's text. */
+  .dense-table {
+    width: 100%;
+    /* separate, not collapse: a collapsed border vanishes from a sticky header
+       once it scrolls, and the header then floats over the rows with no edge. */
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.8125rem;
+    line-height: 1.15;
+  }
+
+  .dense-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    height: 1.75rem;
+    padding: 0 0.5rem;
+    background: white;
+    border-bottom: 1px solid var(--color-line);
+    text-align: left;
+    font-weight: 500;
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    white-space: nowrap;
+  }
+
+  .dense-table tbody td {
+    height: var(--row-h);
+    padding: 0 0.5rem;
+    border-bottom: 1px solid var(--color-line);
+    color: var(--color-ink);
+    vertical-align: middle;
+    /* No number is ever truncated or wrapped: a figure that has lost its last
+       digit is worse than a figure the reader has to scroll sideways for. */
+    white-space: nowrap;
+  }
+
+  .dense-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .dense-table th:first-child,
+  .dense-table td:first-child {
+    padding-left: var(--panel-gutter);
+  }
+
+  .dense-table th:last-child,
+  .dense-table td:last-child {
+    padding-right: var(--panel-gutter);
+  }
+
+  .dense-table-compact tbody td {
+    height: var(--row-h-compact);
+  }
+
+  /* Numeric columns. Right aligned so the digits line up on the decimal, and
+     tabular so they line up on the stem. */
+  .dense-table .num-col {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+
+  /* Opt in, on rows that actually do something when you click them. A hover
+     tint on an inert row is a promise the table does not keep. */
+  .row-hit {
+    position: relative;
+    transition: background-color var(--dur-1) ease;
+  }
+
+  .row-hit:hover,
+  .row-hit:focus-within {
+    background: var(--color-mist-soft);
+  }
+
+  /* Loading. A shape the size of the row that is coming, so the panel does not
+     change height when the data lands. */
+  .skeleton {
+    border-radius: 0.25rem;
+    background: linear-gradient(
+      90deg,
+      var(--color-mist-soft) 25%,
+      var(--color-line) 37%,
+      var(--color-mist-soft) 63%
+    );
+    background-size: 400% 100%;
+    animation: skeleton-sweep 1.4s ease-in-out infinite;
+  }
+
+  @keyframes skeleton-sweep {
+    from {
+      background-position: 100% 50%;
+    }
+    to {
+      background-position: 0 50%;
+    }
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .marquee-track,
-  .scroll-cue {
+  .scroll-cue,
+  .skeleton {
     animation: none;
   }
   html {
@@ -620,4 +767,34 @@
 
 .text-balance {
   text-wrap: balance;
+}
+
+/* ------------------------------------------------------------------
+   Console panels.
+
+   The entrance is on the panel chrome and nothing else. A figure that
+   counts up, or a table row that reveals itself on scroll, tells the
+   reader the number is a prop rather than a measurement, which is the
+   one thing a screening scientist will not forgive. So: 200ms, once,
+   on mount, on the container.
+------------------------------------------------------------------- */
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.panel-in {
+  animation: panel-in 200ms var(--ease-out-soft) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel-in {
+    animation: none;
+  }
 }

@@ -179,6 +179,8 @@ def cmd_count(args: argparse.Namespace) -> int:
 # ---------------------------------------------------------------------------
 
 def cmd_run(args: argparse.Namespace) -> int:
+    from .count import count_table_samples
+    from .design import DesignError, build_design
     from .pipeline import ScreenInput, run_pipeline
 
     fastqs: dict[str, Path] = {}
@@ -191,12 +193,38 @@ def cmd_run(args: argparse.Namespace) -> int:
 
     roles: dict[str, str] = {}
     for item in args.role or []:
+        if "=" not in item:
+            print(f"--role expects label=role, got {item!r}")
+            return 1
         label, _, role = item.partition("=")
         roles[label] = role
 
-    # Anything not given an explicit role is treated by how it is used.
-    for label in fastqs:
-        roles.setdefault(label, "treatment" if label in (args.treatment or []) else "control")
+    # Roles for samples the caller did not name are inferred from the sample
+    # labels, not from which side of the contrast they sit on. Defaulting them
+    # to "control" is what this replaces, and it was quietly destructive: in the
+    # standard dropout design it made the plasmid pool and the T0 sample both
+    # control arms, which left the screen with no library reference, so NNMD,
+    # AUROC and the essentiality check did not run at all and the reason printed
+    # said no reference had been supplied when two had.
+    #
+    # Validated here as well as in the pipeline so a bad design costs nothing:
+    # no database round trip, no counting, and an error that names the flag to
+    # change.
+    if not fastqs and not args.counts:
+        print("nothing to analyse: pass --fastq LABEL=PATH or --counts FILE.")
+        return 1
+    try:
+        labels = list(fastqs) if fastqs else count_table_samples(Path(args.counts))
+        design = build_design(labels, roles, args.treatment or [], args.control or [])
+    except DesignError as exc:
+        print(f"This screen cannot be analysed as stated:\n  {exc}")
+        return 1
+    except FileNotFoundError:
+        print(f"not found: {args.counts}")
+        return 1
+    for note in design.notes:
+        print(f"note: {note}")
+    roles = design.roles
 
     org_id = args.org
     if args.persist and not org_id:
@@ -257,7 +285,11 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument("--fastq", action="append", metavar="LABEL=PATH")
     r.add_argument("--counts", help="count table instead of FASTQ")
     r.add_argument("--role", action="append", metavar="LABEL=ROLE",
-                   help="plasmid, reference, control or treatment")
+                   help="plasmid, reference, control or treatment. 'plasmid' is the "
+                        "plasmid pool, 'reference' a T0 or day-0 sample; both are "
+                        "library references that QC measures dropout against. Inferred "
+                        "from the sample label when it says so (plasmid, pDNA, T0, D0, "
+                        "input), otherwise from which side of the contrast it is on")
     r.add_argument("--treatment", action="append", metavar="LABEL")
     r.add_argument("--control", action="append", metavar="LABEL")
     r.add_argument("--library", help="library slug; detected when omitted")

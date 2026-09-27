@@ -58,3 +58,10 @@ engine/.tools/
 # The reference lake is reproducible from scripts/data/build-lake.py and lives
 # on R2. Same reasoning as data/references.
 data/lake/
+
+# Stray analysis caches. Scripts that need one write it to the scratchpad.
+*.npy
+
+# Temporary measurement routes. Agents create these to measure geometry; they
+# are never part of the app.
+apps/web/src/app/dashboard/zz-probe/
