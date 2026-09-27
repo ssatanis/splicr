@@ -80,7 +80,7 @@ export function HitReportPreview() {
             </p>
           </Reveal>
 
-          <Reveal delay={0.1}>
+          <Reveal delay={0.1} className="min-w-0">
             <div className="rounded-[1.5rem] border border-line bg-white shadow-card overflow-hidden">
               <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-line">
                 <div className="min-w-0">

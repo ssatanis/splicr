@@ -56,11 +56,12 @@ export function MarketingNav({ variant = "pill" }: { variant?: "pill" | "bar" })
             <Link
               href="/contact"
               className={cn(
-                "inline-flex items-center justify-center rounded-full bg-orange-500 text-white",
-                "px-7 py-3 text-[0.95rem] font-normal transition-colors hover:bg-orange-600",
+                "inline-flex items-center justify-center rounded-full bg-orange-500 text-white whitespace-nowrap",
+                "px-5 sm:px-7 py-3 text-[0.95rem] font-normal transition-colors hover:bg-orange-600",
               )}
             >
-              Request a Demo
+              <span className="sm:hidden">Demo</span>
+              <span className="hidden sm:inline">Request a Demo</span>
             </Link>
             <button
               type="button"

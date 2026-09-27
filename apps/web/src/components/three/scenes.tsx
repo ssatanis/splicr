@@ -154,7 +154,7 @@ export function WaveRibbonScene({ className }: { className?: string }) {
   return (
     <Scene className={className} camera={{ position: [0, 0, 12], fov: 30 }}>
       <Studio />
-      <Drift speed={0.5} rotation={0.05} float={0.3}>
+      <Drift speed={0.6} rotation={0.18} float={0.45}>
         <group rotation={[0.25, 0, 0]}>
           <TwistRibbon length={19} amplitude={1.1} waves={2.4} phase={0} z={0} width={1.05} twist={Math.PI * 2.5} position={[0, 0.9, 0]} />
           <TwistRibbon length={19} amplitude={1.0} waves={2.2} phase={1.7} z={-0.6} width={0.95} twist={Math.PI * 3} position={[0, -0.3, 0]} />
