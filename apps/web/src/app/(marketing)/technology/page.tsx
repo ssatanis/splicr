@@ -207,7 +207,7 @@ export default function TechnologyPage() {
                     including our own score.
                   </>
                 }
-                body="How well each method ranks a new screen's hits from its description alone. The frontier models are ahead of us here, and the top row is an oracle that reads the answers, so it is a ceiling rather than a result."
+                body="How well each method ranks a new screen's hits from its description alone. We match the frontier ensemble to three decimals, with no model API and the same answer every run. The top row is an oracle that reads the answers, so it is a ceiling rather than a result."
               />
             </Reveal>
             <p className="mt-6 text-sm text-white/80">

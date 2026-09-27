@@ -148,23 +148,35 @@ export const discoveryQuadrants = [
  * than find it out later.
  *
  * The top row is an oracle. It reads the test labels to pick the single best
- * past screen, so it is a ceiling on what retrieval could ever be worth, not a
- * result anyone can have. The label has to keep saying so.
+ * past screen, so it is a ceiling on what single-donor retrieval could be worth,
+ * not a result anyone can have. The label has to keep saying so.
+ *
+ * Measured 2026-09-27 against the official Genentech evaluator
+ * (`pip install git+https://github.com/Genentech/AssayBench.git`) on the
+ * 334-screen yearfold0 test split, from `engine/splicr/features/orcs_retrieval.py`.
+ * Our row is `orcs_retrieval_rate` at 0.1628, pre-registered in that module
+ * before it was ever scored on test, run once, no tuning: 95% CI [0.1358,
+ * 0.1900], which contains the ensemble's 0.1631, so the honest word is "tie",
+ * never "beats". The 0.136 row is upstream's own phenotype-stratified
+ * hit-frequency prior refit on train+validation (assaybench_stack.py:21); it was
+ * mislabelled as ours until this was measured. The bottom row is `retrieval_knn`
+ * (assaybench_stack.py:25), which replaced an unsourced 0.065 that no run in the
+ * repository produces.
  */
 export const benchmark = [
   { label: "Oracle: best past screen, chosen with hindsight", value: 0.292, tone: "muted" },
+  { label: "SplicR: retrieval over 1,574 past screens", value: 0.163, tone: "orange" },
   { label: "Ensemble of frontier models", value: 0.163, tone: "teal" },
   { label: "Gemini 3 Pro", value: 0.157, tone: "teal" },
   { label: "GPT-5.4", value: 0.147, tone: "teal" },
-  { label: "SplicR's best scorer", value: 0.136, tone: "orange" },
-  { label: "Frequent-hitter prior", value: 0.133, tone: "muted" },
-  { label: "Past screen found by text similarity", value: 0.065, tone: "muted" },
+  { label: "Hit-frequency prior, refit on every pre-2022 screen", value: 0.136, tone: "muted" },
+  { label: "Retrieval on screen metadata alone", value: 0.122, tone: "muted" },
 ] as const;
 
 export const benchmarkCite: Citation = {
   text: "AssayBench test set, 334 screens published after 2021",
   href: "https://github.com/Genentech/AssayBench",
-  note: "Score is AnDCG@100, higher is better. Every row re-scored by this project's harness; the published reference points reproduce to four decimals.",
+  note: "Score is AnDCG@100, higher is better. Every row scored with Genentech's own evaluator; the published reference points reproduce to four decimals. Our row is a single pre-registered run with no tuning, 95% CI [0.1358, 0.1900], which contains the ensemble, so the two are tied rather than separated.",
 };
 
 /**
@@ -304,6 +316,6 @@ export const faq = [
   },
   {
     q: "Do you beat the language models at predicting hits?",
-    a: "Not at predicting a screen nobody has run. On the AssayBench test split our best scorer reaches 0.136 against a frontier ensemble at 0.163, and we publish that chart rather than hide it. That task is a literature-recall question answered from a screen's description alone. Ours is the opposite: given the data from a screen you did run, which of its hits survive a re-test.",
+    a: "We match them. On the AssayBench test split our retrieval scorer reaches 0.163 against a frontier ensemble at 0.163, with a 95% confidence interval that contains theirs, so the honest word is tie rather than beat. It gets there by retrieving over 1,574 published screens instead of recalling literature, which means no model API, the same answer every run, and about two minutes on a laptop. That task is still a prediction from a screen's description alone. Ours is the opposite question: given the data from a screen you did run, which of its hits survive a re-test.",
   },
 ] as const;

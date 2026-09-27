@@ -8,12 +8,17 @@ import { benchmarkCite } from "@/lib/content";
 /* The middle two rows used to read "1.8x retrieval vs best AI" and "0.29
    oracle AnDCG@100". That ratio came from dividing AssayBench's oracle, which
    reads the test labels, by its model ensemble, so it credited us with a
-   ceiling nobody can reach. These are the two comparable scores instead, ours
-   first, and ours is the lower one. */
+   ceiling nobody can reach. These are the two comparable scores instead.
+
+   Ours read 0.136 until 2026-09-27, when `orcs_retrieval_rate` was scored on
+   the test split for the first time and returned 0.1628. The old 0.136 was
+   upstream's own hit-frequency prior, not a SplicR method. The two numbers are
+   now equal to three decimals and our 95% CI [0.1358, 0.1900] contains theirs,
+   so the copy below says we match them and must never say we beat them. */
 const stats = [
   { value: "2,217", suffix: "", label: "Published screens indexed" },
   { value: "334", suffix: "", label: "Held-out test screens" },
-  { value: "0.136", suffix: "", label: "Our score on that split" },
+  { value: "0.163", suffix: "", label: "Our score on that split" },
   { value: "0.163", suffix: "", label: "Best frontier ensemble" },
 ];
 
@@ -61,10 +66,10 @@ export function StatementCard() {
                   <ArrowUpRight className="w-5 h-5" />
                 </Link>
                 <p className="mt-6 text-body leading-relaxed">
-                  On this benchmark the frontier models rank a new screen&apos;s hits better than
-                  our scorer does. They cannot read your counts, see the amplified segment your
-                  hits sit in, or say how often a call at that confidence held up. That is the
-                  part we work on.
+                  On this benchmark we match the frontier models, by retrieving over 1,574
+                  published screens rather than recalling literature. They still cannot read your
+                  counts, see the amplified segment your hits sit in, or say how often a call at
+                  that confidence held up. That is the part we work on.
                 </p>
                 <p className="mt-3 text-xs text-muted">
                   <Cite cite={benchmarkCite} prefix="Source:" />
