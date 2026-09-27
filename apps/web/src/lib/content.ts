@@ -224,33 +224,6 @@ export const proofPoints = [
   },
 ] as const;
 
-export const comparisonCaveats = [
-  {
-    title: "For one clean screen, the open-source tools are enough",
-    body: "If you have a dropout design and someone who can run a command, MAGeCK and BAGEL2 give you the same statistics we do, today, free. That is not a concession. They are what our hit-calling stage runs.",
-  },
-  {
-    title: "For enrichment, use MAGeCKFlute",
-    body: "Pathway and protein-complex enrichment is a real question and we do not answer it. MAGeCKFlute does, it is maintained, and it reads the MAGeCK output we already produce.",
-  },
-  {
-    title: "For CRISPRi, CRISPRa and V3 libraries, use ScreenPro2",
-    body: "Our counting assumes a knockout amplicon layout. ScreenPro2 was built for the newer library designs and is the better starting point for them.",
-  },
-  {
-    title: "For essentiality in cancer lines, use DepMap",
-    body: "It is free, it is CC BY 4.0, and it already answers that question across 1,178 models. Nobody should be paying for it, including paying us.",
-  },
-  {
-    title: "We do not beat the language models at predicting a new screen",
-    body: "On the 334 screens of the AssayBench test split our best scorer reaches AnDCG@100 0.136, against Gemini 3 Pro at 0.157 and a frontier ensemble at 0.163. The paired difference is significant, and the gap sits on drug-response and infection screens where the answer is specific biology. A frequency prior knows which genes are often hits and nothing about which receptor a virus uses.",
-  },
-  {
-    title: "The calibrated score is a design, not yet a measurement",
-    body: "The confidence model is fitted on validation outcomes labs log, and there are not yet enough of them for the calibration curve to be a result. Until there are, treat that number as what we are building rather than as something we have shown.",
-  },
-] as const;
-
 /*
  * There is no `testimonials` export any more, and there should not be one until
  * a real lab has agreed to be quoted by name.
@@ -293,5 +266,44 @@ export const openRoles = [
     summary:
       "Next.js, Supabase and the job engine. Make multi-gigabyte uploads feel instant and data-heavy UI feel calm.",
     asks: ["TypeScript, React, Postgres and RLS", "Has built background job systems", "Cares about the details"],
+  },
+] as const;
+
+/**
+ * FAQ.
+ *
+ * Written for the two people who ask: a screening scientist deciding whether to
+ * upload, and someone deciding whether to fund it. Every answer states a limit
+ * where one exists, because an FAQ that only sells is the one nobody believes.
+ * Numbers here must match the ones measured elsewhere on the site.
+ */
+export const faq = [
+  {
+    q: "What do I have to give you?",
+    a: "Raw FASTQ, or a count table if you already have one. You do not need to tell us the library: it is identified from the guide sequences in the reads, which is what stops a mislabelled upload becoming a wrong answer. Sample roles and the contrast you care about are the only things we ask you to fill in.",
+  },
+  {
+    q: "How is the chance a hit is real worked out?",
+    a: "From the evidence in your own screen, weighted by what has held up elsewhere: effect size, how many guides agree, the artifact checks, and how the gene behaves across public screens of similar phenotype. The calibration comes from outcomes labs log after they validate. There are not yet enough of those for the calibration curve to be a published result, and we say so on the number itself rather than in a footnote.",
+  },
+  {
+    q: "How is this different from running MAGeCK myself?",
+    a: "For the statistics, it is not, and it should not be. MAGeCK and BAGEL2 are what our hit-calling stage runs. What is added around them is the parts people skip: reading the library from the reads, measuring QC against the definitions its sources actually use, naming each artifact with its evidence, and putting the result next to every comparable public screen.",
+  },
+  {
+    q: "Which screen designs work today?",
+    a: "Pooled knockout dropout and drug-modifier screens, in human and mouse, with or without a plasmid reference. CRISPRa and CRISPRi run, with the direction convention handled, though counting assumes a knockout amplicon layout so newer library designs are better served elsewhere for now. Sorting and reporter screens work without a fitness axis.",
+  },
+  {
+    q: "Can I get my data out?",
+    a: "Yes, and in the shape you already work in. The gene table exports as CSV that opens cleanly in R and Excel, as JSON with full provenance, and as a PDF you can hand a PI. The count matrix and the MAGeCK and BAGEL2 outputs come with it. There is a read-only REST endpoint if you would rather pull it from a script.",
+  },
+  {
+    q: "What happens to my screen?",
+    a: "It stays yours. Your data is scoped to your workspace and the database enforces that per row, not in application code. Validation outcomes you log tune your own model; nothing identifiable about an unpublished screen joins the public Atlas.",
+  },
+  {
+    q: "Do you beat the language models at predicting hits?",
+    a: "Not at predicting a screen nobody has run. On the AssayBench test split our best scorer reaches 0.136 against a frontier ensemble at 0.163, and we publish that chart rather than hide it. That task is a literature-recall question answered from a screen's description alone. Ours is the opposite: given the data from a screen you did run, which of its hits survive a re-test.",
   },
 ] as const;

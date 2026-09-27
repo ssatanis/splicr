@@ -12,9 +12,10 @@ richer basis for screen-to-screen retrieval than the AssayBench records alone:
   AssayBench never turned into records at all),
 * the *full* library per donor, so the "did this donor even measure this gene"
   denominator is exact,
-* graded hit strength from ``SCORE.1``, and
 * the ORCS screen index's own metadata (``CONDITION_NAME``, ``SCREEN_RATIONALE``,
-  ``NOTES``, ``LIBRARY``, ...), which is what the retrieval similarity is built on.
+  ``NOTES``, ``LIBRARY``, ...), which is what the retrieval similarity is built on, and
+* graded hit strength from ``SCORE.1`` -- which turned out **not** to help; see
+  RESULTS.  The binary ``HIT`` call is the better signal.
 
 LEAKAGE
 -------
@@ -47,10 +48,108 @@ hit rate over safe ORCS donors::
 
     score(g) = sum_j w_j * H_j(g)  /  ( sum_j w_j * M_j(g) + eps * mean(w) )
 
-``M_j(g)`` is 1 when donor *j* assayed *g*; ``H_j(g)`` is the donor's graded hit
-strength for *g* in the query's direction, ``1/log2(2+rank)`` over that donor's
-hits ordered by ``SCORE.1`` extremity.  The features differ in how ``w_j`` is
-built and in which direction pool ``H`` is drawn from.
+``M_j(g)`` is 1 when donor *j* assayed *g*; ``H_j(g)`` is 1 when donor *j* called
+*g* a hit in the query's direction (or, in the ``_graded`` ablation, that hit's
+``1/log2(2+rank)`` strength by ``SCORE.1`` extremity).  ``eps`` is a Beta
+pseudo-count toward the pooled rate, so a gene two donors assayed does not
+outrank a gene six hundred donors assayed on a 1/2-vs-200/600 technicality.  The
+features differ in how ``w_j`` is built and which direction pool ``H`` comes from.
+
+The retrieval weight is a product of three label-free blocks::
+
+    w_j = containment_j * (1 + 15 * drug_j) * (1 + 10 * text_j)   , top-150 kept
+
+* ``containment_j = |Q_library n D_library| / |Q_library|`` -- library structure.
+  This was the one block recon found carried real signal across the temporal shift.
+* ``drug_j`` -- token containment of the query's ``condition_name`` in the donor's
+  ORCS ``CONDITION_NAME``.  The single largest lever: naming the same compound
+  finds the screens that share its resistance and sensitiser genes.
+* ``text_j`` -- TF-IDF cosine over 12 concatenated metadata fields, vocabulary and
+  idf fitted on the 1,574 donor documents only (so a screen's features never
+  depend on which other screens were in the same call).
+
+RESULTS
+-------
+Standalone validation AnDCG@100, mean over the 218 validation screens, scored
+with ``assaybench.benchmark.metrics.RankingMetrics`` key ``adjusted_ndcg@100``.
+The test split was never loaded.  Reference: the AssayBench train gene-frequency
+prior scores 0.17669 on the same screens.
+
+===========================  =========  ==============  ======================
+feature                      AnDCG@100  vs freq prior   95% bootstrap CI
+===========================  =========  ==============  ======================
+orcs_prf_rate                  0.23485        +0.05816  [+0.04065, +0.07696]
+orcs_net_rate                  0.23193        +0.05525  [+0.03699, +0.07453]
+orcs_retrieval_rate (PRIMARY)  0.23095        +0.05427  [+0.03666, +0.07318]
+orcs_retrieval_rate_graded     0.22215        +0.04546  [+0.02775, +0.06466]
+orcs_text_rate                 0.20985        +0.03317  [+0.01804, +0.04874]
+orcs_libnn_rate                0.19564        +0.01895  [+0.00996, +0.02803]
+orcs_hit_rate                  0.19335        +0.01666  [+0.00785, +0.02612]
+orcs_hit_rate_stratum          0.18953        +0.01284  [-0.00806, +0.03279]
+orcs_opposite_rate             0.08753        -0.08916  (sanity: should lose)
+orcs_support_log               0.07947        -0.09721  (coverage only)
+orcs_cohit_ppmi                0.01967        -0.15702  (failed, see below)
+===========================  =========  ==============  ======================
+
+``orcs_retrieval_rate`` is the **pre-registered** primary: its configuration was
+fixed on the validation (cond_mult, text_mult, k) grid -- a 2x4x5 plateau whose
+cells run 0.214 to 0.236, mean 0.227 -- by taking an interior point rather than
+the argmax (0.23588 at cond_mult=15, text_mult=40, k=200).  ``orcs_prf_rate`` and
+``orcs_net_rate`` score marginally higher but were not pre-registered, and their
+paired difference from the primary is inside the noise.
+
+What ORCS actually buys, measured by running this exact machinery against the
+1,349 AssayBench train records instead of the safe ORCS pool: 0.19617 for the
+best train-donor configuration vs 0.22524 for the matched ORCS one, and at
+identical settings 0.18813 vs 0.20542.  So the ORCS pool is worth roughly
++0.02 to +0.03 AnDCG@100 over the same retrieval on AssayBench alone.
+
+Where the gain lands (primary vs frequency prior, by stratum): drug/chemical
+response +0.054 (n=157), host-pathogen +0.115 (n=17), fitness +0.006 (n=36).  By
+direction: enrichment/positive-selection screens +0.074 (n=100), depletion +0.033
+(n=67), bidirectional +0.018 (n=51).  Screens clamped to zero by the adjusted-nDCG
+floor fall from 91/218 to 58/218, which is where the mean gain comes from: the
+metric floors losses at zero for everyone, so the only way to move is to be
+strictly better than random on screens where you previously were not.
+
+WHAT DID NOT WORK
+-----------------
+* **Co-hit PPMI** (``orcs_cohit_ppmi``, 0.0197 -- random is ~0.019).  PPMI between
+  a candidate gene and pseudo-positive seed genes is dominated by rare genes with
+  one or two co-occurrences.  Total failure, kept visible rather than deleted.
+* **Pseudo-relevance feedback** (``orcs_prf_rate``).  Reweighting donors by how
+  well their hit set covers the round-1 prediction was the obvious way to attack
+  the label-free-similarity bottleneck.  It does not work: with graded hits it was
+  flatly negative (beta=2 cost -0.006, two rounds -0.013, three rounds -0.017 --
+  each round pulls the neighbour set further toward whatever the prior already
+  said), and with binary hits at beta=1 it lands +0.004 over the primary, inside
+  the noise.  Feedback on predicted labels reinforces the prior instead of finding
+  better neighbours.
+* **Graded hit strength from SCORE.1** (``orcs_retrieval_rate_graded``, -0.0105 vs
+  the binary primary, CI [-0.0175, -0.0033], p=0.001, worse in all 20 grid cells).
+  ``SCORE.1`` spans 42 incompatible score types whose signs even disagree (CERES
+  negative = essential, Bayes Factor positive = essential), so ranking hits by
+  score extremity partly ranks them by noise, and down-weighting a screen's weaker
+  hits discards real positives.
+* **Donor "lift" normalisation** (each donor votes with equal total mass,
+  ``H`` row-normalised): 0.153, i.e. -0.040.  High-hit-rate donors are genuinely
+  more informative and equalising them destroys that.
+* **Library-size similarity** and **library Jaccard** as similarity weights: both
+  net-negative on top of containment (-0.017 and -0.020).  Containment is the
+  right asymmetric form -- what matters is how much of the *query's* library the
+  donor covers, not how similar the two libraries are in size.
+* **Phenotype-stratum restriction** (``orcs_hit_rate_stratum``) is the weakest
+  member and the only one whose CI against the frequency prior crosses zero.
+  Hard-gating on ORCS ``PHENOTYPE`` throws away donors that a soft text similarity
+  would have kept at partial weight.
+* **Hard drug filtering** (keep only donors sharing a condition token): -0.006 vs
+  soft multiplicative weighting.  Only 110 of 218 validation screens have any
+  donor sharing a ``condition_name`` token, so a hard filter silently falls back to
+  the global pool on half the benchmark.
+* **Opposite-direction subtraction** (``orcs_net_rate`` with larger
+  ``NET_LAMBDA``) degrades monotonically past 1.0 (lambda=2 costs -0.011,
+  lambda=4 -0.017), so the opposite-direction pool is a weak negative signal, not
+  the lever the metric's unclipped numerator suggested it would be.
 
 DIRECTION
 ---------

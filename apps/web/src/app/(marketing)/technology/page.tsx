@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 
 import { MarketingNav } from "@/components/marketing/nav";
 import { CtaSection } from "@/components/marketing/sections/cta";
+import { Faq } from "@/components/marketing/faq";
 import { SideCoil, AccentCoil } from "@/components/three";
 import { LinkButton, SectionHeading } from "@/components/ui/bits";
-import { Orb } from "@/components/ui/orb";
 import { Reveal, Stagger, StaggerItem } from "@/components/ui/reveal";
 import {
   benchmark,
   benchmarkCite,
-  comparisonCaveats,
+  faq,
   discoveryQuadrants,
   modules,
   proofPoints,
@@ -316,37 +316,27 @@ export default function TechnologyPage() {
       </section>
 
 
-      {/* Where the other tool is the right answer */}
-      <section className="py-16 md:py-24 bg-teal-800 text-white">
-        <div className="container-x grid lg:grid-cols-[1fr_1.2fr] gap-14">
+
+      {/* FAQ */}
+      <section className="py-16 md:py-24 bg-mist-soft">
+        <div className="container-x grid lg:grid-cols-[0.8fr_1.4fr] gap-12 lg:gap-20">
           <div>
             <Reveal>
               <SectionHeading
-                tone="dark"
-                eyebrow="Use something else"
+                eyebrow="Questions"
                 title={
                   <>
-                    Six cases where
+                    The ones we
                     <br />
-                    we are not the answer.
+                    get asked.
                   </>
                 }
-                body="If any of these is your question, the tool named will serve you better than we will, and two of them are about us rather than about you."
               />
             </Reveal>
-            <Reveal delay={0.1} className="mt-8 flex items-center gap-4">
-              <Orb size={110} />
-              <Orb size={74} tone="cyan" />
-            </Reveal>
           </div>
-          <Stagger className="space-y-5">
-            {comparisonCaveats.map((c) => (
-              <StaggerItem key={c.title} className="rounded-2xl bg-white/10 p-6">
-                <h3 className="font-medium text-white">{c.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-white/90">{c.body}</p>
-              </StaggerItem>
-            ))}
-          </Stagger>
+          <Reveal delay={0.1}>
+            <Faq items={faq} />
+          </Reveal>
         </div>
       </section>
 
