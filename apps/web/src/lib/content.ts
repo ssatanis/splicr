@@ -5,40 +5,50 @@
 
 export type Citation = { text: string; href: string; note: string };
 
+/**
+ * The four numbers under the hero.
+ *
+ * All four describe the problem, not us. The row that used to sit first read
+ * "1.8x, best retrieval vs best AI model", which divided AssayBench's oracle
+ * by its language-model ensemble. That oracle reads the test labels to pick the
+ * best past screen, so the ratio was a ceiling on retrieval rather than
+ * anything SplicR does, and it contradicted our own benchmark section further
+ * down the page. A reader who checks the source would have caught it.
+ */
 export const heroStats = [
   {
-    value: "1.8x",
-    label: "Best retrieval vs best AI model",
-    cite: {
-      text: "AssayBench, Genentech 2026",
-      href: "https://github.com/Genentech/AssayBench",
-      note: "AnDCG@100: 0.292 oracle retrieval vs 0.163 LLM ensemble",
-    },
-  },
-  {
     value: "0.26",
-    label: "Precision between two gold-standard screens",
+    label: "Precision when one gold-standard screen checks another",
     cite: {
       text: "Dempster et al., Nat Commun 2019",
       href: "https://doi.org/10.1038/s41467-019-13805-y",
-      note: "Precision 0.255 at recall 0.781, Broad vs Sanger",
+      note: "Precision 0.255 at recall 0.781, Broad against Sanger",
+    },
+  },
+  {
+    value: "0.30",
+    label: "Replicate agreement once the context-specific effect is isolated",
+    cite: {
+      text: "Cell Systems 2023",
+      href: "https://pmc.ncbi.nlm.nih.gov/articles/PMC10266068/",
+      note: "Guide-level Pearson 0.30 on the context-specific delta, from 0.97 on the same screens' raw counts",
     },
   },
   {
     value: "2,217",
-    label: "Public screens in the Atlas",
+    label: "Published screens in the largest public index",
     cite: {
       text: "BioGRID ORCS v2.0.18",
       href: "https://orcs.thebiogrid.org/",
-      note: "418 publications, 825 cell lines",
+      note: "418 publications, 825 cell lines, September 2025",
     },
   },
   {
     value: "$19k",
-    label: "Cost of one genome-wide screen",
+    label: "Published price of one pooled genome-wide screen",
     cite: {
-      text: "Academic core pricing",
-      href: "https://www.uthscsa.edu/research/core-facilities",
+      text: "Greehey CCRI Target Discovery Core",
+      href: "https://gccri.uthscsa.edu/services/tdc/service-and-pricing/",
       note: "Plus 12 to 20 weeks of work",
     },
   },
@@ -47,7 +57,7 @@ export const heroStats = [
 /** Marquee rows. Every term is something SplicR actually does or uses. */
 export const marqueeRows = [
   ["Hit Report", "Discovery Map", "Screen Planner", "Truth Loop", "Atlas", "Connect"],
-  ["MAGeCK", "BAGEL2", "CRISPRcleanR", "Chronos", "DrugZ", "CRISPRcleanR"],
+  ["MAGeCK", "BAGEL2", "CRISPRcleanR", "Chronos", "DrugZ"],
   ["Copy-number flags", "Guide concordance", "Frequent hitters", "Calibration", "Blind tests"],
 ];
 
@@ -434,29 +444,17 @@ export const comparisonCaveats = [
   },
 ] as const;
 
-export const testimonials = [
-  {
-    quote:
-      "We had 212 hits and budget for twelve. SplicR put our eventual paper gene in the top three and flagged the copy-number cluster we would have chased for a semester.",
-    name: "Priya Raman, PhD",
-    role: "Postdoctoral fellow, oncology, Boston",
-    initials: "PR",
-  },
-  {
-    quote:
-      "The blind test sold it. They scored our old screen before we said which hits worked, and the calibration held.",
-    name: "Daniel Okafor",
-    role: "Director, functional genomics core, New York",
-    initials: "DO",
-  },
-  {
-    quote:
-      "Our agents already run MAGeCK. What they could not do was say which results to trust.",
-    name: "Mei-Ling Chen",
-    role: "Head of computational biology, Cambridge",
-    initials: "MC",
-  },
-] as const;
+/*
+ * There is no `testimonials` export any more, and there should not be one until
+ * a real lab has agreed to be quoted by name.
+ *
+ * What was here was three invented quotes under three invented names, titles
+ * and cities, with an 11px line at the bottom of the section admitting they
+ * were placeholders. A researcher reads the quote and the affiliation, not the
+ * footnote, so the page was claiming customers it does not have. Everything
+ * else on this site is checkable, which is the only reason any of it is worth
+ * reading, and one fabricated section is enough to lose that.
+ */
 
 export const openRoles = [
   {

@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { Logo } from "@/components/brand/logo";
-import { AccentCoil } from "@/components/three";
+import { RotatableCoil } from "@/components/three";
 import { site } from "@/lib/site";
 
 /**
@@ -19,9 +19,10 @@ export function AuthPanel({ children, aside }: { children: React.ReactNode; asid
           </Link>
         </div>
 
-        {/* Artwork band: fixed height, never behind the text. */}
+        {/* Artwork band: fixed height, never behind the text. The coil turns
+            under the pointer or the arrow keys, and says so to nobody. */}
         <div className="relative z-0 h-40 sm:h-52 lg:flex-1 lg:h-auto lg:min-h-[180px] my-6">
-          <AccentCoil className="absolute inset-0" />
+          <RotatableCoil className="absolute inset-0" />
         </div>
 
         <div className="relative z-20 max-w-md">

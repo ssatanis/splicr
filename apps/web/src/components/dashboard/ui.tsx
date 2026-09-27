@@ -16,7 +16,10 @@ export function Card({ className, children, title, action, subtitle }: {
       {(title || action) && (
         <div className="flex items-start justify-between gap-4 mb-4">
           <div>
-            {title && <h3 className="text-ink text-lg font-medium">{title}</h3>}
+            {/* h2, not h3: every dashboard page puts its h1 in PageHeader, so a
+                card sits directly under it and skipping a level would leave a
+                hole in the outline a screen reader has to guess at. */}
+            {title && <h2 className="text-ink text-lg font-medium">{title}</h2>}
             {subtitle && <p className="text-sm text-muted mt-0.5">{subtitle}</p>}
           </div>
           {action}
@@ -47,7 +50,9 @@ export function PageHeader({ eyebrow, title, body, actions }: { eyebrow?: string
         <h1 className="text-3xl md:text-4xl text-ink font-medium tracking-tight">{title}</h1>
         {body && <p className="mt-2 text-body max-w-2xl">{body}</p>}
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      {/* Wraps, because a header with two actions ran off the right edge of a
+          375px viewport where the page cannot scroll sideways to reach it. */}
+      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
   );
 }
@@ -136,14 +141,20 @@ export function StageRail({ stages, compact = false }: { stages: { key: string; 
   );
 }
 
-export function Tabs({ tabs, active, hrefFor }: { tabs: { key: string; label: string; count?: number }[]; active: string; hrefFor: (k: string) => string }) {
+/**
+ * These are links that change the URL, not ARIA tabs, so they are a labelled
+ * navigation landmark with aria-current rather than a tablist. Calling them a
+ * tablist would promise a panel that moves with arrow keys, which it is not.
+ */
+export function Tabs({ tabs, active, hrefFor, label = "Sections" }: { tabs: { key: string; label: string; count?: number }[]; active: string; hrefFor: (k: string) => string; label?: string }) {
   return (
-    <div className="flex gap-1 overflow-x-auto thin-scroll border-b border-line">
+    <nav aria-label={label} className="flex gap-1 overflow-x-auto thin-scroll border-b border-line">
       {tabs.map((t) => (
         <Link
           key={t.key}
           href={hrefFor(t.key)}
           scroll={false}
+          aria-current={active === t.key ? "page" : undefined}
           className={cn(
             "px-4 py-3 text-sm whitespace-nowrap border-b-2 -mb-px transition-colors",
             active === t.key ? "border-orange-500 text-ink font-medium" : "border-transparent text-muted hover:text-ink",
@@ -153,7 +164,7 @@ export function Tabs({ tabs, active, hrefFor }: { tabs: { key: string; label: st
           {typeof t.count === "number" && <span className="ml-2 text-xs text-muted">{t.count}</span>}
         </Link>
       ))}
-    </div>
+    </nav>
   );
 }
 

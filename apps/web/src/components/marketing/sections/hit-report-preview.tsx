@@ -3,8 +3,11 @@ import { Reveal } from "@/components/ui/reveal";
 import { cn } from "@/lib/utils";
 
 /**
- * A slice of a real Hit Report. Genes and effects are drawn from published
- * ferroptosis screens in A375; the confidence column is what SplicR adds.
+ * The shape of a Hit Report, not one we ran. The genes and the direction of
+ * each effect come from published A375 ferroptosis work, so the example is at
+ * least biologically true; the fold changes, FDRs and confidences are invented
+ * to show the columns. Anything added here has to stay inventable, and the
+ * caption under the card has to keep saying so.
  */
 const rows = [
   {
@@ -82,7 +85,7 @@ export function HitReportPreview() {
               <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-line">
                 <div className="min-w-0">
                   <div className="text-ink font-medium truncate">A375 ferroptosis sensitizers</div>
-                  <div className="text-xs text-muted">Brunello · RSL3 vs DMSO · 212 candidate hits</div>
+                  <div className="text-xs text-muted">Sample report · Brunello · RSL3 against DMSO · 212 candidate hits</div>
                 </div>
                 <LinkButton href="/dashboard/screens/scr_demo" tone="orange" size="sm" icon="none">
                   Open
@@ -137,9 +140,15 @@ export function HitReportPreview() {
                 ))}
               </ul>
             </div>
+            {/* The old caption said the effects "reflect published screens",
+                which invited a reader to take the fold changes as measured.
+                They are not measured. The genes and the directions come from
+                published A375 ferroptosis work; every number beside them is
+                made up to show the shape of the report. Say that first. */}
             <p className="mt-3 text-xs text-muted">
-              Effects reflect published ferroptosis screens in A375. Confidence values are
-              illustrative until your own screen is scored.
+              A sample report, not a measurement. The genes and the direction of each effect come
+              from published ferroptosis screens in A375. The numbers beside them are illustrative
+              until your own screen is scored.
             </p>
           </Reveal>
         </div>

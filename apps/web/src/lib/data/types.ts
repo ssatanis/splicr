@@ -395,11 +395,6 @@ export const DEFAULT_WORKSPACE_SETTINGS: WorkspaceSettings = {
   },
 };
 
-function asRecord(value: unknown): Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : {};
-}
 
 /**
  * Turn whatever is in organizations.settings into a complete, typed document.

@@ -5,28 +5,12 @@ import { CtaSection } from "@/components/marketing/sections/cta";
 import { DarkHero } from "@/components/three";
 import { SectionHeading } from "@/components/ui/bits";
 import { Reveal, Stagger, StaggerItem } from "@/components/ui/reveal";
-import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "About",
   description:
     "SplicR was started by researchers at Cornell University to answer one question: which hits are real?",
 };
-
-const founders = [
-  {
-    name: "Sahaj Satani",
-    initials: "SS",
-    study: "Health Care and Applied Economics and Management",
-    school: "Cornell University",
-  },
-  {
-    name: "Ishaan Samantaray",
-    initials: "IS",
-    study: "Biomedical Engineering and Computer Science",
-    school: "Cornell University",
-  },
-];
 
 const values = [
   {
@@ -54,6 +38,25 @@ const timeline = [
   { when: "Now", what: "Blind tests with design partners, benchmarked on AssayBench." },
 ];
 
+/**
+ * A founder's name, linked out. Underlined rather than recoloured, so the
+ * sentence still reads as a sentence: this sits on the dark hero where a
+ * link colour would either vanish or shout.
+ */
+function FounderLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="text-white underline decoration-white/40 underline-offset-4
+                 hover:decoration-white transition-colors"
+    >
+      {children}
+    </a>
+  );
+}
+
 export default function AboutPage() {
   return (
     <main className="sheet">
@@ -75,8 +78,14 @@ export default function AboutPage() {
             </Reveal>
             <Reveal delay={0.1}>
               <p className="mt-6 text-lg text-white/90 leading-relaxed">
-                We turn the world&apos;s CRISPR screens into ground truth for the next
-                one. Built from {site.location}.
+                <FounderLink href="https://www.linkedin.com/in/sahajsatani/">
+                  Sahaj Satani
+                </FounderLink>{" "}
+                and{" "}
+                <FounderLink href="https://ishaansamantray.com/">
+                  Ishaan Samantaray
+                </FounderLink>{" "}
+                turn the world&apos;s CRISPR screens into ground truth for the next one.
               </p>
             </Reveal>
           </div>
@@ -86,9 +95,12 @@ export default function AboutPage() {
           </div>
 
           <div className="mt-10 lg:mt-24 flex flex-wrap gap-y-5 divide-x divide-white/20">
+            {/* "1.8x, retrieval vs best AI" used to sit in the middle here. It
+                was AssayBench's label-reading oracle divided by its model
+                ensemble, so it was not a result of ours, and the technology
+                page says plainly that the models are ahead of us. */}
             {[
-              ["2,217", "Public screens"],
-              ["1.8x", "Retrieval vs best AI"],
+              ["2,217", "Published screens indexed"],
               ["334", "Held-out test screens"],
             ].map(([v, l]) => (
               <div key={l} className="px-6 first:pl-0">
@@ -126,25 +138,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="bg-mist-soft py-16 md:py-24">
-        <div className="container-x">
-          <Reveal>
-            <SectionHeading eyebrow="Who we are" title="The founders." />
-          </Reveal>
-          <Stagger className="mt-10 grid sm:grid-cols-2 gap-5 max-w-3xl">
-            {founders.map((f) => (
-              <StaggerItem key={f.name} className="card p-7">
-                <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-teal-800 text-white text-sm font-medium">
-                  {f.initials}
-                </span>
-                <div className="mt-5 text-xl text-ink font-medium">{f.name}</div>
-                <div className="mt-1.5 text-body text-sm leading-relaxed">{f.study}</div>
-                <div className="mt-0.5 text-muted text-sm">{f.school}</div>
-              </StaggerItem>
-            ))}
-          </Stagger>
-        </div>
-      </section>
 
       <section className="py-16 md:py-24">
         <div className="container-x grid lg:grid-cols-[1fr_1.4fr] gap-12 lg:gap-16">

@@ -8,7 +8,6 @@ import { ScienceSection } from "@/components/marketing/sections/science";
 import { ServicesMarquee } from "@/components/marketing/sections/services";
 import { StatementCard } from "@/components/marketing/sections/statement";
 import { StatsStrip } from "@/components/marketing/sections/stats-strip";
-import { Testimonials } from "@/components/marketing/sections/testimonials";
 
 export default function HomePage() {
   return (
@@ -22,7 +21,6 @@ export default function HomePage() {
       <PipelineSection />
       <RedefinedSection />
       <HitReportPreview />
-      <Testimonials />
       <CtaSection />
     </main>
   );

@@ -80,12 +80,19 @@ function HitTip({ active, payload }: Partial<TooltipContentProps<number, string>
 
 export function VolcanoChart({ hits, onSelect, height = 320 }: { hits: Hit[]; onSelect?: (h: Hit) => void; height?: number }) {
   const data = hits.map((h) => ({ ...h, nlp: -Math.log10(h.pValue) }));
+  // Symmetric about zero and measured off the data. The domain used to be
+  // hardcoded to [-4.2, 0.5], which drew a volcano with no positive side at all:
+  // every gene from the enriched arm fell outside the axis and simply was not
+  // on the chart.
+  const reach = Math.ceil(Math.max(1.5, ...data.map((d) => Math.abs(d.lfc))) * 1.08 * 2) / 2;
   return (
     <ChartFrame height={height}>
       <ScatterChart margin={{ top: 10, right: 10, bottom: 10, left: 0 }}>
         <CartesianGrid stroke={grid} strokeDasharray="3 3" />
-        <XAxis type="number" dataKey="lfc" name="log2 fold change" tick={axisStyle} domain={[-4.2, 0.5]} label={{ value: "log2 fold change", position: "insideBottom", offset: -4, ...axisStyle }} />
+        <XAxis type="number" dataKey="lfc" name="log2 fold change" tick={axisStyle} domain={[-reach, reach]} tickFormatter={(v) => Number(v).toFixed(1)} label={{ value: "log2 fold change", position: "insideBottom", offset: -4, ...axisStyle }} />
         <YAxis type="number" dataKey="nlp" name="-log10 p" tick={axisStyle} label={{ value: "-log10 p", angle: -90, position: "insideLeft", ...axisStyle }} />
+        <ReferenceLine x={0} stroke="#d3dbe1" />
+        <ReferenceLine x={1} stroke="#d3dbe1" strokeDasharray="4 4" />
         <ReferenceLine x={-1} stroke="#d3dbe1" strokeDasharray="4 4" />
         <ReferenceLine y={2} stroke="#d3dbe1" strokeDasharray="4 4" />
         <Tooltip content={<HitTip />} cursor={{ strokeDasharray: "3 3" }} />

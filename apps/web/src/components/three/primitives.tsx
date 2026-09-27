@@ -111,7 +111,7 @@ function subscribeMotion(cb: () => void) {
   mq.addEventListener("change", cb);
   return () => mq.removeEventListener("change", cb);
 }
-function useReducedMotion() {
+export function useReducedMotion() {
   return useSyncExternalStore(
     subscribeMotion,
     () => window.matchMedia(motionQuery).matches,

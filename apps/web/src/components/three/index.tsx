@@ -28,3 +28,8 @@ export const DarkHero = dynamic(() => import("./scenes").then((m) => m.DarkHeroS
   ssr: false,
   loading: placeholder,
 });
+/** AccentCoil, but the reader can turn it. Used on login and signup. */
+export const RotatableCoil = dynamic(() => import("./rotatable").then((m) => m.RotatableCoilScene), {
+  ssr: false,
+  loading: placeholder,
+});

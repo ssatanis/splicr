@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Minus, Plus, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 
 import { MarketingNav } from "@/components/marketing/nav";
 import { CtaSection } from "@/components/marketing/sections/cta";
 import { SideCoil, AccentCoil } from "@/components/three";
-import { LinkButton, MarkerPill, SectionHeading } from "@/components/ui/bits";
+import { LinkButton, SectionHeading } from "@/components/ui/bits";
 import { Orb } from "@/components/ui/orb";
 import { Reveal, Stagger, StaggerItem } from "@/components/ui/reveal";
 import {
@@ -30,24 +30,15 @@ export default function TechnologyPage() {
     <main className="sheet">
       <MarketingNav variant="pill" />
 
-      {/* Split hero: ribbon with zoom rail and markers, copy on the right */}
+      {/* Split hero: artwork left, copy right.
+          Three marker pills reading 82%, 11% and 71% used to float over the
+          ribbon, next to a zoom rail that zoomed nothing. On a page whose
+          subject is a calibrated chance a hit is real, three loose percentages
+          read as three scores, and they were not measurements of anything. The
+          artwork carries the section on its own. */}
       <section className="grid lg:grid-cols-[1.15fr_1fr] min-h-[600px]">
         <div className="relative min-h-[460px] overflow-hidden">
           <SideCoil className="absolute inset-0" mirror />
-          <div className="absolute left-6 md:left-10 top-1/2 -translate-y-1/2 flex flex-col items-center gap-3 text-ink/70" aria-hidden>
-            <span className="w-7 h-7 rounded-full border border-line-strong bg-white flex items-center justify-center">
-              <Plus className="w-3.5 h-3.5" />
-            </span>
-            <span className="w-px h-28 bg-line-strong relative">
-              <span className="absolute left-1/2 -translate-x-1/2 top-2 w-[3px] h-14 bg-ink rounded-full" />
-            </span>
-            <span className="w-7 h-7 rounded-full border border-line-strong bg-white flex items-center justify-center">
-              <Minus className="w-3.5 h-3.5" />
-            </span>
-          </div>
-          <MarkerPill value="82%" className="left-[48%] top-[18%]" />
-          <MarkerPill value="11%" className="left-[18%] top-[62%]" />
-          <MarkerPill value="71%" className="left-[70%] top-[66%]" />
         </div>
 
         <div className="container-x lg:pl-14 py-14 lg:py-20 flex flex-col justify-between">
@@ -69,7 +60,7 @@ export default function TechnologyPage() {
             <div className="flex gap-12">
               <div>
                 <div className="text-4xl md:text-5xl font-medium text-orange-500 tracking-tight">2,217</div>
-                <div className="mt-1 text-body">Public screens</div>
+                <div className="mt-1 text-body">Published screens in BioGRID ORCS</div>
               </div>
               <div>
                 <div className="text-4xl md:text-5xl font-medium text-orange-500 tracking-tight">1 pipeline</div>

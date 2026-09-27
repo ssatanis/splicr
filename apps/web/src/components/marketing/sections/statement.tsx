@@ -5,11 +5,16 @@ import { Cite } from "@/components/ui/cite";
 import { Reveal } from "@/components/ui/reveal";
 import { benchmarkCite } from "@/lib/content";
 
+/* The middle two rows used to read "1.8x retrieval vs best AI" and "0.29
+   oracle AnDCG@100". That ratio came from dividing AssayBench's oracle, which
+   reads the test labels, by its model ensemble, so it credited us with a
+   ceiling nobody can reach. These are the two comparable scores instead, ours
+   first, and ours is the lower one. */
 const stats = [
-  { value: "2,217", suffix: "", label: "Public screens" },
-  { value: "1.8", suffix: "x", label: "Retrieval vs best AI" },
-  { value: "0.29", suffix: "", label: "Oracle AnDCG@100" },
+  { value: "2,217", suffix: "", label: "Published screens indexed" },
   { value: "334", suffix: "", label: "Held-out test screens" },
+  { value: "0.136", suffix: "", label: "Our score on that split" },
+  { value: "0.163", suffix: "", label: "Best frontier ensemble" },
 ];
 
 export function StatementCard() {
@@ -56,8 +61,10 @@ export function StatementCard() {
                   <ArrowUpRight className="w-5 h-5" />
                 </Link>
                 <p className="mt-6 text-body leading-relaxed">
-                  On a public benchmark, finding the right past screen beats the best AI model by
-                  roughly 1.8x. The answer is in the data, not a better chatbot.
+                  On this benchmark the frontier models rank a new screen&apos;s hits better than
+                  our scorer does. They cannot read your counts, see the amplified segment your
+                  hits sit in, or say how often a call at that confidence held up. That is the
+                  part we work on.
                 </p>
                 <p className="mt-3 text-xs text-muted">
                   <Cite cite={benchmarkCite} prefix="Source:" />

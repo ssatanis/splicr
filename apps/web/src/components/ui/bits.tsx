@@ -1,4 +1,4 @@
-import { ArrowRight, ArrowUpRight, ChevronDown, MoveVertical, Play } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ChevronDown, Play } from "lucide-react";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
