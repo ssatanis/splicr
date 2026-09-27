@@ -22,40 +22,43 @@ const numbers = [
 export default function PipelinePage() {
   return (
     <main className="sheet">
-      <MarketingNav variant="pill" />
+      {/* Same dark treatment as the Technology and About Us heroes: copy on
+          the left, art on the right. Scoped to this section only. */}
+      <section className="relative bg-teal-800 text-white overflow-hidden rounded-b-[2rem]">
+        <MarketingNav variant="bar" />
+        <SideCoil className="hidden lg:block absolute inset-y-0 right-0 w-[52%] pointer-events-none" />
 
-      <section className="container-x pt-12 md:pt-20 pb-10 grid lg:grid-cols-[1.1fr_0.9fr] gap-10 items-center">
-        <div>
-          <Reveal>
-            <h1 className="font-serif text-ink leading-[0.95] tracking-[-0.02em] text-[clamp(2.6rem,7vw,5.5rem)] max-w-3xl">
-              From reads to a
-              <br />
-              calibrated answer
-            </h1>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <p className="mt-6 max-w-xl text-lg text-body leading-relaxed">
-              One pipeline runs on your screen and on every screen in the Atlas. That is
-              what makes the numbers comparable.
-            </p>
-          </Reveal>
+        <div className="relative container-x pt-10 pb-16 lg:pt-16 lg:pb-24">
+          <div className="lg:max-w-[46%]">
+            <Reveal>
+              <h1 className="font-serif text-white leading-[0.95] tracking-[-0.02em] text-[clamp(2.4rem,6vw,4.4rem)]">
+                From reads to a
+                <br />
+                calibrated answer
+              </h1>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <p className="mt-6 text-lg text-white/90 leading-relaxed">
+                One pipeline runs on your screen and on every screen in the Atlas. That is
+                what makes the numbers comparable.
+              </p>
+            </Reveal>
+          </div>
 
-          <Reveal delay={0.2}>
-            <div className="mt-10 flex flex-wrap gap-x-12 gap-y-5 border-y border-line py-6">
-              {numbers.map((n) => (
-                <div key={n.label}>
-                  <div className="text-3xl md:text-4xl font-medium text-ink tabular-nums">
-                    {n.value}
-                  </div>
-                  <div className="mt-1 text-sm text-body">{n.label}</div>
+          <div className="relative lg:hidden h-52 my-8">
+            <SideCoil className="absolute inset-0" />
+          </div>
+
+          <div className="mt-10 lg:mt-16 lg:max-w-[46%] flex flex-wrap gap-y-5 divide-x divide-white/20">
+            {numbers.map((n) => (
+              <div key={n.label} className="px-6 first:pl-0">
+                <div className="text-2xl md:text-3xl font-medium tabular-nums text-orange-400">
+                  {n.value}
                 </div>
-              ))}
-            </div>
-          </Reveal>
-        </div>
-
-        <div className="relative hidden lg:block h-[420px]">
-          <SideCoil className="absolute inset-0" />
+                <div className="text-white/90 text-xs md:text-sm mt-1">{n.label}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

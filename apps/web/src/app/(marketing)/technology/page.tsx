@@ -35,7 +35,7 @@ export default function TechnologyPage() {
         <div className="relative container-x pt-10 pb-16 lg:pt-16 lg:pb-24">
           <div className="lg:max-w-[46%] lg:ml-auto">
             <Reveal>
-              <h1 className="display text-white text-4xl sm:text-5xl lg:text-[4.2rem]">
+              <h1 className="font-serif text-white leading-[0.95] tracking-[-0.02em] text-[clamp(2.4rem,6vw,4.4rem)]">
                 Screens, meet
                 <br />
                 the answer key.
