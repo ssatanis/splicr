@@ -101,6 +101,54 @@ export function SideCoilScene({ className, mirror = false }: { className?: strin
   );
 }
 
+/**
+ * Two side positions as fractions of the visible viewport, same trick as
+ * useCorners: this is one full-width canvas, so there is no div edge to
+ * clip the coils — they just taper off naturally at the frustum's edge.
+ */
+function useSides() {
+  const { width } = useThree((s) => s.viewport);
+  const halfW = width / 2;
+  return {
+    left: -0.86 * halfW,
+    right: 0.86 * halfW,
+  };
+}
+
+/** A coil framing each edge of a hero, mirrored, sharing one canvas so
+    neither is clipped by a container boundary. */
+function SideFrameRig() {
+  const { left, right } = useSides();
+  return (
+    <>
+      <Studio />
+      <Drift speed={0.8} rotation={0.35} float={0.7}>
+        <group position={[left, 0, -0.5]} rotation={[-0.35, -0.5, 0.15]}>
+          <SmoothTube seed={61} spread={[2.6, 2.6, 1.6]} radius={0.16} position={[1.2, 1.4, -0.8]} />
+          <CoilRibbon seed={71} spread={[3.4, 1.6, 1.2]} radius={0.7} turns={9} width={0.55} thickness={0.08} position={[-0.6, -0.6, 0]} />
+          <CoilRibbon seed={73} spread={[2, 1, 0.8]} radius={0.42} turns={6} scale={0.7} position={[2.4, -2.2, 0.8]} rotation={[0.6, 0.2, 1.2]} />
+        </group>
+      </Drift>
+      <Drift speed={0.75} rotation={0.3} float={0.65}>
+        <group position={[right, 0, -1]} rotation={[0.35, 0.5, 0.15]}>
+          <SmoothTube seed={81} spread={[2.6, 2.6, 1.6]} radius={0.16} position={[-1.2, 1.4, -0.8]} />
+          <CoilRibbon seed={83} spread={[3.4, 1.6, 1.2]} radius={0.7} turns={9} width={0.55} thickness={0.08} position={[0.6, -0.6, 0]} />
+          <CoilRibbon seed={85} spread={[2, 1, 0.8]} radius={0.42} turns={6} scale={0.7} position={[-2.4, -2.2, 0.8]} rotation={[0.6, 0.2, 1.2]} />
+        </group>
+      </Drift>
+    </>
+  );
+}
+
+/** Coils framing the far left and right edges of a hero, one canvas wide. */
+export function SideFrameScene({ className }: { className?: string }) {
+  return (
+    <Scene className={className} camera={{ position: [0, 0, 11], fov: 34 }}>
+      <SideFrameRig />
+    </Scene>
+  );
+}
+
 /** Three wide twisted ribbons across the pipeline section. */
 export function WaveRibbonScene({ className }: { className?: string }) {
   return (

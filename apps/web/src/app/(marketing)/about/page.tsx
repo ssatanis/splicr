@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { MarketingNav } from "@/components/marketing/nav";
 import { CtaSection } from "@/components/marketing/sections/cta";
-import { DarkHero, SideCoil } from "@/components/three";
+import { DarkHero, SideFrame } from "@/components/three";
 import { SectionHeading } from "@/components/ui/bits";
 import { Reveal, Stagger, StaggerItem } from "@/components/ui/reveal";
 
@@ -65,10 +65,10 @@ export default function AboutPage() {
           white on a light background. */}
       <section className="relative bg-teal-800 text-white overflow-hidden rounded-b-[2rem] lg:min-h-[640px]">
         <MarketingNav variant="bar" />
-        {/* Art frames both edges, homepage-hero style, and sits behind the
-            centered copy rather than sharing a column with it. */}
-        <SideCoil mirror className="hidden lg:block absolute top-24 bottom-0 left-0 w-[34%] pointer-events-none" />
-        <SideCoil className="hidden lg:block absolute top-24 bottom-0 right-0 w-[34%] pointer-events-none" />
+        {/* One full-width canvas, homepage-hero style: the two coils sit at
+            the far edges but nothing clips them at a container boundary, so
+            they taper off naturally instead of ending in a hard box edge. */}
+        <SideFrame className="hidden lg:block absolute inset-x-0 top-24 bottom-0 pointer-events-none" />
 
         <div className="relative container-x pt-10 pb-16 lg:pt-0 lg:pb-0 lg:absolute lg:inset-0 lg:flex lg:flex-col lg:items-center lg:justify-center">
           <div className="lg:max-w-2xl lg:text-center">

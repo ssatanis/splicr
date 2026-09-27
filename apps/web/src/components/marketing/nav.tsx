@@ -36,8 +36,7 @@ export function MarketingNav({ variant = "pill" }: { variant?: "pill" | "bar" })
 
           <nav className="hidden lg:flex items-center gap-9 text-[0.95rem]">
             {marketingNav.map((item) => {
-              const active =
-                item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+              const active = pathname.startsWith(item.href);
               return (
                 <Link
                   key={item.href}
