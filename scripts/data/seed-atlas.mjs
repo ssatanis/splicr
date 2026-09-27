@@ -1,7 +1,7 @@
 /**
  * Loads downloaded reference data into the atlas schema.
  *
- *   node scripts/data/seed-atlas.mjs            genes, gene sets, libraries
+ *   node scripts/data/seed-atlas.mjs            genes and gene sets
  *   node scripts/data/seed-atlas.mjs --genes    one section only
  *
  * Idempotent: everything upserts on a natural key, so re-running is safe.
@@ -194,83 +194,14 @@ if (want("genesets")) {
 }
 
 /* ------------------------------------------------------------ libraries ---- */
-if (want("libraries")) {
-  // Broad GPP files use bare CR line endings; normalize before splitting.
-  const readRows = (p) => readFileSync(p, "utf8").replace(/\r\n?/g, "\n").split("\n").filter(Boolean);
+// Libraries and guides are seeded by scripts/data/seed-libraries.py, which uses
+// the engine's own parsers. The copy that lived here parsed the files a second
+// time in JavaScript and split every header on a tab, so the comma-delimited
+// files (both GeCKOv2 sets and both mouse GeCKOv2 sets) were rejected as an
+// unexpected header and never reached the Atlas. It also did not know that
+// Brie's controls ship in a separate file. One parser for both the analysis and
+// the Atlas means the two cannot drift apart.
 
-  const defs = [
-    { slug: "brunello", name: "Brunello", file: "brunello.txt", taxid: 9606, modality: "knockout", cas: "SpCas9",
-      addgene: "73179", seqCol: "sgRNA Target Sequence", geneCol: "Target Gene Symbol", control: "Non-Targeting Control" },
-    { slug: "brie", name: "Brie", file: "brie.txt", taxid: 10090, modality: "knockout", cas: "SpCas9",
-      addgene: "73633", seqCol: "sgRNA Target Sequence", geneCol: "Target Gene Symbol", control: "Non-Targeting Control" },
-    { slug: "gattinara", name: "Gattinara", file: "gattinara.txt", taxid: 9606, modality: "knockout", cas: "SpCas9",
-      addgene: "136986", seqCol: "Barcode Sequence", geneCol: "Annotated Gene Symbol", control: "NEG_CONTROL" },
-    { slug: "calabrese-a", name: "Calabrese Set A", file: "calabrese-a.txt", taxid: 9606, modality: "crispra", cas: "dCas9-p65-HSF",
-      addgene: "92379", seqCol: "Barcode Sequence", geneCol: "Annotated Gene Symbol", control: "NO-TARGET" },
-    { slug: "dolcetto-a", name: "Dolcetto Set A", file: "dolcetto-a.txt", taxid: 9606, modality: "crispri", cas: "dCas9-KRAB",
-      addgene: "92385", seqCol: "Barcode Sequence", geneCol: "Annotated Gene Symbol", control: "NO-TARGET" },
-  ];
-
-  for (const d of defs) {
-    const file = join(REF, "libraries", d.file);
-    if (!existsSync(file)) { console.log(`! skipping ${d.slug}: missing`); continue; }
-    const lines = readRows(file);
-    const header = lines[0].split("\t");
-    const si = header.indexOf(d.seqCol);
-    const gi = header.indexOf(d.geneCol);
-    if (si < 0 || gi < 0) { console.log(`! skipping ${d.slug}: unexpected header`); continue; }
-
-    const guides = [];
-    const genes = new Set();
-    let controls = 0;
-    for (let i = 1; i < lines.length; i++) {
-      const f = lines[i].split("\t");
-      const seq = (f[si] ?? "").trim().toUpperCase();
-      if (!/^[ACGTN]{15,34}$/.test(seq)) continue;
-      const gene = (f[gi] ?? "").trim();
-      const isControl = !gene || gene.startsWith(d.control);
-      if (isControl) controls++; else genes.add(gene);
-      guides.push({
-        guide_key: `${d.slug}:${i}`,
-        sequence: seq,
-        gene_symbol: isControl ? null : gene,
-        is_control: isControl,
-        control_type: isControl ? "non_targeting" : null,
-      });
-    }
-
-    const { rows: [lib] } = await client.query(
-      `insert into atlas.libraries
-         (slug, name, taxid, modality, cas, n_guides, n_targeting, n_controls, n_genes,
-          guides_per_gene, guide_length, addgene_id, source_version)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
-       on conflict (slug) where org_id is null do update set
-         n_guides = excluded.n_guides, n_targeting = excluded.n_targeting,
-         n_controls = excluded.n_controls, n_genes = excluded.n_genes,
-         guides_per_gene = excluded.guides_per_gene, updated_at = now()
-       returning id`,
-      [d.slug, d.name, d.taxid, d.modality, d.cas, guides.length, guides.length - controls,
-       controls, genes.size, genes.size ? ((guides.length - controls) / genes.size).toFixed(2) : null,
-       guides[0]?.sequence.length ?? null, d.addgene, "addgene"],
-    );
-
-    await client.query("begin");
-    await client.query(`delete from atlas.guides where library_id = $1`, [lib.id]);
-    await client.query(`create temp table _guides (
-      library_id uuid, guide_key text, sequence text, gene_symbol text,
-      is_control boolean, control_type text) on commit drop`);
-    const cols = ["library_id","guide_key","sequence","gene_symbol","is_control","control_type"];
-    await copyInto("_guides", cols, guides.map((g) => ({ ...g, library_id: lib.id })));
-    await client.query(`
-      insert into atlas.guides (library_id, guide_key, sequence, gene_symbol, gene_id, is_control, control_type)
-      select t.library_id, t.guide_key, t.sequence, t.gene_symbol, g.id, t.is_control, t.control_type
-      from _guides t
-      left join atlas.genes g on g.symbol = t.gene_symbol and g.taxid = $1
-    `, [d.taxid]);
-    await client.query("commit");
-    console.log(`library ${d.slug}: ${guides.length} guides, ${genes.size} genes, ${controls} controls`);
-  }
-}
 
 const { rows: counts } = await client.query(`
   select 'genes' t, count(*)::int n from atlas.genes

@@ -16,7 +16,7 @@ import type { ApiKey } from "@/lib/data/types";
 export const DEMO_API_KEYS: readonly ApiKey[] = [
   {
     id: "demo-key-notebook",
-    name: "Lab notebook agent",
+    name: "Lab notebook sync",
     key_prefix: "spk_live_7f3",
     scopes: ["atlas:read", "hits:read"],
     created_by: null,

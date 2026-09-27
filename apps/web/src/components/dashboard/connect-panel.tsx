@@ -21,7 +21,6 @@ import {
   Loader2,
   Plus,
   ShieldCheck,
-  Terminal,
   TriangleAlert,
   X,
 } from "lucide-react";
@@ -30,12 +29,9 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState, useTransition
 
 import {
   CONNECT_SCOPES,
-  CONNECT_TOOLS,
   KEY_PLACEHOLDER,
   SCREEN_PLACEHOLDER,
-  claudeMcpSnippet,
   curlSnippet,
-  mcpJsonSnippet,
   type SnippetInputs,
 } from "@/lib/connect/config";
 import { createApiKey, revokeApiKey } from "@/lib/data/actions";
@@ -320,7 +316,7 @@ function CreateKeyForm({
               if (event.key === "Enter") submit();
             }}
             maxLength={80}
-            placeholder="Lab notebook agent"
+            placeholder="Lab notebook sync"
             className="underline-input"
           />
         </div>
@@ -578,8 +574,6 @@ export function ConnectPanel({
   );
 
   const curl = useMemo(() => curlSnippet(snippetInputs), [snippetInputs]);
-  const mcpAdd = useMemo(() => claudeMcpSnippet(snippetInputs), [snippetInputs]);
-  const mcpJson = useMemo(() => mcpJsonSnippet(snippetInputs), [snippetInputs]);
 
   const liveKeys = keys.filter((key) => key.status === "active").length;
 
@@ -599,8 +593,8 @@ export function ConnectPanel({
     <div className="space-y-4">
       <PageHeader
         eyebrow="Connect"
-        title="They bring the chat, you bring the truth"
-        body="A scoped key, a REST endpoint and a tool list, so a coding agent can read this workspace's hits mid-conversation instead of asking somebody to export a CSV."
+        title="Read your results from anywhere"
+        body="A scoped key and a REST endpoint, so a script, a notebook or a pipeline can pull this workspace's hits directly instead of waiting on an exported CSV."
         actions={createButton}
       />
 
@@ -685,7 +679,7 @@ export function ConnectPanel({
           {keys.length === 0 ? (
             <Empty
               title={isDemo ? "No keys in the demo workspace" : "No API keys yet"}
-              body="A key lets a script or a coding agent read this workspace over HTTP: the hits from a finished screen, their artifact flags, the QC verdict. Each key carries scopes, so a reader cannot write, and revoking one takes effect on its next request."
+              body="A key lets a script read this workspace over HTTP: the hits from a finished screen, their artifact flags, the QC verdict. Each key carries scopes, so a reader cannot write, and revoking one takes effect on its next request."
               action={canManage ? createButton : undefined}
             />
           ) : (
@@ -756,70 +750,6 @@ export function ConnectPanel({
           </div>
         </Card>
 
-        <Card
-          title="Add SplicR to Claude Code"
-          subtitle="Remote MCP over Streamable HTTP"
-          className="min-w-0"
-        >
-          <p className="flex items-start gap-2 text-sm text-body">
-            <Terminal className="w-4 h-4 mt-0.5 shrink-0 text-muted" />
-            <span>
-              The MCP bridge is not serving yet, so these two blocks register an endpoint that will
-              answer later. The REST call above is what works today, with the same key.
-            </span>
-          </p>
-          <CodeBlock label="Claude Code" code={mcpAdd} />
-          <CodeBlock label=".mcp.json" code={mcpJson} />
-        </Card>
-
-        <Card
-          title="Tools exposed to agents"
-          subtitle="What a model can call, and with which scope"
-          className="min-w-0"
-        >
-          <div className="overflow-x-auto thin-scroll -mx-1 px-1">
-            <table className="table-base min-w-[520px]">
-              <thead>
-                <tr>
-                  <th>Tool</th>
-                  <th>Scope</th>
-                  <th>State</th>
-                </tr>
-              </thead>
-              <tbody>
-                {CONNECT_TOOLS.map((tool) => (
-                  <tr key={tool.name}>
-                    <td className="align-top">
-                      <div className="font-mono text-xs text-ink">{tool.name}</div>
-                      <div className="text-xs text-muted mt-1 max-w-sm">{tool.summary}</div>
-                      <div className="text-[11px] text-muted mt-1 font-mono">
-                        {tool.endpoint}
-                      </div>
-                      <div className="text-[11px] text-muted mt-0.5">args: {tool.args}</div>
-                    </td>
-                    <td className="align-top">
-                      <span className="rounded-md bg-mist-soft px-1.5 py-0.5 font-mono text-[11px] text-ink whitespace-nowrap">
-                        {tool.scope}
-                      </span>
-                    </td>
-                    <td className="align-top">
-                      <span
-                        className={cn(
-                          "inline-flex rounded-full px-2.5 py-1 text-xs whitespace-nowrap",
-                          tool.status === "live"
-                            ? "bg-cyan-50 text-cyan-700"
-                            : "bg-mist-soft text-muted",
-                        )}
-                      >
-                        {tool.status === "live" ? "Live" : "Planned"}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
       </div>
 
       <CreateKeyDialog

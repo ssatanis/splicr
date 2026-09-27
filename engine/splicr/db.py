@@ -376,6 +376,13 @@ def finish_run(conn: "psycopg.Connection", ctx: RunContext, status: str = "compl
         "update public.runs set status = %s, error = %s, finished_at = now() where id = %s",
         (status, error, ctx.run_id),
     )
+    # Roll the run's QC verdict up onto the screen. Without this the screen sits
+    # at the 'pending' default forever, so a screen whose QC failed is served as
+    # "not checked yet" by the dashboard and by /api/v1/hits. Read back from
+    # run_qc rather than passed in, so the two can never disagree.
+    verdict = conn.execute(
+        "select verdict from public.run_qc where run_id = %s", (ctx.run_id,)
+    ).fetchone()
     counts = conn.execute(
         """
         select count(*),
@@ -388,10 +395,11 @@ def finish_run(conn: "psycopg.Connection", ctx: RunContext, status: str = "compl
     conn.execute(
         """
         update public.screens
-           set status = %s, n_hits = %s, n_real_hits = %s, updated_at = now()
+           set status = %s, qc = %s, n_hits = %s, n_real_hits = %s, updated_at = now()
          where id = %s
         """,
         ("complete" if status == "complete" else "failed",
+         verdict[0] if verdict else "pending",
          counts[0] or 0, counts[1] or 0, ctx.screen_id),
     )
 
