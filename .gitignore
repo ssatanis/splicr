@@ -24,10 +24,14 @@ __pycache__/
 dist/
 *.egg-info/
 
-# downloaded reference data: large, and some sources forbid redistribution
+# Downloaded data: large, and some sources forbid redistribution.
+# The READMEs that record provenance are kept.
 data/references/
 data/atlas/
 data/cache/
+data/testdata/*
+!data/testdata/README.md
+!data/testdata/*.json
 *.fastq
 *.fastq.gz
 *.fq.gz
