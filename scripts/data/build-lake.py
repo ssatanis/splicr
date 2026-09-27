@@ -103,7 +103,7 @@ def build_copy_number() -> str:
         f"create or replace view _cn as select * from read_csv('{path}', header=true, "
         "sample_size=4000, all_varchar=false)"
     )
-    first = conn.execute("select name from (describe _cn) limit 1").fetchone()[0]
+    first = conn.execute("select column_name from (describe _cn) limit 1").fetchone()[0]
     return (
         f'select "{first}" as model_id, '
         "regexp_replace(gene_label, ' \\(.*', '') as gene_symbol, "

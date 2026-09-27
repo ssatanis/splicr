@@ -1,0 +1,56 @@
+{
+  "dataset": "GSE145743",
+  "library": "geckov2-a",
+  "published_table": "GSE145743_my_counts_anno_merged.txt.gz",
+  "note": "The deposited table is normalised to 10,000,000 reads per column, 5,000,000 per library across the two halves it merges, so counts are compared as counts per million rather than raw. Only GeCKOv2 library A guides are compared, because the deposited columns merge libraries A and B.",
+  "samples": [
+    {
+      "fastq": "SRR12401850_libA_plasmid.fastq.gz",
+      "published_column": "plasmid",
+      "guides_compared": 65383,
+      "median_cpm_ratio": 0.9691,
+      "fraction_within_25_percent": 0.8949,
+      "spearman": 0.9289,
+      "zero_guides_splicr": 1574,
+      "zero_guides_published": 2661,
+      "reads": 3119503,
+      "mapping_rate": 0.8893
+    },
+    {
+      "fastq": "SRR11144449_libA_T0_input.fastq.gz",
+      "published_column": "input",
+      "guides_compared": 65383,
+      "median_cpm_ratio": 0.9723,
+      "fraction_within_25_percent": 0.8885,
+      "spearman": 0.9399,
+      "zero_guides_splicr": 1748,
+      "zero_guides_published": 3013,
+      "reads": 12449815,
+      "mapping_rate": 0.8863
+    },
+    {
+      "fastq": "SRR11144453_libA_DMSO_rep1.fastq.gz",
+      "published_column": "DMSO1",
+      "guides_compared": 65383,
+      "median_cpm_ratio": 0.9763,
+      "fraction_within_25_percent": 0.8401,
+      "spearman": 0.9533,
+      "zero_guides_splicr": 3186,
+      "zero_guides_published": 4713,
+      "reads": 5896213,
+      "mapping_rate": 0.8143
+    },
+    {
+      "fastq": "SRR11144451_libA_olaparib_rep1.fastq.gz",
+      "published_column": "Olaparib1",
+      "guides_compared": 65383,
+      "median_cpm_ratio": 0.9762,
+      "fraction_within_25_percent": 0.8409,
+      "spearman": 0.9548,
+      "zero_guides_splicr": 4188,
+      "zero_guides_published": 5734,
+      "reads": 4871170,
+      "mapping_rate": 0.871
+    }
+  ]
+}
