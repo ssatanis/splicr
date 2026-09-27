@@ -140,35 +140,63 @@ def check_single_guide(
     thresholds: ArtifactThresholds = SETTINGS.artifacts,
 ) -> Flag | None:
     share = gene.max_guide_share
-    if share is None or share < thresholds.single_guide_share:
+    n = len(gene.guide_lfcs)
+    if share is None or not n:
+        return None
+    # Scale the bar to the guide count. An even split gives each guide 1/n, so
+    # the same share is far less surprising with three guides than with ten:
+    # 60% of three is under twice an even share, while 60% of ten is six times
+    # it. The floor is twice the even share, which only binds at n <= 3.
+    limit = max(thresholds.single_guide_share, 2.0 / n)
+    if share < limit:
         return None
     return Flag(
         flag="single_guide",
         severity="critical" if share > 0.8 else "warn",
-        message=f"One guide carries {share:.0%} of the gene-level signal.",
+        message=f"One guide carries {share:.0%} of the gene-level signal, of {n} guides.",
         evidence={
             "max_guide_share": round(share, 3),
-            "n_guides": len(gene.guide_lfcs),
+            "n_guides": n,
             "guide_lfcs": [round(v, 3) for v in gene.guide_lfcs],
-            "threshold": thresholds.single_guide_share,
+            "threshold": round(limit, 3),
         },
     )
 
 
-def check_guide_disagreement(gene: GeneResult) -> Flag | None:
+def check_guide_disagreement(
+    gene: GeneResult,
+    thresholds: ArtifactThresholds = SETTINGS.artifacts,
+) -> Flag | None:
+    """
+    The gene-level effect rests on a minority of its guides.
+
+    The bar is a minority, not unanimity. Requiring 75% agreement means
+    requiring all three guides in a 3-guide library, since the only values
+    available there are 1, 2/3 and 1/3. On a real GeCKOv2 Set A screen that
+    flagged 7,974 genes for the single reason that two of their three guides
+    agreed, which is a majority and is what a working guide set looks like.
+    Under a null the directions are close to coin flips, so a quarter of all
+    genes reach unanimity by chance and the other three quarters were flagged.
+    """
     agreement = gene.guide_agreement
-    if agreement is None or agreement >= 0.75 or len(gene.guide_lfcs) < 3:
+    if agreement is None or len(gene.guide_lfcs) < 3:
         return None
+    if agreement > thresholds.guide_agreement_min:
+        return None
+    n_agree = round(agreement * len(gene.guide_lfcs))
     return Flag(
         flag="single_guide",
         severity="warn",
         message=(
-            f"Only {agreement:.0%} of guides move in the same direction as the "
-            "gene-level effect."
+            f"Only {n_agree} of {len(gene.guide_lfcs)} guides move in the same "
+            "direction as the gene-level effect."
         ),
         evidence={
             "guide_agreement": round(agreement, 3),
+            "n_agree": n_agree,
+            "n_guides": len(gene.guide_lfcs),
             "guide_lfcs": [round(v, 3) for v in gene.guide_lfcs],
+            "threshold": thresholds.guide_agreement_min,
         },
     )
 
@@ -490,7 +518,7 @@ def flag_artifacts(
         if f:
             flags.append(f)
         else:
-            f = check_guide_disagreement(gene)
+            f = check_guide_disagreement(gene, thresholds)
             if f:
                 flags.append(f)
 
@@ -520,9 +548,21 @@ def flag_artifacts(
     return out
 
 
-def summarise_flags(flags: dict[str, list[Flag]]) -> dict[str, int]:
+def summarise_flags(
+    flags: dict[str, list[Flag]],
+    genes: list[str] | None = None,
+) -> dict[str, int]:
+    """
+    Count flags by kind.
+
+    Pass `genes` to count over the genes that were actually called. Flags are
+    stored for every gene, so that a user looking one up sees its caveats, but a
+    genome-wide total is not a useful headline: on a 20,916-gene screen with 11
+    called hits, most of the count describes genes nobody will read.
+    """
+    keys = flags.keys() if genes is None else [g for g in genes if g in flags]
     counts: dict[str, int] = {}
-    for gene_flags in flags.values():
-        for f in gene_flags:
+    for key in keys:
+        for f in flags[key]:
             counts[f.flag] = counts.get(f.flag, 0) + 1
     return dict(sorted(counts.items(), key=lambda kv: -kv[1]))

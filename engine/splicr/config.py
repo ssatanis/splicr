@@ -130,8 +130,17 @@ class ArtifactThresholds:
     """Thresholds for artifact flagging."""
 
     # Fraction of the absolute gene-level signal carried by a single guide
-    # before the hit is flagged as single-guide driven.
+    # before the hit is flagged as single-guide driven. Raised to twice an even
+    # share when a gene has three guides or fewer, where 0.60 is barely above
+    # chance.
     single_guide_share: float = 0.60
+
+    # Flag when at most this fraction of a gene's guides move with the
+    # gene-level effect, that is when only a minority does. Our convention. The
+    # bar is deliberately not unanimity: with three guides the only achievable
+    # values are 1, 2/3 and 1/3, so anything above 1/2 demands all three and
+    # flags every gene whose guides are not perfectly consistent.
+    guide_agreement_min: float = 0.50
 
     # Guides with more than this many perfect genomic alignments are
     # promiscuous. DepMap drops guides with > 5 alignments; BAGEL2 uses 10.

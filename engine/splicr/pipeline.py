@@ -62,8 +62,11 @@ class PipelineResult:
         if self.hits:
             sig = self.hits.significant(0.1)
             lines.append(f"  {len(self.hits.genes)} genes scored, {len(sig)} significant at FDR 0.1")
-        if self.flags:
-            lines.append(f"  flags: {summarise_flags(self.flags)}")
+        if self.flags and self.hits:
+            called = [g.gene for g in self.hits.significant(0.1)]
+            lines.append(f"  flags on called hits: "
+                         f"{summarise_flags(self.flags, called) or 'none'}")
+            lines.append(f"  flags over all genes: {summarise_flags(self.flags)}")
         return "\n".join(lines)
 
 
@@ -227,8 +230,14 @@ def run_pipeline(
         t = time.time()
         flags = flag_artifacts(hits, library, model_id=spec.model_id)
         result.flags = flags
-        record("artifacts", "done", f"{summarise_flags(flags)}", "splicr.artifacts", t,
-               summarise_flags(flags))
+        # Reported over the called hits. Every gene keeps its flags in the
+        # database; the headline is about the genes anyone will read.
+        called = [g.gene for g in hits.significant(0.1)]
+        on_called = summarise_flags(flags, called)
+        record("artifacts", "done",
+               f"{len(called)} called hits: {on_called or 'no flags'}",
+               "splicr.artifacts", t,
+               {"on_called_hits": on_called, "all_genes": summarise_flags(flags)})
 
         # --- 07 atlas ------------------------------------------------------
         t = time.time()
