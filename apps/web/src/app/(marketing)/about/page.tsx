@@ -63,11 +63,11 @@ export default function AboutPage() {
       {/* The dark treatment is scoped to this section only. Applying it to the
           whole sheet made the headings in the white sections below render
           white on a light background. */}
-      <section className="relative bg-teal-800 text-white overflow-hidden rounded-b-[2rem]">
+      <section className="relative bg-teal-800 text-white overflow-hidden rounded-b-[2rem] lg:min-h-[640px]">
         <MarketingNav variant="bar" />
         <DarkHero className="hidden lg:block absolute inset-y-0 right-0 w-[52%] pointer-events-none" />
 
-        <div className="relative container-x pt-10 pb-16 lg:pt-16 lg:pb-24">
+        <div className="relative container-x pt-10 pb-16 lg:pt-0 lg:pb-0 lg:absolute lg:inset-0 lg:flex lg:flex-col lg:justify-center">
           <div className="lg:max-w-[46%]">
             <Reveal>
               <h1 className="font-serif text-white leading-[0.95] tracking-[-0.02em] text-[clamp(2.4rem,6vw,4.4rem)]">
