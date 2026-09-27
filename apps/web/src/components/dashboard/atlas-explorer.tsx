@@ -139,7 +139,7 @@ export function AtlasExplorer() {
   const hidden = atlasScreensList.length - sorted.length;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
+    <div className="flex flex-col gap-3 lg:min-h-0 lg:flex-1">
       <PageHeader
         dense
         title="Atlas"
@@ -151,6 +151,7 @@ export function AtlasExplorer() {
       </SampleNote>
 
       <KpiStrip
+        className="shrink-0"
         title="Corpus"
         count={`${formatNumber(ATLAS_SCREENS_TOTAL)} screens indexed`}
         footer={<FootNote>Monthly refresh, last Sep 2026, from the sample manifest</FootNote>}
@@ -297,13 +298,13 @@ export function AtlasExplorer() {
           }
           bodyClassName="py-2.5"
         >
-          <div className="flex flex-wrap items-start gap-x-6 gap-y-2">
+          <div className="flex flex-col items-start gap-x-6 gap-y-2 sm:flex-row">
             <FilterField
               label="Gene symbol"
               value={gene}
               onChange={(value) => set({ gene: value })}
               placeholder={`Gene symbol, for instance ${examples}`}
-              className="w-full max-w-[260px]"
+              className="w-full shrink-0 sm:max-w-[260px]"
             />
 
             {hit ? (

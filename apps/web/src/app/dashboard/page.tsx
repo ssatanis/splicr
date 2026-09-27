@@ -176,6 +176,22 @@ function plural(n: number, one: string, many: string) {
   return `${formatNumber(n)} ${n === 1 ? one : many}`;
 }
 
+/**
+ * How the two grid cells behave at each width.
+ *
+ * One column until lg rather than the system's default of two from md: a 354px
+ * column at 768 gives the candidate table half the width it needs and hands the
+ * outcomes panel 2,348px of empty white to stretch into beside it. Two columns
+ * start where there is room for two.
+ *
+ * The cap below lg is what keeps the rest of the page reachable on a phone. The
+ * panel is as tall as its rows there, and seventy-six of them put the runs and
+ * the outcomes 2,500px down a page nobody scrolls that far. Capped, the table
+ * scrolls inside the panel and the panels below it stay one thumb away.
+ */
+const CANDIDATES_CELL = "panel-in min-h-0 max-h-[70vh] md:col-span-12 lg:col-span-6 lg:max-h-none";
+const STACK_CELL = "md:col-span-12 lg:col-span-6";
+
 /** Where the likely-real cut sits, spelled out once for every label that cites it. */
 const REAL_CUT = `chance real ${LIKELY_REAL_THRESHOLD.toFixed(2)} or above`;
 
@@ -293,7 +309,11 @@ function WorkspaceOverview({
           : `${plural(stats.screens, "screen", "screens")}, ${plural(stats.hits, "hit", "hits")} called and ${plural(stats.outcomes, "bench outcome", "bench outcomes")} logged.`
       }
       strip={
-        <KpiStrip title="Where this workspace stands" count={`${plural(stats.screens, "screen", "screens")}`}>
+        <KpiStrip
+          title="Where this workspace stands"
+          count={plural(stats.screens, "screen", "screens")}
+          className="panel-in shrink-0"
+        >
           <KpiTile
             label="Candidates ranked"
             value={formatNumber(candidates.length)}
@@ -330,7 +350,7 @@ function WorkspaceOverview({
       }
     >
       <CandidatesPanel
-        className="panel-in min-h-0"
+        className={CANDIDATES_CELL}
         rows={candidates}
         ranked={headline.scored ? "chance" : "fdr"}
         count={plural(candidates.length, "candidate", "candidates")}
@@ -342,7 +362,7 @@ function WorkspaceOverview({
         exportHref={null}
         emptyBody="Either no run has called a hit yet, or the read did not complete. Nothing is being reported as zero."
       />
-      <PanelStack span={6}>
+      <PanelStack span={6} className={STACK_CELL}>
         <RunsPanel className="panel-in min-h-0" runs={runs} realCut={REAL_CUT} />
         <OutcomesPanel className="panel-in" outcomes={outcomeRows} />
       </PanelStack>
@@ -448,6 +468,7 @@ function SampleOverview({ signedIn }: { signedIn: boolean }) {
         <KpiStrip
           title="Where this workspace stands"
           count={plural(screens.length, "screen", "screens")}
+          className="panel-in shrink-0"
         >
           <KpiTile
             label="Candidates waiting"
@@ -481,15 +502,15 @@ function SampleOverview({ signedIn }: { signedIn: boolean }) {
       }
     >
       <CandidatesPanel
-        className="panel-in min-h-0"
+        className={CANDIDATES_CELL}
         rows={candidates}
         ranked="chance"
         count={plural(queue.length, "candidate", "candidates")}
-        provenance={`${scoreTool ?? "Scoring stage"}, band ±0.06 · FDR ${FDR_THRESHOLD.toFixed(2)} · ${source.library}, ${formatNumber(tests)} genes`}
+        provenance={`${scoreTool ?? "Scoring stage"} · FDR ${FDR_THRESHOLD.toFixed(2)} · ${source.library}, ${formatNumber(tests)} genes`}
         exportHref={`/api/report/${source.id}?format=csv`}
         emptyBody="Every candidate on this screen has been answered at the bench."
       />
-      <PanelStack span={6}>
+      <PanelStack span={6} className={STACK_CELL}>
         <RunsPanel className="panel-in min-h-0" runs={runs} realCut={REAL_CUT} />
         <OutcomesPanel className="panel-in" outcomes={outcomeRows} />
       </PanelStack>

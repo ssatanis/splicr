@@ -209,5 +209,17 @@ def main() -> None:
     print("\n  PASS: MAGeCK and BAGEL2 both recover the planted essentials.")
 
 
+# --- pytest entry point ------------------------------------------------------
+# See the note in integration_test.py: a file with no collectable test is
+# indistinguishable from a passing one.
+def test_smoke():
+    import shutil
+    import pytest
+
+    if shutil.which("mageck") is None:
+        pytest.skip("MAGeCK is not on PATH; run engine/setup.sh and export it")
+    assert main() in (0, None)
+
+
 if __name__ == "__main__":
     main()

@@ -49,6 +49,15 @@ const RESULT_ORDER: Record<OutcomeRow["result"], number> = {
  */
 const FILL = "min-h-0 grow basis-auto";
 
+/**
+ * Below this the table scrolls sideways rather than dropping a digit off the
+ * percentage. The rows themselves are the full 32px, not the compact 26px the
+ * runs list above uses: this is the panel that takes the slack in the column,
+ * and seven short rows adrift in a 460px box read as a table with something
+ * missing from it.
+ */
+const MIN_WIDTH = 400;
+
 const cellOf = (row: OutcomeRow, key: string): Cell => {
   switch (key) {
     case "gene":
@@ -87,9 +96,7 @@ export function OutcomesPanel({
       control={<PanelLink href="/dashboard/validation">Truth Loop</PanelLink>}
       footer={
         <>
-          <FootNote>
-            Chance real as recorded when the gene was called, never recomputed after the result.
-          </FootNote>
+          <FootNote>Chance real as recorded at the call, not recomputed after.</FootNote>
           <span className="num shrink-0">
             {resolved.length === 0
               ? "None resolved"
@@ -111,7 +118,7 @@ export function OutcomesPanel({
           />
         </div>
       ) : (
-        <DenseTable compact minWidth={400}>
+        <DenseTable minWidth={MIN_WIDTH}>
           <thead>
             <tr>
               <SortTh

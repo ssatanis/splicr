@@ -102,7 +102,7 @@ export function Planner() {
   const clearsFloor = coverage >= COVERAGE_FLOOR;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
+    <div className="flex flex-col gap-3 lg:min-h-0 lg:flex-1">
       <PageHeader
         dense
         title="Screen Planner"

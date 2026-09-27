@@ -1,7 +1,7 @@
 """Offline loader for Genentech's AssayBench benchmark.
 
 Reads the parquet snapshot already on disk at
-``data/references/assaybench/snapshot`` — no network, no HuggingFace call.
+``data/references/assaybench/snapshot``, no network, no HuggingFace call.
 
 The HuggingFace repo exposes only a ``train`` split per config; the real
 train/validation/test partition lives in the ``yearfold0`` column

@@ -90,9 +90,11 @@ export function RunsPanel({
     <Panel
       title={flagged.length > 0 ? "Runs needing a look" : "Runs"}
       count={
-        flagged.length > 0
-          ? `${formatNumber(flagged.length)} of ${formatNumber(runs.length)} screens`
-          : `${formatNumber(runs.length)} screens`
+        <span className="hidden sm:inline">
+          {flagged.length > 0
+            ? `${formatNumber(flagged.length)} of ${formatNumber(runs.length)} screens`
+            : `${formatNumber(runs.length)} screens`}
+        </span>
       }
       span={6}
       body="flush"

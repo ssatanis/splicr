@@ -47,14 +47,16 @@ import { OutcomeBadge } from "@/components/dashboard/outcome-badge";
 import {
   DenseTable,
   FootNote,
-  KpiStrip,
-  KpiTile,
   PageHeader,
   Panel,
   SortTh,
 } from "@/components/dashboard/ui";
 import { calibration, calibrationN, outcomes, screens, type Outcome } from "@/lib/mock/data";
 import { formatDate, formatNumber, formatPercent } from "@/lib/utils";
+
+/** Day and month in a column; the full date stays on the cell as its title. */
+const shortDate = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
 /** The screen an outcome belongs to, by name, so a column can sort on it. */
 const screenNameOf = (outcome: Outcome) =>
@@ -105,7 +107,7 @@ export function TruthLoop() {
   const { sorted, sortProps } = useUrlSort(outcomes, { key: "logged", dir: "desc" }, cellOf);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
+    <div className="flex flex-col gap-3 lg:min-h-0 lg:flex-1">
       <PageHeader
         dense
         title="Truth Loop"
@@ -117,46 +119,25 @@ export function TruthLoop() {
         work and none of it is a measurement.
       </SampleNote>
 
-      <KpiStrip title="Logged outcomes" count={`${formatNumber(outcomes.length)} in the sample dataset`}>
-        <KpiTile
-          label="Outcomes logged"
-          value={formatNumber(outcomes.length)}
-          denominator="sample rows"
-          definition="Every row in the table below, all time."
-        />
-        <KpiTile
-          label="Validated"
-          value={formatNumber(validated)}
-          denominator={`of ${formatNumber(decided)} decided`}
-          definition="Held up in the assay the row names."
-          tone="cyan"
-        />
-        <KpiTile
-          label="Validated rate"
-          value={decided > 0 ? formatPercent(validated / decided) : "Not enough outcomes"}
-          denominator={decided > 0 ? `${validated} of ${decided}` : undefined}
-          definition={`${pending} pending and ${inconclusive} inconclusive are out of the denominator.`}
-          tone="orange"
-        />
-        <KpiTile
-          label="Still at the bench"
-          value={formatNumber(pending)}
-          denominator="no result yet"
-          definition="No figure is shown for a re-test still running."
-        />
-      </KpiStrip>
-
-      <div className="grid min-h-0 grid-cols-12 gap-4 lg:flex-1 lg:grid-rows-[minmax(0,1fr)]">
+      {/* The table gets the whole width. In an 8-of-12 panel its seven columns
+          wanted 760px of 657 and the date was cut off the right edge, and the
+          four KPI tiles that used to sit above it restated a seven-row table,
+          which is the vanity figure the brief warns about. The rate that is
+          actually a claim is in this panel's footer, next to the rows it was
+          counted from. */}
+      <div className="grid min-h-0 grid-cols-12 gap-4 lg:flex-1 lg:grid-rows-[minmax(0,1fr)_auto]">
         <Panel
-          span={8}
+          span={12}
           className="min-h-[300px]"
           title="All outcomes"
-          count={`${formatNumber(sorted.length)} outcomes`}
+          count={`${formatNumber(sorted.length)} logged, ${formatNumber(pending)} still at the bench`}
           body="flush"
           footer={
             <>
               <FootNote>
-                Bench result is what the assay measured, not the model&apos;s verdict
+                {decided > 0
+                  ? `${formatPercent(validated / decided)} validated, ${validated} of ${decided} decided. ${pending} pending and ${inconclusive} inconclusive are out of that denominator. Result is what the assay measured, not the model's verdict.`
+                  : "No outcome has been decided yet, so no rate is stated. Result is what the assay measured, not the model's verdict."}
               </FootNote>
               <CsvFootLink
                 filename="splicr-sample-outcomes.csv"
@@ -186,14 +167,17 @@ export function TruthLoop() {
                 <SortTh label="Gene" {...sortProps("gene")} />
                 <SortTh label="Screen" {...sortProps("screen")} />
                 <SortTh
-                  label="Chance real"
+                  label="Chance"
                   align="right"
                   title="The calibrated chance real the score gave this gene when it was called, before the bench answered"
                   {...sortProps("predicted", "desc")}
                 />
-                <SortTh label="Bench result" {...sortProps("result")} />
+                <SortTh label="Result" title="What the bench measured" {...sortProps("result")} />
                 <SortTh label="Assay" {...sortProps("assay")} />
-                <SortTh label="By" {...sortProps("by")} />
+                {/* Who logged it rides with when, because seven columns of nowrap
+                    text wanted 865px of a 657px panel and the two together are
+                    one fact: this person, on this date. Both are their own column
+                    in the export. */}
                 <SortTh label="Logged" {...sortProps("logged", "desc")} />
               </tr>
             </thead>
@@ -204,7 +188,8 @@ export function TruthLoop() {
                   <td>
                     <Link
                       href={`/dashboard/screens/${outcome.screenId}?tab=validation`}
-                      className="text-ink underline decoration-line-strong underline-offset-2 hover:decoration-orange-500"
+                      title={screenNameOf(outcome)}
+                      className="block max-w-[220px] truncate text-ink underline decoration-line-strong underline-offset-2 hover:decoration-orange-500"
                     >
                       {screenNameOf(outcome)}
                     </Link>
@@ -213,10 +198,17 @@ export function TruthLoop() {
                   <td>
                     <OutcomeBadge result={outcome.result} />
                   </td>
-                  <td>{outcome.assay}</td>
-                  <td>{outcome.by}</td>
-                  <td className="text-muted" title={formatDate(outcome.loggedAt)}>
-                    {formatDate(outcome.loggedAt)}
+                  <td>
+                    <span className="block max-w-[200px] truncate" title={outcome.assay}>
+                      {outcome.assay}
+                    </span>
+                  </td>
+                  <td
+                    className="text-muted"
+                    title={`${formatDate(outcome.loggedAt)}, logged by ${outcome.by}`}
+                  >
+                    {shortDate(outcome.loggedAt)}
+                    <span className="ml-1.5 text-ink">{outcome.by}</span>
                   </td>
                 </tr>
               ))}
@@ -225,33 +217,37 @@ export function TruthLoop() {
         </Panel>
 
         <Panel
-          span={4}
-          className="min-h-[300px] [animation-delay:60ms]"
+          span={12}
+          className="[animation-delay:60ms]"
           title="Calibration"
-          count={`${formatNumber(calibrationN)} outcomes`}
-          footer={<FootNote>{calibration.cohort}, not the rows beside it</FootNote>}
+          count={`${formatNumber(calibrationN)} outcomes in the ${calibration.cohort}`}
+          footer={
+            <FootNote>
+              {calibration.source}. Not the {formatNumber(outcomes.length)} rows above, which cannot
+              fill six bins
+            </FootNote>
+          }
+          bodyClassName="py-3"
         >
-          {/* A reliability curve, which is the one plot this page owes the reader:
-              the diagonal is what the score promised and the line is what the
-              bench delivered. The bins are printed underneath because reading a
-              value off a 150px plot is not reading a value. */}
-          <CalibrationChart bins={calibration.bins} height={150} />
-          <div className="mt-2">
-            {calibration.bins.map((bin) => (
-              <DefRow
-                key={bin.bin}
-                term={`Predicted ${bin.bin}`}
-                value={`${Math.round(bin.observed * 100)}% validated`}
-                note={`n=${bin.n}`}
-              />
-            ))}
+          <div className="flex flex-wrap items-start gap-x-5 gap-y-3">
+            {/* A reliability curve, which is the one plot this page owes the
+                reader: the dashed diagonal is what the score promised and the
+                line is what the bench delivered. The bins are printed beside it
+                because reading a value off a 140px plot is not reading a value. */}
+            <div className="w-full max-w-[360px] shrink-0">
+              <CalibrationChart bins={calibration.bins} height={140} />
+            </div>
+            <dl className="grid min-w-0 flex-1 grid-cols-2 gap-x-6 sm:grid-cols-3">
+              {calibration.bins.map((bin) => (
+                <DefRow
+                  key={bin.bin}
+                  term={`Predicted ${bin.bin}`}
+                  value={`${Math.round(bin.observed * 100)}%`}
+                  note={`validated, n=${bin.n}`}
+                />
+              ))}
+            </dl>
           </div>
-          <p className="mt-2 text-[11px] leading-snug text-muted">
-            {calibration.source}. {formatNumber(outcomes.length)} outcomes cannot fill six bins, so
-            this curve is not computed from the table beside it and the two counts are not the same
-            quantity. A workspace starts reading its own curve once it has logged enough outcomes to
-            fill a bin.
-          </p>
         </Panel>
       </div>
     </div>

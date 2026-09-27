@@ -2,7 +2,7 @@
 
 These are the invariants that make the family safe and reproducible rather than
 the ones that make it accurate; accuracy lives in the module's own self-check
-(``python engine/splicr/features/orcs-retrieval.py``).
+(``python engine/splicr/features/orcs_retrieval.py``).
 
 The test split is never loaded here.
 """
@@ -65,7 +65,7 @@ def test_known_valtest_screens_are_absent(corpus, screen_id):
 def test_index_cache_is_safe_only():
     import json
 
-    with open(OR._mod.INDEX_CACHE) as fh:
+    with open(OR.INDEX_CACHE) as fh:
         payload = json.load(fh)
     ids = {int(k) for k in payload["screens"]}
     assert ids <= set(safe_ids())
@@ -74,7 +74,7 @@ def test_index_cache_is_safe_only():
 
 def test_self_check_refuses_the_test_split():
     with pytest.raises(SystemExit) as excinfo:
-        OR._mod._self_check("test")
+        OR._self_check("test")
     assert "test split" in str(excinfo.value)
 
 
@@ -85,13 +85,13 @@ def test_self_check_refuses_the_test_split():
 @pytest.mark.parametrize("access", ["getitem", "get"])
 @pytest.mark.parametrize("key", ["relevance_scores", "hit"])
 def test_label_access_raises(validation, access, key):
-    view = OR._mod._ScreenView(validation[0])
+    view = OR._ScreenView(validation[0])
     with pytest.raises(OR.LabelAccessError):
         view[key] if access == "getitem" else view.get(key)
 
 
 def test_label_keys_hidden_from_iteration(validation):
-    view = OR._mod._ScreenView(validation[0])
+    view = OR._ScreenView(validation[0])
     assert "relevance_scores" not in set(view)
     assert "hit" not in set(view)
     assert "relevance_genes" in set(view)       # the library stays readable

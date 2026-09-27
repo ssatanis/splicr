@@ -183,5 +183,19 @@ def main() -> None:
     print("All stages passed.")
 
 
+# --- pytest entry point ------------------------------------------------------
+# Without this, `pytest tests/` collects nothing from this file and reports
+# success, so the suite that proves every stage works would quietly not run. It
+# skips with a reason when the toolchain is absent rather than passing silently,
+# because "skipped, MAGeCK not on PATH" and "passed" must not look alike.
+def test_pipeline_end_to_end():
+    import shutil
+    import pytest
+
+    if shutil.which("mageck") is None:
+        pytest.skip("MAGeCK is not on PATH; run engine/setup.sh and export it")
+    assert main() in (0, None)
+
+
 if __name__ == "__main__":
     main()

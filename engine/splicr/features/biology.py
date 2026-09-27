@@ -3,7 +3,7 @@
 Every feature in this module is computed from resources that contain **no CRISPR
 screen hit calls from AssayBench or BioGRID ORCS**. Nothing here reads the
 AssayBench test split, and nothing here reads ``relevance_genes`` /
-``relevance_scores`` — the only screen fields consulted are the descriptive
+``relevance_scores``, the only screen fields consulted are the descriptive
 metadata columns (``cell_line``, ``condition_name``, ``phenotype``, …), which are
 part of the benchmark's *input* and are shown to the LLM baselines too.
 
@@ -20,9 +20,9 @@ The family has three layers.
    profile, or its lineage mean) through ``Model.csv`` name normalisation.
 
 3. **Condition-conditional features**. The screen's ``condition_name`` /
-   ``condition_clause`` is resolved to external entities — a ChEMBL molecule
+   ``condition_clause`` is resolved to external entities, a ChEMBL molecule
    (via Open Targets ``drug_molecule``, then its mechanism-of-action targets and
-   its DGIdb interaction partners) or an HGNC gene symbol named in the text —
+   its DGIdb interaction partners) or an HGNC gene symbol named in the text ,
    and those *seed* genes are expanded through the STRING network, Reactome
    pathway co-membership and DepMap co-dependency.
 
@@ -58,7 +58,7 @@ feature is emitted un-negated so a downstream model can choose the sign, and its
 standalone number is therefore expected to sit at the random baseline.
 
 The honest headline: **the family's entire usable signal is DepMap breadth of
-essentiality.** Nothing else in it is additive — see "What did not work" below
+essentiality.** Nothing else in it is additive, see "What did not work" below
 and the notes on ``biology_composite``.
 
 And the harder finding: **the family is redundant with the screen-derived
@@ -74,8 +74,8 @@ the 1,349 train screens and applying it to validation gives 0.17681, slightly
         paired delta vs the prior alone -0.00054, CI95 [-0.00407, +0.00294]
         -> the ensemble does NOT beat the prior; the CI straddles zero
 
-Both estimators are ranking essentially the same thing — "genes that are broadly
-essential, and therefore commonly reported as hits" — one from DepMap and one
+Both estimators are ranking essentially the same thing, "genes that are broadly
+essential, and therefore commonly reported as hits", one from DepMap and one
 from the train screens. So this family is best read as an *independent
 confirmation* that the frequency prior's signal is real biology rather than a
 corpus artefact, and as a label-free substitute usable where no train screens
@@ -101,7 +101,7 @@ What did not work
 * **Open Targets gene-disease association was not usable for the screens that
   need it.** Only 1 of the 9 distinct pathogen conditions in validation
   (SARS-CoV-2) resolves to an EFO/MONDO id by name or synonym, so the
-  host-pathogen stratum — where essentiality scores 0.016 — gets no help.
+  host-pathogen stratum, where essentiality scores 0.016, gets no help.
 * **No composite beat the best single feature.** Rank-averaging essentiality
   with any of ``ot_n_pathway``, ``ot_missense_z``, ``string_physical_degree``,
   ``literature_mentions_log`` or ``condition_string_proximity`` moved the mean
@@ -703,7 +703,7 @@ def match_depmap_model(cell_line: Any) -> str | None:
     """Resolve an AssayBench ``cell_line`` string to a DepMap ``ModelID``.
 
     Tries the normalised name, then drops an hTERT prefix, a clone suffix after
-    a dot, and a trailing digit run — which is what maps ``"HAP-1"``->``HAP1``,
+    a dot, and a trailing digit run, which is what maps ``"HAP-1"``->``HAP1``,
     ``"HCT 116"``->``HCT116``, ``"Huh-7.5.1"``->``HUH7``. 182 of the 218
     validation screens resolve to a ``Model.csv`` row; 144 of those rows have
     Chronos data.
@@ -726,7 +726,7 @@ def _cellline_dependency(screen: Mapping[str, Any]) -> dict[str, float]:
 
     Order: the matched line's own profile -> its lineage mean -> the all-lines
     mean. Every step of that chain is a negated Chronos gene effect, so the
-    feature stays on one scale across screens no matter which step supplied it —
+    feature stays on one scale across screens no matter which step supplied it ,
     falling back to a 0..1 dependency *fraction* here would make the column
     incomparable between a matched and an unmatched screen.
 
@@ -838,7 +838,7 @@ def compute_biology_features(
         features: subset of :data:`FEATURE_NAMES` to compute. ``None`` computes
             all of them.
         universe: ``"library"`` (default) emits one entry per gene in the
-            screen's own ``relevance_genes`` — which is the right universe for
+            screen's own ``relevance_genes``, which is the right universe for
             ranking, because the metric deletes any predicted gene the screen
             did not measure. ``"union"`` emits every gene any resource knows
             about, for model training that needs negatives outside the library.
@@ -1011,7 +1011,7 @@ def evaluate_feature(
 ) -> np.ndarray:
     """Per-screen AnDCG@``k`` from ranking each screen's library by one feature.
 
-    Scoring goes through ``assaybench.benchmark.metrics.RankingMetrics`` — the
+    Scoring goes through ``assaybench.benchmark.metrics.RankingMetrics``, the
     metric is never reimplemented here. ``split`` is restricted to ``"train"``
     and ``"validation"``: this module refuses to load the test split.
     """

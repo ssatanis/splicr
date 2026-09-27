@@ -186,5 +186,18 @@ def main() -> int:
     return 0
 
 
+# --- pytest entry point ------------------------------------------------------
+# Skips loudly when the 3 GB of test FASTQ is not downloaded, rather than
+# collecting nothing and looking like a pass.
+def test_counts_match_published():
+    import pytest
+
+    if not PUBLISHED.exists():
+        pytest.skip(f"{PUBLISHED.name} is missing; run scripts/data/download.sh")
+    if not any((SCREEN / "fastq").glob("*.fastq.gz")):
+        pytest.skip("no test FASTQ downloaded; run scripts/data/download.sh")
+    assert main() == 0
+
+
 if __name__ == "__main__":
     sys.exit(main())

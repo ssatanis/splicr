@@ -349,17 +349,29 @@ export function Panel({
       // between panels instead of walking a dense table to reach the next one.
       aria-label={typeof title === "string" ? title : undefined}
       className={cn(
-        // min-h-0 as well as min-w-0: a Panel is often a flex child of a
-        // PanelStack, and without it the panel refuses to shrink below its
-        // content and pushes the fixed shell past the fold, which is the exact
-        // failure this system exists to prevent.
+        // min-w-0: a Panel is often a flex child of a PanelStack, and without
+        // it the panel refuses to shrink below its content and pushes the fixed
+        // shell past the fold, which is the exact failure this system exists to
+        // prevent.
         // panel-in is the only motion: 200ms, once, on mount, on the chrome.
         // Never on a figure or a row, because motion on a number tells the
         // reader the figure is a prop rather than a measurement.
-        "panel-in flex min-h-0 min-w-0 flex-col overflow-hidden rounded-panel border border-line bg-white",
+        "panel-in flex min-w-0 flex-col overflow-hidden rounded-panel border border-line bg-white",
         PANEL_SPAN[span],
         className,
       )}
+      // The floor, and the reason it is not min-h-0. A panel is usually laid on
+      // a `1fr` grid track, and a `1fr` track does not overflow when the space
+      // runs out, it collapses. Measured at 1024x768, where the strip and the
+      // page title eat the whole 768px: the track resolved to 0 and all three
+      // data panels rendered at zero height, so the reader arrived at a console
+      // whose every table was invisible while the page still reported that it
+      // fit. A panel that cannot show its heading and one row is worse than a
+      // page that scrolls a little, so the floor wins and the page overflows
+      // instead. Header, one row, and the footer when there is one.
+      style={{
+        minHeight: `calc(var(--panel-head-h) + var(--row-h)${footer ? " + var(--panel-foot-h)" : ""})`,
+      }}
     >
       {/* Fixed height, so a row of panels has its titles on one baseline no
           matter what the titles say. That is also why there is no subtitle: a

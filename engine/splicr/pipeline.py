@@ -16,6 +16,7 @@ from pathlib import Path
 
 from . import db
 from .artifacts import Flag, flag_artifacts, summarise_flags
+from .atlas import AtlasResult, atlas_context
 from .count import (
     CountMatrix, SampleCounts, count_fastq, count_table_samples, read_count_table,
 )
@@ -47,6 +48,7 @@ class PipelineResult:
     matrix: CountMatrix | None = None
     qc: ScreenQc | None = None
     hits: HitTable | None = None
+    atlas: AtlasResult | None = None
     flags: dict[str, list[Flag]] = field(default_factory=dict)
     stages: list[StageRecord] = field(default_factory=list)
     screen_id: str | None = None
@@ -268,8 +270,23 @@ def run_pipeline(
             conn.commit()
 
         # --- 06 artifacts --------------------------------------------------
+        # The Atlas is retrieved here rather than in stage 07, because the
+        # frequent_hitter flag needs it and stage 07 runs after this one. Stage
+        # 07 then reports on what this loaded. atlas_context never raises: a
+        # missing or half-built Atlas comes back as available=False with a
+        # reason, and flag_artifacts falls back to DepMap pan-essentials alone
+        # rather than to a fabricated rate.
         t = time.time()
-        flags = flag_artifacts(hits, library, model_id=spec.model_id)
+        t_atlas = time.time()
+        atlas = atlas_context(
+            sorted(hits.genes),
+            cell_line=spec.cell_line,
+            phenotype=spec.phenotype,
+        )
+        atlas_seconds = time.time() - t_atlas
+        result.atlas = atlas
+        flags = flag_artifacts(hits, library, model_id=spec.model_id,
+                               atlas_hit_rates=atlas.hit_rates if atlas.available else None)
         result.flags = flags
         # Reported over the called hits. Every gene keeps its flags in the
         # database; the headline is about the genes anyone will read.
@@ -282,9 +299,12 @@ def run_pipeline(
 
         # --- 07 atlas ------------------------------------------------------
         t = time.time()
-        record("atlas", "skipped",
-               "the Atlas needs the ORCS human archive, which is not yet on disk",
-               "splicr.atlas", t)
+        # The work happened in stage 06, so the duration is back-dated.
+        # Recording time.time() here would report 0.0s for a stage that did
+        # real work.
+        record("atlas", "done" if atlas.available else "skipped",
+               atlas.describe(), "splicr.atlas", time.time() - atlas_seconds,
+               atlas.metrics())
 
         # --- 08 score ------------------------------------------------------
         t = time.time()

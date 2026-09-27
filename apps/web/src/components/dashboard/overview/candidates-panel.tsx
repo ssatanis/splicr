@@ -36,7 +36,6 @@ import {
   Segmented,
   SortTh,
   Th,
-  verdictColor,
 } from "@/components/dashboard/ui";
 import type { Verdict } from "@/lib/mock/data";
 import { cn, formatNumber } from "@/lib/utils";
@@ -55,6 +54,19 @@ const CALL_SHORT: Record<Verdict, string> = {
   "Real and known": "Real, known",
   Artifact: "Artifact",
   Uncertain: "Uncertain",
+};
+
+/**
+ * The chip is tinted rather than dotted. A dot plus its gap cost twelve pixels
+ * of a column that has to fit six others in 490px, and the tint carries the same
+ * grouping. The word is always there, so a colour-blind reader loses nothing.
+ */
+const CALL_TONE: Record<Verdict, string> = {
+  "Real and new": "bg-orange-50 text-orange-700",
+  "Real and known": "bg-cyan-50 text-cyan-700",
+  "Real but generic": "bg-mist-soft text-body",
+  Artifact: "bg-red-50 text-red-700",
+  Uncertain: "bg-mist-soft text-muted",
 };
 
 type View = "all" | "clean" | "picked";
@@ -135,7 +147,10 @@ export function CandidatesPanel({
   return (
     <Panel
       title="Validate next"
-      count={count}
+      /* Hidden on a phone, where the title, the denominator and a three way
+         control cannot share 343px without the title becoming "Validate n...".
+         The same figure is in the strip above, with its denominator. */
+      count={<span className="hidden sm:inline">{count}</span>}
       span={6}
       body="flush"
       className={className}
@@ -187,7 +202,7 @@ export function CandidatesPanel({
               />
               <Th>Call</Th>
               <SortTh
-                label="Chance"
+                label="Real"
                 align="right"
                 active={key === "chance"}
                 dir={dir}
@@ -211,12 +226,12 @@ export function CandidatesPanel({
                 title="Benjamini-Hochberg q-value, to one significant figure."
               />
               <SortTh
-                label="Guides"
+                label="Agree"
                 align="right"
                 active={key === "guides"}
                 dir={dir}
                 onToggle={() => sort("guides", "desc")}
-                title="sgRNAs against this gene moving in the same direction."
+                title="sgRNAs against this gene that move in the same direction, of the guides it has."
               />
             </tr>
           </thead>
@@ -288,37 +303,34 @@ export function CandidatesPanel({
   );
 }
 
-/** The call, as a square dense chip. The word is always there; the hue only sorts. */
-function Call({ verdict }: { verdict: Verdict }) {
+/** The call, as a square dense chip. The word is always there; the tint only groups. */
+function Call({ verdict, full = false }: { verdict: Verdict; full?: boolean }) {
   return (
     <span
       title={verdict}
-      className="inline-flex h-[18px] max-w-full items-center gap-1 truncate rounded-[4px] bg-mist-soft px-1.5 text-[11px] leading-none text-ink"
+      className={cn(
+        "inline-flex h-[18px] max-w-full items-center truncate rounded-[4px] px-1.5 text-[11px] leading-none",
+        CALL_TONE[verdict],
+      )}
     >
-      <span
-        aria-hidden="true"
-        className="h-1.5 w-1.5 shrink-0 rounded-full"
-        style={{ background: verdictColor[verdict] }}
-      />
-      {CALL_SHORT[verdict]}
+      {full ? verdict : CALL_SHORT[verdict]}
     </span>
   );
 }
 
 /**
- * Artifact flags, as a count rather than a column. The seventh column cost more
- * width than the panel has; the marker keeps the signal on the row and the flags
- * themselves are named in the drawer, where the reader is deciding.
+ * Artifact flags, as a mark rather than a column. The seventh column cost more
+ * width than the panel has, so the row keeps the signal and the drawer names the
+ * flags themselves, which is where the reader is actually deciding.
  */
 function FlagMark({ flags }: { flags: string[] }) {
   const label = `${flags.length === 1 ? "1 artifact flag" : `${flags.length} artifact flags`}: ${flags.join(", ")}`;
   return (
     <span
       title={label}
-      className="inline-flex shrink-0 items-center gap-0.5 rounded-[4px] bg-orange-50 px-1 text-[11px] leading-none text-orange-700"
+      className="inline-flex shrink-0 items-center rounded-[4px] bg-orange-50 px-1 text-orange-700"
     >
       <TriangleAlert className="h-2.5 w-2.5" aria-hidden="true" />
-      <span className="num">{flags.length}</span>
       <span className="sr-only">{label}</span>
     </span>
   );
@@ -348,7 +360,7 @@ function Evidence({
     <ModalDrawer eyebrow="Evidence" title={row.gene} onClose={onClose} closeLabel="Close evidence">
       {row.verdict && (
         <div className="mt-3">
-          <Call verdict={row.verdict} />
+          <Call verdict={row.verdict} full />
         </div>
       )}
 

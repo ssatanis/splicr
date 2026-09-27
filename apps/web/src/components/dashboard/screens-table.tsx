@@ -161,7 +161,7 @@ export function ScreensTable() {
   const inUse = libraries.filter((library) => screens.some((s) => s.library === library.name));
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
+    <div className="flex flex-col gap-3 lg:min-h-0 lg:flex-1">
       <PageHeader
         dense
         title="Screens"
@@ -176,7 +176,7 @@ export function ScreensTable() {
           left after the title, the label and the three panels below, so the rows
           a reader is comparing are on screen rather than a scroll apart. */}
       <Panel
-        className="min-h-0 flex-1"
+        className="min-h-[340px] flex-1"
         title="All screens"
         count={`${formatNumber(sorted.length)} of ${formatNumber(screens.length)} screens`}
         control={
