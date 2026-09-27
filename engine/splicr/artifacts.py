@@ -173,55 +173,127 @@ def check_guide_disagreement(gene: GeneResult) -> Flag | None:
     )
 
 
-def check_multi_gene_guides(entry: GeneOffTarget | None) -> Flag | None:
+def check_multi_gene_guides(
+    entry: GeneOffTarget | None,
+    guides: list[Guide] | None = None,
+) -> Flag | None:
     """
     Guides that perfectly target more than one gene.
 
     When a guide cuts two genes, the gene-level call cannot be attributed to
     either of them. Fortin 2019 found 5.4% of Avana guides do this, affecting
     about 2,000 genes.
+
+    Counted over the guides this screen actually used, whenever those guides
+    carry measured alignment counts. Fortin's per-gene summary is computed over
+    a whole library family, so on a GeCKOv2 Set A screen it reports all six A+B
+    guides and "4 of 6 of your guides" is wrong about a screen that ran three.
+    Falling back to the summary is better than silence, but it says so.
     """
+    measured = [g for g in (guides or []) if g.perfect_alignments is not None]
+    if measured:
+        # More than one perfect cut site, which is Fortin's own definition. It
+        # reproduces their published per-gene counts exactly across all 20,872
+        # GeCKOv2 genes; counting distinct gene symbols matches only 81.7%.
+        multi = [g for g in measured if (g.perfect_alignments or 0) > 1]
+        if not multi:
+            return None
+        fraction = len(multi) / len(measured)
+        return Flag(
+            flag="multi_gene_guide",
+            severity="critical" if fraction >= 0.5 else "warn",
+            message=(
+                f"{len(multi)} of this screen's {len(measured)} guides for the gene "
+                "perfectly target another gene as well, so this call may belong to "
+                "the neighbour."
+            ),
+            evidence={
+                "n_multiplex_guides": len(multi),
+                "n_guides": len(measured),
+                "multiplex_fraction": round(fraction, 3),
+                "guides": [{"sequence": g.sequence,
+                            "perfect_sites": g.perfect_alignments,
+                            "genes_hit": g.genes_hit} for g in multi[:6]],
+                "basis": "measured per guide in the screened library",
+                "source": "Fortin et al., Genome Biology 2019",
+            },
+        )
+
     if entry is None or entry.n_multiplex_guides <= 0:
         return None
     fraction = entry.multiplex_fraction
     return Flag(
         flag="multi_gene_guide",
-        severity="critical" if fraction >= 0.5 else "warn",
+        severity="warn",
         message=(
-            f"{entry.n_multiplex_guides} of {entry.n_guides} guides perfectly target "
-            "another gene as well, so this call may belong to the neighbour."
+            f"{entry.n_multiplex_guides} of the {entry.n_guides} guides this library "
+            "family carries for the gene perfectly target another gene as well. This "
+            "screen's own guides were not in the alignment table, so it is not known "
+            "how many of them are affected."
         ),
         evidence={
             "n_multiplex_guides": entry.n_multiplex_guides,
             "n_multiplex_exonic": entry.n_multiplex_exonic,
             "n_guides": entry.n_guides,
             "multiplex_fraction": round(fraction, 3),
+            "basis": "library-family summary, not this screen's guides",
             "source": "Fortin et al., Genome Biology 2019",
         },
     )
 
 
-def check_promiscuous(entry: GeneOffTarget | None) -> Flag | None:
+def check_promiscuous(
+    entry: GeneOffTarget | None,
+    guides: list[Guide] | None = None,
+) -> Flag | None:
     """
     Guides with additional near-identical genomic matches.
 
-    Uses Fortin's own per-gene flag, which accounts for both multi-gene
-    targeting and single-mismatch off-targets.
+    Counted over this screen's own guides where the alignment table covers them,
+    for the same reason as the multi-gene check. Fortin's per-gene flag is the
+    fallback, and it accounts for both multi-gene targeting and single-mismatch
+    off-targets.
     """
+    measured = [g for g in (guides or []) if g.mismatch1_alignments is not None]
+    if measured:
+        loose = [g for g in measured if (g.mismatch1_alignments or 0) > 0]
+        if not loose:
+            return None
+        return Flag(
+            flag="promiscuous_guide",
+            severity="warn",
+            message=(
+                f"{len(loose)} of this screen's {len(measured)} guides for the gene "
+                "have single-mismatch matches elsewhere in the genome."
+            ),
+            evidence={
+                "n_mismatch_guides": len(loose),
+                "n_guides": len(measured),
+                "guides": [{"sequence": g.sequence,
+                            "mismatch1_alignments": g.mismatch1_alignments}
+                           for g in loose[:6]],
+                "basis": "measured per guide in the screened library",
+                "source": "Fortin et al., Genome Biology 2019",
+            },
+        )
+
     if entry is None or not entry.flagged:
         return None
     return Flag(
         flag="promiscuous_guide",
-        severity="warn" if entry.flagged_exonic else "info",
+        severity="info",
         message=(
-            f"{entry.n_mismatch_guides} of {entry.n_guides} guides have "
-            "single-mismatch matches elsewhere in the genome."
+            f"{entry.n_mismatch_guides} of the {entry.n_guides} guides this library "
+            "family carries for the gene have single-mismatch matches elsewhere in "
+            "the genome."
             + (" At least one is exonic." if entry.flagged_exonic else "")
+            + " This screen's own guides were not in the alignment table."
         ),
         evidence={
             "n_mismatch_guides": entry.n_mismatch_guides,
             "n_guides": entry.n_guides,
             "flag_exonic": entry.flagged_exonic,
+            "basis": "library-family summary, not this screen's guides",
             "source": "Fortin et al., Genome Biology 2019",
         },
     )
@@ -390,6 +462,13 @@ def flag_artifacts(
     back to positional clustering from the screen alone.
     """
     offtarget = load_gene_offtarget(library.slug)
+    # Attach measured per-guide alignment counts so the off-target flags can be
+    # about this screen's own guides. Both loaders are cached, so the large
+    # alignment table is parsed once per process.
+    n_annotated = annotate_offtarget(library)
+    if n_annotated:
+        print(f"      off-target: measured counts for {n_annotated:,} of "
+              f"{len(library.guides):,} guides")
 
     guides_by_gene: dict[str, list[Guide]] = {}
     for g in library.guides:
@@ -416,10 +495,11 @@ def flag_artifacts(
                 flags.append(f)
 
         entry = offtarget.get(name)
-        f = check_multi_gene_guides(entry)
+        own_guides = guides_by_gene.get(name, [])
+        f = check_multi_gene_guides(entry, own_guides)
         if f:
             flags.append(f)
-        f = check_promiscuous(entry)
+        f = check_promiscuous(entry, own_guides)
         if f:
             flags.append(f)
 

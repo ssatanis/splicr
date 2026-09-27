@@ -49,8 +49,16 @@ class Guide:
     chrom: str | None = None
     cut_pos: int | None = None
     strand: str | None = None
+    # Measured counts from Fortin's alignment table, or None when this guide is
+    # not in it. None means unknown. Never a stand-in value: a flag that reads
+    # a number here is entitled to treat it as measured.
     perfect_alignments: int | None = None
     mismatch1_alignments: int | None = None
+    genes_hit: int | None = None            # distinct genes hit with no mismatch
+    # Set when the guide's GENE is flagged in Fortin's per-gene summary. That
+    # summary describes the whole library family, so it says nothing about this
+    # particular guide, which is why it is kept separate from the counts above.
+    gene_offtarget_flagged: bool = False
 
     @property
     def targets_gene(self) -> bool:
@@ -518,9 +526,20 @@ def load_guide_offtarget(library_slug: str) -> dict[str, tuple[int, int, int]]:
     """
     Per-guide alignment counts, derived by grouping the alignment table.
 
-    Returns sequence -> (perfect_alignments, one_mismatch_alignments,
-    distinct_genes_hit). GeCKOv2's alignment file is 186 MB, so this streams
-    rather than loading it whole.
+    Returns sequence -> (perfect_sites, one_mismatch_sites, genes_hit_perfectly).
+
+    Counts are over DISTINCT genomic SITES, not table rows. The table lists one
+    row per alignment per annotated gene, so a single cut site inside a pair of
+    overlapping genes appears twice: 1,950 GeCKOv2 guides are affected, and
+    counting rows inflates every one of them.
+
+    A guide is multiplex when perfect_sites > 1. That definition reproduces
+    Fortin's own published n.multiplex.guides for 20,872 of 20,872 GeCKOv2 genes,
+    exactly, with zero mean difference. Counting distinct gene symbols instead
+    matches only 81.7% and overstates by 0.66 guides per gene on average, because
+    two overlapping annotations at one cut site are one cut, not two.
+
+    GeCKOv2's alignment file is 186 MB, so this streams rather than loading it.
     """
     stem = _FORTIN_STEM.get(library_slug)
     if stem is None:
@@ -529,8 +548,8 @@ def load_guide_offtarget(library_slug: str) -> dict[str, tuple[int, int, int]]:
     if path is None:
         return {}
 
-    perfect: dict[str, int] = {}
-    mismatch: dict[str, int] = {}
+    perfect: dict[str, set[tuple[str, str]]] = {}
+    mismatch: dict[str, set[tuple[str, str]]] = {}
     genes: dict[str, set[str]] = {}
 
     with path.open(newline="") as fh:
@@ -542,60 +561,56 @@ def load_guide_offtarget(library_slug: str) -> dict[str, tuple[int, int, int]]:
                 n_mm = int(float(row.get("n.mismatches") or 0))
             except (ValueError, TypeError):
                 continue
+            site = ((row.get("chr") or "").strip(), (row.get("start") or "").strip())
             if n_mm == 0:
-                perfect[seq] = perfect.get(seq, 0) + 1
+                perfect.setdefault(seq, set()).add(site)
+                symbols = (row.get("gene_symbol") or "").strip().strip('"')
+                if symbols and symbols != "NA":
+                    genes.setdefault(seq, set()).update(
+                        s for s in symbols.split(";") if s and s != "NA"
+                    )
             elif n_mm == 1:
-                mismatch[seq] = mismatch.get(seq, 0) + 1
-            symbols = (row.get("gene_symbol") or "").strip().strip('"')
-            if symbols and symbols != "NA":
-                genes.setdefault(seq, set()).update(
-                    s for s in symbols.split(";") if s and s != "NA"
-                )
+                mismatch.setdefault(seq, set()).add(site)
 
     return {
-        seq: (perfect.get(seq, 0), mismatch.get(seq, 0), len(genes.get(seq, ())))
+        seq: (len(perfect.get(seq, ())), len(mismatch.get(seq, ())),
+              len(genes.get(seq, ())))
         for seq in set(perfect) | set(mismatch) | set(genes)
     }
 
 
-def annotate_offtarget(library: Library, per_guide: bool = False) -> int:
+def annotate_offtarget(library: Library, per_guide: bool = True) -> int:
     """
     Attach off-target counts to a library's guides.
 
-    per_guide=False (default) uses the small gene summary and marks every
-    guide of a flagged gene. per_guide=True parses the full alignment table
-    for exact per-guide counts, which is slower but precise.
+    per_guide=True reads the alignment table for measured per-guide counts. It
+    is the default because a flag that names a guide has to be about that guide:
+    the gene summary is computed over the whole library family, so a GeCKOv2 Set
+    A screen inherits counts over all six A+B guides and a claim of "4 of 6 of
+    your guides" is then wrong about a screen that ran three.
 
-    Returns the number of guides annotated.
+    per_guide=False only marks which genes Fortin flagged, in
+    `gene_offtarget_flagged`, and writes no counts at all.
+
+    Returns the number of guides given measured counts.
     """
-    if per_guide:
-        table = load_guide_offtarget(library.slug)
-        if not table:
-            return 0
-        hit = 0
-        for g in library.guides:
-            counts = table.get(g.sequence)
-            if counts:
-                g.perfect_alignments, g.mismatch1_alignments, _ = counts
-                hit += 1
-        return hit
-
     summary = load_gene_offtarget(library.slug)
-    if not summary:
+    for g in library.guides:
+        entry = summary.get(g.gene) if g.gene else None
+        g.gene_offtarget_flagged = bool(entry and entry.flagged)
+
+    if not per_guide:
+        return 0
+
+    table = load_guide_offtarget(library.slug)
+    if not table:
         return 0
     hit = 0
     for g in library.guides:
-        entry = summary.get(g.gene) if g.gene else None
-        if entry is None:
-            continue
-        # Attribute the gene's multiplex guides across its guides. This is an
-        # upper bound per guide, so it is used to raise a flag for review, not
-        # to assert that a specific guide is promiscuous.
-        if entry.n_multiplex_guides > 0:
-            g.perfect_alignments = 2
-        if entry.n_mismatch_guides > 0:
-            g.mismatch1_alignments = 1
-        hit += 1
+        counts = table.get(g.sequence)
+        if counts:
+            g.perfect_alignments, g.mismatch1_alignments, g.genes_hit = counts
+            hit += 1
     return hit
 
 
