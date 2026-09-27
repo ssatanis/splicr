@@ -33,12 +33,6 @@ export function AuthPanel({ children, aside }: { children: React.ReactNode; asid
           <p className="mt-4 text-white/90 leading-relaxed">{site.description}</p>
           {aside}
         </div>
-
-        <div className="relative z-20 mt-8 flex flex-wrap gap-x-8 gap-y-2 text-xs text-white/80">
-          <span>SOC 2 in progress</span>
-          <span>Data stays in us-east-1</span>
-          <span>Free for public data</span>
-        </div>
       </div>
 
       <div className="flex items-center justify-center p-6 sm:p-10 lg:p-14">

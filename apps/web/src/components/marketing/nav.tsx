@@ -57,7 +57,7 @@ export function MarketingNav({ variant = "pill" }: { variant?: "pill" | "bar" })
             <Link
               href="/login"
               className={cn(
-                "inline-flex items-center justify-center rounded-full bg-orange-500 text-teal-950",
+                "inline-flex items-center justify-center rounded-full bg-orange-500 text-white",
                 "px-7 py-3 text-[0.95rem] font-normal transition-colors hover:bg-orange-600",
               )}
             >

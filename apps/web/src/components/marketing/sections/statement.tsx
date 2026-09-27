@@ -50,7 +50,7 @@ export function StatementCard() {
               <div className="max-w-sm">
                 <Link
                   href="/technology"
-                  className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-cyan-500 text-teal-950 hover:bg-cyan-600 transition-colors"
+                  className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-cyan-500 text-white hover:bg-cyan-600 transition-colors"
                   aria-label="Explore the technology"
                 >
                   <ArrowUpRight className="w-5 h-5" />

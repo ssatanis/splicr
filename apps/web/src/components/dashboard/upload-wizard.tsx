@@ -44,7 +44,7 @@ export function UploadWizard() {
               i === step ? "bg-teal-800 text-white" : i < step ? "bg-white text-ink border border-line" : "text-muted",
             )}
           >
-            <span className={cn("w-6 h-6 rounded-full flex items-center justify-center text-xs", i < step ? "bg-cyan-500 text-teal-950" : i === step ? "bg-white/15" : "bg-mist-soft")}>
+            <span className={cn("w-6 h-6 rounded-full flex items-center justify-center text-xs", i < step ? "bg-cyan-500 text-white" : i === step ? "bg-white/15" : "bg-mist-soft")}>
               {i < step ? <Check className="w-3.5 h-3.5" /> : i + 1}
             </span>
             {s}
@@ -89,7 +89,7 @@ export function UploadWizard() {
         {step === 1 && (
           <Card title="Library detected" subtitle="From the first 200,000 reads of each file">
             <div className="rounded-2xl bg-cyan-50 border border-cyan-100 p-5 flex items-start gap-4">
-              <span className="w-10 h-10 rounded-full bg-cyan-500 text-teal-950 flex items-center justify-center shrink-0">
+              <span className="w-10 h-10 rounded-full bg-cyan-500 text-white flex items-center justify-center shrink-0">
                 <Check className="w-5 h-5" />
               </span>
               <div>

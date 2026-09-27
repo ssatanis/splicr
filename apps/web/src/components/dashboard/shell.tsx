@@ -105,7 +105,7 @@ export function DashboardShell({ user, children }: { user: ShellUser; children: 
 
       <div className="p-3 border-t border-white/10">
         <div className="flex items-center gap-3 px-2 py-1.5">
-          <span className="w-8 h-8 rounded-full bg-orange-500 text-teal-950 text-[11px] font-medium flex items-center justify-center shrink-0">
+          <span className="w-8 h-8 rounded-full bg-orange-500 text-white text-[11px] font-medium flex items-center justify-center shrink-0">
             {initials(user.name)}
           </span>
           <div className="min-w-0 flex-1">

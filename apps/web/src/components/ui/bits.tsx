@@ -3,24 +3,6 @@ import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 
-export function ScrollCue({ className }: { className?: string }) {
-  return (
-    <span className={cn("scroll-cue text-ink", className)} aria-hidden>
-      <MoveVertical className="w-3 h-3" strokeWidth={1.6} />
-    </span>
-  );
-}
-
-export function Dots({ className, count = 3 }: { className?: string; count?: number }) {
-  return (
-    <div className={cn("dots", className)} aria-hidden>
-      {Array.from({ length: count }).map((_, i) => (
-        <span key={i} />
-      ))}
-    </div>
-  );
-}
-
 export function PlayButton({ className }: { className?: string }) {
   return (
     <span
@@ -49,14 +31,7 @@ export function MarkerPill({
   const bg = tone === "cyan" ? "bg-cyan-500" : "bg-teal-800";
   return (
     <div className={cn("absolute flex flex-col items-center", flip && "flex-col-reverse", className)} aria-hidden>
-      <span
-        className={cn(
-          "rounded-xl px-3.5 py-2 text-sm font-medium shadow-float",
-          // Dark ink on the bright fills: white reads 2.43 on cyan, well under AA.
-          tone === "cyan" ? "text-teal-950" : "text-white",
-          bg,
-        )}
-      >
+      <span className={cn("rounded-xl px-3.5 py-2 text-white text-sm font-medium shadow-float", bg)}>
         {value}
       </span>
       <span className={cn("w-0.5 h-3", bg)} />

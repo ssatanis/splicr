@@ -226,7 +226,7 @@ export function ScreenWorkspace({ screen, tab }: { screen: Screen; tab: string }
           </Card>
           <div className="space-y-3">
             {[
-              ["Real and new", "Your paper. Validate these first.", "bg-orange-500 text-teal-950"],
+              ["Real and new", "Your paper. Validate these first.", "bg-orange-500 text-white"],
               ["Fake and new", "The trap. Exciting, and where most wasted months go.", "bg-teal-800 text-white"],
               ["Real and known", "Good positive controls. Not a paper.", "bg-mist-soft text-ink"],
               ["Fake and known", "Ignore.", "bg-mist-soft text-ink"],
@@ -311,7 +311,7 @@ export function ScreenWorkspace({ screen, tab }: { screen: Screen; tab: string }
               </button>
             </div>
           </Card>
-          <Card title="Methods, auto-written">
+          <Card title="Methods">
             <p className="text-sm text-body leading-relaxed">
               Reads were counted with MAGeCK 0.5.9.5 (exact match, 1-mismatch fallback) against Brunello (76,441 guides).
               Gene-level statistics were computed with MAGeCK RRA and MLE, BAGEL2 (CEGv2 and NEGv1 reference sets) and
@@ -513,10 +513,10 @@ function ValidationPanel({ hits, screenId }: { hits: Hit[]; screenId: string }) 
                               "rounded-full px-2.5 py-1 text-[11px] capitalize border",
                               value === r
                                 ? r === "validated"
-                                  ? "bg-cyan-500 text-teal-950 border-cyan-500"
+                                  ? "bg-cyan-500 text-white border-cyan-500"
                                   : r === "failed"
                                     ? "bg-teal-800 text-white border-teal-800"
-                                    : "bg-orange-500 text-teal-950 border-orange-500"
+                                    : "bg-orange-500 text-white border-orange-500"
                                 : "border-line text-muted hover:border-line-strong",
                             )}
                           >
@@ -547,7 +547,7 @@ function ValidationPanel({ hits, screenId }: { hits: Hit[]; screenId: string }) 
                 title={filled ? plan[idx].gene : isControl ? "control" : "empty"}
                 className={cn(
                   "aspect-square rounded-full text-[8px] flex items-center justify-center",
-                  filled ? "bg-orange-500 text-teal-950" : isControl ? "bg-teal-800 text-white" : "bg-mist-soft text-muted",
+                  filled ? "bg-orange-500 text-white" : isControl ? "bg-teal-800 text-white" : "bg-mist-soft text-muted",
                 )}
               >
                 {filled ? plan[idx].gene.slice(0, 3) : isControl ? "C" : ""}

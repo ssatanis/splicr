@@ -119,7 +119,7 @@ export function StageRail({ stages, compact = false }: { stages: { key: string; 
             className={cn(
               "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs",
               s.status === "done" && "bg-teal-800 text-white",
-              s.status === "running" && "bg-orange-500 text-teal-950",
+              s.status === "running" && "bg-orange-500 text-white",
               s.status === "queued" && "bg-white border border-line text-muted",
               s.status === "failed" && "bg-red-600 text-white",
               s.status === "skipped" && "bg-mist-soft text-muted",

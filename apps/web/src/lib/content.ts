@@ -114,11 +114,17 @@ export const howItWorks = [
   { n: 9, title: "Report", sub: "Discovery Map, validation plan" },
 ] as const;
 
+/**
+ * The Discovery Map quadrants, in reading order for a 2x2 grid: top-left,
+ * top-right, bottom-left, bottom-right. "Chance it is real" increases to the
+ * right and "how new" increases upwards, so real sits on the right and new at
+ * the top. Reordering this array moves the cards, so keep it spatial.
+ */
 export const discoveryQuadrants = [
-  { title: "Real and known", body: "Positive controls. Not a paper.", tone: "muted" },
+  { title: "Fake and new", body: "The trap. Where wasted months go.", tone: "teal" },
   { title: "Real and new", body: "Validate these first.", tone: "orange" },
   { title: "Fake and known", body: "Ignore.", tone: "muted" },
-  { title: "Fake and new", body: "The trap. Where wasted months go.", tone: "teal" },
+  { title: "Real and known", body: "Positive controls. Not a paper.", tone: "muted" },
 ] as const;
 
 export const benchmark = [

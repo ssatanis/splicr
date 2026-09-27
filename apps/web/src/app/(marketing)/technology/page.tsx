@@ -4,7 +4,7 @@ import { Minus, Plus, ArrowUpRight } from "lucide-react";
 import { MarketingNav } from "@/components/marketing/nav";
 import { CtaSection } from "@/components/marketing/sections/cta";
 import { SideCoil, AccentCoil } from "@/components/three";
-import { LinkButton, MarkerPill, ScrollCue, SectionHeading } from "@/components/ui/bits";
+import { LinkButton, MarkerPill, SectionHeading } from "@/components/ui/bits";
 import { Orb } from "@/components/ui/orb";
 import { Reveal, Stagger, StaggerItem } from "@/components/ui/reveal";
 import { benchmark, benchmarkCite, discoveryQuadrants, moatLayers, modules } from "@/lib/content";
@@ -40,12 +40,6 @@ export default function TechnologyPage() {
           <MarkerPill value="82%" className="left-[48%] top-[18%]" />
           <MarkerPill value="11%" className="left-[18%] top-[62%]" />
           <MarkerPill value="71%" className="left-[70%] top-[66%]" />
-          <div className="absolute bottom-8 right-10 flex items-center gap-3 text-muted" aria-hidden>
-            <span className="w-1.5 h-1.5 rounded-full bg-line-strong" />
-            <span className="w-1.5 h-1.5 rounded-full bg-line-strong" />
-            <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-            <ScrollCue className="ml-3" />
-          </div>
         </div>
 
         <div className="container-x lg:pl-14 py-14 lg:py-20 flex flex-col justify-between">
@@ -156,31 +150,54 @@ export default function TechnologyPage() {
             </Reveal>
           </div>
           <Reveal delay={0.1}>
-            <div className="relative">
-              <div className="absolute -left-3 top-1/2 -translate-y-1/2 -rotate-90 origin-center text-xs tracking-[0.2em] uppercase text-muted whitespace-nowrap">
-                how new it is →
+            {/* A labelled 2x2, laid out as a real grid rather than a rotated
+                label floated over the cards. The old version put the y axis in
+                an absolutely positioned -rotate-90 span, which rotates about its
+                centre, so a long label overhung the first card and sat on top of
+                its text. writing-mode gives the track its true rotated width, so
+                the gutter is sized correctly and nothing overlaps.
+
+                The cards are also in their correct quadrants now. With "chance
+                it is real" increasing rightwards and "how new" increasing
+                upwards, real belongs on the right and new at the top, which puts
+                "Real and new" in the top right where the eye goes. The previous
+                order flipped both axes, so the map contradicted its own labels. */}
+            <div className="grid grid-cols-[auto_1fr] grid-rows-[1fr_auto] gap-x-3 gap-y-2">
+              <div
+                className="row-start-1 col-start-1 flex items-center justify-center
+                           text-[0.7rem] tracking-[0.2em] uppercase text-muted"
+                style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
+              >
+                how new it is
               </div>
-              <div className="grid grid-cols-2 gap-3 ml-6">
-                {discoveryQuadrants.map((q, i) => (
+
+              <div className="row-start-1 col-start-2 grid grid-cols-2 gap-3">
+                {discoveryQuadrants.map((q) => (
                   <div
                     key={q.title}
                     className={cn(
                       "rounded-2xl p-6 min-h-[150px] flex flex-col justify-end",
-                      q.tone === "orange" && "bg-orange-500 text-teal-950",
+                      q.tone === "orange" && "bg-orange-500 text-white",
                       q.tone === "teal" && "bg-teal-800 text-white",
                       q.tone === "muted" && "bg-mist-soft text-ink",
-                      i === 0 && "order-3",
-                      i === 1 && "order-4",
-                      i === 2 && "order-1",
-                      i === 3 && "order-2",
                     )}
                   >
                     <div className="font-medium text-lg">{q.title}</div>
-                    <div className={cn("text-sm mt-1", q.tone === "muted" ? "text-body" : "text-white/90")}>{q.body}</div>
+                    <div
+                      className={cn(
+                        "text-sm mt-1",
+                        q.tone === "muted" ? "text-body" : "text-white/90",
+                      )}
+                    >
+                      {q.body}
+                    </div>
                   </div>
                 ))}
               </div>
-              <div className="mt-3 ml-6 text-xs tracking-[0.2em] uppercase text-muted text-right">chance it&apos;s real →</div>
+
+              <div className="row-start-2 col-start-2 text-[0.7rem] tracking-[0.2em] uppercase text-muted text-center">
+                chance it is real
+              </div>
             </div>
           </Reveal>
         </div>

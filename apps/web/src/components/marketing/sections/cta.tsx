@@ -5,7 +5,7 @@ export function CtaSection() {
   return (
     <section className="px-3 md:px-5 pb-6">
       <Reveal>
-        <div className="relative rounded-[2rem] bg-orange-500 text-teal-950 overflow-hidden px-7 py-14 md:px-16 md:py-20">
+        <div className="relative rounded-[2rem] bg-orange-500 text-white overflow-hidden px-7 py-14 md:px-16 md:py-20">
           <svg
             aria-hidden
             className="absolute inset-0 w-full h-full opacity-25"
@@ -21,10 +21,10 @@ export function CtaSection() {
             <path d="M0 380 C300 200, 500 600, 900 340" />
           </svg>
           <div className="relative max-w-lg">
-            <h2 className="display text-teal-950 text-3xl md:text-4xl lg:text-5xl">
+            <h2 className="display text-white text-3xl md:text-4xl lg:text-5xl">
               Bring us a finished screen.
             </h2>
-            <p className="mt-5 text-teal-950/90 leading-relaxed">
+            <p className="mt-5 text-white/90 leading-relaxed">
               Do not tell us which hits worked. SplicR calls them blind, then you reveal the
               answer and we are scored on the spot.
             </p>

@@ -20,17 +20,22 @@
   --color-teal-100: #dbe9ed;
   --color-teal-50: #eef5f7;
 
-  --color-orange-700: #c8560d;
-  --color-orange-600: #e5650c;
-  --color-orange-500: #f87315;
+  /* The orange and cyan ramps are shifted one step darker at 500, because white
+     text on the old values measured 2.82 and 2.43 against the 4.5 WCAG AA needs.
+     At these values white clears it: 4.54 on the orange and 5.59 on the cyan.
+     Hover stays a step darker than base, so 600 and 700 moved with them. The
+     lighter tints above 400 are untouched, since nothing puts text on those. */
+  --color-orange-700: #8f3d07;
+  --color-orange-600: #a8490a;
+  --color-orange-500: #c2560a;
   --color-orange-400: #f9904a;
   --color-orange-300: #fbb07e;
   --color-orange-100: #fde3cc;
   --color-orange-50: #fff3e8;
 
-  --color-cyan-700: #05819a;
-  --color-cyan-600: #069bb3;
-  --color-cyan-500: #07b6d3;
+  --color-cyan-700: #07485a;
+  --color-cyan-600: #095d6d;
+  --color-cyan-500: #0b7285;
   --color-cyan-400: #38c8df;
   --color-cyan-100: #d5f4f9;
   --color-cyan-50: #ecfafc;
@@ -234,13 +239,9 @@
     transform: translateY(0);
   }
 
-  /* Text on the bright brand fills is the darkest teal, not white. Measured on
-     the real values: white gives 2.82 on #f87315 and 2.43 on #07b6d3, both well
-     under the 4.5 WCAG AA needs, while #0b2f3b gives 5.27 and 6.11. The brand
-     hues are unchanged; only the ink on them is. */
   .btn-orange {
     background: var(--color-orange-500);
-    color: var(--color-teal-950);
+    color: white;
   }
 
   .btn-orange:hover {
@@ -249,7 +250,7 @@
 
   .btn-cyan {
     background: var(--color-cyan-500);
-    color: var(--color-teal-950);
+    color: white;
   }
 
   .btn-cyan:hover {

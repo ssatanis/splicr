@@ -5,7 +5,7 @@ import { useRef } from "react";
 
 import { MarketingNav } from "@/components/marketing/nav";
 import { HeroField } from "@/components/three";
-import { LinkButton, ScrollCue } from "@/components/ui/bits";
+import { LinkButton } from "@/components/ui/bits";
 
 const line = {
   hidden: { opacity: 0, y: 28 },
@@ -68,14 +68,6 @@ export function Hero() {
         </motion.div>
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.1, duration: 0.8 }}
-        className="relative z-10 container-x pb-10"
-      >
-        <ScrollCue />
-      </motion.div>
     </section>
   );
 }

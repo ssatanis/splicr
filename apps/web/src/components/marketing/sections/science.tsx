@@ -29,7 +29,7 @@ const facts = [
 
 export function ScienceSection() {
   return (
-    <section className="bg-orange-500 text-teal-950 py-18 md:py-24 overflow-hidden">
+    <section className="bg-orange-500 text-white py-18 md:py-24 overflow-hidden">
       <div className="container-x">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <Reveal>
