@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { MarketingNav } from "@/components/marketing/nav";
 import { CtaSection } from "@/components/marketing/sections/cta";
-import { DarkHero } from "@/components/three";
+import { DarkHero, SideCoil } from "@/components/three";
 import { SectionHeading } from "@/components/ui/bits";
 import { Reveal, Stagger, StaggerItem } from "@/components/ui/reveal";
 
@@ -65,10 +65,13 @@ export default function AboutPage() {
           white on a light background. */}
       <section className="relative bg-teal-800 text-white overflow-hidden rounded-b-[2rem] lg:min-h-[640px]">
         <MarketingNav variant="bar" />
-        <DarkHero className="hidden lg:block absolute inset-y-0 right-0 w-[52%] pointer-events-none" />
+        {/* Art frames both edges, homepage-hero style, and sits behind the
+            centered copy rather than sharing a column with it. */}
+        <SideCoil mirror className="hidden lg:block absolute top-24 bottom-0 left-0 w-[34%] pointer-events-none" />
+        <SideCoil className="hidden lg:block absolute top-24 bottom-0 right-0 w-[34%] pointer-events-none" />
 
-        <div className="relative container-x pt-10 pb-16 lg:pt-0 lg:pb-0 lg:absolute lg:inset-0 lg:flex lg:flex-col lg:justify-center">
-          <div className="lg:max-w-[46%]">
+        <div className="relative container-x pt-10 pb-16 lg:pt-0 lg:pb-0 lg:absolute lg:inset-0 lg:flex lg:flex-col lg:items-center lg:justify-center">
+          <div className="lg:max-w-2xl lg:text-center">
             <Reveal>
               <h1 className="font-serif text-white leading-[0.95] tracking-[-0.02em] text-[clamp(2.4rem,6vw,4.4rem)]">
                 Started by researchers
@@ -77,7 +80,7 @@ export default function AboutPage() {
               </h1>
             </Reveal>
             <Reveal delay={0.1}>
-              <p className="mt-6 text-lg text-white/90 leading-relaxed">
+              <p className="mt-6 text-lg text-white/90 leading-relaxed lg:max-w-lg lg:mx-auto">
                 <FounderLink href="https://www.linkedin.com/in/sahajsatani/">
                   Sahaj Satani
                 </FounderLink>{" "}
@@ -94,7 +97,7 @@ export default function AboutPage() {
             <DarkHero className="absolute inset-0" />
           </div>
 
-          <div className="mt-10 lg:mt-24 flex flex-wrap gap-y-5 divide-x divide-white/20">
+          <div className="mt-10 lg:mt-10 flex flex-wrap justify-center gap-y-5 divide-x divide-white/20">
             {/* "1.8x, retrieval vs best AI" used to sit in the middle here. It
                 was AssayBench's label-reading oracle divided by its model
                 ensemble, so it was not a result of ours, and the technology
