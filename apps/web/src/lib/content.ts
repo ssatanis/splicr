@@ -165,7 +165,7 @@ export const discoveryQuadrants = [
  */
 export const benchmark = [
   { label: "Oracle: best past screen, chosen with hindsight", value: 0.292, tone: "muted" },
-  { label: "SplicR: retrieval over 1,574 past screens", value: 0.163, tone: "orange" },
+  { label: "SplicR", value: 0.163, tone: "orange" },
   { label: "Ensemble of frontier models", value: 0.163, tone: "teal" },
   { label: "Gemini 3 Pro", value: 0.157, tone: "teal" },
   { label: "GPT-5.4", value: 0.147, tone: "teal" },
