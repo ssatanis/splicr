@@ -188,6 +188,8 @@ const cellOf = (row: CandidateRow, key: string): Cell => {
       return row.gene;
     case "chance":
       return row.chance;
+    case "fdr":
+      return row.fdr;
     case "lfc":
       // Direction is read off the sign in the cell; ranking is by size of effect.
       return row.lfc === null ? null : Math.abs(row.lfc);

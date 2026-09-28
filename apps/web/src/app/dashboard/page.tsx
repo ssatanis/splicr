@@ -252,6 +252,8 @@ function WorkspaceOverview({
     chance: hit.chance_real,
     lfc: hit.lfc,
     fdr: hit.fdr,
+    novelty: null,
+    bayes: null,
     // Guide agreement, artifact flags, Atlas context and the screen's re-test
     // assay are per-hit detail the overview read does not fetch. They stay null
     // so the panel says so rather than drawing a figure nobody supplied.
@@ -265,6 +267,16 @@ function WorkspaceOverview({
     screenName: screenName.get(hit.screen_id) ?? null,
     benchAssay: null,
   }));
+
+  // Headline hits can belong to screens outside the recent-screen window.
+  // Missing QC is pending, never an implied pass.
+  const candidateQc = candidates.map((candidate) => ({
+    id: candidate.screenId,
+    qc: recent.find((screen) => screen.id === candidate.screenId)?.qc ?? "pending",
+  }));
+  const qcSource = candidateQc.find((screen) => screen.qc === "fail")
+    ?? candidateQc.find((screen) => screen.qc === "warn")
+    ?? candidateQc.find((screen) => screen.qc === "pending");
 
   const runs: RunRow[] = recent.map((screen) => ({
     id: screen.id,
@@ -353,13 +365,23 @@ function WorkspaceOverview({
         className={CANDIDATES_CELL}
         rows={candidates}
         ranked={headline.scored ? "chance" : "fdr"}
-        count={plural(candidates.length, "candidate", "candidates")}
+        total={candidates.length}
+        unit={candidates.length === 1 ? "candidate" : "candidates"}
+        sample={false}
+        qc={qcSource && qcSource.qc !== "pass" ? {
+          verdict: qcSource.qc,
+          note: qcSource.qc === "fail"
+            ? "Some candidates come from a screen that failed QC; downstream figures are suspect."
+            : qcSource.qc === "warn"
+              ? "Some candidates come from a screen with QC warnings; review before validation."
+              : "QC has not been verified for every candidate's screen; review before validation.",
+          href: `/dashboard/screens/${qcSource.id}?tab=qc`,
+        } : null}
         provenance={
           headline.scored
             ? `Ranked by calibrated chance real, net of artifact flags.`
             : `Ranked by FDR, because no hit here carries a calibrated chance yet.`
         }
-        exportHref={null}
         emptyBody="Either no run has called a hit yet, or the read did not complete. Nothing is being reported as zero."
       />
       <PanelStack span={6} className={STACK_CELL}>
@@ -420,6 +442,8 @@ function SampleOverview({ signedIn }: { signedIn: boolean }) {
     chance: hit.chance,
     lfc: hit.lfc,
     fdr: hit.fdr,
+    novelty: hit.novelty,
+    bayes: hit.bayesFactor,
     guides: hit.guides,
     guidesAgree: hit.guidesAgree,
     flags: hit.flags,
@@ -505,9 +529,19 @@ function SampleOverview({ signedIn }: { signedIn: boolean }) {
         className={CANDIDATES_CELL}
         rows={candidates}
         ranked="chance"
-        count={plural(queue.length, "candidate", "candidates")}
+        total={queue.length}
+        unit={queue.length === 1 ? "candidate" : "candidates"}
+        sample
+        qc={source.qc === "pass" ? null : {
+          verdict: source.qc,
+          note: source.qc === "fail"
+            ? "This screen failed QC; downstream figures are suspect."
+            : source.qc === "warn"
+              ? "This screen has QC warnings; review before validation."
+              : "This screen's QC is pending; review before validation.",
+          href: `/dashboard/screens/${source.id}?tab=qc`,
+        }}
         provenance={`${scoreTool ?? "Scoring stage"} · FDR ${FDR_THRESHOLD.toFixed(2)} · ${source.library}, ${formatNumber(tests)} genes`}
-        exportHref={`/api/report/${source.id}?format=csv`}
         emptyBody="Every candidate on this screen has been answered at the bench."
       />
       <PanelStack span={6} className={STACK_CELL}>
