@@ -1,0 +1,58 @@
+FROZEN ROUTES {
+  "drug / chemical / environmental response": {
+    "n_screens": 157,
+    "n_publications": 20,
+    "means": {
+      "external": 0.15026384428422762,
+      "global": 0.05843557830244959,
+      "phenotype": 0.014630763901472218
+    },
+    "selected": "external",
+    "selection_estimate_not_unbiased": true
+  },
+  "host-pathogen / infection response": {
+    "n_screens": 17,
+    "n_publications": 8,
+    "means": {
+      "external": 0.1784586607198217,
+      "global": 0.0112968677813771,
+      "phenotype": 0.041837231695025644
+    },
+    "selected": "external",
+    "selection_estimate_not_unbiased": true
+  },
+  "trafficking / localization / structural phenotypes": {
+    "n_screens": 4,
+    "n_publications": 2,
+    "means": {
+      "external": 0.0,
+      "global": 0.0194930850809451,
+      "phenotype": 0.003645165626092976
+    },
+    "selected": "external",
+    "selection_estimate_not_unbiased": true
+  },
+  "molecular output / reporter / pathway activity": {
+    "n_screens": 4,
+    "n_publications": 4,
+    "means": {
+      "external": 0.20606591466989188,
+      "global": 0.06300097837970457,
+      "phenotype": 0.0
+    },
+    "selected": "external",
+    "selection_estimate_not_unbiased": true
+  },
+  "fitness / proliferation / viability": {
+    "n_screens": 36,
+    "n_publications": 5,
+    "means": {
+      "external": 0.36649466290571,
+      "global": 0.41226687996070344,
+      "phenotype": 0.417435815235779
+    },
+    "selected": "phenotype",
+    "selection_estimate_not_unbiased": true
+  }
+}
+select 0.19484942106435008 {'mean': 0.008412300384782037, 'n_screens': 218, 'n_publications': 34, 'seed': 20260927, 'repeats': 10000, 'unit': 'publication', 'ci95': [-0.012498669203989884, 0.043779589694788]}

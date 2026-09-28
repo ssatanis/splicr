@@ -1,0 +1,6 @@
+{
+  "check": "independently refit and regenerate frozen rankings; no scoring or tuning",
+  "n_screens": 334,
+  "all_rankings_identical": true,
+  "prediction_sha256": "02eb8af3311b491b418b7e014b3d4dc8738480cf3eed4b1380d9aebbffaeaf0f"
+}

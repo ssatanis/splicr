@@ -1,0 +1,33 @@
+{
+  "dataset": "GSE145743",
+  "comparison": "library A CPM against author merged A+B normalized table",
+  "files": [
+    {
+      "path": "data/testdata/GSE145743/counts/GSE145743_my_counts_anno_merged.txt.gz",
+      "bytes": 1531146,
+      "sha256": "a14192f5d84a23f08aaaa5dad5e253ffaf5e03e92b4a3a83eeacc628e13edb00"
+    },
+    {
+      "path": "data/testdata/GSE145743/fastq/SRR12401850_libA_plasmid.fastq.gz",
+      "bytes": 105266536,
+      "sha256": "edc4e4f62245ff9080fb63b5201fce2ba23a288e59a93ae14582c9a3b2ed19d4"
+    },
+    {
+      "path": "data/testdata/GSE145743/fastq/SRR11144449_libA_T0_input.fastq.gz",
+      "bytes": 440464023,
+      "sha256": "a561f554b64528260d75adfacd6bc0da52e1dc81a499036a6f3e22b637af8c31"
+    },
+    {
+      "path": "data/testdata/GSE145743/fastq/SRR11144453_libA_DMSO_rep1.fastq.gz",
+      "bytes": 279026701,
+      "sha256": "34a3fb1fd5cd5e7d5828a4ce84f3e889abd19c1d3a52c20ebbcb61328ec63e2e"
+    },
+    {
+      "path": "data/testdata/GSE145743/fastq/SRR11144451_libA_olaparib_rep1.fastq.gz",
+      "bytes": 152325251,
+      "sha256": "516b0a330284957bc8628f555c31c3b196b599da0f517858df14d77cb9da6334"
+    }
+  ],
+  "report_sha256": "3a770f4f996c124466c2579633cb364650d6cf1f8366c8e36a69adace794f226",
+  "log_sha256": "9c9b5685f60f46adbc58148dccd194c7f58a34b6eec47c09c4df08fb155d3782"
+}

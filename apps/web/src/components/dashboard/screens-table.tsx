@@ -30,7 +30,6 @@ import Link from "next/link";
 import { useMemo } from "react";
 
 import {
-  CALIBRATION_BAND,
   FDR_THRESHOLD,
   libraries,
   LIKELY_REAL_THRESHOLD,
@@ -199,7 +198,7 @@ export function ScreensTable() {
             {/* One line, because the footer is one line. The long-hand version of
                 this sentence lived under the table and cost 77px of rows. */}
             <FootNote>
-              Hits: chance real {LIKELY_REAL_THRESHOLD.toFixed(2)} or above, over candidates past BH
+              Demo hits: illustrative score {LIKELY_REAL_THRESHOLD.toFixed(2)} or above, over candidates past BH
               FDR {FDR_THRESHOLD.toFixed(2)}
             </FootNote>
             <span className="flex shrink-0 items-center gap-3">
@@ -394,11 +393,11 @@ export function ScreensTable() {
         <Panel
           span={4}
           className={cn(SIDE_PANEL_H, "[animation-delay:80ms]")}
-          title="How these figures were computed"
+          title="Illustrative analysis settings"
         >
           <DefRow term="Counting" value={toolFor("count")} />
           <DefRow term="Hit calling" value={toolFor("hits")} />
-          <DefRow term="Score" value={toolFor("score")} note={`Calibration band ±${CALIBRATION_BAND.toFixed(2)}`} />
+          <DefRow term="Score" value={toolFor("score")} note="Illustrative score; no fitted calibration or interval" />
           <DefRow
             term="Candidate cut"
             value={`BH FDR ${FDR_THRESHOLD.toFixed(2)}`}

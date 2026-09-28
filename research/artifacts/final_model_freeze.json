@@ -1,0 +1,24 @@
+{
+  "config": {
+    "alpha": 10,
+    "kind": "ridge"
+  },
+  "historical_public_test_access": true,
+  "name": "text_ridge_10",
+  "provenance": {
+    "assaybench_version": "0.2.0",
+    "data_sha256": "25e00c380358486137d1f25c490db98d007dfc5230f8ad502276dc6ccc741a5c",
+    "git_revision": "166cb3c2366424e9fdb6ac47bf051f01a1948c67",
+    "input": "pre-experimental metadata; train-union genes; no target library",
+    "loader_code_sha256": "6e3dc144928252f96af66e1b7966ace7556aa23935a10005f05a1a0b3aa84044",
+    "metric_sha256": "d1b638c9aa3ee1cbd984028595b7af009f00736d203fa9cc10405732d182fbae",
+    "model_code_sha256": "cdfb02576fb89cc67807d00672b438db6f07d5698efcc64c53ad13f0853a9683",
+    "protocol": "train <=2020; validation 2021; public test >=2022 already explored historically",
+    "protocol_code_sha256": "2287b13c5d0946a1e2e92e9ad470113abe5b325fe38692e6aa87469a09b91264",
+    "residual_runner_sha256": "7595bf6c3b1c2ee55a073f2f9570f219184b3cc19a6f5c4c9241149dc8eb5247",
+    "runner_code_sha256": "5056075e24de9e480eecbd2738125ce1c5fbab72d6397a30355f9466738e6dc3",
+    "seed": 20260927
+  },
+  "selection_data": "2021 validation; optimistic",
+  "test_access_this_experiment": false
+}

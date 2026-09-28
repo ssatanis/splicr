@@ -148,6 +148,12 @@ def test_leave_one_publication_out_counters_are_exact():
             want = u.group_sums(rows)
             got = c.field_sums(field, value, pub)
             for a, b in zip(got, want):
-                assert np.allclose(a, b), f"{field}={value} drifted for pub {pub}"
+                # Sparse float32 sums are accumulated in a different order when
+                # a publication is subtracted from a cached group total.
+                # Check the actual counter tolerance, including zero entries.
+                assert np.allclose(a, b, rtol=1e-5, atol=3e-5), (
+                    f"{field}={value} drifted for pub {pub}: "
+                    f"max error {np.max(np.abs(a - b))}"
+                )
             checked += 1
     assert checked >= 8

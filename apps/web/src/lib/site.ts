@@ -3,10 +3,10 @@ export const site = {
   name: "SplicR",
   /** The full name, for the document title, Open Graph and anywhere the
       product is being introduced rather than referred to. */
-  fullName: "SplicR | The Answer Key for CRISPR Screens",
-  tagline: "Know which hits are real.",
+  fullName: "SplicR | CRISPR Screen Evidence",
+  tagline: "Inspect the evidence behind your CRISPR hits.",
   description:
-    "The answer key for CRISPR screens. For every hit, a calibrated chance it is real, the reason, and what to do next.",
+    "CRISPR screen analysis and prediction research with traceable evidence, measured benchmarks and explicit uncertainty.",
   email: "hello@splicr.org",
   url: "https://splicr.org",
   location: "New York, United States",
@@ -16,6 +16,7 @@ export const site = {
 export const marketingNav = [
   { href: "/technology", label: "Technology" },
   { href: "/pipeline", label: "Pipeline" },
+  { href: "/evidence", label: "Evidence" },
   { href: "/about", label: "About Us" },
 ] as const;
 
@@ -25,6 +26,7 @@ export const footerColumns = [
     links: [
       { href: "/technology", label: "Tech" },
       { href: "/pipeline", label: "Pipeline" },
+  { href: "/evidence", label: "Evidence" },
     ],
   },
   {

@@ -1,0 +1,42 @@
+Published table: 123,411 guides, columns ['DMSO1', 'DMSO2', 'input', 'Olaparib1', 'Olaparib2', 'plasmid']
+  column sums: {'DMSO1': 10000000, 'DMSO2': 10000000, 'input': 10000000, 'Olaparib1': 10000000, 'Olaparib2': 10000000, 'plasmid': 10000000}
+
+SRR12401850_libA_plasmid.fastq.gz  vs published column 'plasmid'
+  plasmid: 3,119,503 reads, 88.9% mapped (2,562,690 exact, 211,606 1mm), 93.4% carry the u6_tail anchor
+  guides compared        65,383
+  median CPM ratio       0.9691
+  within 25 percent      89.5%
+  Spearman               0.9289
+  zero guides, SplicR    1,574
+  zero guides, published 2,661
+
+SRR11144449_libA_T0_input.fastq.gz  vs published column 'input'
+  input: 12,449,815 reads, 88.6% mapped (9,925,379 exact, 1,109,384 1mm), 95.9% carry the u6_tail anchor
+  guides compared        65,383
+  median CPM ratio       0.9723
+  within 25 percent      88.9%
+  Spearman               0.9399
+  zero guides, SplicR    1,748
+  zero guides, published 3,013
+
+SRR11144453_libA_DMSO_rep1.fastq.gz  vs published column 'DMSO1'
+  DMSO1: 5,896,213 reads, 81.4% mapped (4,028,296 exact, 772,914 1mm), 81.6% carry the u6_tail anchor
+  guides compared        65,383
+  median CPM ratio       0.9763
+  within 25 percent      84.0%
+  Spearman               0.9533
+  zero guides, SplicR    3,186
+  zero guides, published 4,713
+
+SRR11144451_libA_olaparib_rep1.fastq.gz  vs published column 'Olaparib1'
+  Olaparib1: 4,871,170 reads, 87.1% mapped (3,849,504 exact, 393,362 1mm), 97.4% carry the u6_tail anchor
+  guides compared        65,383
+  median CPM ratio       0.9762
+  within 25 percent      84.1%
+  Spearman               0.9548
+  zero guides, SplicR    4,188
+  zero guides, published 5,734
+
+wrote /Users/sahaj/Documents/Projects/SplicR/docs/validation/counting.json
+
+Across 4 samples: median CPM ratio 0.969 to 0.976, Spearman 0.929 to 0.955

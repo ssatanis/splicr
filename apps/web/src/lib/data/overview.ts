@@ -101,8 +101,10 @@ export interface CalibrationBin {
 }
 
 export interface Calibration {
+  /** Descriptive bins alone do not establish validation probabilities. */
+  interpretation: "descriptive_only";
   bins: CalibrationBin[];
-  /** Expected calibration error, weighted by bin population. */
+  /** Descriptive binned score/outcome discrepancy; not proof of calibration. */
   error: number;
   /** Outcomes that actually resolved, so validated or failed. */
   resolved: number;
@@ -338,7 +340,7 @@ async function hitsFromComparison(
 /**
  * The hits worth looking at first, across the workspace's screens.
  *
- * Scored hits win when they exist, ranked by calibrated chance. Otherwise the
+ * Scored hits win when they exist, ranked by recorded model score (calibration is not established). Otherwise the
  * strongest by FDR come back with `scored` false, and the page words the card
  * differently rather than implying a confidence nobody computed.
  */
@@ -398,7 +400,7 @@ export async function listHeadlineHits(orgId: string, limit = 6): Promise<Headli
       return { hits: top, scored: true };
     }
 
-    // No calibrated score anywhere in the workspace. Fall back to statistical
+    // No recorded model score anywhere in the workspace. Fall back to statistical
     // strength, which is a different claim, and the page says which one it is.
     const byFdr = (
       await Promise.all(comparisonIds.map((id) => hitsFromComparison(supabase, id, "fdr", limit)))
@@ -481,7 +483,10 @@ const CALIBRATION_BANDS: { bin: string; lower: number; upper: number }[] = [
 const MIN_RESOLVED_FOR_CALIBRATION = 10;
 
 /**
- * The reliability curve, computed from the lab's own logged outcomes.
+ * Descriptive score/outcome bins from the lab's logged outcomes.
+ * These pooled, selected observations do not establish calibrated probabilities.
+ * Model/assay/study grouping and an independent calibration cohort are required
+ * before any probability interpretation. This diagnostic is not shown by the UI.
  *
  * Only outcomes that actually resolved count: `inconclusive` and `pending` say
  * nothing about whether a prediction held. Returns null when too few have been
@@ -508,7 +513,7 @@ export async function getCalibration(orgId: string): Promise<Calibration | null>
 
     const resolved = rows<{ predicted: number | null; result: string | null }>(data)
       .map((row) => ({ predicted: toNumber(row.predicted), validated: row.result === "validated" }))
-      .filter((row): row is { predicted: number; validated: boolean } => row.predicted !== null);
+      .filter((row): row is { predicted: number; validated: boolean } => row.predicted !== null && row.predicted >= 0 && row.predicted <= 1);
 
     if (resolved.length < MIN_RESOLVED_FOR_CALIBRATION) return null;
 
@@ -530,7 +535,7 @@ export async function getCalibration(orgId: string): Promise<Calibration | null>
 
     if (bins.length === 0) return null;
 
-    return { bins, error: weightedError / resolved.length, resolved: resolved.length };
+    return { interpretation: "descriptive_only", bins, error: weightedError / resolved.length, resolved: resolved.length };
   } catch (error) {
     note("getCalibration", error);
     return null;
@@ -561,7 +566,7 @@ interface StageRow {
  * Stages come back in `position` order, which is the order the engine writes
  * them, so a skipped stage stays visible in place rather than being quietly
  * dropped. A skipped `score` or `atlas` stage is exactly what the overview needs
- * to show, because it explains why hits carry no calibrated chance.
+ * to show, because it explains why hits carry no recorded model score.
  */
 export async function getLatestRun(orgId: string): Promise<LatestRun | null> {
   if (!queryable(orgId)) return null;

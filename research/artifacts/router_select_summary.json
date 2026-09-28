@@ -1,0 +1,4994 @@
+{
+  "experts": {
+    "external": {
+      "adjusted_ndcg@10": 0.21590033244477305,
+      "ci95": [
+        0.1153633645698936,
+        0.26398878099965734
+      ],
+      "distribution": {
+        "max": 1.0,
+        "median": 0.11916241125194263,
+        "min": 0.0,
+        "p25": 0.0,
+        "p75": 0.2651709683402319
+      },
+      "invalid_hgnc_fraction": 0.0008365179687516908,
+      "mean": 0.18643712067956802,
+      "measured_at100": 79.09174311926606,
+      "n_publications": 34,
+      "n_screens": 218,
+      "precision@10": 0.2393730886850153,
+      "precision@100": 0.14833605989538598,
+      "recall@100": 0.22832085277158784,
+      "repeats": 10000,
+      "seed": 20260927,
+      "slot_precision_at100": 0.10990825688073395,
+      "subgroups": {
+        "cell_line": {
+          "A-375": {
+            "ci95": null,
+            "mean": 0.2911929643455677,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "B16-F10": {
+            "ci95": null,
+            "mean": 0.14469589600542698,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "BLaER1": {
+            "ci95": null,
+            "mean": 0.2880847307363777,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "BxPC-3": {
+            "ci95": null,
+            "mean": 0.013467073746829712,
+            "n_publications": 1,
+            "n_screens": 8,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "CNE2-IR": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Calu-3": {
+            "ci95": null,
+            "mean": 0.032651208782972806,
+            "n_publications": 1,
+            "n_screens": 6,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "H1HeLa": {
+            "ci95": null,
+            "mean": 0.35771561271160923,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "H4": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "HAP-1": {
+            "ci95": null,
+            "mean": 0.17908533209259495,
+            "n_publications": 1,
+            "n_screens": 86,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "HCT 116": {
+            "ci95": [
+              0.0,
+              0.1932113593130742
+            ],
+            "mean": 0.1288075728753828,
+            "n_publications": 2,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "HEK-293": {
+            "ci95": null,
+            "mean": 0.016786826929230024,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "HEK293-A": {
+            "ci95": null,
+            "mean": 0.12378861516446282,
+            "n_publications": 1,
+            "n_screens": 8,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "HEK293T": {
+            "ci95": null,
+            "mean": 0.14527021616840743,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "HUES 62": {
+            "ci95": null,
+            "mean": 0.05692020016348576,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "HeLa": {
+            "ci95": [
+              0.23580448774870347,
+              0.5419638936933646
+            ],
+            "mean": 0.4982268357012702,
+            "n_publications": 2,
+            "n_screens": 7,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "HuH-7": {
+            "ci95": [
+              0.0659461527397327,
+              0.21344719264834003
+            ],
+            "mean": 0.13969667269403635,
+            "n_publications": 2,
+            "n_screens": 8,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Huh-7.5": {
+            "ci95": null,
+            "mean": 0.49875629866264976,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Huh-7.5.1": {
+            "ci95": null,
+            "mean": 0.27032458615226934,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Jurkat": {
+            "ci95": null,
+            "mean": 0.09070718575919101,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "K-562": {
+            "ci95": null,
+            "mean": 0.37193208334684846,
+            "n_publications": 1,
+            "n_screens": 6,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "MV4-11": {
+            "ci95": null,
+            "mean": 0.03873304598817514,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mel JuSo": {
+            "ci95": null,
+            "mean": 0.08489180481451136,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "NALM-6": {
+            "ci95": [
+              0.007072446466199602,
+              0.11521563888508804
+            ],
+            "mean": 0.054086768805558495,
+            "n_publications": 3,
+            "n_screens": 8,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "OCI-AML-1": {
+            "ci95": null,
+            "mean": 0.21047796808647762,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "OCI-AML-2": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "OCI-AML-5": {
+            "ci95": null,
+            "mean": 0.12067864647888911,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "PANC-1": {
+            "ci95": null,
+            "mean": 0.010558619370378945,
+            "n_publications": 1,
+            "n_screens": 8,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "PC-9": {
+            "ci95": null,
+            "mean": 0.23367354910610574,
+            "n_publications": 1,
+            "n_screens": 24,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "PLC/PRF/5": {
+            "ci95": null,
+            "mean": 0.1350089179939742,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "STAT1\u2212/\u2212 fibroblasts": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "THP-1": {
+            "ci95": null,
+            "mean": 0.21234512569365174,
+            "n_publications": 1,
+            "n_screens": 6,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "U2OS": {
+            "ci95": null,
+            "mean": 0.2094943402564005,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "cardiomyocyte cell line": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "hTERT-RPE1": {
+            "ci95": null,
+            "mean": 0.5850755894474249,
+            "n_publications": 1,
+            "n_screens": 6,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "primary melanoma cell line": {
+            "ci95": null,
+            "mean": 0.2696998631784341,
+            "n_publications": 1,
+            "n_screens": 8,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          }
+        },
+        "condition": {
+          "17-AAG/Tanespimycin": {
+            "ci95": null,
+            "mean": 0.11665413314404109,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "2-Thenoyltrifluoroacetone (TTFA)": {
+            "ci95": null,
+            "mean": 0.0973643756606445,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "5-fluorouracil": {
+            "ci95": null,
+            "mean": 0.001359948110597986,
+            "n_publications": 1,
+            "n_screens": 4,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "A159": {
+            "ci95": null,
+            "mean": 0.028377226035494515,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "AZD0156": {
+            "ci95": null,
+            "mean": 0.0925317244620131,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "AZD5576 (CDK9i)": {
+            "ci95": null,
+            "mean": 0.2895796160193171,
+            "n_publications": 1,
+            "n_screens": 4,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "AZD6738": {
+            "ci95": null,
+            "mean": 0.2893344487194705,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "BAPTA-AM": {
+            "ci95": null,
+            "mean": 0.25513515198081066,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "BI-2536": {
+            "ci95": null,
+            "mean": 0.1165028795270089,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "BIBR 1532 (BIBR1532)": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Bisindolylm. (bisindolylmaleimide/GF109203X)": {
+            "ci95": null,
+            "mean": 0.1492676408653298,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Bleocin": {
+            "ci95": null,
+            "mean": 0.6192219923703993,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Brefeldin A": {
+            "ci95": null,
+            "mean": 0.1707088730712882,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "CB-5083": {
+            "ci95": null,
+            "mean": 0.15263421572794975,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "CBK77": {
+            "ci95": null,
+            "mean": 0.08489180481451136,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Camptothecin": {
+            "ci95": null,
+            "mean": 0.25996162042496085,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Cisplatin": {
+            "ci95": null,
+            "mean": 0.585961103405093,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Colchicine": {
+            "ci95": null,
+            "mean": 0.10432198035575707,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Cycloheximide": {
+            "ci95": null,
+            "mean": 0.25858007664932375,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Cytochalasin D": {
+            "ci95": null,
+            "mean": 0.15203113999864004,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Dichloroacetic acid (DCA)": {
+            "ci95": null,
+            "mean": 0.10459969795606938,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Dinaciclib": {
+            "ci95": null,
+            "mean": 0.05494705200849931,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Doxorubicin": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "EMI1": {
+            "ci95": null,
+            "mean": 0.007072446466199602,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Flavopiridol": {
+            "ci95": null,
+            "mean": 0.2626057647842071,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "GPS167": {
+            "ci95": null,
+            "mean": 0.19449244282080103,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Gemcitabine": {
+            "ci95": null,
+            "mean": 0.007913266671458438,
+            "n_publications": 1,
+            "n_screens": 4,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "HB007": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Harringtonine": {
+            "ci95": null,
+            "mean": 0.15600964231736486,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Hydrogen Peroxide (H2O2)": {
+            "ci95": null,
+            "mean": 0.016786826929230024,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Imatinib mesylate": {
+            "ci95": null,
+            "mean": 0.07088983708667927,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Immunotherapy (GVAX + PD-1 blockade)": {
+            "ci95": null,
+            "mean": 0.14469589600542698,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Interferon gamma": {
+            "ci95": null,
+            "mean": 0.07345355671248649,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Ionizing Radiation (IR)": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Ipatasertib": {
+            "ci95": null,
+            "mean": 0.14316324931348556,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Irinotecan": {
+            "ci95": null,
+            "mean": 0.008148791197454309,
+            "n_publications": 1,
+            "n_screens": 4,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "JG-231": {
+            "ci95": null,
+            "mean": 0.17749850301003847,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "KH-CB19": {
+            "ci95": null,
+            "mean": 0.09187923298533744,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Leptomycin B": {
+            "ci95": null,
+            "mean": 0.1277228232891163,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Methyl methanesulfonate (MMS)": {
+            "ci95": null,
+            "mean": 0.27590347136982496,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mutation: EGFR (ETG1956) T790M/L858R": {
+            "ci95": null,
+            "mean": 0.5043916491718438,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mutation: EGFR (ETG1956) T790M/L858R| erlotinib": {
+            "ci95": null,
+            "mean": 0.16110074717474435,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mutation: ELOF1 (ETG84337) KO": {
+            "ci95": null,
+            "mean": 0.05692020016348576,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mutation: HAPSTR1 (TAPR1) (ETG29035) KO": {
+            "ci95": null,
+            "mean": 0.02665826244100143,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mutation: KRAS (ETG3845) G12V": {
+            "ci95": null,
+            "mean": 0.39695640252154357,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mutation: KRAS (ETG3845) G12V| erlotinib": {
+            "ci95": null,
+            "mean": 0.2034755025800277,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mutation: RIT1 (ETG6016) M90I": {
+            "ci95": null,
+            "mean": 0.15195194912239884,
+            "n_publications": 1,
+            "n_screens": 6,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mutation: RIT1 (ETG6016) M90I| erlotinib": {
+            "ci95": null,
+            "mean": 0.14978009657794447,
+            "n_publications": 1,
+            "n_screens": 6,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mutation: TP53 (ETG:7157) KO": {
+            "ci95": null,
+            "mean": 0.5807181109755984,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "NU 7441 (KU-57788)": {
+            "ci95": null,
+            "mean": 0.003706081036586687,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Nicotinamide": {
+            "ci95": null,
+            "mean": 0.11746571100284264,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Not specified": {
+            "ci95": [
+              0.07230146479897089,
+              0.45282408458983436
+            ],
+            "mean": 0.3670881238490273,
+            "n_publications": 7,
+            "n_screens": 22,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Olaparib": {
+            "ci95": null,
+            "mean": 0.09205845771408223,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Olaparib|AZD0156": {
+            "ci95": null,
+            "mean": 0.05082441392602553,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Oxaliplatin": {
+            "ci95": null,
+            "mean": 0.030629380254906583,
+            "n_publications": 1,
+            "n_screens": 4,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Paclitaxel (Taxol)": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Palbociclib": {
+            "ci95": null,
+            "mean": 0.23486705508233685,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Pictilisib": {
+            "ci95": null,
+            "mean": 0.1716912291536337,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Pimasertib (AS-703026)": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Pladienolide B (PladB)": {
+            "ci95": null,
+            "mean": 0.10455570237048743,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Pravastatin Sodium": {
+            "ci95": null,
+            "mean": 0.08392024641401984,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "RO-3306": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Rabusertib (LY2603618)": {
+            "ci95": null,
+            "mean": 0.17569927287637713,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Rapamycin": {
+            "ci95": [
+              0.1150117951494351,
+              0.13147510197371653
+            ],
+            "mean": 0.12324344856157582,
+            "n_publications": 2,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Ribociclib": {
+            "ci95": null,
+            "mean": 0.19594062157329484,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "SARS-CoV-2 Spike-RBD": {
+            "ci95": null,
+            "mean": 0.06530241756594561,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Salmonella enterica serovar Typhimurium and IFNgamma (500 U/ml)": {
+            "ci95": null,
+            "mean": 0.23580448774870347,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "TAK-243": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "TAK-901": {
+            "ci95": null,
+            "mean": 0.08663157753402755,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "TG003": {
+            "ci95": null,
+            "mean": 0.05927524084912563,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "TIL (Tumor Infiltrating Lymphocyte) co-culture": {
+            "ci95": null,
+            "mean": 0.34735755811916436,
+            "n_publications": 1,
+            "n_screens": 6,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Thapsigargin": {
+            "ci95": null,
+            "mean": 1.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Transferrin receptor (TFRC/CD71)": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Tunicamycin": {
+            "ci95": null,
+            "mean": 1.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "UM171": {
+            "ci95": null,
+            "mean": 0.18054486088394814,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Vemurafenib": {
+            "ci95": null,
+            "mean": 0.2911929643455677,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Virus: HCoV-229E (Human coronavirus 229E)": {
+            "ci95": [
+              0.0614703618056463,
+              0.43607497621172175
+            ],
+            "mean": 0.18633856660767142,
+            "n_publications": 2,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Virus: Hepatitis C Virus": {
+            "ci95": null,
+            "mean": 0.49875629866264976,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Virus: Human hepatitis A virus HM175": {
+            "ci95": null,
+            "mean": 0.27032458615226934,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Virus: MERS-CoV": {
+            "ci95": null,
+            "mean": 0.07042194367381911,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Virus: Rhinovirus serotype B14 (RV-B14)": {
+            "ci95": null,
+            "mean": 0.35771561271160923,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Virus: SARS-CoV-2 (Severe acute respiratory syndrome coronavirus 2)": {
+            "ci95": null,
+            "mean": 0.13923793146054608,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Virus: Zika virus": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Vismodegib (GDC-0449)": {
+            "ci95": null,
+            "mean": 0.02400367918902624,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Vorinostat/SAHA": {
+            "ci95": null,
+            "mean": 0.13694362465450058,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "aflatoxin B1 (AFB1)": {
+            "ci95": null,
+            "mean": 0.1350089179939742,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          }
+        },
+        "modality": {
+          "Activation": {
+            "ci95": [
+              0.0,
+              0.020564908819823806
+            ],
+            "mean": 0.018279918950954495,
+            "n_publications": 2,
+            "n_screens": 9,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Inhibition": {
+            "ci95": null,
+            "mean": 0.032651208782972806,
+            "n_publications": 1,
+            "n_screens": 6,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Knockout": {
+            "ci95": [
+              0.1333397043595673,
+              0.27762640560645446
+            ],
+            "mean": 0.19843776248713996,
+            "n_publications": 32,
+            "n_screens": 203,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          }
+        },
+        "phenotype": {
+          "Drug / Chemical / Environmental Response": {
+            "ci95": [
+              0.0697840196417207,
+              0.17565357878451182
+            ],
+            "mean": 0.15026384428422762,
+            "n_publications": 20,
+            "n_screens": 157,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Fitness / Proliferation / Viability": {
+            "ci95": [
+              0.0721117603351665,
+              0.46628337940750614
+            ],
+            "mean": 0.36649466290571,
+            "n_publications": 5,
+            "n_screens": 36,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Host-Pathogen / Infection Response": {
+            "ci95": [
+              0.09673522079839254,
+              0.2838598071971115
+            ],
+            "mean": 0.1784586607198217,
+            "n_publications": 8,
+            "n_screens": 17,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Molecular Output / Reporter / Pathway Activity": {
+            "ci95": [
+              0.1613262471904057,
+              0.2614171409318788
+            ],
+            "mean": 0.20606591466989188,
+            "n_publications": 4,
+            "n_screens": 4,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Trafficking / Localization / Structural Phenotypes": {
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "n_publications": 2,
+            "n_screens": 4,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          }
+        }
+      },
+      "unit": "publication",
+      "wrong_direction_fraction_returned": 0.013287189739078577
+    },
+    "global": {
+      "adjusted_ndcg@10": 0.10254716105066694,
+      "ci95": [
+        0.017015119810847718,
+        0.2812345891013653
+      ],
+      "distribution": {
+        "max": 0.9430159493133827,
+        "median": 0.0,
+        "min": 0.0,
+        "p25": 0.0,
+        "p75": 0.042538294272330725
+      },
+      "invalid_hgnc_fraction": 0.0,
+      "mean": 0.11255970861557762,
+      "measured_at100": 46.27064220183486,
+      "n_publications": 34,
+      "n_screens": 218,
+      "precision@10": 0.18539755351681958,
+      "precision@100": 0.18352980372311384,
+      "recall@100": 0.015376703745813373,
+      "repeats": 10000,
+      "seed": 20260927,
+      "slot_precision_at100": 0.11123853211009174,
+      "subgroups": {
+        "cell_line": {
+          "A-375": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "B16-F10": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "BLaER1": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "BxPC-3": {
+            "ci95": null,
+            "mean": 0.009250805116508665,
+            "n_publications": 1,
+            "n_screens": 8,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "CNE2-IR": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Calu-3": {
+            "ci95": null,
+            "mean": 0.03477852919871665,
+            "n_publications": 1,
+            "n_screens": 6,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "H1HeLa": {
+            "ci95": null,
+            "mean": 0.005268358702190379,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "H4": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "HAP-1": {
+            "ci95": null,
+            "mean": 0.021991410236061795,
+            "n_publications": 1,
+            "n_screens": 86,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "HCT 116": {
+            "ci95": [
+              0.0,
+              0.0846114628798028
+            ],
+            "mean": 0.05640764191986853,
+            "n_publications": 2,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "HEK-293": {
+            "ci95": null,
+            "mean": 0.00015298339541966094,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "HEK293-A": {
+            "ci95": null,
+            "mean": 0.020791782304051768,
+            "n_publications": 1,
+            "n_screens": 8,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "HEK293T": {
+            "ci95": null,
+            "mean": 0.1397153812427092,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "HUES 62": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "HeLa": {
+            "ci95": [
+              0.0,
+              0.5029287558296768
+            ],
+            "mean": 0.4310817907111515,
+            "n_publications": 2,
+            "n_screens": 7,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "HuH-7": {
+            "ci95": [
+              0.0,
+              0.01270280000262762
+            ],
+            "mean": 0.00635140000131381,
+            "n_publications": 2,
+            "n_screens": 8,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Huh-7.5": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Huh-7.5.1": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Jurkat": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "K-562": {
+            "ci95": null,
+            "mean": 0.37957905685951104,
+            "n_publications": 1,
+            "n_screens": 6,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "MV4-11": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mel JuSo": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "NALM-6": {
+            "ci95": [
+              0.0,
+              0.022891451874303307
+            ],
+            "mean": 0.011813467717297,
+            "n_publications": 3,
+            "n_screens": 8,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "OCI-AML-1": {
+            "ci95": null,
+            "mean": 0.18095757440727753,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "OCI-AML-2": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "OCI-AML-5": {
+            "ci95": null,
+            "mean": 0.01786545171227565,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "PANC-1": {
+            "ci95": null,
+            "mean": 0.020584130463241777,
+            "n_publications": 1,
+            "n_screens": 8,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "PC-9": {
+            "ci95": null,
+            "mean": 0.5346191046816191,
+            "n_publications": 1,
+            "n_screens": 24,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "PLC/PRF/5": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "STAT1\u2212/\u2212 fibroblasts": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "THP-1": {
+            "ci95": null,
+            "mean": 0.009231348579273413,
+            "n_publications": 1,
+            "n_screens": 6,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "U2OS": {
+            "ci95": null,
+            "mean": 0.11228853227610906,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "cardiomyocyte cell line": {
+            "ci95": null,
+            "mean": 0.0027876817443633455,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "hTERT-RPE1": {
+            "ci95": null,
+            "mean": 0.48199550592732665,
+            "n_publications": 1,
+            "n_screens": 6,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "primary melanoma cell line": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 8,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          }
+        },
+        "condition": {
+          "17-AAG/Tanespimycin": {
+            "ci95": null,
+            "mean": 0.07495393640434528,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "2-Thenoyltrifluoroacetone (TTFA)": {
+            "ci95": null,
+            "mean": 0.028390441834121743,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "5-fluorouracil": {
+            "ci95": null,
+            "mean": 0.0019909859042322193,
+            "n_publications": 1,
+            "n_screens": 4,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "A159": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "AZD0156": {
+            "ci95": null,
+            "mean": 0.0030564224831218364,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "AZD5576 (CDK9i)": {
+            "ci95": null,
+            "mean": 0.0018209167090428332,
+            "n_publications": 1,
+            "n_screens": 4,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "AZD6738": {
+            "ci95": null,
+            "mean": 0.06631955262164746,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "BAPTA-AM": {
+            "ci95": null,
+            "mean": 0.003940473318478655,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "BI-2536": {
+            "ci95": null,
+            "mean": 0.016807296109788487,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "BIBR 1532 (BIBR1532)": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Bisindolylm. (bisindolylmaleimide/GF109203X)": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Bleocin": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Brefeldin A": {
+            "ci95": null,
+            "mean": 0.004580394060830525,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "CB-5083": {
+            "ci95": null,
+            "mean": 0.006156425979953708,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "CBK77": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Camptothecin": {
+            "ci95": null,
+            "mean": 0.04847803625486232,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Cisplatin": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Colchicine": {
+            "ci95": null,
+            "mean": 0.024172458639777742,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Cycloheximide": {
+            "ci95": null,
+            "mean": 0.08430261466782472,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Cytochalasin D": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Dichloroacetic acid (DCA)": {
+            "ci95": null,
+            "mean": 0.011463245466379841,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Dinaciclib": {
+            "ci95": null,
+            "mean": 0.016034808213156383,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Doxorubicin": {
+            "ci95": null,
+            "mean": 0.0027876817443633455,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "EMI1": {
+            "ci95": null,
+            "mean": 0.002941934241162784,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Flavopiridol": {
+            "ci95": null,
+            "mean": 0.014462416648460229,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "GPS167": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Gemcitabine": {
+            "ci95": null,
+            "mean": 0.015355090030017532,
+            "n_publications": 1,
+            "n_screens": 4,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "HB007": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Harringtonine": {
+            "ci95": null,
+            "mean": 0.004388516807137932,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Hydrogen Peroxide (H2O2)": {
+            "ci95": null,
+            "mean": 0.00015298339541966094,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Imatinib mesylate": {
+            "ci95": null,
+            "mean": 0.019303515095548292,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Immunotherapy (GVAX + PD-1 blockade)": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Interferon gamma": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Ionizing Radiation (IR)": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Ipatasertib": {
+            "ci95": null,
+            "mean": 0.017785477882517647,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Irinotecan": {
+            "ci95": null,
+            "mean": 0.0023368192521739835,
+            "n_publications": 1,
+            "n_screens": 4,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "JG-231": {
+            "ci95": null,
+            "mean": 0.024317767396087795,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "KH-CB19": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Leptomycin B": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Methyl methanesulfonate (MMS)": {
+            "ci95": null,
+            "mean": 0.044188156980576127,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mutation: EGFR (ETG1956) T790M/L858R": {
+            "ci95": null,
+            "mean": 0.6190748565199232,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mutation: EGFR (ETG1956) T790M/L858R| erlotinib": {
+            "ci95": null,
+            "mean": 0.6285879819019354,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mutation: ELOF1 (ETG84337) KO": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mutation: HAPSTR1 (TAPR1) (ETG29035) KO": {
+            "ci95": null,
+            "mean": 0.03052193583240441,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mutation: KRAS (ETG3845) G12V": {
+            "ci95": null,
+            "mean": 0.6202646488728468,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mutation: KRAS (ETG3845) G12V| erlotinib": {
+            "ci95": null,
+            "mean": 0.6170802749809435,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mutation: RIT1 (ETG6016) M90I": {
+            "ci95": null,
+            "mean": 0.47416724053511916,
+            "n_publications": 1,
+            "n_screens": 6,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mutation: RIT1 (ETG6016) M90I| erlotinib": {
+            "ci95": null,
+            "mean": 0.42180529705353265,
+            "n_publications": 1,
+            "n_screens": 6,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mutation: TP53 (ETG:7157) KO": {
+            "ci95": null,
+            "mean": 0.4652550856083555,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "NU 7441 (KU-57788)": {
+            "ci95": null,
+            "mean": 0.021815151566138755,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Nicotinamide": {
+            "ci95": null,
+            "mean": 0.03628176136582816,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Not specified": {
+            "ci95": [
+              0.01247650358623434,
+              0.4186424356298933
+            ],
+            "mean": 0.320148116745129,
+            "n_publications": 7,
+            "n_screens": 22,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Olaparib": {
+            "ci95": null,
+            "mean": 0.005390345941212059,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Olaparib|AZD0156": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Oxaliplatin": {
+            "ci95": null,
+            "mean": 0.03998697597307715,
+            "n_publications": 1,
+            "n_screens": 4,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Paclitaxel (Taxol)": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Palbociclib": {
+            "ci95": null,
+            "mean": 0.020930474974634378,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Pictilisib": {
+            "ci95": null,
+            "mean": 0.005658457734275435,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Pimasertib (AS-703026)": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Pladienolide B (PladB)": {
+            "ci95": null,
+            "mean": 0.0002680989879671929,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Pravastatin Sodium": {
+            "ci95": null,
+            "mean": 0.008302905599666913,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "RO-3306": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Rabusertib (LY2603618)": {
+            "ci95": null,
+            "mean": 0.08479986823756516,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Rapamycin": {
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "n_publications": 2,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Ribociclib": {
+            "ci95": null,
+            "mean": 0.011631733846825122,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "SARS-CoV-2 Spike-RBD": {
+            "ci95": null,
+            "mean": 0.04356627828950649,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Salmonella enterica serovar Typhimurium and IFNgamma (500 U/ml)": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "TAK-243": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "TAK-901": {
+            "ci95": null,
+            "mean": 0.10955092005018391,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "TG003": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "TIL (Tumor Infiltrating Lymphocyte) co-culture": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 6,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Thapsigargin": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Transferrin receptor (TFRC/CD71)": {
+            "ci95": null,
+            "mean": 0.0259907801079268,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Tunicamycin": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "UM171": {
+            "ci95": null,
+            "mean": 0.12659353350894356,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Vemurafenib": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Virus: HCoV-229E (Human coronavirus 229E)": {
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "n_publications": 2,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Virus: Hepatitis C Virus": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Virus: Human hepatitis A virus HM175": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Virus: MERS-CoV": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Virus: Rhinovirus serotype B14 (RV-B14)": {
+            "ci95": null,
+            "mean": 0.005268358702190379,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Virus: SARS-CoV-2 (Severe acute respiratory syndrome coronavirus 2)": {
+            "ci95": null,
+            "mean": 0.01693706667017016,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Virus: Zika virus": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Vismodegib (GDC-0449)": {
+            "ci95": null,
+            "mean": 7.42394451114342e-06,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Vorinostat/SAHA": {
+            "ci95": null,
+            "mean": 0.01009747671652143,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "aflatoxin B1 (AFB1)": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          }
+        },
+        "modality": {
+          "Activation": {
+            "ci95": [
+              0.0,
+              0.020153408906681287
+            ],
+            "mean": 0.017914141250383365,
+            "n_publications": 2,
+            "n_screens": 9,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Inhibition": {
+            "ci95": null,
+            "mean": 0.03477852919871665,
+            "n_publications": 1,
+            "n_screens": 6,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Knockout": {
+            "ci95": [
+              0.01608797477710127,
+              0.28835482672843826
+            ],
+            "mean": 0.11905476862931119,
+            "n_publications": 32,
+            "n_screens": 203,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          }
+        },
+        "phenotype": {
+          "Drug / Chemical / Environmental Response": {
+            "ci95": [
+              0.011095862046209983,
+              0.20784291699327695
+            ],
+            "mean": 0.05843557830244959,
+            "n_publications": 20,
+            "n_screens": 157,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Fitness / Proliferation / Viability": {
+            "ci95": [
+              0.011413932253992901,
+              0.5008764680772951
+            ],
+            "mean": 0.41226687996070344,
+            "n_publications": 5,
+            "n_screens": 36,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Host-Pathogen / Infection Response": {
+            "ci95": [
+              0.0007024478269587171,
+              0.02519135677891387
+            ],
+            "mean": 0.0112968677813771,
+            "n_publications": 8,
+            "n_screens": 17,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Molecular Output / Reporter / Pathway Activity": {
+            "ci95": [
+              0.0,
+              0.12600195675940914
+            ],
+            "mean": 0.06300097837970457,
+            "n_publications": 4,
+            "n_screens": 4,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Trafficking / Localization / Structural Phenotypes": {
+            "ci95": [
+              0.0,
+              0.0259907801079268
+            ],
+            "mean": 0.0194930850809451,
+            "n_publications": 2,
+            "n_screens": 4,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          }
+        }
+      },
+      "unit": "publication",
+      "wrong_direction_fraction_returned": 0.05004587155963303
+    },
+    "phenotype": {
+      "adjusted_ndcg@10": 0.06194072243687794,
+      "ci95": [
+        0.009000596209043164,
+        0.20801710037898005
+      ],
+      "distribution": {
+        "max": 0.9369345028880588,
+        "median": 0.0,
+        "min": 0.0,
+        "p25": 0.0,
+        "p75": 0.01282951780491934
+      },
+      "invalid_hgnc_fraction": 0.0,
+      "mean": 0.08280060955201371,
+      "measured_at100": 18.674311926605505,
+      "n_publications": 34,
+      "n_screens": 218,
+      "precision@10": 0.08810251929517986,
+      "precision@100": 0.0930838005528972,
+      "recall@100": 0.01011153152317756,
+      "repeats": 10000,
+      "seed": 20260927,
+      "slot_precision_at100": 0.073348623853211,
+      "subgroups": {
+        "cell_line": {
+          "A-375": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "B16-F10": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "BLaER1": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "BxPC-3": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 8,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "CNE2-IR": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Calu-3": {
+            "ci95": null,
+            "mean": 0.025613060159834874,
+            "n_publications": 1,
+            "n_screens": 6,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "H1HeLa": {
+            "ci95": null,
+            "mean": 0.16395641008310158,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "H4": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "HAP-1": {
+            "ci95": null,
+            "mean": 0.017403157876489824,
+            "n_publications": 1,
+            "n_screens": 86,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "HCT 116": {
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "n_publications": 2,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "HEK-293": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "HEK293-A": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 8,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "HEK293T": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "HUES 62": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "HeLa": {
+            "ci95": [
+              0.12237753191488834,
+              0.5243414059542847
+            ],
+            "mean": 0.4669179953772281,
+            "n_publications": 2,
+            "n_screens": 7,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "HuH-7": {
+            "ci95": [
+              0.005042702071628104,
+              0.02541851999829866
+            ],
+            "mean": 0.015230611034963381,
+            "n_publications": 2,
+            "n_screens": 8,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Huh-7.5": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Huh-7.5.1": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Jurkat": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "K-562": {
+            "ci95": null,
+            "mean": 0.390443034324582,
+            "n_publications": 1,
+            "n_screens": 6,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "MV4-11": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mel JuSo": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "NALM-6": {
+            "ci95": [
+              0.0,
+              0.02134943582944766
+            ],
+            "mean": 0.010674717914723828,
+            "n_publications": 3,
+            "n_screens": 8,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "OCI-AML-1": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "OCI-AML-2": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "OCI-AML-5": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "PANC-1": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 8,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "PC-9": {
+            "ci95": null,
+            "mean": 0.3003766256003037,
+            "n_publications": 1,
+            "n_screens": 24,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "PLC/PRF/5": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "STAT1\u2212/\u2212 fibroblasts": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "THP-1": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 6,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "U2OS": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "cardiomyocyte cell line": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "hTERT-RPE1": {
+            "ci95": null,
+            "mean": 0.5074840507071295,
+            "n_publications": 1,
+            "n_screens": 6,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "primary melanoma cell line": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 8,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          }
+        },
+        "condition": {
+          "17-AAG/Tanespimycin": {
+            "ci95": null,
+            "mean": 0.041784708221201755,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "2-Thenoyltrifluoroacetone (TTFA)": {
+            "ci95": null,
+            "mean": 0.028390441834121743,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "5-fluorouracil": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 4,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "A159": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "AZD0156": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "AZD5576 (CDK9i)": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 4,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "AZD6738": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "BAPTA-AM": {
+            "ci95": null,
+            "mean": 0.003940473318478655,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "BI-2536": {
+            "ci95": null,
+            "mean": 0.019595473611309044,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "BIBR 1532 (BIBR1532)": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Bisindolylm. (bisindolylmaleimide/GF109203X)": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Bleocin": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Brefeldin A": {
+            "ci95": null,
+            "mean": 0.004580394060830525,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "CB-5083": {
+            "ci95": null,
+            "mean": 0.006156425979953708,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "CBK77": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Camptothecin": {
+            "ci95": null,
+            "mean": 0.04847803625486232,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Cisplatin": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Colchicine": {
+            "ci95": null,
+            "mean": 0.02864108821219129,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Cycloheximide": {
+            "ci95": null,
+            "mean": 0.08430261466782472,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Cytochalasin D": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Dichloroacetic acid (DCA)": {
+            "ci95": null,
+            "mean": 0.011463245466379841,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Dinaciclib": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Doxorubicin": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "EMI1": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Flavopiridol": {
+            "ci95": null,
+            "mean": 0.014462416648460229,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "GPS167": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Gemcitabine": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 4,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "HB007": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Harringtonine": {
+            "ci95": null,
+            "mean": 0.004388516807137932,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Hydrogen Peroxide (H2O2)": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Imatinib mesylate": {
+            "ci95": null,
+            "mean": 0.019303515095548292,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Immunotherapy (GVAX + PD-1 blockade)": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Interferon gamma": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Ionizing Radiation (IR)": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Ipatasertib": {
+            "ci95": null,
+            "mean": 0.017785477882517647,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Irinotecan": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 4,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "JG-231": {
+            "ci95": null,
+            "mean": 0.028175477575105124,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "KH-CB19": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Leptomycin B": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Methyl methanesulfonate (MMS)": {
+            "ci95": null,
+            "mean": 0.044188156980576127,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mutation: EGFR (ETG1956) T790M/L858R": {
+            "ci95": null,
+            "mean": 0.6120557162077928,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mutation: EGFR (ETG1956) T790M/L858R| erlotinib": {
+            "ci95": null,
+            "mean": 0.04289045633751561,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mutation: ELOF1 (ETG84337) KO": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mutation: HAPSTR1 (TAPR1) (ETG29035) KO": {
+            "ci95": null,
+            "mean": 0.02846591443926354,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mutation: KRAS (ETG3845) G12V": {
+            "ci95": null,
+            "mean": 0.6246159702551185,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mutation: KRAS (ETG3845) G12V| erlotinib": {
+            "ci95": null,
+            "mean": 0.1147973525706707,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mutation: RIT1 (ETG6016) M90I": {
+            "ci95": null,
+            "mean": 0.4497775999775901,
+            "n_publications": 1,
+            "n_screens": 6,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mutation: RIT1 (ETG6016) M90I| erlotinib": {
+            "ci95": null,
+            "mean": 0.054549154738075804,
+            "n_publications": 1,
+            "n_screens": 6,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Mutation: TP53 (ETG:7157) KO": {
+            "ci95": null,
+            "mean": 0.49526195027860104,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "NU 7441 (KU-57788)": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Nicotinamide": {
+            "ci95": null,
+            "mean": 0.03628176136582816,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Not specified": {
+            "ci95": [
+              0.0,
+              0.43149949561715345
+            ],
+            "mean": 0.3203556861400079,
+            "n_publications": 7,
+            "n_screens": 22,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Olaparib": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Olaparib|AZD0156": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Oxaliplatin": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 4,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Paclitaxel (Taxol)": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Palbociclib": {
+            "ci95": null,
+            "mean": 0.020930474974634378,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Pictilisib": {
+            "ci95": null,
+            "mean": 0.005658457734275435,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Pimasertib (AS-703026)": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Pladienolide B (PladB)": {
+            "ci95": null,
+            "mean": 0.0002680989879671929,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Pravastatin Sodium": {
+            "ci95": null,
+            "mean": 0.008302905599666913,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "RO-3306": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Rabusertib (LY2603618)": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Rapamycin": {
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "n_publications": 2,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Ribociclib": {
+            "ci95": null,
+            "mean": 0.011631733846825122,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "SARS-CoV-2 Spike-RBD": {
+            "ci95": null,
+            "mean": 0.04636589948487912,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Salmonella enterica serovar Typhimurium and IFNgamma (500 U/ml)": {
+            "ci95": null,
+            "mean": 0.12237753191488834,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "TAK-243": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "TAK-901": {
+            "ci95": null,
+            "mean": 7.573000597944212e-05,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "TG003": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "TIL (Tumor Infiltrating Lymphocyte) co-culture": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 6,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Thapsigargin": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Transferrin receptor (TFRC/CD71)": {
+            "ci95": null,
+            "mean": 0.004860220834790635,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Tunicamycin": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "UM171": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Vemurafenib": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Virus: HCoV-229E (Human coronavirus 229E)": {
+            "ci95": [
+              0.0,
+              0.010085404143256208
+            ],
+            "mean": 0.006723602762170805,
+            "n_publications": 2,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Virus: Hepatitis C Virus": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Virus: Human hepatitis A virus HM175": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Virus: MERS-CoV": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Virus: Rhinovirus serotype B14 (RV-B14)": {
+            "ci95": null,
+            "mean": 0.16395641008310158,
+            "n_publications": 1,
+            "n_screens": 2,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Virus: SARS-CoV-2 (Severe acute respiratory syndrome coronavirus 2)": {
+            "ci95": null,
+            "mean": 0.033891359997731546,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Virus: Zika virus": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Vismodegib (GDC-0449)": {
+            "ci95": null,
+            "mean": 7.42394451114342e-06,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Vorinostat/SAHA": {
+            "ci95": null,
+            "mean": 0.01009747671652143,
+            "n_publications": 1,
+            "n_screens": 3,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "aflatoxin B1 (AFB1)": {
+            "ci95": null,
+            "mean": 0.0,
+            "n_publications": 1,
+            "n_screens": 1,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          }
+        },
+        "modality": {
+          "Activation": {
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "n_publications": 2,
+            "n_screens": 9,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Inhibition": {
+            "ci95": null,
+            "mean": 0.025613060159834874,
+            "n_publications": 1,
+            "n_screens": 6,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Knockout": {
+            "ci95": [
+              0.009041037630700124,
+              0.21924092338780027
+            ],
+            "mean": 0.0881618449329063,
+            "n_publications": 32,
+            "n_screens": 203,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          }
+        },
+        "phenotype": {
+          "Drug / Chemical / Environmental Response": {
+            "ci95": [
+              0.0,
+              0.026098690548516858
+            ],
+            "mean": 0.014630763901472218,
+            "n_publications": 20,
+            "n_screens": 157,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Fitness / Proliferation / Viability": {
+            "ci95": [
+              0.010645065920516264,
+              0.4957080879228357
+            ],
+            "mean": 0.417435815235779,
+            "n_publications": 5,
+            "n_screens": 36,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Host-Pathogen / Infection Response": {
+            "ci95": [
+              0.012184488827970704,
+              0.08663986688473502
+            ],
+            "mean": 0.041837231695025644,
+            "n_publications": 8,
+            "n_screens": 17,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Molecular Output / Reporter / Pathway Activity": {
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "n_publications": 4,
+            "n_screens": 4,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          },
+          "Trafficking / Localization / Structural Phenotypes": {
+            "ci95": [
+              0.0,
+              0.004860220834790635
+            ],
+            "mean": 0.003645165626092976,
+            "n_publications": 2,
+            "n_screens": 4,
+            "repeats": 2000,
+            "seed": 20260927,
+            "unit": "publication"
+          }
+        }
+      },
+      "unit": "publication",
+      "wrong_direction_fraction_returned": 0.03573394495412844
+    }
+  },
+  "external_file_sha256": "d6df699d8d0cbf77fe2dd0238cd8bd6f3efe21618994eec7deacc21f39deb2e7",
+  "paired_vs_external": {
+    "ci95": [
+      -0.012498669203989884,
+      0.043779589694788
+    ],
+    "mean": 0.008412300384782037,
+    "n_publications": 34,
+    "n_screens": 218,
+    "repeats": 10000,
+    "seed": 20260927,
+    "unit": "publication"
+  },
+  "provenance": {
+    "assaybench_version": "0.2.0",
+    "data_sha256": "25e00c380358486137d1f25c490db98d007dfc5230f8ad502276dc6ccc741a5c",
+    "git_revision": "166cb3c2366424e9fdb6ac47bf051f01a1948c67",
+    "input": "pre-experimental metadata; train-union genes; no target library",
+    "loader_code_sha256": "6e3dc144928252f96af66e1b7966ace7556aa23935a10005f05a1a0b3aa84044",
+    "metric_sha256": "d1b638c9aa3ee1cbd984028595b7af009f00736d203fa9cc10405732d182fbae",
+    "model_code_sha256": "cdfb02576fb89cc67807d00672b438db6f07d5698efcc64c53ad13f0853a9683",
+    "prediction_loader_sha256": "4b0ba272e3e79759a703cc17ffec601f3d46e7c9c3a105cff551ebdf54e8cc87",
+    "protocol": "train <=2020; validation 2021; public test >=2022 already explored historically",
+    "protocol_code_sha256": "2287b13c5d0946a1e2e92e9ad470113abe5b325fe38692e6aa87469a09b91264",
+    "router_runner_sha256": "8f3c408d0584c6e1a5ed12a9b4adfcc7fc2c73e3b99722945ec731df39e36291",
+    "router_sha256": "93a6e8d9db2a0162d327cc0832f271ddc1bdb88af66d0378d7e896c3b827dd67",
+    "runner_code_sha256": "5056075e24de9e480eecbd2738125ce1c5fbab72d6397a30355f9466738e6dc3",
+    "seed": 20260927
+  },
+  "router": {
+    "adjusted_ndcg@10": 0.19976446220322666,
+    "ci95": [
+      0.11655908865850065,
+      0.2761549498512402
+    ],
+    "distribution": {
+      "max": 1.0,
+      "median": 0.11131239895517125,
+      "min": 0.0,
+      "p25": 0.0,
+      "p75": 0.2694131974346628
+    },
+    "invalid_hgnc_fraction": 0.0007447748494856358,
+    "mean": 0.19484942106435008,
+    "measured_at100": 78.56422018348624,
+    "n_publications": 34,
+    "n_screens": 218,
+    "precision@10": 0.2367445755060434,
+    "precision@100": 0.16063941327054038,
+    "recall@100": 0.22587492522810232,
+    "repeats": 10000,
+    "seed": 20260927,
+    "slot_precision_at100": 0.11894495412844036,
+    "subgroups": {
+      "cell_line": {
+        "A-375": {
+          "ci95": null,
+          "mean": 0.2911929643455677,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "B16-F10": {
+          "ci95": null,
+          "mean": 0.14469589600542698,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "BLaER1": {
+          "ci95": null,
+          "mean": 0.2880847307363777,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "BxPC-3": {
+          "ci95": null,
+          "mean": 0.013467073746829712,
+          "n_publications": 1,
+          "n_screens": 8,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "CNE2-IR": {
+          "ci95": null,
+          "mean": 0.0,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Calu-3": {
+          "ci95": null,
+          "mean": 0.032651208782972806,
+          "n_publications": 1,
+          "n_screens": 6,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "H1HeLa": {
+          "ci95": null,
+          "mean": 0.35771561271160923,
+          "n_publications": 1,
+          "n_screens": 2,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "H4": {
+          "ci95": null,
+          "mean": 0.0,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "HAP-1": {
+          "ci95": null,
+          "mean": 0.17908533209259495,
+          "n_publications": 1,
+          "n_screens": 86,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "HCT 116": {
+          "ci95": [
+            0.0,
+            0.1932113593130742
+          ],
+          "mean": 0.1288075728753828,
+          "n_publications": 2,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "HEK-293": {
+          "ci95": null,
+          "mean": 0.016786826929230024,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "HEK293-A": {
+          "ci95": null,
+          "mean": 0.12378861516446282,
+          "n_publications": 1,
+          "n_screens": 8,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "HEK293T": {
+          "ci95": null,
+          "mean": 0.14527021616840743,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "HUES 62": {
+          "ci95": null,
+          "mean": 0.0,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "HeLa": {
+          "ci95": [
+            0.23580448774870347,
+            0.5243414059542847
+          ],
+          "mean": 0.48312184621063026,
+          "n_publications": 2,
+          "n_screens": 7,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "HuH-7": {
+          "ci95": [
+            0.0659461527397327,
+            0.21344719264834003
+          ],
+          "mean": 0.13969667269403635,
+          "n_publications": 2,
+          "n_screens": 8,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Huh-7.5": {
+          "ci95": null,
+          "mean": 0.49875629866264976,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Huh-7.5.1": {
+          "ci95": null,
+          "mean": 0.27032458615226934,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Jurkat": {
+          "ci95": null,
+          "mean": 0.09070718575919101,
+          "n_publications": 1,
+          "n_screens": 2,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "K-562": {
+          "ci95": null,
+          "mean": 0.390443034324582,
+          "n_publications": 1,
+          "n_screens": 6,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "MV4-11": {
+          "ci95": null,
+          "mean": 0.03873304598817514,
+          "n_publications": 1,
+          "n_screens": 2,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Mel JuSo": {
+          "ci95": null,
+          "mean": 0.08489180481451136,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "NALM-6": {
+          "ci95": [
+            0.007072446466199602,
+            0.11521563888508804
+          ],
+          "mean": 0.05476463830490679,
+          "n_publications": 3,
+          "n_screens": 8,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "OCI-AML-1": {
+          "ci95": null,
+          "mean": 0.21047796808647762,
+          "n_publications": 1,
+          "n_screens": 2,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "OCI-AML-2": {
+          "ci95": null,
+          "mean": 0.0,
+          "n_publications": 1,
+          "n_screens": 2,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "OCI-AML-5": {
+          "ci95": null,
+          "mean": 0.12067864647888911,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "PANC-1": {
+          "ci95": null,
+          "mean": 0.010558619370378945,
+          "n_publications": 1,
+          "n_screens": 8,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "PC-9": {
+          "ci95": null,
+          "mean": 0.350045416166094,
+          "n_publications": 1,
+          "n_screens": 24,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "PLC/PRF/5": {
+          "ci95": null,
+          "mean": 0.1350089179939742,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "STAT1\u2212/\u2212 fibroblasts": {
+          "ci95": null,
+          "mean": 0.0,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "THP-1": {
+          "ci95": null,
+          "mean": 0.21234512569365174,
+          "n_publications": 1,
+          "n_screens": 6,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "U2OS": {
+          "ci95": null,
+          "mean": 0.2094943402564005,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "cardiomyocyte cell line": {
+          "ci95": null,
+          "mean": 0.0,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "hTERT-RPE1": {
+          "ci95": null,
+          "mean": 0.5074840507071295,
+          "n_publications": 1,
+          "n_screens": 6,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "primary melanoma cell line": {
+          "ci95": null,
+          "mean": 0.21378390963109845,
+          "n_publications": 1,
+          "n_screens": 8,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        }
+      },
+      "condition": {
+        "17-AAG/Tanespimycin": {
+          "ci95": null,
+          "mean": 0.11665413314404109,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "2-Thenoyltrifluoroacetone (TTFA)": {
+          "ci95": null,
+          "mean": 0.0973643756606445,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "5-fluorouracil": {
+          "ci95": null,
+          "mean": 0.001359948110597986,
+          "n_publications": 1,
+          "n_screens": 4,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "A159": {
+          "ci95": null,
+          "mean": 0.028377226035494515,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "AZD0156": {
+          "ci95": null,
+          "mean": 0.0925317244620131,
+          "n_publications": 1,
+          "n_screens": 2,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "AZD5576 (CDK9i)": {
+          "ci95": null,
+          "mean": 0.2895796160193171,
+          "n_publications": 1,
+          "n_screens": 4,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "AZD6738": {
+          "ci95": null,
+          "mean": 0.2893344487194705,
+          "n_publications": 1,
+          "n_screens": 2,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "BAPTA-AM": {
+          "ci95": null,
+          "mean": 0.25513515198081066,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "BI-2536": {
+          "ci95": null,
+          "mean": 0.1165028795270089,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "BIBR 1532 (BIBR1532)": {
+          "ci95": null,
+          "mean": 0.0,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Bisindolylm. (bisindolylmaleimide/GF109203X)": {
+          "ci95": null,
+          "mean": 0.1492676408653298,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Bleocin": {
+          "ci95": null,
+          "mean": 0.6192219923703993,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Brefeldin A": {
+          "ci95": null,
+          "mean": 0.1707088730712882,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "CB-5083": {
+          "ci95": null,
+          "mean": 0.15263421572794975,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "CBK77": {
+          "ci95": null,
+          "mean": 0.08489180481451136,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Camptothecin": {
+          "ci95": null,
+          "mean": 0.25996162042496085,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Cisplatin": {
+          "ci95": null,
+          "mean": 0.585961103405093,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Colchicine": {
+          "ci95": null,
+          "mean": 0.10432198035575707,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Cycloheximide": {
+          "ci95": null,
+          "mean": 0.25858007664932375,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Cytochalasin D": {
+          "ci95": null,
+          "mean": 0.15203113999864004,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Dichloroacetic acid (DCA)": {
+          "ci95": null,
+          "mean": 0.10459969795606938,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Dinaciclib": {
+          "ci95": null,
+          "mean": 0.05494705200849931,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Doxorubicin": {
+          "ci95": null,
+          "mean": 0.0,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "EMI1": {
+          "ci95": null,
+          "mean": 0.007072446466199602,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Flavopiridol": {
+          "ci95": null,
+          "mean": 0.2626057647842071,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "GPS167": {
+          "ci95": null,
+          "mean": 0.19449244282080103,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Gemcitabine": {
+          "ci95": null,
+          "mean": 0.007913266671458438,
+          "n_publications": 1,
+          "n_screens": 4,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "HB007": {
+          "ci95": null,
+          "mean": 0.0,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Harringtonine": {
+          "ci95": null,
+          "mean": 0.15600964231736486,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Hydrogen Peroxide (H2O2)": {
+          "ci95": null,
+          "mean": 0.016786826929230024,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Imatinib mesylate": {
+          "ci95": null,
+          "mean": 0.07088983708667927,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Immunotherapy (GVAX + PD-1 blockade)": {
+          "ci95": null,
+          "mean": 0.14469589600542698,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Interferon gamma": {
+          "ci95": null,
+          "mean": 0.07345355671248649,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Ionizing Radiation (IR)": {
+          "ci95": null,
+          "mean": 0.0,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Ipatasertib": {
+          "ci95": null,
+          "mean": 0.14316324931348556,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Irinotecan": {
+          "ci95": null,
+          "mean": 0.008148791197454309,
+          "n_publications": 1,
+          "n_screens": 4,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "JG-231": {
+          "ci95": null,
+          "mean": 0.17749850301003847,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "KH-CB19": {
+          "ci95": null,
+          "mean": 0.09187923298533744,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Leptomycin B": {
+          "ci95": null,
+          "mean": 0.1277228232891163,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Methyl methanesulfonate (MMS)": {
+          "ci95": null,
+          "mean": 0.27590347136982496,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Mutation: EGFR (ETG1956) T790M/L858R": {
+          "ci95": null,
+          "mean": 0.6120557162077928,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Mutation: EGFR (ETG1956) T790M/L858R| erlotinib": {
+          "ci95": null,
+          "mean": 0.16110074717474435,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Mutation: ELOF1 (ETG84337) KO": {
+          "ci95": null,
+          "mean": 0.0,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Mutation: HAPSTR1 (TAPR1) (ETG29035) KO": {
+          "ci95": null,
+          "mean": 0.02846591443926354,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Mutation: KRAS (ETG3845) G12V": {
+          "ci95": null,
+          "mean": 0.6246159702551185,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Mutation: KRAS (ETG3845) G12V| erlotinib": {
+          "ci95": null,
+          "mean": 0.2034755025800277,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Mutation: RIT1 (ETG6016) M90I": {
+          "ci95": null,
+          "mean": 0.4497775999775901,
+          "n_publications": 1,
+          "n_screens": 6,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Mutation: RIT1 (ETG6016) M90I| erlotinib": {
+          "ci95": null,
+          "mean": 0.14978009657794447,
+          "n_publications": 1,
+          "n_screens": 6,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Mutation: TP53 (ETG:7157) KO": {
+          "ci95": null,
+          "mean": 0.49526195027860104,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "NU 7441 (KU-57788)": {
+          "ci95": null,
+          "mean": 0.003706081036586687,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Nicotinamide": {
+          "ci95": null,
+          "mean": 0.11746571100284264,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Not specified": {
+          "ci95": [
+            0.07230146479897089,
+            0.4403434741254144
+          ],
+          "mean": 0.35782221607998826,
+          "n_publications": 7,
+          "n_screens": 22,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Olaparib": {
+          "ci95": null,
+          "mean": 0.09205845771408223,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Olaparib|AZD0156": {
+          "ci95": null,
+          "mean": 0.05082441392602553,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Oxaliplatin": {
+          "ci95": null,
+          "mean": 0.030629380254906583,
+          "n_publications": 1,
+          "n_screens": 4,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Paclitaxel (Taxol)": {
+          "ci95": null,
+          "mean": 0.0,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Palbociclib": {
+          "ci95": null,
+          "mean": 0.23486705508233685,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Pictilisib": {
+          "ci95": null,
+          "mean": 0.1716912291536337,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Pimasertib (AS-703026)": {
+          "ci95": null,
+          "mean": 0.0,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Pladienolide B (PladB)": {
+          "ci95": null,
+          "mean": 0.10455570237048743,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Pravastatin Sodium": {
+          "ci95": null,
+          "mean": 0.08392024641401984,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "RO-3306": {
+          "ci95": null,
+          "mean": 0.0,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Rabusertib (LY2603618)": {
+          "ci95": null,
+          "mean": 0.17569927287637713,
+          "n_publications": 1,
+          "n_screens": 2,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Rapamycin": {
+          "ci95": [
+            0.1150117951494351,
+            0.13147510197371653
+          ],
+          "mean": 0.12324344856157582,
+          "n_publications": 2,
+          "n_screens": 2,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Ribociclib": {
+          "ci95": null,
+          "mean": 0.19594062157329484,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "SARS-CoV-2 Spike-RBD": {
+          "ci95": null,
+          "mean": 0.06530241756594561,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Salmonella enterica serovar Typhimurium and IFNgamma (500 U/ml)": {
+          "ci95": null,
+          "mean": 0.23580448774870347,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "TAK-243": {
+          "ci95": null,
+          "mean": 0.0,
+          "n_publications": 1,
+          "n_screens": 2,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "TAK-901": {
+          "ci95": null,
+          "mean": 0.08663157753402755,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "TG003": {
+          "ci95": null,
+          "mean": 0.05927524084912563,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "TIL (Tumor Infiltrating Lymphocyte) co-culture": {
+          "ci95": null,
+          "mean": 0.27280295338938354,
+          "n_publications": 1,
+          "n_screens": 6,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Thapsigargin": {
+          "ci95": null,
+          "mean": 1.0,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Transferrin receptor (TFRC/CD71)": {
+          "ci95": null,
+          "mean": 0.0,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Tunicamycin": {
+          "ci95": null,
+          "mean": 1.0,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "UM171": {
+          "ci95": null,
+          "mean": 0.18054486088394814,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Vemurafenib": {
+          "ci95": null,
+          "mean": 0.2911929643455677,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Virus: HCoV-229E (Human coronavirus 229E)": {
+          "ci95": [
+            0.0614703618056463,
+            0.43607497621172175
+          ],
+          "mean": 0.18633856660767142,
+          "n_publications": 2,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Virus: Hepatitis C Virus": {
+          "ci95": null,
+          "mean": 0.49875629866264976,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Virus: Human hepatitis A virus HM175": {
+          "ci95": null,
+          "mean": 0.27032458615226934,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Virus: MERS-CoV": {
+          "ci95": null,
+          "mean": 0.07042194367381911,
+          "n_publications": 1,
+          "n_screens": 2,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Virus: Rhinovirus serotype B14 (RV-B14)": {
+          "ci95": null,
+          "mean": 0.35771561271160923,
+          "n_publications": 1,
+          "n_screens": 2,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Virus: SARS-CoV-2 (Severe acute respiratory syndrome coronavirus 2)": {
+          "ci95": null,
+          "mean": 0.13923793146054608,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Virus: Zika virus": {
+          "ci95": null,
+          "mean": 0.0,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Vismodegib (GDC-0449)": {
+          "ci95": null,
+          "mean": 0.02400367918902624,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Vorinostat/SAHA": {
+          "ci95": null,
+          "mean": 0.13694362465450058,
+          "n_publications": 1,
+          "n_screens": 3,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "aflatoxin B1 (AFB1)": {
+          "ci95": null,
+          "mean": 0.1350089179939742,
+          "n_publications": 1,
+          "n_screens": 1,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        }
+      },
+      "modality": {
+        "Activation": {
+          "ci95": [
+            0.0,
+            0.020564908819823806
+          ],
+          "mean": 0.018279918950954495,
+          "n_publications": 2,
+          "n_screens": 9,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Inhibition": {
+          "ci95": null,
+          "mean": 0.032651208782972806,
+          "n_publications": 1,
+          "n_screens": 6,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Knockout": {
+          "ci95": [
+            0.13063088144887972,
+            0.2879566891798085
+          ],
+          "mean": 0.20747166142252166,
+          "n_publications": 32,
+          "n_screens": 203,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        }
+      },
+      "phenotype": {
+        "Drug / Chemical / Environmental Response": {
+          "ci95": [
+            0.0697840196417207,
+            0.17565357878451182
+          ],
+          "mean": 0.15026384428422762,
+          "n_publications": 20,
+          "n_screens": 157,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Fitness / Proliferation / Viability": {
+          "ci95": [
+            0.010645065920516264,
+            0.4957080879228357
+          ],
+          "mean": 0.417435815235779,
+          "n_publications": 5,
+          "n_screens": 36,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Host-Pathogen / Infection Response": {
+          "ci95": [
+            0.09673522079839254,
+            0.2838598071971115
+          ],
+          "mean": 0.1784586607198217,
+          "n_publications": 8,
+          "n_screens": 17,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Molecular Output / Reporter / Pathway Activity": {
+          "ci95": [
+            0.1613262471904057,
+            0.2614171409318788
+          ],
+          "mean": 0.20606591466989188,
+          "n_publications": 4,
+          "n_screens": 4,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        },
+        "Trafficking / Localization / Structural Phenotypes": {
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "n_publications": 2,
+          "n_screens": 4,
+          "repeats": 2000,
+          "seed": 20260927,
+          "unit": "publication"
+        }
+      }
+    },
+    "unit": "publication",
+    "wrong_direction_fraction_returned": 0.04437142660313195
+  },
+  "split": "validation"
+}

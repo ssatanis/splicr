@@ -203,7 +203,7 @@ export function toPdf(doc: ReportDocument, generatedAt: Date): Buffer {
     // denominator goes in the summary paragraph below rather than being cut off
     // mid-number here.
     { label: "Candidate hits", value: formatNumber(doc.counts.candidates), hint: "BH FDR below 0.10", color: INK },
-    { label: "Likely real", value: formatNumber(doc.counts.likelyReal), hint: "chance real 0.60 or above", color: ORANGE },
+    { label: "Demo score >=0.60", value: formatNumber(doc.counts.likelyReal), hint: "Illustrative, not a probability", color: ORANGE },
     { label: "Real and new", value: formatNumber(doc.counts.byVerdict["Real and new"]), hint: "new in this context", color: CYAN },
     { label: "Flagged", value: formatNumber(doc.counts.flagged), hint: "at least one artifact flag", color: INK },
   ];
@@ -406,7 +406,7 @@ export function toPdf(doc: ReportDocument, generatedAt: Date): Buffer {
         { text: "#", width: columns.rank, font: "bold", color: MUTED, size: 7.2 },
         { text: "Gene", width: columns.gene, font: "bold", color: MUTED, size: 7.2 },
         { text: "Verdict", width: columns.verdict, font: "bold", color: MUTED, size: 7.2 },
-        { text: "Chance", width: columns.chance, align: "right", font: "bold", color: MUTED, size: 7.2 },
+        { text: "Score", width: columns.chance, align: "right", font: "bold", color: MUTED, size: 7.2 },
         { text: "Arm", width: columns.dir, font: "bold", color: MUTED, size: 7.2 },
         { text: "LFC", width: columns.lfc, align: "right", font: "bold", color: MUTED, size: 7.2 },
         { text: "FDR", width: columns.fdr, align: "right", font: "bold", color: MUTED, size: 7.2 },

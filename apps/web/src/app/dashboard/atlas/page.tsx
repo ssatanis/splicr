@@ -1,20 +1,21 @@
 import { Suspense } from "react";
 
-import { AtlasExplorer } from "@/components/dashboard/atlas-explorer";
+import { Card, PageHeader } from "@/components/dashboard/ui";
+import { getCurrentContext } from "@/lib/data/org";
 
 export const metadata = { title: "Atlas" };
+export const dynamic = "force-dynamic";
 
-/**
- * The page is the explorer. There is no header block above it beyond the one
- * dense line the explorer draws itself, because the facets, the sort and the gene
- * lookup all live in the query string and the explorer reads them with
- * `useSearchParams`, which has to sit inside a Suspense boundary or the whole
- * route falls back to client rendering.
- */
-export default function AtlasPage() {
-  return (
-    <Suspense fallback={<div className="min-h-0 flex-1" aria-hidden="true" />}>
-      <AtlasExplorer />
-    </Suspense>
-  );
+export default async function AtlasPage() {
+  const context = await getCurrentContext();
+  if (context.isDemo) {
+    const { AtlasExplorer } = await import("@/components/dashboard/atlas-explorer");
+    return <Suspense fallback={<div aria-hidden="true" />}><AtlasExplorer /></Suspense>;
+  }
+  return <div className="flex flex-col gap-4">
+    <PageHeader dense title="Atlas" body="Public screen evidence" />
+    <Card title="Atlas browsing is not connected">
+      <p className="text-sm">The analysis engine can use imported public screen evidence, but this workspace does not yet have a connected Atlas browser. Historical evidence recorded by an analysis is available with that run when it has been persisted.</p>
+    </Card>
+  </div>;
 }

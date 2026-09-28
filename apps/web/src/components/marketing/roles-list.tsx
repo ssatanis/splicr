@@ -16,7 +16,7 @@ export function RolesList() {
         const expanded = open === r.id;
         return (
           <article key={r.id} className="py-8">
-            <div className="eyebrow">Open roles</div>
+            <div className="eyebrow">Areas of interest</div>
             <div className="mt-3 flex flex-col md:flex-row md:items-center justify-between gap-6">
               <h2 className="text-3xl md:text-4xl text-ink font-medium tracking-tight">{r.title}</h2>
               <div className="flex items-center gap-3">
@@ -30,19 +30,12 @@ export function RolesList() {
                   <ChevronDown className={cn("w-4 h-4 transition-transform", expanded && "rotate-180")} />
                 </button>
                 <a
-                  href={`mailto:${site.email}?subject=${encodeURIComponent(`Application: ${r.title}`)}`}
+                  href={`mailto:${site.email}?subject=${encodeURIComponent(`Interest: ${r.title}`)}`}
                   className="btn btn-orange"
                 >
-                  Submit Application <ArrowUpRight className="w-4 h-4" />
+                  Discuss opportunities <ArrowUpRight className="w-4 h-4" />
                 </a>
               </div>
-            </div>
-            <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-body">
-              <span>{r.type}</span>
-              <span className="w-1 h-1 rounded-full bg-line-strong" />
-              <span>{r.pay}</span>
-              <span className="w-1 h-1 rounded-full bg-line-strong" />
-              <span>{r.location}</span>
             </div>
             {expanded && (
               <div className="mt-6 grid md:grid-cols-2 gap-8 text-body">

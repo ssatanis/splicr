@@ -63,8 +63,6 @@ export interface ExportContext {
   caveat: string | null;
   /** True only in the sample workspace, and then said twice in the file. */
   sample: boolean;
-  /** Half-width of the calibration interval on chance real. */
-  band: number;
   /** The shortlist keys, so the file can mark which rows were picked. */
   picked: readonly string[];
   /** The key for a row, matching the shortlist's own scheme. */
@@ -85,22 +83,21 @@ export function candidatesCsv(rows: CandidateRow[], ctx: ExportContext): string 
     `# filter: ${ctx.filter}`,
     `# sorted_by: ${ctx.sort}`,
     `# provenance: ${ctx.provenance}`,
-    `# chance_real_calibration_band: plus or minus ${ctx.band.toFixed(2)}; chance_lower and chance_upper are that band, clipped to 0 and 1`,
+    "# chance_real is a legacy field name for an uncalibrated model score, not a validation probability",
+    "# chance_lower and chance_upper are empty: no validated uncertainty interval is available",
     ...(ctx.caveat === null ? [] : [`# qc_caveat: ${ctx.caveat}`]),
     "# guide sequences are not in this file: there is no guide table behind these rows, so none is invented here",
   ];
 
   const body = rows.map((row) => {
-    const lower = row.chance === null ? null : Math.max(0, row.chance - ctx.band);
-    const upper = row.chance === null ? null : Math.min(1, row.chance + ctx.band);
     return [
       field(row.screenId),
       field(row.screenName),
       field(row.gene),
       field(row.verdict),
       field(row.chance),
-      field(lower === null ? null : Number(lower.toFixed(4))),
-      field(upper === null ? null : Number(upper.toFixed(4))),
+      field(null),
+      field(null),
       field(row.novelty),
       field(row.lfc),
       field(row.fdr),

@@ -164,7 +164,7 @@ export function RunsPanel({
                 active={key === "hits"}
                 dir={dir}
                 onToggle={() => toggle("hits", "desc")}
-                title={`Likely real of called, where likely real is ${realCut}.`}
+                title={`Stored selected-hit count / called count. ${realCut}; this is not independent validation.`}
               />
             </tr>
           </thead>

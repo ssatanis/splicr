@@ -1,0 +1,53 @@
+PRE-2022 SELECTION {
+  "Drug / Chemical / Environmental Response": {
+    "n": 435,
+    "scores": {
+      "phenotype_prior": 0.09409368601091261,
+      "five_model_consensus": 0.19007047015588208,
+      "gemini_3_pro": 0.18125845101139212
+    },
+    "selected": "five_model_consensus"
+  },
+  "Fitness / Proliferation / Viability": {
+    "n": 983,
+    "scores": {
+      "phenotype_prior": 0.8329247801839105,
+      "five_model_consensus": 0.8056107974649696,
+      "gemini_3_pro": 0.7913033170218303
+    },
+    "selected": "phenotype_prior"
+  },
+  "Host-Pathogen / Infection Response": {
+    "n": 55,
+    "scores": {
+      "phenotype_prior": 0.06925918902599848,
+      "five_model_consensus": 0.2611338681273717,
+      "gemini_3_pro": 0.23940814376625652
+    },
+    "selected": "five_model_consensus"
+  },
+  "Molecular Output / Reporter / Pathway Activity": {
+    "n": 52,
+    "scores": {
+      "phenotype_prior": 0.09043230148137653,
+      "five_model_consensus": 0.3652769059630544,
+      "gemini_3_pro": 0.26756662552060023
+    },
+    "selected": "five_model_consensus"
+  },
+  "Trafficking / Localization / Structural Phenotypes": {
+    "n": 42,
+    "scores": {
+      "phenotype_prior": 0.10749668248048434,
+      "five_model_consensus": 0.2240119576609643,
+      "gemini_3_pro": 0.19383902171432946
+    },
+    "selected": "five_model_consensus"
+  }
+}
+PRE-2022 five-fold selection stability [{'Drug / Chemical / Environmental Response': 'five_model_consensus', 'Fitness / Proliferation / Viability': 'phenotype_prior', 'Host-Pathogen / Infection Response': 'five_model_consensus', 'Molecular Output / Reporter / Pathway Activity': 'five_model_consensus', 'Trafficking / Localization / Structural Phenotypes': 'five_model_consensus'}, {'Drug / Chemical / Environmental Response': 'five_model_consensus', 'Fitness / Proliferation / Viability': 'phenotype_prior', 'Host-Pathogen / Infection Response': 'five_model_consensus', 'Molecular Output / Reporter / Pathway Activity': 'five_model_consensus', 'Trafficking / Localization / Structural Phenotypes': 'five_model_consensus'}, {'Drug / Chemical / Environmental Response': 'five_model_consensus', 'Fitness / Proliferation / Viability': 'phenotype_prior', 'Host-Pathogen / Infection Response': 'five_model_consensus', 'Molecular Output / Reporter / Pathway Activity': 'five_model_consensus', 'Trafficking / Localization / Structural Phenotypes': 'five_model_consensus'}, {'Drug / Chemical / Environmental Response': 'five_model_consensus', 'Fitness / Proliferation / Viability': 'phenotype_prior', 'Host-Pathogen / Infection Response': 'five_model_consensus', 'Molecular Output / Reporter / Pathway Activity': 'five_model_consensus', 'Trafficking / Localization / Structural Phenotypes': 'five_model_consensus'}, {'Drug / Chemical / Environmental Response': 'five_model_consensus', 'Fitness / Proliferation / Viability': 'phenotype_prior', 'Host-Pathogen / Infection Response': 'five_model_consensus', 'Molecular Output / Reporter / Pathway Activity': 'five_model_consensus', 'Trafficking / Localization / Structural Phenotypes': 'five_model_consensus'}]
+TEST official AnDCG@100 0.21995152202905938
+TEST densified published ensemble 0.2193241509601307
+TEST paired difference and 95% bootstrap interval 0.0006273710689286575 [-0.008032105073549076, 0.008718407261541817]
+TEST categories {'Host-Pathogen / Infection Response': {'n': 105, 'mean': 0.19485661807435595}, 'Fitness / Proliferation / Viability': {'n': 44, 'mean': 0.5315331165194865}, 'Molecular Output / Reporter / Pathway Activity': {'n': 39, 'mean': 0.17502350038935952}, 'Drug / Chemical / Environmental Response': {'n': 144, 'mean': 0.1575753660086189}, 'Trafficking / Localization / Structural Phenotypes': {'n': 2, 'mean': 0.04981855630744903}}
+TEST max metric difference 2.329743498119541e-08

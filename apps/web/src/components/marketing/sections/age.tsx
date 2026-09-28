@@ -18,14 +18,12 @@ export function AgeSection() {
             <div className="max-w-md space-y-5 text-body leading-relaxed">
               <Reveal delay={0.1}>
                 <p>
-                  A screen returns hundreds of candidates. Many are artifacts. Checking one takes
-                  weeks. Today labs guess which to check.
+                  A screen can return hundreds of candidates. Effect size, guide support and technical artifacts all matter when choosing follow-up experiments.
                 </p>
               </Reveal>
               <Reveal delay={0.2}>
                 <p>
-                  SplicR scores every hit against every public screen and the record of what
-                  actually validated, so the right ones go first.
+                  SplicR brings available statistics, artifact risks and historical context together for review. Independent validation is still needed to establish which candidates reproduce.
                 </p>
               </Reveal>
               <Reveal delay={0.3}>

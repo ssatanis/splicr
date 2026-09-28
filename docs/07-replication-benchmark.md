@@ -1,22 +1,31 @@
 # The replication benchmark
 
-SplicR's product claim is: given a screen's data, which of its hits are real.
-Nobody benchmarks that, because there is no public dataset recording which hits
-later validated. This is the closest honest proxy, built from data already in
-the repository.
+**Historical retrospective research protocol.** The tables below retain the
+original archive-derived counts and experiment record. They are not a new blind
+prospective evaluation or a calibrated validation-success model. The current
+[final report](../research/10_FINAL_RESULTS.md) takes precedence for product and
+performance claims. No model superiority has been demonstrated.
+
+This benchmark measures agreement with another published screen's hit calls.
+Public validation studies do exist, but this repository has not established a
+representative independently validated positive/negative outcome cohort suitable
+for calibration. Cross-screen replication is a useful, narrower proxy.
 
 **The task.** Given only screen A's own measurements, rank A's gene space by the
-probability that the gene is also called a hit in screen B, an independent
-screen of the same phenotype in the same cell line by a different lab with a
-different library. B's hit calls are the label and a predictor never sees them.
+ranking score for whether the gene is also called a hit in screen B, a
+metadata-matched screen from another publication and library. Publication/first
+author differences do not prove independent laboratories or distinct underlying
+experiments. B's hit calls are evaluator labels and must not enter predictors.
+Average precision evaluates ranking, not probability calibration.
 
-If two labs screen the same thing independently and a gene hits in both, it is
-far more likely to be real than one that hits in only one. So this is the
-benchmark where being right about artifacts, guide agreement, effect size and QC
-should pay, and where a literature-recall method has nothing to recall.
+Agreement can supply supporting evidence, but shared confounding, source reuse
+and different statistical thresholds complicate interpretation. A true effect
+can also fail to replicate. These published screens are potentially present in
+literature or model pretraining; literature memorization is not ruled out.
 
 ```bash
-export PATH="engine/.tools/env/bin:$PATH"
+export PATH="$PWD/engine/.tools/env/bin:$PATH"
+export PYTHONPATH="$PWD/engine${PYTHONPATH:+:$PYTHONPATH}"
 python -m splicr.replication.dataset build    # rebuild the artifact
 python -m pytest engine/tests/test_replication_benchmark.py
 ```
@@ -39,16 +48,18 @@ This is the decision the benchmark will be attacked on, so every condition is
 mechanical, applied to metadata BioGRID ships, and recorded in the built
 artifact as a funnel. Two screens form a pair only if all of the following hold.
 
-**Different publication, and different first author.** One paper's two screens
-are one experiment. Two papers with the same first author are one lab, so they
-are not independent labs. First author is a proxy for lab, and an imperfect one;
-see the objections.
+**Different publication, and different first author.** The original filter
+excludes same-publication and same-first-author pairs to reduce related-study
+overlap. A publication can contain multiple experiments and an author can change
+labs; this is a conservative metadata heuristic, not a verified laboratory or
+experiment identity. See the objections.
 
 **Different library.** This is the condition that gives the label its meaning.
 Two screens using the same library share guide sequences, so a seed effect or an
 off-target artifact of a particular guide would replicate. Requiring different
-libraries means guide-level artifacts do *not* replicate, so failure to
-replicate is evidence about the hit rather than about the shared reagent.
+libraries reduces some shared guide artifacts, but libraries may share sequences
+or genomic confounders. It does not prove artifacts cannot replicate or that
+nonreplication uniquely identifies a false biological effect.
 
 **Same library type.** A CRISPRa hit and a CRISPRn hit are not the same claim.
 
@@ -266,10 +277,11 @@ the same cell line, and where the target screen is an Avana screen it is a later
 release of the label itself. Any per-cell-line DepMap feature for that model is
 forbidden.
 
-The cell-line-independent DepMap products, such as the inferred common essentials
-list, are *not* forbidden, because they are gene-level summaries over about a
-thousand lines and do not identify this unit's label. That is a judgement rather
-than a proof, and it is listed again under the objections.
+The historical protocol allowed cell-line-independent DepMap aggregates such as
+common essentials. This does **not** establish temporal or target independence:
+an aggregate can incorporate these experiments or later data. Treat affected
+results as retrospective. A strict evaluation needs a dated admissible release
+or a recomputation excluding all related target experiments.
 
 All of this sits inside the existing AssayBench boundary. Only screens that
 `splicr.orcs_safe` marks safe under the publication-level policy are considered,
@@ -412,17 +424,20 @@ one.
 publication, same first author and same library, which catches the cases that
 matter most, but not two screens from one consortium using different libraries.
 
-**Cell-line-independent DepMap products are allowed.** The common-essentials
-list is used to define the primary space, and a method may consult gene-level
-DepMap summaries. The argument is that a summary over a thousand lines does not
-identify a single unit's label. It is a judgement, not a proof, and a reader who
-rejects it should read the primary-space numbers only, where common-essential
-membership is constant and so carries no information at all.
+**Aggregate contamination remains possible.** The historical primary gene
+space itself uses the common-essentials list. Making membership constant after
+filtering does not remove a future-informed gene-universe selection. Sensitivity
+analysis with a historically available independent list is required; gene-level
+DepMap summaries are not automatically admissible features.
 
 **Two directions per pair.** Each screen pair yields two units, A predicting B
 and B predicting A, which doubles the unit count without doubling the
 information. `paired_test` resamples by `pair_key` to avoid counting one
-experiment twice; any other analysis must do the same.
+experiment twice. This still does not account for shared publications and
+consortia across multiple pairs. Preserve those historical intervals as pair-level
+intervals; new generalization claims need study/connected-experiment resampling
+and enough genuinely independent studies. The 113-pair hub cannot support the
+same confidence as 113 independent laboratories.
 
 **Development is small.** 14 pairs and 9 publications. Interval estimates on
 development are wide, and a method tuned there can overfit 14 pairs. That is the

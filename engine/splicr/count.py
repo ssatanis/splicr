@@ -23,6 +23,8 @@ from __future__ import annotations
 
 import gzip
 import io
+import csv
+from decimal import Decimal, InvalidOperation
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -376,7 +378,16 @@ def count_table_samples(path: Path) -> list[str]:
         first = fh.readline()
     first = first.replace("\r\n", "\n").replace("\r", "\n").split("\n")[0]
     delim = "\t" if first.count("\t") >= first.count(",") else ","
-    return [h.strip() for h in first.split(delim)[2:] if h.strip()]
+    return _count_header(next(csv.reader([first], delimiter=delim), []), path)
+
+
+def _count_header(header: list[str], path: Path) -> list[str]:
+    samples = [h.strip() for h in header[2:]]
+    if not samples or any(not s for s in samples):
+        raise ValueError(f"{path.name}: expected sgRNA, Gene and nonempty sample columns")
+    if len(set(samples)) != len(samples):
+        raise ValueError(f"{path.name}: duplicate sample labels in count table")
+    return samples
 
 
 def read_count_table(path: Path, library: Library | None = None) -> CountMatrix:
@@ -386,28 +397,47 @@ def read_count_table(path: Path, library: Library | None = None) -> CountMatrix:
     Used when a lab uploads counts rather than reads, and when checking our
     counts against a published table.
     """
-    text_lines = [l for l in _read_any(path).split("\n") if l.strip()]
+    text_lines = _read_any(path).splitlines()
+    if not text_lines:
+        raise ValueError(f"{path.name}: empty count table")
     delim = "\t" if text_lines[0].count("\t") >= text_lines[0].count(",") else ","
-    header = text_lines[0].split(delim)
-    samples = [h.strip() for h in header[2:]]
+    reader = csv.reader(text_lines, delimiter=delim)
+    header = next(reader)
+    samples = _count_header(header, path)
 
     guide_ids: list[str] = []
     genes: list[str | None] = []
     matrix: list[list[int]] = []
-    for line in text_lines[1:]:
-        f = line.split(delim)
-        if len(f) < 3:
+    seen: set[str] = set()
+    for f in reader:
+        if not f or all(not value.strip() for value in f):
             continue
-        guide_ids.append(f[0].strip())
+        where = f"{path.name}: row {reader.line_num}"
+        if len(f) != len(header):
+            raise ValueError(f"{where}: expected {len(header)} columns, found {len(f)}")
+        guide_id = f[0].strip()
+        if not guide_id or guide_id in seen:
+            raise ValueError(f"{where}: empty or duplicate guide identifier {guide_id!r}")
+        seen.add(guide_id)
+        guide_ids.append(guide_id)
         gene = f[1].strip()
         genes.append(None if gene.upper() in ("CONTROL", "NA", "") else gene)
         row = []
-        for v in f[2:2 + len(samples)]:
+        for sample, v in zip(samples, f[2:]):
             try:
-                row.append(int(float(v)))
-            except (ValueError, TypeError):
-                row.append(0)
+                value = Decimal(v.strip())
+                if not value.is_finite() or value < 0 or value != value.to_integral_value():
+                    raise InvalidOperation
+                row.append(int(value))
+            except (InvalidOperation, ValueError):
+                raise ValueError(
+                    f"{where}, sample {sample!r}: count {v!r} must be a finite "
+                    "nonnegative integer; missing counts cannot be treated as zero"
+                ) from None
         matrix.append(row)
+
+    if not matrix:
+        raise ValueError(f"{path.name}: count table contains no guide rows")
 
     return CountMatrix(
         library_slug=library.slug if library else "unknown",

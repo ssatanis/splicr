@@ -15,8 +15,9 @@ The deposited table is normalised to exactly 10,000,000 reads per column, which
 is visible in the column sums and is 5,000,000 per library across the two
 GeCKOv2 halves it merges, so raw counts are not comparable and should
 not be. Both sides are converted to counts per million and compared as a ratio per
-guide. A median ratio of 1.0 means SplicR assigns reads to guides in the same
-proportions the authors did.
+guide. A median ratio near 1.0 checks median scale, not complete guide-level
+agreement. Inspect Spearman correlation, fraction within tolerance and dropout
+alongside the ratio; this script measures agreement without certifying accuracy.
 
 The deposited table also merges GeCKOv2 libraries A and B into one column per
 condition, while the FASTQ runs are per library, so only the library A guides

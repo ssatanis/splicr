@@ -71,7 +71,7 @@ function HitTip({ active, payload }: Partial<TooltipContentProps<number, string>
     <div className="rounded-xl bg-white border border-line shadow-card px-3 py-2 text-xs">
       <div className="text-ink font-medium">{h.gene}</div>
       <div className="text-muted">
-        LFC {h.lfc} · FDR {h.fdr.toExponential(1)} · {Math.round(h.chance * 100)}% real
+        LFC {h.lfc} · FDR {h.fdr.toExponential(1)} · demo score {h.chance.toFixed(3)}
       </div>
       <div className="text-muted">{h.verdict}</div>
     </div>
@@ -113,7 +113,7 @@ export function DiscoveryMap({ hits, onSelect, height = 420 }: { hits: Hit[]; on
         <ReferenceArea x1={0.5} x2={1} y1={0.5} y2={1} fill="#f87315" fillOpacity={0.06} />
         <ReferenceArea x1={0} x2={0.5} y1={0.5} y2={1} fill="#174f62" fillOpacity={0.05} />
         <CartesianGrid stroke={grid} strokeDasharray="3 3" />
-        <XAxis type="number" dataKey="chance" domain={[0, 1]} tick={axisStyle} tickFormatter={(v) => `${Math.round(v * 100)}%`} label={{ value: "chance it's real →", position: "insideBottom", offset: -8, ...axisStyle }} />
+        <XAxis type="number" dataKey="chance" domain={[0, 1]} tick={axisStyle} tickFormatter={(v) => Number(v).toFixed(1)} label={{ value: "illustrative model score →", position: "insideBottom", offset: -8, ...axisStyle }} />
         <YAxis type="number" dataKey="novelty" domain={[0, 1]} tick={axisStyle} tickFormatter={(v) => `${Math.round(v * 100)}%`} label={{ value: "how new it is →", angle: -90, position: "insideLeft", ...axisStyle }} />
         <ReferenceLine x={0.5} stroke="#d3dbe1" />
         <ReferenceLine y={0.5} stroke="#d3dbe1" />

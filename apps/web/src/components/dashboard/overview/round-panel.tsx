@@ -32,7 +32,6 @@ import {
   Panel,
   PanelLink,
 } from "@/components/dashboard/ui";
-import { CALIBRATION_BAND } from "@/lib/mock/data";
 import { formatNumber } from "@/lib/utils";
 
 import { candidatesCsv, downloadCsv } from "./export-rows";
@@ -86,7 +85,6 @@ export function RoundPanel({
       provenance: "Shortlist assembled in the SplicR console overview",
       caveat,
       sample,
-      band: CALIBRATION_BAND,
       picked,
       keyOf: (row) => pickKey(row.screenId, row.gene),
     });

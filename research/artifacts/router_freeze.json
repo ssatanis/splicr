@@ -1,0 +1,86 @@
+{
+  "evidence": {
+    "drug / chemical / environmental response": {
+      "means": {
+        "external": 0.15026384428422762,
+        "global": 0.05843557830244959,
+        "phenotype": 0.014630763901472218
+      },
+      "n_publications": 20,
+      "n_screens": 157,
+      "selected": "external",
+      "selection_estimate_not_unbiased": true
+    },
+    "fitness / proliferation / viability": {
+      "means": {
+        "external": 0.36649466290571,
+        "global": 0.41226687996070344,
+        "phenotype": 0.417435815235779
+      },
+      "n_publications": 5,
+      "n_screens": 36,
+      "selected": "phenotype",
+      "selection_estimate_not_unbiased": true
+    },
+    "host-pathogen / infection response": {
+      "means": {
+        "external": 0.1784586607198217,
+        "global": 0.0112968677813771,
+        "phenotype": 0.041837231695025644
+      },
+      "n_publications": 8,
+      "n_screens": 17,
+      "selected": "external",
+      "selection_estimate_not_unbiased": true
+    },
+    "molecular output / reporter / pathway activity": {
+      "means": {
+        "external": 0.20606591466989188,
+        "global": 0.06300097837970457,
+        "phenotype": 0.0
+      },
+      "n_publications": 4,
+      "n_screens": 4,
+      "selected": "external",
+      "selection_estimate_not_unbiased": true
+    },
+    "trafficking / localization / structural phenotypes": {
+      "means": {
+        "external": 0.0,
+        "global": 0.0194930850809451,
+        "phenotype": 0.003645165626092976
+      },
+      "n_publications": 2,
+      "n_screens": 4,
+      "selected": "external",
+      "selection_estimate_not_unbiased": true
+    }
+  },
+  "expert_file_sha256": "d6df699d8d0cbf77fe2dd0238cd8bd6f3efe21618994eec7deacc21f39deb2e7",
+  "input": "metadata only; no target library",
+  "memorization_risk": "published LLMs may have trained on screen publications",
+  "provenance": {
+    "assaybench_version": "0.2.0",
+    "data_sha256": "25e00c380358486137d1f25c490db98d007dfc5230f8ad502276dc6ccc741a5c",
+    "git_revision": "166cb3c2366424e9fdb6ac47bf051f01a1948c67",
+    "input": "pre-experimental metadata; train-union genes; no target library",
+    "loader_code_sha256": "6e3dc144928252f96af66e1b7966ace7556aa23935a10005f05a1a0b3aa84044",
+    "metric_sha256": "d1b638c9aa3ee1cbd984028595b7af009f00736d203fa9cc10405732d182fbae",
+    "model_code_sha256": "cdfb02576fb89cc67807d00672b438db6f07d5698efcc64c53ad13f0853a9683",
+    "prediction_loader_sha256": "4b0ba272e3e79759a703cc17ffec601f3d46e7c9c3a105cff551ebdf54e8cc87",
+    "protocol": "train <=2020; validation 2021; public test >=2022 already explored historically",
+    "protocol_code_sha256": "2287b13c5d0946a1e2e92e9ad470113abe5b325fe38692e6aa87469a09b91264",
+    "router_runner_sha256": "8f3c408d0584c6e1a5ed12a9b4adfcc7fc2c73e3b99722945ec731df39e36291",
+    "router_sha256": "93a6e8d9db2a0162d327cc0832f271ddc1bdb88af66d0378d7e896c3b827dd67",
+    "runner_code_sha256": "5056075e24de9e480eecbd2738125ce1c5fbab72d6397a30355f9466738e6dc3",
+    "seed": 20260927
+  },
+  "routes": {
+    "drug / chemical / environmental response": "external",
+    "fitness / proliferation / viability": "phenotype",
+    "host-pathogen / infection response": "external",
+    "molecular output / reporter / pathway activity": "external",
+    "trafficking / localization / structural phenotypes": "external"
+  },
+  "selection_split": "validation"
+}

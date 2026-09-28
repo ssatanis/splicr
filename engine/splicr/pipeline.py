@@ -11,7 +11,10 @@ from __future__ import annotations
 
 import time
 import traceback
-from dataclasses import dataclass, field
+import json
+import hashlib
+import platform
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 from . import db
@@ -20,13 +23,45 @@ from .atlas import AtlasResult, atlas_context
 from .count import (
     CountMatrix, SampleCounts, count_fastq, count_table_samples, read_count_table,
 )
-from .design import Design, DesignError, build_design
+from .design import Design, DesignError, REFERENCE_ROLES, build_design
 from .detect import Detection, detect_from_count_table, detect_from_fastq
 from .hits import HitTable, call_hits
 from .qc import ScreenQc, screen_qc
 from .references import Library, load_library
 
 STAGES = ("ingest", "detect", "count", "qc", "hits", "artifacts", "atlas", "score", "report")
+
+
+def _file_sha256(path: Path) -> str | None:
+    """Hash existing analysis inputs; missing evidence remains explicit."""
+    try:
+        with path.open("rb") as handle:
+            digest = hashlib.sha256()
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(chunk)
+            return digest.hexdigest()
+    except FileNotFoundError:
+        return None
+
+
+def _report_provenance(workdir: Path, source_dir: Path | None = None) -> dict:
+    source_dir = source_dir or Path(__file__).resolve().parent
+    counts = workdir / "hits" / "counts.txt"
+    counts_hash = _file_sha256(counts)
+    requirements = source_dir.parent / "requirements.txt"
+    return {
+        "python_version": platform.python_version(),
+        "code_sha256": {name: _file_sha256(source_dir / name) for name in (
+            "pipeline.py", "hits.py", "count.py", "qc.py", "artifacts.py", "atlas.py",
+        )},
+        "requirements_sha256": _file_sha256(requirements),
+        "requirements_note": "Declared dependency pins; this is not an installed-environment lockfile.",
+        "analyzed_counts": {
+            "path": str(counts), "sha256": counts_hash,
+            "available": counts_hash is not None,
+            "unavailable_reason": "analysis count file is absent" if counts_hash is None else None,
+        },
+    }
 
 
 @dataclass
@@ -55,6 +90,7 @@ class PipelineResult:
     run_id: str | None = None
     failed_at: str | None = None
     error: str | None = None
+    report_path: Path | None = None
 
     @property
     def ok(self) -> bool:
@@ -112,6 +148,12 @@ class ScreenInput:
     model_id: str | None = None                             # DepMap ACH-######
     phenotype: str | None = None
     modality: str = "knockout"
+    condition: str | None = None
+    # None uses only unambiguous fitness phenotype labels. A reporter/FACS
+    # screen must not be judged by loss of core essential genes.
+    fitness_assay: bool | None = None
+    run_drugz: bool = False
+    drugz_paired: bool = False
 
 
 def run_pipeline(
@@ -129,9 +171,11 @@ def run_pipeline(
     is visible from the app while the run is still going. It needs org_id.
     """
     result = PipelineResult(screen_name=spec.name)
+    workdir = workdir.resolve()
     workdir.mkdir(parents=True, exist_ok=True)
     conn = None
     ctx: db.RunContext | None = None
+    active_stage = "ingest"
 
     def say(msg: str) -> None:
         if verbose:
@@ -157,6 +201,10 @@ def run_pipeline(
         # --- 01 ingest -----------------------------------------------------
         t = time.time()
         sources = list(spec.fastqs.values()) + ([spec.count_table] if spec.count_table else [])
+        if bool(spec.fastqs) == bool(spec.count_table):
+            raise ValueError("supply exactly one input type: FASTQ files or a count table")
+        if spec.drugz_paired and not spec.run_drugz:
+            raise ValueError("drugz_paired requires run_drugz=True")
         missing = [p for p in sources if not Path(p).exists()]
         if missing:
             raise FileNotFoundError(f"input not found: {missing}")
@@ -173,6 +221,16 @@ def run_pipeline(
         design = build_design(labels, spec.roles, spec.treatment, spec.control)
         result.design = design
         roles, treat, ctrl = design.roles, design.treatment, design.control
+        loss_of_function = spec.modality.lower() in {
+            "knockout", "crisprko", "crispr-ko", "ko", "inhibition", "crispri", "crispr-i",
+        }
+        fitness = (spec.fitness_assay if spec.fitness_assay is not None else
+                   (spec.phenotype or "").strip().lower() in {
+                       "fitness", "viability", "proliferation", "cell viability",
+                       "cell proliferation", "growth", "essentiality", "dropout",
+                   })
+        assess_essentiality = loss_of_function and fitness
+        essentiality_contrast = assess_essentiality and all(roles[s] in REFERENCE_ROLES for s in ctrl)
         for note in design.notes:
             say(f"      design: {note}")
         detail = (f"{len(sources)} file(s), {total_bytes / 1e9:.2f} GB, "
@@ -191,6 +249,7 @@ def run_pipeline(
         record("ingest", "done", detail, "splicr.ingest", t, design.as_dict())
 
         # --- 02 detect -----------------------------------------------------
+        active_stage = "detect"
         t = time.time()
         if spec.library_slug:
             library = load_library(spec.library_slug)
@@ -209,6 +268,7 @@ def run_pipeline(
                {"library": library.slug, "n_guides": len(library)})
 
         # --- 03 count ------------------------------------------------------
+        active_stage = "count"
         t = time.time()
         if spec.fastqs:
             samples: list[SampleCounts] = []
@@ -237,8 +297,10 @@ def run_pipeline(
             sample_ids = {}
 
         # --- 04 QC ---------------------------------------------------------
+        active_stage = "qc"
         t = time.time()
-        qc = screen_qc(matrix, roles, treat, ctrl, library)
+        qc = screen_qc(matrix, roles, treat, ctrl, library,
+                       assess_essentiality=assess_essentiality)
         result.qc = qc
         nnmd = f"NNMD {qc.nnmd:.2f}" if qc.nnmd is not None else "NNMD n/a"
         record("qc", "done", f"{qc.verdict}, {nnmd}", "splicr.qc", t, qc.as_dict())
@@ -250,15 +312,25 @@ def run_pipeline(
             say("      QC failed; continuing so the report can explain why")
 
         # --- 05 hits -------------------------------------------------------
+        active_stage = "hits"
         t = time.time()
-        hits = call_hits(matrix, library, treat, ctrl, workdir / "hits")
+        hits = call_hits(matrix, library, treat, ctrl, workdir / "hits",
+                         run_bagel=essentiality_contrast,
+                         run_drug=spec.run_drugz, drugz_paired=spec.drugz_paired,
+                         essentiality_contrast=essentiality_contrast)
+        if not essentiality_contrast:
+            hits.warnings.append("BAGEL2 and the essential-direction inversion guard were "
+                                 "not applied: this contrast is not a declared loss-of-function "
+                                 "fitness endpoint against a library reference.")
         result.hits = hits
         sig = hits.significant(0.1)
         record("hits", "done",
                f"{len(hits.genes)} genes, {len(sig)} at FDR 0.1, methods {hits.methods}",
                ", ".join(hits.methods), t,
                {"methods": hits.methods, "n_significant": len(sig),
-                "warnings": hits.warnings})
+                "warnings": hits.warnings,
+                "fdr_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
+                "essentiality_contrast": essentiality_contrast})
 
         if persist and conn is not None and ctx is not None:
             comparison_id = db.create_comparison(
@@ -270,6 +342,7 @@ def run_pipeline(
             conn.commit()
 
         # --- 06 artifacts --------------------------------------------------
+        active_stage = "artifacts"
         # The Atlas is retrieved here rather than in stage 07, because the
         # frequent_hitter flag needs it and stage 07 runs after this one. Stage
         # 07 then reports on what this loaded. atlas_context never raises: a
@@ -282,11 +355,17 @@ def run_pipeline(
             sorted(hits.genes),
             cell_line=spec.cell_line,
             phenotype=spec.phenotype,
+            condition=spec.condition,
+            modality=spec.modality,
+            library=library.slug,
         )
         atlas_seconds = time.time() - t_atlas
         result.atlas = atlas
         flags = flag_artifacts(hits, library, model_id=spec.model_id,
-                               atlas_hit_rates=atlas.hit_rates if atlas.available else None)
+                               atlas_hit_rates=atlas.hit_rates if atlas.available else None,
+                               modality=spec.modality,
+                               screened_guide_ids={gid for gid, row in zip(matrix.guide_ids, matrix.matrix)
+                                                   if any(row)})
         result.flags = flags
         # Reported over the called hits. Every gene keeps its flags in the
         # database; the headline is about the genes anyone will read.
@@ -298,6 +377,7 @@ def run_pipeline(
                {"on_called_hits": on_called, "all_genes": summarise_flags(flags)})
 
         # --- 07 atlas ------------------------------------------------------
+        active_stage = "atlas"
         t = time.time()
         # The work happened in stage 06, so the duration is back-dated.
         # Recording time.time() here would report 0.0s for a stage that did
@@ -307,24 +387,58 @@ def run_pipeline(
                atlas.metrics())
 
         # --- 08 score ------------------------------------------------------
+        active_stage = "score"
         t = time.time()
         record("score", "skipped",
                "no calibrated model is fitted yet, so hits are stored without a confidence",
                "splicr.score", t)
 
         # --- 09 report -----------------------------------------------------
+        active_stage = "report"
         t = time.time()
+        # A portable report also preserves raw directional statistics, which
+        # the existing database columns cannot represent without a migration.
+        report = {
+            "schema_version": "splicr.postscreen.v1",
+            "provenance": _report_provenance(workdir),
+            "screen_name": spec.name,
+            "task": "post_screen_analysis",
+            "context": {"cell_line": spec.cell_line, "phenotype": spec.phenotype,
+                        "modality": spec.modality, "condition": spec.condition},
+            "design": design.as_dict(), "qc": qc.as_dict(),
+            "methods": hits.methods, "warnings": hits.warnings,
+            "drugz_pairing": ("paired in the declared sample order" if spec.drugz_paired
+                              else "unpaired") if spec.run_drugz else None,
+            "statistics": {"fdr_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
+                           "p_value_method": "min(1, 2*min(MAGeCK directional p-values))",
+                           "directional_statistics": "tool-native; separate tail families",
+                           "validation_probability": None,
+                           "validation_probability_reason": "no independently calibrated validation model"},
+            "atlas": atlas.metrics(),
+            "comparable_screens": [asdict(screen) for screen in atlas.comparable],
+            "tool_output_directory": str(workdir / "hits"),
+            "genes": [{**asdict(g), "flags": [asdict(f) for f in flags.get(g.gene, [])],
+                       "atlas_context": (atlas.contexts[g.gene].as_dict()
+                                         if g.gene in atlas.contexts else None)}
+                      for g in hits.ranked()],
+        }
+        report_path = workdir / "postscreen_report.json"
+        temporary = report_path.with_suffix(".json.tmp")
+        temporary.write_text(json.dumps(report, indent=2, allow_nan=False) + "\n")
+        temporary.replace(report_path)
+        result.report_path = report_path
         if persist and conn is not None and ctx is not None:
             written = db.write_hits(conn, ctx, hits, flags)
             db.finish_run(conn, ctx, "complete")
             conn.commit()
             record("report", "done", f"wrote {written:,} hit rows", "splicr.db", t)
         else:
-            record("report", "done", "in-memory only", "splicr.report", t)
+            record("report", "done", str(report_path), "splicr.report", t)
 
     except Exception as exc:
-        result.failed_at = result.stages[-1].stage if result.stages else "ingest"
+        result.failed_at = active_stage
         result.error = f"{type(exc).__name__}: {exc}"
+        result.stages.append(StageRecord(active_stage, "failed", result.error))
         say(f"  FAILED at {result.failed_at}: {result.error}")
         if verbose:
             traceback.print_exc()

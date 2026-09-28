@@ -1,0 +1,47 @@
+✔ non-demo 401 response never imports or renders sample reports (33.056625ms)
+✔ non-demo 501 response never imports or renders sample reports (8.704917ms)
+✔ authentication precedes format parsing and sample-screen lookup (5.211875ms)
+✔ explicit demo csv export retains actual sample labels (111.144167ms)
+✔ explicit demo json export retains actual sample labels (50.556542ms)
+✔ explicit demo pdf export retains actual sample labels (55.930666ms)
+✔ demo malformed format fails before loading sample data (2.733625ms)
+✔ demo unknown screen remains a labelled error, not a fallback report (45.488ms)
+✔ anonymous and demo contexts never query workspace rows (5.055292ms)
+✔ invalid identity and unbounded page input are rejected before reads (24.819625ms)
+✔ an inaccessible screen cannot trigger hit reads or demo fallback (0.872708ms)
+✔ screen, run and hit queries retain session ownership and run identity (0.414917ms)
+✔ missing current run is unavailable, not an invented empty analysis (0.299458ms)
+✔ a genuinely unrun screen has explicit empty evidence (0.254667ms)
+✔ database errors return unavailable and never substitute sample rows (0.294708ms)
+✔ real page renders recorded FDR and null confidence without sample substitution (17.640416ms)
+✔ sample detail is accessible only through explicit demo session (0.9665ms)
+✔ unavailable workspace page names the read failure and contains no sample values (0.445541ms)
+✔ getWorkspaceScreens uses session organization and bounded pagination (1.351333ms)
+✔ getWorkspaceScreens rejects demo, expired session and invalid pages before queries (0.88175ms)
+✔ getWorkspaceScreens distinguishes empty evidence from a failed read (0.666875ms)
+✔ getWorkspaceOutcomes uses session organization and bounded pagination (0.256375ms)
+✔ getWorkspaceOutcomes rejects demo, expired session and invalid pages before queries (0.767625ms)
+✔ getWorkspaceOutcomes distinguishes empty evidence from a failed read (0.666958ms)
+✔ screens: signed-in workspace never imports or renders demonstration data (30.3925ms)
+✔ screens: explicit demo remains separate from workspace queries (7.810334ms)
+✔ validation: signed-in workspace never imports or renders demonstration data (4.886875ms)
+✔ validation: explicit demo remains separate from workspace queries (4.414917ms)
+✔ atlas: signed-in workspace never imports or renders demonstration data (2.468041ms)
+✔ atlas: explicit demo remains separate from workspace queries (4.556958ms)
+✔ upload: signed-in workspace never imports or renders demonstration data (1.951375ms)
+✔ upload: explicit demo remains separate from workspace queries (2.052583ms)
+✔ planner: signed-in workspace never imports or renders demonstration data (1.90975ms)
+✔ planner: explicit demo remains separate from workspace queries (1.611916ms)
+✔ screen list renders only returned real records and links to real detail (6.17125ms)
+✔ outcomes preserve inconclusive state and zero measured effect (3.460084ms)
+✔ database failure and missing workspace never display sample or empty evidence claims (11.103625ms)
+✔ app/dashboard/page.tsx: missing session/workspace cannot fall back to sample records (12.73325ms)
+✔ app/dashboard/settings/members/page.tsx: missing session/workspace cannot fall back to sample records (5.304208ms)
+ℹ tests 39
+ℹ suites 0
+ℹ pass 39
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 500.209083

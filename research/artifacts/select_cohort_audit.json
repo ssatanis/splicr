@@ -1,0 +1,37 @@
+{
+  "evaluation_publications": 34,
+  "n_evaluation": 218,
+  "n_train": 1349,
+  "overlap_handling": "excluded from query donors",
+  "overlap_publications": [],
+  "specification": {
+    "config": {
+      "hierarchy": "phenotype",
+      "negative_weight": 0.0,
+      "retrieval_k": 25,
+      "retrieval_power": 3.0,
+      "retrieval_weight": 0.0,
+      "shrinkage": 0.0,
+      "study_balance": false
+    },
+    "fields": [
+      "cell_line",
+      "cell_type",
+      "phenotype",
+      "cleaned_phenotype",
+      "library_methodology",
+      "screen_type",
+      "library_type",
+      "experimental_setup",
+      "condition_name",
+      "condition_dosage",
+      "duration",
+      "condition_clause"
+    ],
+    "n_genes": 23724,
+    "n_publications": 134,
+    "n_training_screens": 1349,
+    "score_type": "uncalibrated ranking evidence"
+  },
+  "training_publications": 134
+}

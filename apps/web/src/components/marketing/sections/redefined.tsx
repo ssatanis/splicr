@@ -7,9 +7,9 @@ import { DragControl } from "@/components/ui/drag-control";
 import { Reveal } from "@/components/ui/reveal";
 
 const stats = [
-  { value: "2,217", label: "Public screens" },
-  { value: "1,349", label: "Screens learned from" },
-  { value: "334", label: "Held-out test screens" },
+  { value: "2,217", label: "ORCS v2.0.18 reference screens" },
+  { value: "1,349", label: "AssayBench training screens" },
+  { value: "334", label: "Public test screens replayed" },
 ];
 
 export function RedefinedSection() {
@@ -45,7 +45,7 @@ export function RedefinedSection() {
 
             <div className="mt-10 flex flex-col md:flex-row md:items-end justify-between gap-8">
               <p className="max-w-sm text-white/90 leading-relaxed">
-                Precision, honesty about uncertainty, and a record of what actually held up.
+                Recorded effects, inspectable evidence and explicit uncertainty. Independent prospective validation remains outstanding.
               </p>
               <div className="flex flex-wrap gap-y-4 divide-x divide-white/25">
                 {stats.map((s) => (

@@ -149,11 +149,11 @@ export function Chance({ value, size = "md" }: { value: number; size?: "sm" | "m
   const pct = Math.round(value * 100);
   const color = value >= 0.6 ? "#f87315" : value >= 0.4 ? "#07b6d3" : "#174f62";
   return (
-    <span className="inline-flex items-center gap-2">
-      <span className={cn("progress-track", size === "sm" ? "w-12 h-1.5" : "w-16")}>
+    <span className="inline-flex items-center gap-2" title="Uncalibrated model score; not a validation probability">
+      <span aria-hidden="true" className={cn("progress-track", size === "sm" ? "w-12 h-1.5" : "w-16")}>
         <span className="progress-fill block" style={{ width: `${pct}%`, background: color }} />
       </span>
-      <span className={cn("tabular-nums text-ink", size === "sm" ? "text-xs" : "text-sm font-medium")}>{pct}%</span>
+      <span className={cn("tabular-nums text-ink", size === "sm" ? "text-xs" : "text-sm font-medium")}>{value.toFixed(3)}</span>
     </span>
   );
 }

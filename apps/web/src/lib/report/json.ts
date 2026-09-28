@@ -26,6 +26,9 @@ export function toJson(doc: ReportDocument, generatedAt: Date): string {
     sample_data: doc.source === "sample",
     data_source: doc.source === "sample" ? "SplicR sample dataset" : "SplicR workspace",
     notice: doc.notice,
+    score_interpretation: "uncalibrated_model_score",
+    validation_probability: null,
+    score_uncertainty_interval: null,
     screen: {
       id: doc.screen.id,
       name: doc.screen.name,

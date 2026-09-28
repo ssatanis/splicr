@@ -1,36 +1,30 @@
 "use client";
 
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useState } from "react";
 
-const topics = ["Blind test", "Pharma pilot", "Core facility", "Connect / MCP", "Something else"];
+import { site } from "@/lib/site";
+
+const topics = ["Blinded evaluation", "Research pilot", "Core facility", "REST integration", "Something else"];
 
 export function ContactForm() {
-  const [sent, setSent] = useState(false);
+  const [draftOpened, setDraftOpened] = useState(false);
   const [topic, setTopic] = useState(topics[0]);
 
-  if (sent) {
-    return (
-      <div className="rounded-2xl bg-cyan-50 border border-cyan-100 p-6 text-ink">
-        <div className="inline-flex items-center gap-2 font-medium">
-          <Check className="w-4 h-4 text-cyan-600" /> Request received
-        </div>
-        <p className="mt-2 text-body text-sm">
-          Thanks. We reply within two working days. Until the backend is connected this form
-          only confirms locally.
-        </p>
-      </div>
-    );
-  }
 
   return (
     <form
       className="space-y-8"
       onSubmit={(e) => {
         e.preventDefault();
-        setSent(true);
+        const data = new FormData(e.currentTarget);
+        const body = [`Name: ${data.get("name")}`, `Lab or company: ${data.get("company")}`, `Reply email: ${data.get("email")}`, "", String(data.get("message") ?? "")].join("\n");
+        window.location.href = `mailto:${site.email}?subject=${encodeURIComponent(`SplicR: ${topic}`)}&body=${encodeURIComponent(body)}`;
+        setDraftOpened(true);
       }}
     >
+      <p className="text-sm text-body">This opens a draft in your email app. Nothing is submitted by this website; review and send the email yourself. You can also email <a className="underline" href={`mailto:${site.email}`}>{site.email}</a> directly. Do not include private screen data in an initial inquiry.</p>
+      {draftOpened && <p role="status" className="text-sm text-ink">Email draft requested. If your email app did not open, use the address above. No delivery confirmation is available here.</p>}
       <div>
         <label className="label-sm" htmlFor="name">
           Name
@@ -56,6 +50,7 @@ export function ContactForm() {
             <button
               key={t}
               type="button"
+              aria-pressed={topic === t}
               onClick={() => setTopic(t)}
               className={`chip ${topic === t ? "bg-teal-800 text-white" : ""}`}
             >
@@ -71,7 +66,7 @@ export function ContactForm() {
         <textarea id="message" name="message" className="underline-input min-h-[80px] resize-y" placeholder="Tell us about the screen" />
       </div>
       <button type="submit" className="btn btn-cyan">
-        Send <ArrowRight className="w-4 h-4" />
+        Open email draft <ArrowRight className="w-4 h-4" />
       </button>
     </form>
   );

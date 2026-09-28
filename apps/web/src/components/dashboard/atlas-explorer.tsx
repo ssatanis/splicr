@@ -143,11 +143,11 @@ export function AtlasExplorer() {
       <PageHeader
         dense
         title="Atlas"
-        body="Public CRISPR screens, re-run through one pipeline, plus the record of which hits held up."
+        body="Illustrative public-screen browsing and validation evidence layout."
       />
       <SampleNote>
         Sample data. The corpus figures and the {atlasScreensList.length} screens listed are invented
-        to show the layout. The Atlas is not built yet, so none of this is a count of anything.
+        to show the layout. These fixtures are not the ingested Atlas or a count of its coverage.
       </SampleNote>
 
       <KpiStrip

@@ -1,0 +1,5 @@
+
+> splicr@0.1.0 evidence:check
+> python3 scripts/research/publish_evidence.py --check
+
+Public evidence verified.

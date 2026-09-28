@@ -1,5 +1,12 @@
 # The oracle row is mostly a selection maximum
 
+> Historical diagnostic, not independent validation. The split-half experiment
+> measures loss of transfer after answer-dependent donor selection. Its numerical
+> ratio does not by itself identify a literal fraction of "noise" or establish
+> a ceiling for all retrieval models: gene dependence, half-library changes and
+> selection effects remain. The whole public test was already explored. See
+> `research/08_VALIDATION_REPORT.md` for the current evidence and limitations.
+
 AssayBench's leaderboard is topped by `Oracle kNN` at AnDCG@100 = **0.2918**,
 labelled as an oracle because it is chosen with the answers in hand. It is
 natural to read that row as the ceiling on screen-to-screen transfer: the best

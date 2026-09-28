@@ -1,0 +1,68 @@
+
+> splicr@0.1.0 test:web
+> node --test apps/web/tests/*.test.mjs
+
+✔ Connect preserves tiny nonzero statistics and complete recorded numeric precision (126.988292ms)
+✔ Connect distinguishes measured zeros, missing values and nonfinite invalid outputs (3.395041ms)
+✔ stored bounds are preserved without inventing probability or uncertainty claims (2.383667ms)
+✔ Connect forwards scientific filters exactly to the organization-bound RPC (3.688291ms)
+✔ unauthorized or unowned screens cannot reach hit serialization (2.963959ms)
+✔ public evidence exactly regenerates from actual research artifacts (89.383667ms)
+✔ published download checksums match every downloadable artifact (0.38ms)
+✔ website benchmark values are full-precision measured values (77.296167ms)
+✔ homepage report renders actual nonsignificant result and QC limitation (20.133834ms)
+✔ evidence page renders exact measurements, uncertainty and downloadable sources (53.047834ms)
+✔ contact action prepares an encoded email draft without claiming delivery (68.3435ms)
+✔ non-demo 401 response never imports or renders sample reports (88.173959ms)
+✔ non-demo 501 response never imports or renders sample reports (14.917958ms)
+✔ authentication precedes format parsing and sample-screen lookup (21.663167ms)
+✔ explicit demo csv export retains actual sample labels (200.804084ms)
+✔ explicit demo json export retains actual sample labels (82.5215ms)
+✔ explicit demo pdf export retains actual sample labels (72.943333ms)
+✔ demo malformed format fails before loading sample data (2.513834ms)
+✔ demo unknown screen remains a labelled error, not a fallback report (46.472583ms)
+✔ real candidate CSV never fabricates uncertainty intervals (55.252708ms)
+✔ demo candidate CSV never fabricates uncertainty intervals (9.697042ms)
+✔ shared score display prints raw score rather than a validation percentage (176.249417ms)
+✔ sample report builder rejects workspace provenance before fixture lookup (96.857ms)
+✔ sample report and serializers preserve explicit scientific limitations (64.146958ms)
+✔ descriptive outcome diagnostics exclude invalid scores from bins and denominator (14.201958ms)
+✔ anonymous and demo contexts never query workspace rows (5.411709ms)
+✔ invalid identity and unbounded page input are rejected before reads (39.6275ms)
+✔ an inaccessible screen cannot trigger hit reads or demo fallback (1.399083ms)
+✔ screen, run and hit queries retain session ownership and run identity (0.761041ms)
+✔ missing current run is unavailable, not an invented empty analysis (0.4625ms)
+✔ a genuinely unrun screen has explicit empty evidence (0.453917ms)
+✔ database errors return unavailable and never substitute sample rows (0.354417ms)
+✔ real page renders recorded FDR and null confidence without sample substitution (27.307417ms)
+✔ sample detail is accessible only through explicit demo session (1.3595ms)
+✔ unavailable workspace page names the read failure and contains no sample values (0.865417ms)
+✔ getWorkspaceScreens uses session organization and bounded pagination (4.770458ms)
+✔ getWorkspaceScreens rejects demo, expired session and invalid pages before queries (3.247208ms)
+✔ getWorkspaceScreens distinguishes empty evidence from a failed read (1.377ms)
+✔ getWorkspaceOutcomes uses session organization and bounded pagination (0.356375ms)
+✔ getWorkspaceOutcomes rejects demo, expired session and invalid pages before queries (0.87575ms)
+✔ getWorkspaceOutcomes distinguishes empty evidence from a failed read (1.039417ms)
+✔ screens: signed-in workspace never imports or renders demonstration data (34.914875ms)
+✔ screens: explicit demo remains separate from workspace queries (4.94325ms)
+✔ validation: signed-in workspace never imports or renders demonstration data (13.168708ms)
+✔ validation: explicit demo remains separate from workspace queries (6.930334ms)
+✔ atlas: signed-in workspace never imports or renders demonstration data (4.720666ms)
+✔ atlas: explicit demo remains separate from workspace queries (13.039416ms)
+✔ upload: signed-in workspace never imports or renders demonstration data (7.706125ms)
+✔ upload: explicit demo remains separate from workspace queries (3.265ms)
+✔ planner: signed-in workspace never imports or renders demonstration data (4.728083ms)
+✔ planner: explicit demo remains separate from workspace queries (4.822625ms)
+✔ screen list renders only returned real records and links to real detail (11.265625ms)
+✔ outcomes preserve inconclusive state and zero measured effect (4.295792ms)
+✔ database failure and missing workspace never display sample or empty evidence claims (31.370708ms)
+✔ app/dashboard/page.tsx: missing session/workspace cannot fall back to sample records (36.660125ms)
+✔ app/dashboard/settings/members/page.tsx: missing session/workspace cannot fall back to sample records (15.539083ms)
+ℹ tests 56
+ℹ suites 0
+ℹ pass 56
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 816.774875

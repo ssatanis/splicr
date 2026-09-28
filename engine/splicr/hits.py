@@ -41,7 +41,10 @@ class InvertedContrastError(ValueError):
 
 
 def _run(cmd: list[str], cwd: Path, what: str) -> subprocess.CompletedProcess:
-    proc = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, env=tool_env())
+    try:
+        proc = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, env=tool_env())
+    except OSError as exc:
+        raise ToolError(f"{what} could not start: {exc}") from exc
     if proc.returncode != 0:
         tail = (proc.stderr or proc.stdout or "")[-2000:]
         raise ToolError(f"{what} exited {proc.returncode}\n{tail}")
@@ -67,6 +70,12 @@ class GeneResult:
     norm_z: float | None = None
     drugz_fdr: float | None = None
     guide_lfcs: list[float] = field(default_factory=list)
+    # Preserve tool-native directional statistics separately. fdr/p_value
+    # below concern a gene changing in either direction, not a selected tail.
+    depleted_p_value: float | None = None
+    enriched_p_value: float | None = None
+    depleted_fdr: float | None = None
+    enriched_fdr: float | None = None
 
     @property
     def max_guide_share(self) -> float | None:
@@ -208,6 +217,13 @@ def _num(row: dict[str, str], key: str) -> float | None:
         return None
 
 
+def _probability(row: dict[str, str], key: str) -> float | None:
+    value = _num(row, key)
+    if value is not None and not 0 <= value <= 1:
+        raise ToolError(f"Tool returned {key} outside [0, 1]: {value}")
+    return value
+
+
 def run_mageck_rra(
     counts: Path,
     treatment: list[str],
@@ -220,14 +236,15 @@ def run_mageck_rra(
     """
     MAGeCK RRA.
 
-    Genes are ranked by the negative (depleted) direction by default; the
-    positive columns are read too so enrichment screens work from the same
-    call.
+    Preserve MAGeCK's separate directional families, and allocate half the
+    requested FDR to each. The union of discoveries then has FDR at most the
+    sum of the two directional FDR bounds, subject to MAGeCK's assumptions.
+    Native directional p-values and q-values remain available on every gene.
     """
     workdir.mkdir(parents=True, exist_ok=True)
     cmd = [
         "mageck", "test",
-        "-k", str(counts),
+        "-k", str(counts.resolve()),
         "-t", ",".join(treatment),
         "-c", ",".join(control),
         "-n", prefix,
@@ -260,7 +277,9 @@ def run_mageck_rra(
         gene = row.get("id")
         if not gene or gene.upper() in ("NA", "CONTROL"):
             continue
-        neg_fdr, pos_fdr = _num(row, "neg|fdr"), _num(row, "pos|fdr")
+        neg_fdr, pos_fdr = _probability(row, "neg|fdr"), _probability(row, "pos|fdr")
+        neg_p = _probability(row, "neg|p-value")
+        pos_p = _probability(row, "pos|p-value")
         depleted = (neg_fdr if neg_fdr is not None else 1.0) <= (pos_fdr if pos_fdr is not None else 1.0)
         side = "neg" if depleted else "pos"
         results[gene] = GeneResult(
@@ -269,14 +288,24 @@ def run_mageck_rra(
             n_good_guides=int(_num(row, f"{side}|goodsgrna") or 0),
             lfc=_num(row, f"{side}|lfc"),
             rra_score=_num(row, f"{side}|score"),
-            p_value=_num(row, f"{side}|p-value"),
-            fdr=_num(row, f"{side}|fdr"),
+            # Bonferroni omnibus p-value and union-FDR bound are distinct.
+            # Do not refit BH to the pooled tails: that changes the upstream
+            # directional family, borrowing power across opposite directions.
+            p_value=min(1.0, 2 * min(neg_p, pos_p))
+                    if neg_p is not None and pos_p is not None else None,
+            fdr=min(1.0, 2 * min(neg_fdr, pos_fdr))
+                if neg_fdr is not None and pos_fdr is not None else None,
+            depleted_p_value=neg_p, enriched_p_value=pos_p,
+            depleted_fdr=neg_fdr, enriched_fdr=pos_fdr,
             rank=int(_num(row, f"{side}|rank") or 0) or None,
             direction="depleted" if depleted else "enriched",
             guide_lfcs=guide_lfcs.get(gene, []),
         )
+    if any(g.p_value is None or g.fdr is None for g in results.values()):
+        warnings.append("Some MAGeCK rows lack both directional statistics; the "
+                        "corresponding omnibus p-value or union FDR is unavailable.")
     if not results:
-        warnings.append("MAGeCK returned no gene rows.")
+        raise ToolError("MAGeCK returned no gene rows; no hit analysis is available")
     return results, warnings
 
 
@@ -286,6 +315,7 @@ def run_mageck_mle(
     workdir: Path,
     prefix: str = "mageck_mle",
     permutation_round: int = 10,
+    coefficient: str | None = None,
 ) -> dict[str, tuple[float | None, float | None]]:
     """
     MAGeCK MLE.
@@ -296,7 +326,7 @@ def run_mageck_mle(
     """
     workdir.mkdir(parents=True, exist_ok=True)
     _run(
-        ["mageck", "mle", "-k", str(counts), "-d", str(design_matrix),
+        ["mageck", "mle", "-k", str(counts.resolve()), "-d", str(design_matrix.resolve()),
          "-n", prefix, "--permutation-round", str(permutation_round)],
         workdir, "mageck mle",
     )
@@ -308,8 +338,14 @@ def run_mageck_mle(
     rows = _tsv_rows(gene_file)
     if not rows:
         return out
-    beta_col = next((c for c in rows[0] if c.endswith("|beta") and "baseline" not in c), None)
-    fdr_col = next((c for c in rows[0] if c.endswith("|fdr") and "wald" not in c), None)
+    coefficients = [c[:-5] for c in rows[0] if c.endswith("|beta") and c != "baseline|beta"]
+    if coefficient is None:
+        if len(coefficients) != 1:
+            raise ToolError(f"MLE output has coefficients {coefficients}; select one explicitly")
+        coefficient = coefficients[0]
+    if coefficient not in coefficients:
+        raise ToolError(f"MLE coefficient {coefficient!r} is absent from {coefficients}")
+    beta_col, fdr_col = f"{coefficient}|beta", f"{coefficient}|fdr"
     for row in rows:
         gene = row.get("Gene") or row.get("id")
         if gene:
@@ -404,31 +440,41 @@ def run_drugz(
     control: list[str],
     workdir: Path,
     prefix: str = "drugz",
+    paired: bool = False,
 ) -> dict[str, tuple[float | None, float | None]]:
     """
     DrugZ normZ, for chemogenetic (drug modifier) designs.
 
-    Returns gene -> (normZ, fdr). Empty when DrugZ is not installed, so the
-    consensus simply proceeds without it.
+    Returns gene -> (normZ, directional fdr). An unavailable installation or
+    missing result raises ToolError, which call_hits records as a warning.
+    Pairing must be explicitly declared; list order alone is not pair metadata.
     """
     script = DRUGZ_DIR / "drugz.py"
     if not script.exists():
-        return {}
+        raise ToolError(f"DrugZ not found at {script}. Run engine/setup.sh.")
+    if paired and len(treatment) != len(control):
+        raise ToolError("Paired DrugZ requires one matched control per treatment sample")
+    workdir = workdir.resolve()
     workdir.mkdir(parents=True, exist_ok=True)
     out_file = workdir / f"{prefix}.txt"
-    _run([str(SETTINGS.tool_bin / "python"), str(script),
-          "-i", str(counts), "-c", ",".join(control), "-x", ",".join(treatment),
-          "-o", str(out_file)],
-         workdir, "drugz")
+    cmd = [str(SETTINGS.tool_bin / "python"), str(script),
+           "-i", str(counts.resolve()), "-c", ",".join(control), "-x", ",".join(treatment),
+           "-o", str(out_file)]
+    if not paired:
+        cmd.append("-unpaired")
+    _run(cmd, workdir, "drugz")
     if not out_file.exists():
-        return {}
+        raise ToolError("DrugZ produced no output table")
     out: dict[str, tuple[float | None, float | None]] = {}
     for row in _tsv_rows(out_file):
         gene = row.get("GENE") or row.get("Gene")
         if not gene:
             continue
         z = _num(row, "normZ")
-        fdr = _num(row, "fdr_supp") or _num(row, "fdr_synth")
+        # Negative z = synthetic/sensitizing, positive z = suppressor/resistance.
+        # Direction-specific FDR is not an omnibus gene-level FDR.
+        fdr = (_probability(row, "fdr_synth" if z < 0 else "fdr_supp")
+               if z is not None and z != 0 else None)
         out[gene] = (z, fdr)
     return out
 
@@ -448,6 +494,10 @@ def call_hits(
     run_bagel: bool = True,
     run_drug: bool = False,
     allow_inverted: bool = False,
+    essentiality_contrast: bool = False,
+    mle_design_matrix: Path | None = None,
+    mle_coefficient: str | None = None,
+    drugz_paired: bool = False,
 ) -> HitTable:
     """
     Run every applicable caller and merge.
@@ -456,11 +506,10 @@ def call_hits(
     warning and the remaining methods still produce a table. Losing BAGEL2 is
     much better than losing the whole screen.
 
-    Before returning, the known-essential genes are checked for which way they
-    moved, and an inverted contrast raises InvertedContrastError unless the
-    caller passes allow_inverted. That check needs no metadata, which is the
-    point: it catches a swapped --treatment/--control even when the sample
-    roles were never supplied.
+    The known-essential inversion guard runs only when essentiality_contrast
+    explicitly declares a loss-of-function fitness endpoint against a library
+    reference. Enrichment in drug comparisons or reporter assays is not proof
+    of inversion. An apparent inversion raises unless allow_inverted is set.
     """
     if not treatment:
         raise ValueError(
@@ -470,12 +519,20 @@ def call_hits(
         )
     if not control:
         raise ValueError("call_hits was given no control sample.")
+    if len(set(treatment)) != len(treatment) or len(set(control)) != len(control):
+        raise ValueError("contrast sample lists contain duplicate labels")
+    if set(treatment) & set(control):
+        raise ValueError("treatment and control samples must be disjoint")
+    if run_mle and mle_design_matrix is None:
+        raise ValueError("run_mle=True requires an explicit mle_design_matrix and, "
+                         "for multiple coefficients, mle_coefficient")
     missing = [s for s in list(treatment) + list(control) if s not in matrix.samples]
     if missing:
         raise ValueError(
             f"contrast names sample(s) {missing}, which are not columns of the count "
             f"matrix. Its samples are {matrix.samples}."
         )
+    workdir = workdir.resolve()
     workdir.mkdir(parents=True, exist_ok=True)
     counts_file = matrix.to_mageck_tsv(workdir / "counts.txt")
 
@@ -485,6 +542,17 @@ def call_hits(
     genes, warn = run_mageck_rra(counts_file, treatment, control, workdir)
     methods.append("mageck_rra")
     warnings.extend(warn)
+
+    if run_mle:
+        try:
+            mle = run_mageck_mle(counts_file, mle_design_matrix, workdir,
+                                 coefficient=mle_coefficient)
+            for gene, (beta, fdr) in mle.items():
+                if gene in genes:
+                    genes[gene].mle_beta, genes[gene].mle_fdr = beta, fdr
+            methods.append("mageck_mle")
+        except (ToolError, ValueError) as exc:
+            warnings.append(f"MAGeCK MLE did not run: {exc}")
 
     if run_bagel:
         try:
@@ -504,7 +572,7 @@ def call_hits(
 
     if run_drug:
         try:
-            dz = run_drugz(counts_file, treatment, control, workdir)
+            dz = run_drugz(counts_file, treatment, control, workdir, paired=drugz_paired)
             for gene, (z, fdr) in dz.items():
                 if gene in genes:
                     genes[gene].norm_z, genes[gene].drugz_fdr = z, fdr
@@ -513,19 +581,19 @@ def call_hits(
         except ToolError as exc:
             warnings.append(f"DrugZ did not run: {exc}")
 
-    direction = essential_direction(genes, library.taxid)
-    if direction.inverted and not allow_inverted:
+    direction = essential_direction(genes, library.taxid) if essentiality_contrast else None
+    if direction is not None and direction.inverted and not allow_inverted:
         raise InvertedContrastError(
             f"the contrast looks inverted: {direction.enriched} of "
             f"{direction.n_essential} significant CEGv2 core essential genes came out "
             f"ENRICHED, only {direction.depleted} depleted "
-            f"(e.g. {', '.join(direction.examples[:6])}). Core essential genes cannot be "
-            "enriched by a real perturbation; they read that way when the library "
-            f"reference is on the numerator. Requested -t {','.join(treatment)} "
+            f"(e.g. {', '.join(direction.examples[:6])}). In an explicitly declared "
+            "loss-of-function fitness contrast against a library reference this is "
+            f"evidence of a possible orientation problem. Requested -t {','.join(treatment)} "
             f"-c {','.join(control)}; try it the other way round. Pass "
             "allow_inverted=True to score it as stated anyway."
         )
-    if direction.suspicious:
+    if direction is not None and direction.suspicious:
         warnings.append(
             f"{direction.enriched} of {direction.n_essential} significant core essential "
             "genes came out enriched, more than a correctly oriented screen produces. "

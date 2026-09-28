@@ -33,8 +33,8 @@ export function PipelineSection() {
 
       <div className="relative h-[280px] sm:h-[360px] md:h-[440px] mt-8">
         <WaveRibbons className="absolute inset-0" />
-        <MarkerPill value="91%" tone="cyan" className="left-[20%] top-[24%]" />
-        <MarkerPill value="9%" tone="cyan" className="left-[68%] top-[56%]" flip />
+        <MarkerPill value="QC" tone="cyan" className="left-[20%] top-[24%]" />
+        <MarkerPill value="Evidence" tone="cyan" className="left-[68%] top-[56%]" flip />
       </div>
 
       {/* Three columns for three children. This declared four, the first of them
@@ -45,13 +45,12 @@ export function PipelineSection() {
           <h2 className="display text-ink text-3xl md:text-4xl lg:text-5xl">
             One pipeline.
             <br />
-            Every screen.
+            Explicit assumptions.
           </h2>
         </Reveal>
         <Reveal delay={0.1}>
           <p className="text-body leading-relaxed max-w-md">
-            The same nine stages run on your upload and on every screen in the Atlas. That is what
-            makes the numbers comparable, and the score calibrated.
+            The local engine checks inputs, runs applicable statistical methods and records evidence. Atlas entries retain their original methods; they are not uniformly reprocessed or calibrated.
           </p>
         </Reveal>
         <Reveal delay={0.2}>

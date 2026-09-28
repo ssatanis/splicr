@@ -9,11 +9,11 @@ const orbSizes = [76, 100, 126, 152, 182];
 const facts = [
   {
     value: "0.26",
-    label: "Precision when one gold-standard screen checks another",
+    label: "Precision in one processed dependency comparison",
     cite: {
       text: "Dempster et al., Nat Commun 2019",
       href: "https://doi.org/10.1038/s41467-019-13805-y",
-      note: "Precision 0.255 at recall 0.781 across 147 shared cell lines",
+      note: "Precision 0.255 at recall 0.781 for Sanger selective dependencies recovered in processed Broad data before batch correction. Not a general validation rate.",
     },
   },
   {
@@ -36,7 +36,7 @@ export function ScienceSection() {
             <h2 className="display text-white text-3xl md:text-4xl lg:text-5xl">
               The science
               <br />
-              behind the score
+              behind the analysis
             </h2>
           </Reveal>
           <Reveal delay={0.1}>
@@ -70,8 +70,7 @@ export function ScienceSection() {
           ))}
           <Reveal delay={0.1}>
             <p className="text-white/90 leading-relaxed">
-              SplicR does not replace these statistics. It measures how often they were right,
-              and reports that number with every hit.
+              SplicR preserves method-specific statistics and reports their context and limitations. Independent validation-success probabilities are not available.
             </p>
           </Reveal>
         </div>

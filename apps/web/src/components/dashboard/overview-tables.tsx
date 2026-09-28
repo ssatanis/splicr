@@ -37,7 +37,7 @@ export interface TriageHit {
   gene: string;
   /** Null until the artifact stage has classified the hit. */
   verdict: Verdict | null;
-  /** Calibrated probability the hit is real, 0 to 1, or null when unscored. */
+  /** Stored model score, or null when unscored; calibration is not established. */
   chance: number | null;
   /** log2 fold change, endpoint versus T0. */
   lfc: number | null;
@@ -207,7 +207,7 @@ export function TriageTable({ hits, ranked }: { hits: TriageHit[]; ranked: "chan
               <SortHeader label="Gene" sortKey="gene" sort={sort} toggle={toggle} />
               <th scope="col">Call</th>
               <SortHeader
-                label="Chance real"
+                label="Model score"
                 sortKey="chance"
                 sort={sort}
                 toggle={toggle}
@@ -279,8 +279,7 @@ export function TriageTable({ hits, ranked }: { hits: TriageHit[]; ranked: "chan
       </div>
 
       <p className="mt-4 border-t border-line pt-3 text-xs text-muted">
-        Chance real is the calibrated probability from the scoring stage, in percent, and it is net
-        of any artifact flag in the last column. LFC is log2 fold change at the endpoint against T0,
+        Model score is a recorded, uncalibrated model output. LFC is the recorded log2 fold change for the comparison,
         signed: negative is the depleted arm and positive the enriched one. FDR is a
         Benjamini-Hochberg q-value, shown to one significant figure. Guides agree counts the sgRNAs
         against that gene moving in the same direction.
@@ -308,9 +307,9 @@ function HitPanel({ hit, onClose }: { hit: TriageHit; onClose: () => void }) {
 
       <dl className="mt-5 divide-y divide-line border-y border-line text-sm">
         <PanelFact
-          term="Chance real"
-          value={hit.chance !== null ? `${Math.round(hit.chance * 100)}%` : null}
-          note="Calibrated probability from the scoring stage, net of any artifact flag below."
+          term="Model score"
+          value={hit.chance !== null ? hit.chance.toFixed(3) : null}
+          note="Recorded model output; no validated probability or uncertainty interval is available."
         />
         <PanelFact
           term="Effect size"
@@ -504,7 +503,7 @@ export function OutcomesTable({ outcomes }: { outcomes: OutcomeRow[] }) {
             <SortHeader label="Gene" sortKey="gene" sort={sort} toggle={toggle} />
             <th scope="col">Assay</th>
             <SortHeader
-              label="Chance real when called"
+              label="Model score when called"
               sortKey="predicted"
               sort={sort}
               toggle={toggle}
@@ -531,7 +530,7 @@ export function OutcomesTable({ outcomes }: { outcomes: OutcomeRow[] }) {
               </td>
               <td className="text-sm">{outcome.assay ?? <NotRecorded />}</td>
               <td className="tabular-nums">
-                {outcome.predicted !== null ? `${Math.round(outcome.predicted * 100)}%` : <NotRecorded />}
+                {outcome.predicted !== null ? outcome.predicted.toFixed(3) : <NotRecorded />}
               </td>
               <td>
                 <OutcomeBadge result={outcome.result} />

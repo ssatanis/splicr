@@ -124,7 +124,9 @@ def copy_number_for_model(model_id: str) -> dict[str, float]:
                 for gene, value in zip(genes, row[1:]):
                     if value:
                         try:
-                            out[gene] = float(value)
+                            number = float(value)
+                            if math.isfinite(number) and number >= 0:
+                                out[gene] = number
                         except ValueError:
                             continue
                 return out
@@ -232,8 +234,8 @@ def check_multi_gene_guides(
             severity="critical" if fraction >= 0.5 else "warn",
             message=(
                 f"{len(multi)} of this screen's {len(measured)} guides for the gene "
-                "perfectly target another gene as well, so this call may belong to "
-                "the neighbour."
+                "perfectly match multiple genomic sites. Additional sites do not "
+                "necessarily overlap another gene; verify guide specificity."
             ),
             evidence={
                 "n_multiplex_guides": len(multi),
@@ -365,7 +367,7 @@ def check_copy_number(
     dropping out together".
     """
     value = cn.get(gene_symbol)
-    if value is None or value < thresholds.cn_amplification_threshold:
+    if value is None or not math.isfinite(value) or value < thresholds.cn_amplification_threshold:
         return None
 
     depleted_neighbours = [g for g, lfc in neighbourhood if lfc < -0.5]
@@ -382,15 +384,17 @@ def check_copy_number(
             flag="copy_number_cluster",
             severity="critical",
             message=(
-                f"Sits in a region at {value:.1f} copies, and "
-                f"{len(depleted_neighbours)} neighbouring genes drop out with it."
+                f"Has a relative copy-number ratio of {value:.1f}, and "
+                f"{len(depleted_neighbours)} neighbouring genes drop out with it. "
+                "Cutting toxicity is possible; a genuine amplified dependency is not excluded."
             ),
             evidence=evidence,
         )
     return Flag(
         flag="copy_number_cluster",
         severity="warn",
-        message=f"Sits in a region at {value:.1f} copies.",
+        message=(f"Has a relative copy-number ratio of {value:.1f}. Amplification "
+                 "alone does not establish a cutting artifact or exclude a real dependency."),
         evidence=evidence,
     )
 
@@ -421,7 +425,8 @@ def check_positional_cluster(
         severity="warn",
         message=(
             f"{len(depleted)} of {len(values)} neighbouring genes on this chromosome "
-            "deplete together, which points to a locus effect rather than this gene."
+            "deplete together. This is a locus-effect warning, not proof of copy-number "
+            "toxicity; genuine regional dependencies remain possible."
         ),
         evidence={
             "neighbours_depleted": len(depleted),
@@ -481,6 +486,8 @@ def flag_artifacts(
     model_id: str | None = None,
     atlas_hit_rates: dict[str, float] | None = None,
     thresholds: ArtifactThresholds = SETTINGS.artifacts,
+    modality: str = "knockout",
+    screened_guide_ids: set[str] | None = None,
 ) -> dict[str, list[Flag]]:
     """
     Flag every gene in the hit table.
@@ -500,7 +507,7 @@ def flag_artifacts(
 
     guides_by_gene: dict[str, list[Guide]] = {}
     for g in library.guides:
-        if g.targets_gene and g.gene:
+        if g.targets_gene and g.gene and (screened_guide_ids is None or g.guide_id in screened_guide_ids):
             guides_by_gene.setdefault(g.gene, []).append(g)
 
     lfc = {name: g.lfc for name, g in hits.genes.items() if g.lfc is not None}
@@ -536,10 +543,14 @@ def flag_artifacts(
             flags.append(f)
 
         neighbourhood = neighbourhoods.get(name, [])
-        if cn:
-            f = check_copy_number(name, cn, neighbourhood, thresholds)
-        else:
-            f = check_positional_cluster(name, neighbourhood, genome_median, thresholds)
+        # Copy-number cutting toxicity requires a DNA-cleaving perturbation and
+        # a depleted effect. CRISPRi/a do not create those double-strand breaks.
+        f = None
+        if modality.lower() in {"knockout", "crisprko", "crispr-ko", "ko"} and gene.lfc is not None and gene.lfc < 0:
+            if name in cn:
+                f = check_copy_number(name, cn, neighbourhood, thresholds)
+            else:
+                f = check_positional_cluster(name, neighbourhood, genome_median, thresholds)
         if f:
             flags.append(f)
 

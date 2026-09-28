@@ -1,0 +1,57 @@
+
+> @splicr/web@0.1.0 build
+> next build --webpack
+
+▲ Next.js 16.3.6 (webpack)
+- Environments: .env.local
+✓ Running next.config.ts took 55ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 2.9s
+  Running TypeScript ...
+  Finished TypeScript in 1020ms ...
+  Collecting page data using 9 workers ...
+  Generating static pages using 9 workers (0/20) ...
+  Generating static pages using 9 workers (5/20) 
+  Generating static pages using 9 workers (10/20) 
+  Generating static pages using 9 workers (15/20) 
+✓ Generating static pages using 9 workers (20/20) in 601ms
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /about
+├ ƒ /api/demo
+├ ƒ /api/report/[id]
+├ ƒ /api/v1/hits
+├ ƒ /auth/callback
+├ ƒ /auth/signout
+├ ○ /careers
+├ ○ /contact
+├ ƒ /dashboard
+├ ƒ /dashboard/atlas
+├ ƒ /dashboard/connect
+├ ƒ /dashboard/planner
+├ ƒ /dashboard/screens
+├ ƒ /dashboard/screens/[id]
+├ ƒ /dashboard/settings
+├ ƒ /dashboard/settings/members
+├ ƒ /dashboard/upload
+├ ƒ /dashboard/validation
+├ ○ /icon.png
+├ ƒ /invite/[token]
+├ ○ /login
+├ ○ /opengraph-image.png
+├ ○ /pipeline
+├ ○ /signup
+├ ○ /technology
+└ ○ /twitter-image.png
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

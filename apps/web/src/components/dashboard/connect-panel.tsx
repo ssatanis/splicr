@@ -693,7 +693,7 @@ export function ConnectPanel({
 
         <Card
           title="REST"
-          subtitle="Live now. Returns the scored hit table for one screen."
+          subtitle="Returns recorded hits for one screen when Connect and the database are configured."
           className="min-w-0 lg:col-span-2"
         >
           {screens.length > 1 && (
@@ -726,6 +726,15 @@ export function ConnectPanel({
           )}
 
           <CodeBlock label="curl" code={curl} />
+          <p className="mt-3 text-xs text-muted">
+            <code className="font-mono">chance_real</code> and{" "}
+            <code className="font-mono">chance_interval</code> are legacy names for stored,
+            uncalibrated model outputs. They are not validation probabilities or validated
+            confidence intervals; <code className="font-mono">validation_probability</code> is null.
+            <code className="font-mono"> min_chance</code> filters the stored score.
+            Small FDR and p-values retain their recorded numeric precision, including exponent notation.
+            Missing values remain null; this endpoint cannot recover precision lost upstream.
+          </p>
 
           <div className="mt-4 grid sm:grid-cols-2 gap-x-6 gap-y-2 text-xs">
             <div>

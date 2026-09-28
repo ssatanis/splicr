@@ -86,6 +86,7 @@ function preamble(doc: ReportDocument, generatedAt: Date): string[] {
   if (doc.notice) {
     lines.push(`# ${doc.notice.toUpperCase()}`);
   }
+  say("score_interpretation", "chance_real is an uncalibrated model score; no validated uncertainty interval is available");
   say("report_id", doc.reportId);
   say("generated", generatedAt.toISOString());
   say("data_source", doc.source === "sample" ? "SplicR sample dataset" : "SplicR workspace");

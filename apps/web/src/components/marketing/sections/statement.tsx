@@ -5,21 +5,13 @@ import { Cite } from "@/components/ui/cite";
 import { Reveal } from "@/components/ui/reveal";
 import { benchmarkCite } from "@/lib/content";
 
-/* The middle two rows used to read "1.8x retrieval vs best AI" and "0.29
-   oracle AnDCG@100". That ratio came from dividing AssayBench's oracle, which
-   reads the test labels, by its model ensemble, so it credited us with a
-   ceiling nobody can reach. These are the two comparable scores instead.
+import evidence from "../../../../public/evidence/summary.json";
 
-   Ours read 0.136 until 2026-09-27, when `orcs_retrieval_rate` was scored on
-   the test split for the first time and returned 0.1628. The old 0.136 was
-   upstream's own hit-frequency prior, not a SplicR method. The two numbers are
-   now equal to three decimals and our 95% CI [0.1358, 0.1900] contains theirs,
-   so the copy below says we match them and must never say we beat them. */
 const stats = [
-  { value: "2,217", suffix: "", label: "Published screens indexed" },
-  { value: "334", suffix: "", label: "Held-out test screens" },
-  { value: "0.163", suffix: "", label: "Our score on that split" },
-  { value: "0.163", suffix: "", label: "Best frontier ensemble" },
+  { value: "1,349", suffix: "", label: "Training screens" },
+  { value: "334", suffix: "", label: "Public test screens" },
+  { value: evidence.router.mean.toFixed(6), suffix: "", label: "Research router AnDCG@100" },
+  { value: evidence.references.published_ensemble.mean.toFixed(6), suffix: "", label: "Published ensemble AnDCG@100" },
 ];
 
 export function StatementCard() {
@@ -35,8 +27,8 @@ export function StatementCard() {
             <div className="relative grid md:grid-cols-[56px_1fr] gap-4">
               <span className="text-xs text-ink/60 font-medium pt-3">01</span>
               <h2 className="display text-ink text-2xl sm:text-3xl md:text-4xl lg:text-[2.9rem] leading-[1.18] max-w-3xl text-balance">
-                SplicR pairs every public screen with the record of which hits held up, to give{" "}
-                <span className="text-orange-500">calibrated confidence</span> for every hit in yours.
+                SplicR makes screen evidence inspectable, with{" "}
+                <span className="text-orange-500">measured results and explicit limits.</span>
               </h2>
             </div>
 
@@ -45,7 +37,7 @@ export function StatementCard() {
                 {stats.map((s) => (
                   <div key={s.label} className="min-w-0">
                     <div className="flex items-baseline gap-0.5">
-                      <span className="text-3xl sm:text-4xl lg:text-5xl font-medium tracking-tight text-ink tabular-nums">
+                      <span className="text-2xl sm:text-3xl font-medium tracking-tight text-ink tabular-nums">
                         {s.value}
                       </span>
                       {s.suffix && (
@@ -59,17 +51,16 @@ export function StatementCard() {
 
               <div className="max-w-sm">
                 <Link
-                  href="/technology"
+                  href="/evidence"
                   className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-cyan-500 text-white hover:bg-cyan-600 transition-colors"
-                  aria-label="Explore the technology"
+                  aria-label="Inspect the evidence"
                 >
                   <ArrowUpRight className="w-5 h-5" />
                 </Link>
                 <p className="mt-6 text-body leading-relaxed">
-                  On this benchmark we match the frontier models, by retrieving over 1,574
-                  published screens rather than recalling literature. They still cannot read your
-                  counts, see the amplified segment your hits sit in, or say how often a call at
-                  that confidence held up. That is the part we work on.
+                  The research router did not improve on the published ensemble and was not
+                  promoted. Its paired uncertainty interval includes zero. These are retrospective
+                  ranking scores, not percentages of biological accuracy or independent validation.
                 </p>
                 <p className="mt-3 text-xs text-muted">
                   <Cite cite={benchmarkCite} prefix="Source:" />

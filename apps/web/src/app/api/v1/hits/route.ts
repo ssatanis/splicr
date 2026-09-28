@@ -1,7 +1,7 @@
 /**
  * GET /api/v1/hits?screen=<uuid>
  *
- * Scored hits for one screen, authenticated with a SplicR Connect key.
+ * Recorded hits for one screen, authenticated with a SplicR Connect key.
  *
  *   curl -s "https://<host>/api/v1/hits?screen=<uuid>&max_fdr=0.1&limit=25" \
  *     -H "Authorization: Bearer spk_live_..."
@@ -185,11 +185,12 @@ function fail(
   return NextResponse.json({ error: { code, message } }, { status, headers });
 }
 
-/** Six decimal places keeps a real4 honest without printing float noise. */
-function round(value: number | null, places = 6): number | null {
-  if (value === null || !Number.isFinite(value)) return null;
-  const factor = 10 ** places;
-  return Math.round(value * factor) / factor;
+/** Preserve the number received from Postgres, including tiny nonzero statistics.
+ * Fixed decimal rounding destroys small p-values/FDRs. JSON supports exponent
+ * notation; precision already lost upstream cannot be recovered at this layer.
+ */
+function finiteNumber(value: number | null): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
 // ---------------------------------------------------------------------------
@@ -351,22 +352,28 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     direction: row.direction,
     verdict: row.verdict,
     comparison: row.comparison,
-    chance_real: round(row.chance_real, 4),
+    // Legacy names retained for clients. Neither score nor stored bounds imply
+    // calibration, a confidence level, or independent validation evidence.
+    score_interpretation: "stored_uncalibrated_model_output",
+    chance_real: finiteNumber(row.chance_real),
+    chance_interval_interpretation: "stored_uncalibrated_bounds",
+    validation_probability: null,
+    validation_probability_interval: null,
     chance_interval:
-      row.chance_lower === null && row.chance_upper === null
+      finiteNumber(row.chance_lower) === null && finiteNumber(row.chance_upper) === null
         ? null
-        : [round(row.chance_lower, 4), round(row.chance_upper, 4)],
-    novelty: round(row.novelty, 4),
-    lfc: round(row.lfc),
-    fdr: round(row.fdr, 8),
-    p_value: round(row.p_value, 10),
+        : [finiteNumber(row.chance_lower), finiteNumber(row.chance_upper)],
+    novelty: finiteNumber(row.novelty),
+    lfc: finiteNumber(row.lfc),
+    fdr: finiteNumber(row.fdr),
+    p_value: finiteNumber(row.p_value),
     n_guides: row.n_guides,
     n_good_guides: row.n_good_guides,
-    cn_corrected: row.cn_corrected ?? false,
+    cn_corrected: row.cn_corrected ?? null,
     atlas: {
       hit_count: row.atlas_hit_count,
       screen_count: row.atlas_screen_count,
-      hit_rate: round(row.atlas_hit_rate, 4),
+      hit_rate: finiteNumber(row.atlas_hit_rate),
     },
     model_version: row.model_version,
     reason: row.reason,

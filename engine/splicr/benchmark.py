@@ -1,5 +1,13 @@
 """AssayBench (Genentech) scoring harness and SplicR gene-ranking scorers.
 
+Audit note (2026-09-27): the narrative below records earlier experiments and
+contains historical hypotheses. The public test has since been extensively
+examined; it is not untouched. Modern DepMap summaries are not automatically
+historically uncontaminated. Oracle kNN is an answer-selected finite ranking
+reference, not a universal ceiling. Current official reproduction, input-policy
+distinctions and limitations live in research/05_BENCHMARK_REPRODUCTION.md and
+research/08_VALIDATION_REPORT.md. No metric behavior is changed by this note.
+
 This module has three parts:
 
 1. :class:`AnDCG` / :func:`adjusted_ndcg` -- a from-scratch reimplementation of
@@ -656,6 +664,7 @@ def evaluate(
     targets: Mapping[str, ScreenTarget] | None = None,
     split: str = "",
     progress: bool = False,
+    allow_partial: bool = False,
 ) -> EvalResult:
     """Score a :class:`Scorer` on a list of screens.
 
@@ -669,6 +678,8 @@ def evaluate(
             re-normalizing ground truth for every method.
         split: label for the result.
         progress: print a dot every 25 screens.
+        allow_partial: explicit opt-in to scoring an incomplete prediction set.
+            Partial scores are not a full-cohort benchmark result.
 
     Returns:
         An :class:`EvalResult`.
@@ -676,6 +687,9 @@ def evaluate(
     andcg = andcg or AnDCG(k=k)
     if andcg.k != k:
         raise ValueError(f"AnDCG instance has k={andcg.k}, evaluate() asked for k={k}")
+    names = [str(screen["dataset_name"]) for screen in screens]
+    if len(set(names)) != len(names):
+        raise ValueError("duplicate screen IDs in evaluation cohort")
     per: dict[str, float] = {}
     missing = 0
     for i, screen in enumerate(screens):
@@ -684,6 +698,8 @@ def evaluate(
         ranking = scorer.rank(screen)
         if ranking is None:
             missing += 1
+            if not allow_partial:
+                raise ValueError(f"{scorer.name}: missing prediction for {name!r}; complete cohort required")
             continue
         per[name] = float(target.score(ranking))
         if progress and (i + 1) % 25 == 0:

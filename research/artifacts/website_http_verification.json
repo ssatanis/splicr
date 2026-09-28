@@ -1,0 +1,89 @@
+{
+  "base_url": "http://127.0.0.1:3100",
+  "checks": [
+    {
+      "path": "/",
+      "status": 200,
+      "bytes": 100417
+    },
+    {
+      "path": "/technology",
+      "status": 200,
+      "bytes": 74391
+    },
+    {
+      "path": "/pipeline",
+      "status": 200,
+      "bytes": 32309
+    },
+    {
+      "path": "/evidence",
+      "status": 200,
+      "bytes": 40748
+    },
+    {
+      "path": "/about",
+      "status": 200,
+      "bytes": 33798
+    },
+    {
+      "path": "/careers",
+      "status": 200,
+      "bytes": 25677
+    },
+    {
+      "path": "/contact",
+      "status": 200,
+      "bytes": 26836
+    },
+    {
+      "path": "/evidence/summary.json",
+      "status": 200,
+      "sha256_verified": true
+    },
+    {
+      "path": "/evidence/05_BENCHMARK_REPRODUCTION.md",
+      "status": 200,
+      "sha256_verified": true
+    },
+    {
+      "path": "/evidence/08_VALIDATION_REPORT.md",
+      "status": 200,
+      "sha256_verified": true
+    },
+    {
+      "path": "/evidence/10_FINAL_RESULTS.md",
+      "status": 200,
+      "sha256_verified": true
+    },
+    {
+      "path": "/evidence/11_HOW_TO_READ_THE_EVIDENCE.md",
+      "status": 200,
+      "sha256_verified": true
+    },
+    {
+      "path": "/evidence/POSTSCREEN_IMPLEMENTATION.md",
+      "status": 200,
+      "sha256_verified": true
+    },
+    {
+      "path": "/evidence/12_WEBSITE_CONSISTENCY.md",
+      "status": 200,
+      "sha256_verified": true
+    },
+    {
+      "path": "/api/report/scr_demo?format=json",
+      "status": 401,
+      "anonymous_rejected": true
+    },
+    {
+      "path": "/api/v1/hits",
+      "status": 401,
+      "anonymous_rejected": true
+    },
+    {
+      "path": "/dashboard",
+      "redirects_to_home": true
+    }
+  ]
+}

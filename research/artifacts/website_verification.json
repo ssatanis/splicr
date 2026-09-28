@@ -1,0 +1,79 @@
+{
+  "verified_utc": "2026-09-28T03:06:13.651143+00:00",
+  "checks": [
+    {
+      "check": "tests",
+      "command": [
+        "npm",
+        "run",
+        "test:web"
+      ],
+      "exit_status": 0,
+      "duration_seconds": 0.975,
+      "log": "research/artifacts/website_tests.log",
+      "log_sha256": "b285e02f1014c63e134122a6c5afd27b049c1f0144839a82752370198ca3ceb7"
+    },
+    {
+      "check": "typecheck",
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exit_status": 0,
+      "duration_seconds": 1.718,
+      "log": "research/artifacts/website_typecheck.log",
+      "log_sha256": "0cb6ecff467130d615b1f9035df23d645dedfbdefff820c17747d8bff04d3ee3"
+    },
+    {
+      "check": "lint",
+      "command": [
+        "npm",
+        "run",
+        "lint"
+      ],
+      "exit_status": 0,
+      "duration_seconds": 4.262,
+      "log": "research/artifacts/website_lint.log",
+      "log_sha256": "0f0ab91424827e10164d0944df2ac4c5f3b8cc835341bebc2dcacb5d919d3cff"
+    },
+    {
+      "check": "build",
+      "command": [
+        "npm",
+        "run",
+        "build",
+        "-w",
+        "apps/web",
+        "--",
+        "--webpack"
+      ],
+      "exit_status": 0,
+      "duration_seconds": 10.39,
+      "log": "research/artifacts/website_build.log",
+      "log_sha256": "a8288b1cb257b9fc60bdcc05e3389000869710c5c779a866128ee3a56ed3d910"
+    },
+    {
+      "check": "evidence",
+      "command": [
+        "npm",
+        "run",
+        "evidence:check"
+      ],
+      "exit_status": 0,
+      "duration_seconds": 0.134,
+      "log": "research/artifacts/website_evidence.log",
+      "log_sha256": "8d54f077f0ecfeefad525ad477799294fe9fc24691ab6b0095a64dfab96705cd"
+    }
+  ],
+  "frontend_tests": {
+    "passed": 56,
+    "failed": 0,
+    "skipped": 0
+  },
+  "python_checkpoint": "research/artifacts/final_engine_tests.log (197 passed; engine runtime unchanged in website follow-up)",
+  "browser": "research/artifacts/website_browser_verification.json",
+  "live_database_tested": false,
+  "console_gate_preserved": true,
+  "deployment_verified": false
+}

@@ -1,0 +1,8 @@
+
+> splicr@0.1.0 typecheck
+> npm run typecheck -w apps/web
+
+
+> @splicr/web@0.1.0 typecheck
+> tsc --noEmit
+

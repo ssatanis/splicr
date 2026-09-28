@@ -24,15 +24,15 @@ const STAGES: Stage[] = [
     n: "01",
     title: "Ingest",
     produces: "Files and samples",
-    detail: "FASTQ or counts upload straight to object storage in resumable chunks, so a dropped connection costs one chunk instead of the whole file.",
-    tools: "Resumable upload, checksums, SRA fetch",
+    detail: "The local engine reads supported FASTQ files or validated count tables. A connected browser upload and analysis workflow is not available yet.",
+    tools: "Local file inputs and count-table validation",
   },
   {
     n: "02",
     title: "Detect",
     produces: "Library and guide offset",
     detail: "The library is identified by sequence overlap, never by file name, and the spacer is located by scanning for the vector anchor. Staggered primers shift it by up to 8 bases, so a fixed trim would lose most reads.",
-    tools: "Fingerprinting against every library in the Atlas",
+    tools: "Sequence matching against installed reference libraries",
   },
   {
     n: "03",
@@ -45,14 +45,14 @@ const STAGES: Stage[] = [
     n: "04",
     title: "QC",
     produces: "Pass, warn or fail",
-    detail: "Gini on log counts, zero fraction, skew ratio, replicate agreement, and how far known essentials separate from nonessentials.",
+    detail: "Gini, zero fraction, skew ratio and replicate agreement are checked. Essential/nonessential separation is used only for appropriate fitness designs. Count-only uploads cannot establish read-mapping efficiency.",
     tools: "NNMD, AUROC, Gini, skew ratio",
   },
   {
     n: "05",
     title: "Call hits",
-    produces: "One consensus table",
-    detail: "Every method keeps its own columns. When two disagree, the report shows it rather than hiding it behind a single number.",
+    produces: "Method-specific statistics",
+    detail: "Applicable callers are selected for the experimental design and retain their own statistics. Missing tools and failed analyses are reported; not every caller runs on every screen.",
     tools: "MAGeCK RRA and MLE, BAGEL2, DrugZ",
   },
   {
@@ -66,22 +66,22 @@ const STAGES: Stage[] = [
     n: "07",
     title: "Atlas context",
     produces: "Similar screens and history",
-    detail: "The nearest public screens, how often this gene has hit before, and how new the result is in this context.",
-    tools: "Learned similarity over metadata and hit profile",
+    detail: "Compare available public screen metadata and historical hit frequencies. Source studies retain their own hit definitions; missing Atlas evidence remains unavailable.",
+    tools: "Metadata matching and measured-gene hit frequencies",
   },
   {
     n: "08",
-    title: "Score",
-    produces: "A calibrated chance",
-    detail: "Fitted against validation outcomes and conditioned on effect size, because how often a hit survives a re-test depends on how strong it was to begin with.",
-    tools: "Gradient boosting, isotonic calibration",
+    title: "Review evidence",
+    produces: "Support and uncertainty",
+    detail: "Review effects, significance, guide support and historical evidence together. No independently calibrated validation model is fitted, so real analyses do not receive a validation-success percentage.",
+    tools: "Statistical results and evidence provenance",
   },
   {
     n: "09",
     title: "Report",
-    produces: "Hit Report and a plan",
-    detail: "An interactive report, a Discovery Map, and a validation plan with guides, a plate map and an order file. Versioned, so a re-run never overwrites what was cited.",
-    tools: "Discovery Map, validation plan, exports",
+    produces: "Hit evidence and exports",
+    detail: "The local engine writes an evidence JSON report and method output files. Workspace results can be read where records exist; browser report exports and outcome entry are not connected.",
+    tools: "Local evidence JSON and method output files",
   },
 ];
 
@@ -147,8 +147,8 @@ export function PipelineDiagram() {
         </ol>
 
         <p className="mt-5 text-xs text-muted">
-          Select a stage to see what it does. The same nine run on your upload and on
-          every screen in the Atlas.
+          Select a stage to inspect its role and limits. Available inputs determine which
+          analyses can run; Atlas records are not uniformly reprocessed raw screens.
         </p>
       </div>
 

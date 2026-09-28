@@ -1,0 +1,98 @@
+{
+  "hypotheses": {
+    "condition": {
+      "hierarchy": "condition",
+      "negative_weight": 1,
+      "retrieval_k": 25,
+      "retrieval_power": 3.0,
+      "retrieval_weight": 0.0,
+      "shrinkage": 2,
+      "study_balance": true
+    },
+    "direction": {
+      "hierarchy": "direction",
+      "negative_weight": 0.0,
+      "retrieval_k": 25,
+      "retrieval_power": 3.0,
+      "retrieval_weight": 0.0,
+      "shrinkage": 10,
+      "study_balance": false
+    },
+    "direction_signed": {
+      "hierarchy": "direction",
+      "negative_weight": 1,
+      "retrieval_k": 25,
+      "retrieval_power": 3.0,
+      "retrieval_weight": 0.0,
+      "shrinkage": 10,
+      "study_balance": false
+    },
+    "global": {
+      "hierarchy": "global",
+      "negative_weight": 0.0,
+      "retrieval_k": 25,
+      "retrieval_power": 3.0,
+      "retrieval_weight": 0.0,
+      "shrinkage": 0.0,
+      "study_balance": false
+    },
+    "phenotype": {
+      "hierarchy": "phenotype",
+      "negative_weight": 0.0,
+      "retrieval_k": 25,
+      "retrieval_power": 3.0,
+      "retrieval_weight": 0.0,
+      "shrinkage": 0.0,
+      "study_balance": false
+    },
+    "phenotype_shrink": {
+      "hierarchy": "phenotype",
+      "negative_weight": 0.0,
+      "retrieval_k": 25,
+      "retrieval_power": 3.0,
+      "retrieval_weight": 0.0,
+      "shrinkage": 10,
+      "study_balance": false
+    },
+    "study_balanced": {
+      "hierarchy": "phenotype",
+      "negative_weight": 0.0,
+      "retrieval_k": 25,
+      "retrieval_power": 3.0,
+      "retrieval_weight": 0.0,
+      "shrinkage": 2,
+      "study_balance": true
+    },
+    "study_direction": {
+      "hierarchy": "direction",
+      "negative_weight": 1,
+      "retrieval_k": 25,
+      "retrieval_power": 3.0,
+      "retrieval_weight": 0.0,
+      "shrinkage": 2,
+      "study_balance": true
+    },
+    "text_transfer": {
+      "hierarchy": "direction",
+      "negative_weight": 1,
+      "retrieval_k": 25,
+      "retrieval_power": 3.0,
+      "retrieval_weight": 0.5,
+      "shrinkage": 2,
+      "study_balance": true
+    }
+  },
+  "promotion": "no superiority claim unless paired publication interval excludes zero; future cohort still required",
+  "provenance": {
+    "assaybench_version": "0.2.0",
+    "data_sha256": "25e00c380358486137d1f25c490db98d007dfc5230f8ad502276dc6ccc741a5c",
+    "git_revision": "166cb3c2366424e9fdb6ac47bf051f01a1948c67",
+    "input": "pre-experimental metadata; train-union genes; no target library",
+    "metric_sha256": "d1b638c9aa3ee1cbd984028595b7af009f00736d203fa9cc10405732d182fbae",
+    "model_code_sha256": "1729fffcc8a8073521003f38f3706f5b049e0d66f28778a453eb1228475ecadb",
+    "protocol": "train <=2020; validation 2021; public test >=2022 already explored historically",
+    "runner_code_sha256": "469bb3c20fb62bb15f6b03f3dc220fc165e9a765ea2dd5d0cbc56b78633250de",
+    "seed": 20260927
+  },
+  "selection": "highest validation AnDCG@100; selected validation result is optimistic"
+}

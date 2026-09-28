@@ -1,0 +1,19 @@
+{
+  "splits": {
+    "train": 1349,
+    "validation": 218,
+    "test": 334
+  },
+  "publication_cross_split": {},
+  "id_cross_split": {},
+  "exact_label_duplicate_groups": 6,
+  "exact_label_cross_split": [],
+  "absolute_label_duplicate_groups": 182,
+  "absolute_label_cross_split": [],
+  "limitations": [
+    "Exact signatures do not detect all related experiments or alternate processing.",
+    "Publication IDs alone cannot certify independence.",
+    "Free-text metadata and LLM pretraining can contain post-publication clues.",
+    "Year extracted from author string is descriptive and not an independently verified date."
+  ]
+}

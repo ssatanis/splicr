@@ -17,35 +17,27 @@
  * downloads a table with no rows in it has no way to tell a screen with no hits
  * from a pipeline that never ran.
  *
- * Data source, and why this route has no authentication on it. The workspace
- * database is unreachable, so the only source wired up is the sample dataset the
- * console ships with. Nothing here is anybody's data: every response says so in
- * its own body, with a preamble line in the CSV, `sample_data: true` in the JSON,
- * a banner on page 1 and a footer on every page of the PDF, and `_SAMPLE` in the
- * filename. That is what makes an unauthenticated handler acceptable today and
- * only today.
+ * Sample exports require an explicit demo session. Workspace export is not
+ * connected; signed-in non-demo sessions receive 501 instead of sample results.
+ * Anonymous non-demo requests receive 401. Report builders and their sample
+ * dependencies are loaded only after the demo check passes.
  *
- * `SERVED_SOURCE` is the guard rather than a comment. The moment a workspace
- * query is wired up, this route serves rows that belong to somebody, and it
- * needs the bearer-key check /api/v1/hits already implements. Changing the
- * constant without adding that check fails the assertion below rather than
- * quietly publishing a lab's hit table.
+ * Every sample response keeps the label in its body, headers and filename.
+ * Before adding workspace export, replace the sample-only builder with a real
+ * run-backed document and retain session/RLS authorization on the requested run.
  */
 import { NextResponse } from "next/server";
 
-import { screens } from "@/lib/mock/data";
-import { toCsv } from "@/lib/report/csv";
-import { buildReport, reportFilename, type ReportSource } from "@/lib/report/document";
-import { toJson } from "@/lib/report/json";
-import { toPdf } from "@/lib/report/pdf";
+import { getCurrentContext } from "@/lib/data/org";
+import type { ReportSource } from "@/lib/report/document";
 
 /** node:zlib in the PDF writer, and the body depends on the clock. */
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * The only source this handler is allowed to serve while it is unauthenticated.
- * See the note above before widening it.
+ * Only explicit demo sessions can reach the sample renderer.
+ * Workspace reports need a separate run-backed document and authorization.
  */
 const SERVED_SOURCE: ReportSource = "sample";
 
@@ -63,6 +55,12 @@ function fail(status: number, code: string, message: string): NextResponse {
 }
 
 export async function GET(request: Request, ctx: RouteContext<"/api/report/[id]">): Promise<NextResponse> {
+  const context = await getCurrentContext();
+  if (!context.isDemo) {
+    return context.user
+      ? fail(501, "workspace_report_unavailable", "Workspace report exports are not connected. Use the scoped Connect hits API for recorded results.")
+      : fail(401, "authentication_required", "Sign in to access workspace results. Sample reports require an explicit demo session.");
+  }
   const { id } = await ctx.params;
   const requested = new URL(request.url).searchParams.get("format");
 
@@ -75,6 +73,10 @@ export async function GET(request: Request, ctx: RouteContext<"/api/report/[id]"
   }
   const format = requested as Format;
 
+  const [{ screens }, { buildReport, reportFilename }, { toCsv }, { toJson }, { toPdf }] = await Promise.all([
+    import("@/lib/mock/data"), import("@/lib/report/document"), import("@/lib/report/csv"),
+    import("@/lib/report/json"), import("@/lib/report/pdf"),
+  ]);
   const screen = screens.find((s) => s.id === id);
   if (!screen) {
     return fail(404, "not_found", `No screen ${id}.`);
@@ -92,12 +94,12 @@ export async function GET(request: Request, ctx: RouteContext<"/api/report/[id]"
 
   if (SERVED_SOURCE !== "sample") {
     // Unreachable while the constant above is "sample". It is here so that
-    // pointing this route at a workspace without adding the bearer-key check
-    // returns a 501 instead of a lab's hit table to an anonymous caller.
+    // Widening this renderer to workspace data requires a separate authorized
+    // data adapter; demo permission cannot authorize workspace records.
     return fail(
       501,
       "not_implemented",
-      "This route serves the sample dataset only. Serving a workspace report needs the Connect bearer-key check that /api/v1/hits implements.",
+      "This renderer serves explicit demo sessions only. Workspace reports need an authorized run-backed data adapter.",
     );
   }
 

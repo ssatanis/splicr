@@ -1,7 +1,9 @@
 # Data model
 
-Applied schema: 10 migrations, 46 tables, Row Level Security on every one.
-`npm run db:status` prints the live state.
+This describes migration definitions, not a verified live deployment. The
+repository currently contains 15 migration files; `supabase/migrations` is the
+source of truth. `npm run db:status` reads the configured database state.
+Schema columns do not establish that a feature is implemented or populated.
 
 ## Tenancy
 
@@ -37,7 +39,9 @@ published figure has to stay reproducible.
 
 `guide_counts` is hash-partitioned into 8 partitions on `screen_id`. Guide by
 sample counts are the largest table by far, and partitioning keeps one screen's
-rows together and lets an old screen be detached and dropped cheaply.
+rows in a common partition. A hash partition contains multiple screens, so
+detaching it is not a safe way to remove one screen. No retention/deletion
+operation is implied by this schema description.
 
 ## Hits
 
@@ -48,11 +52,11 @@ One row per gene per comparison, with each method in its own columns:
 - SplicR: `chance_real`, `chance_lower`, `chance_upper`, `novelty`, `verdict`, `reason`, `model_version`
 - Atlas: `atlas_hit_count`, `atlas_screen_count`, `atlas_hit_rate`
 
-Nothing is collapsed into a single score column. When two methods disagree the
-report says so, because that disagreement is information.
-
-`model_version` is stored per hit. A score from six months ago stays
-interpretable after the model is retrained.
+These are available schema fields; individual callers populate only their own
+outputs. `chance_real`, intervals and model fields are reserved for a future
+calibrated model. Current pipeline confidence is null, and no fitted validation
+model or automated retraining is available. The portable JSON report retains
+directional statistics that are not all represented in legacy database columns.
 
 ## The Atlas
 
@@ -61,16 +65,19 @@ atlas.genes ──┬── atlas.guides ──── atlas.libraries
               ├── atlas.gene_set_members ──── atlas.gene_sets
               ├── atlas.copy_number ──── atlas.cell_models
               └── atlas.screen_hits ──── atlas.screens
-                       atlas.gene_stats        (rolled up nightly)
-                       atlas.validation_records (the answer key)
+                       atlas.gene_stats        (rollup scheduling defined in migrations)
+                       atlas.validation_records (outcome schema; no adequate calibration cohort)
 ```
 
-Currently loaded: **157,085 genes** (human from HGNC, mouse from NCBI),
-**310,854 guides** across 5 libraries, and 4 reference gene sets that resolve
-at 100%.
+An earlier import recorded **157,085 genes**, **310,854 guides** across five
+libraries, and four reference gene sets with complete symbol resolution. These
+are historical import observations, not current deployed counts. Bulk reference
+data can instead live in the Parquet lake; see [data audit](../research/04_DATA_AUDIT.md).
 
 `atlas.screens.embedding` is a 768-dimension pgvector column with an HNSW
-index, used by `similar_screens()`.
+index and a `similar_screens()` function. That schema support does not establish
+a populated embedding service. Current pipeline Atlas matching uses metadata
+heuristics; it is not a trained semantic retrieval service.
 
 ## Jobs
 
@@ -78,13 +85,13 @@ index, used by `similar_screens()`.
 jobs ──▶ pgmq queue ──▶ worker leases ──▶ heartbeat extends ──▶ archive
 ```
 
-A row in `jobs` enqueues a message by trigger. Workers take a short visibility
-timeout and extend it while running, rather than holding a six-hour lease. A
-cron job every minute returns expired leases to the queue, or marks them dead
-after `max_attempts`.
+Migrations define an enqueue trigger and expired-lease handling. The diagram
+shows intended worker behavior: no complete job-consumption/heartbeat worker is
+implemented. Scheduled database functions and current live cron state have not
+been verified here.
 
-`idempotency_key` is unique, so a retried request cannot start the same work
-twice.
+A unique `idempotency_key` can prevent duplicate job rows. It does not guarantee
+exactly-once external execution or make all pipeline side effects idempotent.
 
 ## Row Level Security
 
@@ -98,10 +105,10 @@ private.can_write_screen(id)  -- member or above in the owning org
 They are `security definer` in the `private` schema with `search_path = ''`,
 which stops a recursive policy lookup and keeps them off the public API.
 
-Policies wrap subqueries as `(select private.is_org_member(org_id))` so
-Postgres evaluates them once per statement instead of once per row. Every
-column a policy filters on is indexed; without that, a policy turns a lookup
-into a sequential scan.
+Policies use membership helpers and supporting indexes. Wrapping a function in
+`SELECT` can enable caching for uncorrelated expressions; an expression depending
+on each row’s `org_id` is not guaranteed to run only once per statement. Verify
+actual plans against representative tenancy/data sizes before asserting performance.
 
 The Atlas is readable by everyone, signed in or not, except custom libraries,
 which stay inside the organization that uploaded them.

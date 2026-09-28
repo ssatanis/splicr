@@ -1,12 +1,19 @@
-import { Planner } from "@/components/dashboard/planner";
+import { Card, PageHeader } from "@/components/dashboard/ui";
+import { getCurrentContext } from "@/lib/data/org";
 
 export const metadata = { title: "Screen Planner" };
+export const dynamic = "force-dynamic";
 
-/**
- * The page is the planner. Its own title line is inside the component, beside the
- * sample-data label, because the form and the figures it moves have to share one
- * screen and a 145px page header is four fields of the form.
- */
-export default function PlannerPage() {
-  return <Planner />;
+export default async function PlannerPage() {
+  const context = await getCurrentContext();
+  if (context.isDemo) {
+    const { Planner } = await import("@/components/dashboard/planner");
+    return <Planner />;
+  }
+  return <div className="flex flex-col gap-4">
+    <PageHeader dense title="Screen Planner" body="Experimental design" />
+    <Card title="Workspace planning is not connected">
+      <p className="text-sm">A supported plan needs your library, assay design, coverage targets and variability estimates. This workspace does not yet compute statistical power, select a focused library or quote experimental costs.</p>
+    </Card>
+  </div>;
 }

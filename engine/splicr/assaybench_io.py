@@ -23,13 +23,14 @@ over the 334 test screens.
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from typing import Any, Iterator
 
 import pyarrow.parquet as pq
 
 ASSAYBENCH_SNAPSHOT = os.environ.get(
     "ASSAYBENCH_SNAPSHOT",
-    "/Users/sahaj/Documents/Projects/SplicR/data/references/assaybench/snapshot",
+    str(Path(__file__).resolve().parents[2] / "data/references/assaybench/snapshot"),
 )
 
 # Columns needed to score a prediction, plus the metadata a predictor may condition on.
@@ -45,7 +46,7 @@ SPLIT_COLS = ["yearfold0", "randomfold0"]
 
 
 def load_split(
-    split: str = "test",
+    split: str | None = "test",
     config: str = "biogrid",
     fold_column: str = "yearfold0",
     snapshot: str | None = None,
@@ -68,6 +69,18 @@ def load_split(
         One dict per screen with at least ``dataset_name``, ``relevance_genes``,
         ``relevance_scores`` and ``hit``.
     """
+    return list(iter_split(split, config=config, fold_column=fold_column,
+                           snapshot=snapshot, with_metadata=with_metadata))
+
+
+def iter_split(
+    split: str | None = "test", config: str = "biogrid",
+    fold_column: str = "yearfold0", snapshot: str | None = None,
+    with_metadata: bool = True,
+) -> Iterator[dict[str, Any]]:
+    """Stream bounded batches; never materialize another split's full table."""
+    if split not in (None, "train", "validation", "test"):
+        raise ValueError(f"unknown split {split!r}")
     root = snapshot or ASSAYBENCH_SNAPSHOT
     path = os.path.join(root, config, "train-00000-of-00001.parquet")
     if not os.path.exists(path):
@@ -85,40 +98,37 @@ def load_split(
         cols += [c for c in METADATA_COLS if c in available]
     # LaTest has no split column of its own: every row is the held-out set.
     use_fold = fold_column if fold_column in available else None
+    if split is not None and use_fold is None and not (config == "LaTest" and split == "test"):
+        raise ValueError(f"split column {fold_column!r} missing from {config!r}")
     if use_fold:
         cols.append(use_fold)
     cols = list(dict.fromkeys(cols))
 
-    out: list[dict[str, Any]] = []
-    for i in range(pf.num_row_groups):  # stream: the biogrid table is ~883 MB in memory
-        batch = pf.read_row_group(i, columns=cols).to_pylist()
-        for rec in batch:
+    for batch in pf.iter_batches(batch_size=16, columns=cols):
+        for rec in batch.to_pylist():
             if split is not None and use_fold and rec[use_fold] != split:
                 continue
             rec["split"] = rec.get(use_fold, "held_out") if use_fold else "held_out"
             rec["num_genes"] = len(rec["relevance_genes"])
-            out.append(rec)
-    return out
+            yield rec
 
 
-def iter_split(split: str = "test", **kw) -> Iterator[dict[str, Any]]:
-    """Memory-friendlier generator form of :func:`load_split`."""
-    yield from load_split(split=split, **kw)
-
-
-def mean_andcg_at_100(predictions: dict[str, list[str]], split: str = "test") -> float:
+def mean_andcg_at_100(predictions: dict[str, list[str]], split: str = "test",
+                      *, allow_partial: bool = False) -> float:
     """Score a {dataset_name: ranked_gene_list} mapping with the upstream metric.
 
-    Screens present in the split but missing from ``predictions`` are skipped,
-    so compare only runs that cover the same screen set.
+    Missing predictions fail closed. Partial scoring requires explicit opt-in
+    and is unsuitable for a full-split benchmark claim.
     """
     from assaybench.benchmark.metrics import RankingMetrics
 
     metric = RankingMetrics(k_values=[100], metric_groups=["adjusted_ndcg"])
     vals = []
+    missing = []
     for screen in load_split(split=split, with_metadata=False):
         genes = predictions.get(screen["dataset_name"])
         if genes is None:
+            missing.append(str(screen["dataset_name"]))
             continue
         res = metric.evaluate(
             predicted_genes=genes,
@@ -126,6 +136,8 @@ def mean_andcg_at_100(predictions: dict[str, list[str]], split: str = "test") ->
             relevance_scores=screen["relevance_scores"],
         )
         vals.append(res["adjusted_ndcg@100"])
+    if missing and not allow_partial:
+        raise ValueError(f"missing predictions for {len(missing)} screens: {missing[:5]}")
     if not vals:
         raise ValueError("no overlap between predictions and the requested split")
     return sum(vals) / len(vals)

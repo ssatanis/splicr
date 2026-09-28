@@ -1,0 +1,86 @@
+{
+  "verified_utc": "2026-09-28T01:34:55.065136+00:00",
+  "checks": [
+    {
+      "check": "tests",
+      "command": [
+        "node",
+        "--test",
+        "apps/web/tests/screen-detail.test.mjs",
+        "apps/web/tests/workspace-routes.test.mjs",
+        "apps/web/tests/report-access.test.mjs"
+      ],
+      "exit_status": 0,
+      "duration_seconds": 0.535,
+      "log": "research/artifacts/final_web_tests.log",
+      "log_sha256": "4fca9169db13d688975b21a2ea89980d94ebacec1a43a9ddba886f72f581d037",
+      "tests": 39,
+      "pass": 39,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "check": "typecheck",
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exit_status": 0,
+      "duration_seconds": 1.521,
+      "log": "research/artifacts/final_web_typecheck.log",
+      "log_sha256": "0cb6ecff467130d615b1f9035df23d645dedfbdefff820c17747d8bff04d3ee3"
+    },
+    {
+      "check": "lint",
+      "command": [
+        "npm",
+        "run",
+        "lint"
+      ],
+      "exit_status": 0,
+      "duration_seconds": 3.847,
+      "log": "research/artifacts/final_web_lint.log",
+      "log_sha256": "0f0ab91424827e10164d0944df2ac4c5f3b8cc835341bebc2dcacb5d919d3cff"
+    },
+    {
+      "check": "build",
+      "command": [
+        "npm",
+        "run",
+        "build",
+        "-w",
+        "apps/web",
+        "--",
+        "--webpack"
+      ],
+      "exit_status": 0,
+      "duration_seconds": 9.39,
+      "log": "research/artifacts/final_web_build.log",
+      "log_sha256": "4e13b2d27cbefde6a0ce6d6f0b1ccf300ac54695e30631e18bb31b12c71b71dd"
+    }
+  ],
+  "live_database_tested": false,
+  "browser_tested": false,
+  "deployment_performed": false,
+  "default_turbopack_build": "Earlier default build failed with EPERM while binding a PostCSS subprocess port; documented webpack option used without privilege escalation.",
+  "console_gate": "Existing proxy redirect for public dashboard/auth routes preserved.",
+  "source_sha256": {
+    "apps/web/src/lib/data/workspace-lists.ts": "80efb962b4d77dff5648672ed263f6b158653493bee9326d17c937d822b71d13",
+    "apps/web/src/lib/data/screen-detail.ts": "aed9f0448ce4993ef945f7105a7bb4a31f9a7ca8260368ea742e91330396c9db",
+    "apps/web/src/components/dashboard/workspace-records.tsx": "e0874e29bb4e712294e03ade73ed0c83bbd8952e4c7d97f5cd0ebd9c5d5670d8",
+    "apps/web/src/app/dashboard/screens/page.tsx": "1a90f85c69cf2e6011089f1d768c6db01ecb9dc7413edb68fc82893248f96dc1",
+    "apps/web/src/app/dashboard/screens/[id]/page.tsx": "a9d1a0f5f1f5146664d8463c94bc1e739b877e31a23767dee381f1d0974e106a",
+    "apps/web/src/app/dashboard/validation/page.tsx": "ddcacc5c0f77c18bf5d518d695f69c3f080b2d081fc63ffbeb9337df6ed8d5bf",
+    "apps/web/src/app/dashboard/atlas/page.tsx": "b02f709caf1fc2114ba51cc874ae435521811123a0ebd81962f5dc54c962954a",
+    "apps/web/src/app/dashboard/upload/page.tsx": "9bff26d6f7def07c008fb0232ac32c5d4a368bd8603a155c9bed38b31dd27519",
+    "apps/web/src/app/dashboard/planner/page.tsx": "d0600dca582850c4443e7ca98834224e5be1eef599b81fea0d2b6fce9af8d282",
+    "apps/web/src/app/dashboard/page.tsx": "74a451caee1babd2086f529b86b57d06e5b8fbc356f18b07bfac3d383d7ccec4",
+    "apps/web/src/app/dashboard/layout.tsx": "5a1bebbd85d9fd69fd958fea8922986b17f922f1f9972c0944480ef83aefda6e",
+    "apps/web/src/app/dashboard/settings/members/page.tsx": "a81bc8ca810b652b9bc67a6e4d2e095f546b11b2da5d699b36d8b926510f54ad",
+    "apps/web/tests/screen-detail.test.mjs": "a8e7be8254fd58ef9b63787ed9f5f5267532163dd0bb0c96b5a5f38c94f3acb1",
+    "apps/web/tests/workspace-routes.test.mjs": "2785e38871abe31e95394980dbabb20b92b8d0499879ab49399381b78d0c1a28",
+    "apps/web/src/app/api/report/[id]/route.ts": "f49b55562b5bec855e25a3d5bbca053421febafa3516d4629ffd49a127761837",
+    "apps/web/tests/report-access.test.mjs": "16a393f6213a9a3e31518f038f6e4bbad4b85634b11ec43b31421338c6b1affd"
+  }
+}

@@ -1,5 +1,15 @@
 # Where the AssayBench headroom actually is
 
+> Historical exploratory analysis; see `research/05_BENCHMARK_REPRODUCTION.md`
+> and `research/08_VALIDATION_REPORT.md` for the audited protocol. Filtering and
+> padding against a target's measured genes supplies an additional input and
+> must be reported as library-aware prediction. It is not a description-only
+> gain over unchanged published rankings. The public test was repeatedly
+> inspected during these analyses. The proposed 0.3239 "bar" below is another
+> hindsight-assisted diagnostic, not a universal performance ceiling. Statements
+> below about choosing methodology from test reversals are historical reasoning,
+> not an acceptable protocol for new model selection.
+
 `data/references/assaybench/RESULTS.md` records where SplicR stands on the
 334-screen `yearfold0` test split: best non-oracle, non-LLM score **0.1361**,
 best published system **0.1631** (LLM RRF ensemble), and `oracle_knn` at

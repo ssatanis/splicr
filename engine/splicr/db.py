@@ -105,12 +105,12 @@ def classify(
     """
     Map a scored gene onto the public.hit_verdict enum.
 
-    Deliberately conservative: a critical artifact flag overrides a high
-    score, because a copy-number cluster that looks significant is exactly
-    the case the product exists to catch.
+    Artifact flags are risk assessments, not confirmed experimental failures.
+    A critical flag requires review even with a high score, but cannot prove
+    the gene is an artifact: amplified loci can contain true dependencies.
     """
     if any(f.severity == "critical" for f in flags):
-        return "artifact"
+        return "uncertain"
     if chance is None:
         return "uncertain"
     if chance < 0.35:
@@ -257,7 +257,9 @@ def write_qc(conn: "psycopg.Connection", ctx: RunContext, qc: ScreenQc,
                  verdict, notes, metrics)
             values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
             on conflict (run_id, sample_id) do update set
-                verdict = excluded.verdict, metrics = excluded.metrics
+                verdict = excluded.verdict, metrics = excluded.metrics,
+                total_reads = excluded.total_reads, mapped_reads = excluded.mapped_reads,
+                mapped_frac = excluded.mapped_frac, notes = excluded.notes
             """,
             (ctx.run_id, sample_id, s.total_reads, s.mapped_reads, s.mapping_rate,
              s.zero_guides, s.zero_fraction, s.gini,

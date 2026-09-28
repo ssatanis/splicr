@@ -1,0 +1,79 @@
+{
+  "base_url": "http://127.0.0.1:3100",
+  "browser": "Chrome 154.0.8037.57 via agent-browser 0.38.1",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "routes": [
+    {
+      "path": "/",
+      "title": "SplicR",
+      "h1": "Traceable evidence\nfor CRISPR screens",
+      "content": 4070,
+      "overflow": false,
+      "overlay": false
+    },
+    {
+      "path": "/technology",
+      "title": "Technology | SplicR",
+      "h1": "CRISPR screens,\nwith context.",
+      "content": 5321,
+      "overflow": false,
+      "overlay": false
+    },
+    {
+      "path": "/pipeline",
+      "title": "Pipeline | SplicR",
+      "h1": "From reads to a\ntraceable report",
+      "content": 1624,
+      "overflow": false,
+      "overlay": false
+    },
+    {
+      "path": "/evidence",
+      "title": "Evidence and limitations | SplicR",
+      "h1": "Evidence you can inspect.",
+      "content": 4345,
+      "overflow": false,
+      "overlay": false
+    },
+    {
+      "path": "/about",
+      "title": "About Us | SplicR",
+      "h1": "Started by researchers\nat Cornell University",
+      "content": 1898,
+      "overflow": false,
+      "overlay": false
+    },
+    {
+      "path": "/careers",
+      "title": "Careers | SplicR",
+      "h1": "Work with\nSplicR",
+      "content": 839,
+      "overflow": false,
+      "overlay": false
+    },
+    {
+      "path": "/contact",
+      "title": "Contact | SplicR",
+      "h1": "Interested in SplicR?",
+      "content": 1085,
+      "overflow": false,
+      "overlay": false
+    }
+  ],
+  "browser_errors": "",
+  "desktop_checks": {
+    "homepage_loaded": true,
+    "evidence_navigation": true,
+    "no_horizontal_overflow": true,
+    "metadata_updated": true
+  },
+  "mobile_navigation": {
+    "menu_expands": true,
+    "evidence_link_works": true
+  },
+  "contact": "Draft-only form rendered; handler encoding tested without sending email",
+  "live_database_tested": false
+}

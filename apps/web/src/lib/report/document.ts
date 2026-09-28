@@ -13,14 +13,11 @@
  * produced it is not reproducible, so the document carries all four and every
  * export writes them out.
  *
- * Source of truth: the console currently reads the shipped sample dataset,
- * because the workspace database is unreachable. `source` records that, and it
- * is the one thing every export repeats in its own body. When a workspace query
- * is wired back up it passes `source: "workspace"` and nothing else here moves.
+ * This builder uses illustrative fixtures only. It refuses workspace source
+ * labels; real reports require a separate adapter backed by recorded run data.
  */
 import {
   ATLAS_SCREENS_TOTAL,
-  atlasSimilarFor,
   BOTTLENECK_WEIGHT,
   controlSeparation,
   FDR_THRESHOLD,
@@ -38,7 +35,7 @@ import {
   type Screen,
   type Verdict,
 } from "@/lib/mock/data";
-import { formatNumber, formatPercent } from "@/lib/utils";
+import { formatNumber } from "@/lib/utils";
 
 import {
   GENOME_BUILDS,
@@ -312,7 +309,7 @@ function buildSummary(screen: Screen, counts: ReportDocument["counts"], hits: Hi
     `${formatNumber(counts.candidates)} genes clear Benjamini-Hochberg FDR ${FDR_THRESHOLD.toFixed(2)} over ${formatNumber(testsForScreen(screen))} gene-level tests in ${screen.name} (${screen.cellLine}, ${screen.modality}, ${screen.phenotype}).`,
   );
   parts.push(
-    `${formatNumber(counts.likelyReal)} carry a chance real of ${LIKELY_REAL_THRESHOLD.toFixed(2)} or above, of which ${formatNumber(counts.byVerdict["Real and new"])} are new in this context and ${formatNumber(counts.byVerdict["Real and known"])} recover known biology.`,
+    `${formatNumber(counts.likelyReal)} carry an illustrative model score of ${LIKELY_REAL_THRESHOLD.toFixed(2)} or above, of which ${formatNumber(counts.byVerdict["Real and new"])} are new in this context and ${formatNumber(counts.byVerdict["Real and known"])} recover known biology.`,
   );
   // A survival screen has two arms and a reader has to be told which one a gene
   // came out of. Reporting only the depleted arm is how a resistance gene gets
@@ -345,82 +342,31 @@ function buildSummary(screen: Screen, counts: ReportDocument["counts"], hits: Hi
   const strongest = hits.find((h) => h.verdict === "Real and new");
   if (strongest) {
     parts.push(
-      `The strongest new candidate is ${strongest.gene} at chance real ${strongest.chance.toFixed(2)}, log2 fold change ${strongest.lfc.toFixed(2)}, ${strongest.guidesAgree} of ${strongest.guides} guides agreeing.`,
+      `The strongest new candidate is ${strongest.gene} at illustrative model score ${strongest.chance.toFixed(2)}, log2 fold change ${strongest.lfc.toFixed(2)}, ${strongest.guidesAgree} of ${strongest.guides} guides agreeing.`,
     );
   }
-  return parts.join(" ");
+  return `Illustrative example; no analysis was executed. ${parts.join(" ")}`;
 }
 
-function buildMethods(
-  screen: Screen,
-  library: ReportLibrary,
-  hits: Hit[],
-  counts: ReportDocument["counts"],
-  qc: ReportQc | null,
-): { heading: string; body: string }[] {
-  const libraryClause =
-    library.guides !== null
-      ? `the ${library.label} library (${formatNumber(library.guides)} guides over ${formatNumber(library.genes ?? 0)} genes, ${library.guidesPerGene} guides per gene, ${library.cas})`
-      : `the ${library.label} library as recorded on the run; guide and gene counts are not registered for this library version and are therefore not reported here`;
-
-  const nearest = atlasSimilarFor(screen)[0];
-  const sections: { heading: string; body: string }[] = [
+function buildMethods(): { heading: string; body: string }[] {
+  return [
     {
-      heading: "Counting",
-      body: `Guide counts were produced with mageck count 0.5.9.5 against ${libraryClause}. Guides were matched exactly with a single-mismatch fallback, and the count matrix was median-ratio normalised, which is the mageck default.`,
+      heading: "Illustrative analysis",
+      body: "This report is generated from demo fixtures. No sequencing, counting, MAGeCK, BAGEL2, copy-number correction or independent validation experiment was performed to produce these numbers. Tool versions, timing, sample metrics and reference releases are illustrative settings, not an execution record.",
+    },
+    {
+      heading: "Illustrative statistics and artifacts",
+      body: "Effects, p-values, FDR values, Bayes factors, guide concordance and artifact labels demonstrate the report layout. They are not measured results. A real report must identify the actual contrast, method, correction, run version and evidence behind every flag. A shared input does not make two statistics independent evidence.",
+    },
+    {
+      heading: "Model score and historical context",
+      body: "The legacy chance_real field contains an illustrative heuristic score. It is not a calibrated validation probability. No fitted uncertainty interval is available. Novelty, similar screens and validation outcomes here are illustrative fixtures; they do not establish biological validity or prospective performance. Demo feedback does not retrain any model.",
     },
   ];
-
-  if (qc) {
-    const worst = qc.flagged[0];
-    sections.push({
-      heading: "Quality control",
-      body:
-        `Across ${qc.samples.length} sequenced samples (${formatNumber(qc.totalReads)} reads) the mean mapping rate was ${formatPercent(qc.meanMapped, 1)}. ` +
-        `The Gini index of guide counts ran from ${qc.giniRange[0].toFixed(2)} to ${qc.giniRange[1].toFixed(2)} and the fraction of zero-count guides from ${formatPercent(qc.zeroGuideRange[0], 1)} to ${formatPercent(qc.zeroGuideRange[1], 1)}. ` +
-        (worst
-          ? `${worst.label} breached all three distribution ceilings: Gini ${worst.gini.toFixed(2)} against 0.30, ${formatPercent(worst.zeroGuides, 1)} of guides at zero against 5%, and a skew ratio of ${worst.skewRatio.toFixed(1)} against 10. It is recorded as a failed sample and was down-weighted to ${BOTTLENECK_WEIGHT.toFixed(2)} at the scoring stage rather than dropped, which is why the run carries a warning rather than a pass. `
-          : "") +
-        `Separation of the reference sets was AUROC ${qc.auroc.toFixed(2)} and NNMD ${qc.nnmd.toFixed(2)} against CEGv2 (${formatNumber(qc.essentialGenes)} genes) and NEGv1 (${formatNumber(qc.nonEssentialGenes)} genes). ` +
-        `The lowest pairwise replicate correlation was ${qc.worstReplicateCorr.toFixed(2)} on log counts. Raw-count correlation is a weak check on a context-specific screen, where a low value is often the correct one, so separation of the reference sets carries the QC verdict here.`,
-    });
-  } else {
-    sections.push({
-      heading: "Quality control",
-      body: `Per-sample distribution metrics, replicate correlations and control separation are not recorded for this screen in the dataset the console is reading, so none are reported. The run carries an overall QC verdict of "${screen.qc}". Treat the hit table below as unverified until the sample-level metrics are attached.`,
-    });
-  }
-
-  const perGene = library.guidesPerGene ?? hits[0]?.guides ?? null;
-  sections.push({
-    heading: "Hit calling",
-    body:
-      `Gene-level ranking and p-values came from mageck test (RRA) and effect sizes from mageck mle, both 0.5.9.5. BAGEL2 2.0 produced Bayes factors against CEGv2 and NEGv1 from guide fold changes; the reported threshold is a Bayes factor above 7, which is the multi-target corrected operating point and is not interchangeable with the uncorrected 10. ` +
-      `Copy-number bias in guide fold changes was corrected with CRISPRcleanR 3.0.0 using ${REFERENCE_RELEASES.depmap.name} ${REFERENCE_RELEASES.depmap.release} segments for ${screen.cellLine}. Candidates were taken at Benjamini-Hochberg FDR below ${FDR_THRESHOLD.toFixed(2)} over ${formatNumber(testsForScreen(screen))} gene-level tests, which returned ${formatNumber(counts.candidates)} genes; every row in the table below is inside that cut, and the fdr column is the step-up q-value, so it is monotone in the p-value. ` +
-      `Both arms are reported. Depletion and enrichment are the same test with opposite signs, so the direction column carries the sign and the log2 fold change is not folded to a magnitude anywhere.` +
-      (perGene !== null
-        ? ` ${perGene} guides per gene were available, ${perGene >= 4 ? "at or above the four-guide floor below which gene-level ranking degrades sharply" : "below the four-guide floor, so gene-level ranking on this screen is unreliable"}.`
-        : ""),
-  });
-
-  sections.push({
-    heading: "Artifact detection",
-    body: `Every candidate was tested for four artifact classes: depletion shared with its chromosomal neighbours in an amplified segment, a single guide carrying most of the gene-level effect, guides with multiple near-perfect genomic matches, and signal concentrated in a down-weighted replicate. ${counts.flagged === 0 ? "No candidate carries a flag" : `${formatNumber(counts.flagged)} candidates carry at least one flag`}. Flags are reported next to the statistic that raised them rather than folded into it, so a reader can disagree with the call.`,
-  });
-
-  sections.push({
-    heading: "Scoring and context",
-    body:
-      `Chance real was produced by splicr.score 0.3.0 from the evidence in the columns beside it: effect size, guide concordance, the gene-level p-value, the BAGEL2 Bayes factor and the artifact flags. Each flag costs the score log-odds, so a flagged gene cannot outrank a clean gene carrying the same statistics. The band is plus or minus 0.06, and the verdict column is read off the score, the novelty and the frequent-hitter flag by one function, so no two surfaces can put a gene in two buckets. ` +
-      `The Bayes factor is independent evidence rather than a restatement of the score: it comes from guide fold changes against the reference sets, and the score reads it, not the reverse. ` +
-      `Novelty and frequent-hitter status were computed against ${formatNumber(ATLAS_SCREENS_TOTAL)} public screens from ${REFERENCE_RELEASES.orcs.name} ${REFERENCE_RELEASES.orcs.release} and ${REFERENCE_RELEASES.depmap.name} ${REFERENCE_RELEASES.depmap.release}. Each gene's Atlas denominator is the subset of that corpus which assayed it, which is reported per row and is smaller than the corpus${nearest ? `; the nearest comparable screen in this organism and modality was ${nearest.id} (${nearest.cellLine}, ${nearest.phenotype}, ${nearest.library}, ${nearest.year})` : "; no public screen in the Atlas matches this organism and modality"}. ` +
-      `Chance real is a calibrated probability, not a p-value, and it does not replace the FDR next to it.`,
-  });
-
-  return sections;
 }
 
 export function buildReport(screen: Screen, source: ReportSource = "sample"): ReportDocument {
+  if (source !== "sample") throw new Error("Sample report builder cannot produce workspace reports");
   // A screen that never reached hit calling has no table. The export route
   // refuses those with a 409 before this is called, so an empty table here means
   // the run called nothing, which is a result and is reported as one.
@@ -484,7 +430,7 @@ export function buildReport(screen: Screen, source: ReportSource = "sample"): Re
     parameters: buildParameters(screen, library, hits, qc),
     references: buildReferences(screen, library),
     summary: buildSummary(screen, counts, hits, qc),
-    methods: buildMethods(screen, library, hits, counts, qc),
+    methods: buildMethods(),
     hits: hits.map((h) => ({
       rank: h.rank,
       gene: h.gene,

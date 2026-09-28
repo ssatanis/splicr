@@ -25,12 +25,11 @@ export function CtaSection() {
               Bring us a finished screen.
             </h2>
             <p className="mt-5 text-white/90 leading-relaxed">
-              Do not tell us which hits worked. SplicR calls them blind, then you reveal the
-              answer and we are scored on the spot.
+              Discuss a blinded evaluation with us. Predictions, outcome definitions and the analysis plan must be frozen before independent validation outcomes are revealed. This workflow still requires a laboratory partner.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <LinkButton href="/contact" tone="teal" icon="none">
-                Request a blind test
+                Discuss a blinded evaluation
               </LinkButton>
               <LinkButton href="/contact" tone="white" icon="none">
                 Request a Demo

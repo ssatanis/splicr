@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "Technology",
   description:
-    "Five parts that share one brain: the Atlas, the Hit Report, the Screen Planner, the Truth Loop and Connect.",
+    "Explore SplicR's screen analysis, published evidence, planning estimates, outcome records and REST integration.",
 };
 
 export default function TechnologyPage() {
@@ -36,14 +36,14 @@ export default function TechnologyPage() {
           <div className="lg:max-w-[46%] lg:ml-auto">
             <Reveal>
               <h1 className="font-serif text-white leading-[0.95] tracking-[-0.02em] text-[clamp(2.4rem,6vw,4.4rem)]">
-                Screens, meet
+                CRISPR screens,
                 <br />
-                the answer key.
+                with context.
               </h1>
             </Reveal>
             <Reveal delay={0.1}>
               <p className="mt-6 max-w-md text-lg text-white/90 leading-relaxed">
-                Precision statistics, plus the record of what actually validated.
+                Screen statistics, published context and inspectable evidence.
               </p>
             </Reveal>
           </div>
@@ -54,8 +54,8 @@ export default function TechnologyPage() {
 
           <div className="mt-10 lg:mt-16 lg:ml-auto lg:max-w-[46%] flex flex-wrap gap-y-5 divide-x divide-white/20">
             {[
-              ["2,217", "Published screens in BioGRID ORCS"],
-              ["1 pipeline", "Every screen, same way"],
+              ["2,217", "ORCS v2.0.18 reference screens"],
+              ["1 workflow", "QC, hit calling and evidence review"],
             ].map(([v, l]) => (
               <div key={l} className="px-6 first:pl-0">
                 <div className="text-2xl md:text-3xl font-medium tabular-nums text-orange-400">{v}</div>
@@ -71,7 +71,7 @@ export default function TechnologyPage() {
         <div className="container-x">
           <Reveal>
             <SectionHeading
-              eyebrow="Five parts, one brain"
+              eyebrow="Capabilities and status"
               title={
                 <>
                   Five parts,
@@ -79,7 +79,7 @@ export default function TechnologyPage() {
                   one record.
                 </>
               }
-              body="The Atlas is the answer key. The other four are how labs use it, before and after a screen."
+              body="Public workspace access is not enabled. The analysis engine and research tools are implemented locally; workspace and demonstration features have different availability, stated below."
             />
           </Reveal>
 
@@ -99,6 +99,7 @@ export default function TechnologyPage() {
                       {m.title}
                     </h3>
                     <p className={cn("mt-5 leading-relaxed max-w-md", i % 2 === 0 ? "text-body" : "text-white/90")}>{m.blurb}</p>
+                    <p className="mt-4 text-sm font-medium">Status: {m.status}</p>
                   </div>
                   <ul className="grid sm:grid-cols-3 gap-4 content-start">
                     {m.points.map((p) => (
@@ -129,12 +130,12 @@ export default function TechnologyPage() {
                 eyebrow="The Discovery Map"
                 title={
                   <>
-                    Real on one axis.
+                    Evidence on one axis.
                     <br />
                     New on the other.
                   </>
                 }
-                body="Tools built on published literature push famous genes up. Our scores come from measured outcomes, so a never-studied gene can still be called real."
+                body="A conceptual way to separate experimental support from how well a gene is studied. These categories guide review; they do not establish that a hit is real or provide a calibrated validation probability."
               />
             </Reveal>
           </div>
@@ -146,11 +147,8 @@ export default function TechnologyPage() {
                 its text. writing-mode gives the track its true rotated width, so
                 the gutter is sized correctly and nothing overlaps.
 
-                The cards are also in their correct quadrants now. With "chance
-                it is real" increasing rightwards and "how new" increasing
-                upwards, real belongs on the right and new at the top, which puts
-                "Real and new" in the top right where the eye goes. The previous
-                order flipped both axes, so the map contradicted its own labels. */}
+                Evidence increases rightwards and novelty upwards. The labels
+                describe a conceptual review aid, not measured probabilities. */}
             <div className="grid grid-cols-[auto_1fr] grid-rows-[1fr_auto] gap-x-3 gap-y-2">
               <div
                 className="row-start-1 col-start-1 flex items-center justify-center
@@ -185,7 +183,7 @@ export default function TechnologyPage() {
               </div>
 
               <div className="row-start-2 col-start-2 text-[0.7rem] tracking-[0.2em] uppercase text-muted text-center">
-                chance it is real
+                strength of evidence
               </div>
             </div>
           </Reveal>
@@ -199,15 +197,15 @@ export default function TechnologyPage() {
             <Reveal>
               <SectionHeading
                 tone="dark"
-                eyebrow="Where we stand today"
+                eyebrow="Measured research comparison"
                 title={
                   <>
-                    Predicting a new screen,
+                    Replaying published screens,
                     <br />
                     including our own score.
                   </>
                 }
-                body="How well each method ranks a new screen's hits from its description alone. We match the frontier ensemble to three decimals, with no model API and the same answer every run. The top row is an oracle that reads the answers, so it is a ceiling rather than a result."
+                body="The new research router scored below the published frontier ensemble and was not promoted. Predictions were evaluated with the official metric without target-library filtering or backfill. Cached model predictions and a public test set do not establish prospective performance. The oracle selects with test answers."
               />
             </Reveal>
             <p className="mt-6 text-sm text-white/80">
@@ -237,8 +235,7 @@ export default function TechnologyPage() {
                       {b.value.toFixed(3)}
                     </span>
                   </div>
-                  {/* Widths are a share of the oracle row, which is the ceiling
-                      this whole chart is measured against. A 0 to 1 axis would
+                  {/* Widths are a share of the oracle reference row. A 0 to 1 axis would
                       render every bar as a sliver and hide the differences the
                       section is about. */}
                   <div className="h-2 rounded-full bg-white/10 overflow-hidden">
@@ -256,7 +253,7 @@ export default function TechnologyPage() {
               );
             })}
             <li className="pt-2 text-xs text-white/70 list-none">
-              Higher is better. Bars are drawn against the oracle row.
+              Higher AnDCG is better; it is not percent accuracy. Bars are scaled to the oracle reference, not a mathematical performance ceiling.
             </li>
           </Stagger>
         </div>
@@ -273,10 +270,10 @@ export default function TechnologyPage() {
                 <>
                   Four numbers,
                   <br />
-                  checked against someone else.
+                  with their limitations.
                 </>
               }
-              body="Not our own benchmarks. Each of these is measured against a published screen or a published method, so it can be disagreed with."
+              body="Measured benchmark and real-data checks, including a failed research hypothesis. Inspect downloadable evidence, data provenance and uncertainty on the Evidence page."
             />
           </Reveal>
 
@@ -299,8 +296,8 @@ export default function TechnologyPage() {
 
           <Reveal delay={0.1}>
             <div className="mt-10">
-              <LinkButton href="/pipeline" tone="ghost" icon="none">
-                How the pipeline works
+              <LinkButton href="/evidence" tone="ghost" icon="none">
+                Inspect the measured evidence
               </LinkButton>
             </div>
           </Reveal>

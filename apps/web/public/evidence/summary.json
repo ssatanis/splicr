@@ -1,0 +1,203 @@
+{
+  "measurement_date": "2026-09-27",
+  "dataset": "Genentech/assaybench \u00b7 biogrid/yearfold0",
+  "split": {
+    "train": 1349,
+    "validation": 218,
+    "test": 334
+  },
+  "metric": "Adjusted nDCG@100",
+  "references": {
+    "published_embedding_knn": {
+      "mean": 0.06460030169548284,
+      "ci95": [
+        0.03844434514093022,
+        0.10169878169833363
+      ]
+    },
+    "published_ensemble": {
+      "mean": 0.16309105341547825,
+      "ci95": [
+        0.12435158672545148,
+        0.21169275502755247
+      ]
+    },
+    "published_gemini3pro": {
+      "mean": 0.15699111156489173,
+      "ci95": [
+        0.11807350568432998,
+        0.20855967953550772
+      ]
+    },
+    "published_gpt54": {
+      "mean": 0.14697605791551085,
+      "ci95": [
+        0.11011813591874998,
+        0.1916820843579909
+      ]
+    },
+    "published_oracle_knn": {
+      "mean": 0.29178431087462314,
+      "ci95": [
+        0.2351279263367456,
+        0.34609295509125787
+      ]
+    },
+    "published_phenotype_frequency": {
+      "mean": 0.13343958615780954,
+      "ci95": [
+        0.0779636201361144,
+        0.21394591647621672
+      ]
+    },
+    "splicr_legacy_seed0": {
+      "mean": 0.13616124340731678,
+      "ci95": [
+        0.07962425682965675,
+        0.21922114197113815
+      ]
+    }
+  },
+  "router": {
+    "mean": 0.16036947764886397,
+    "ci95": [
+      0.12038642831605759,
+      0.21120068288610572
+    ],
+    "paired_vs_ensemble": {
+      "ci95": [
+        -0.015580579751069256,
+        0.006267558948259969
+      ],
+      "mean": -0.002721575766614277,
+      "n_publications": 63,
+      "n_screens": 334,
+      "repeats": 10000,
+      "seed": 20260927,
+      "unit": "publication"
+    }
+  },
+  "legacy_prior": {
+    "andcg100": 0.13605235245977712,
+    "input": "target library aware",
+    "seeds": [
+      0.13616124340731678,
+      0.13588686189512475,
+      0.13596417990114276,
+      0.13607873523830272,
+      0.1360571352278961,
+      0.13608837737657326,
+      0.13604175220224174,
+      0.13614053442961888
+    ],
+    "train": "1349 train + 218 validation"
+  },
+  "counts": {
+    "dataset": "GSE145743",
+    "library": "geckov2-a",
+    "published_table": "GSE145743_my_counts_anno_merged.txt.gz",
+    "note": "The deposited table is normalised to 10,000,000 reads per column, 5,000,000 per library across the two halves it merges, so counts are compared as counts per million rather than raw. Only GeCKOv2 library A guides are compared, because the deposited columns merge libraries A and B.",
+    "samples": [
+      {
+        "fastq": "SRR12401850_libA_plasmid.fastq.gz",
+        "published_column": "plasmid",
+        "guides_compared": 65383,
+        "median_cpm_ratio": 0.9691,
+        "fraction_within_25_percent": 0.8949,
+        "spearman": 0.9289,
+        "zero_guides_splicr": 1574,
+        "zero_guides_published": 2661,
+        "reads": 3119503,
+        "mapping_rate": 0.8893
+      },
+      {
+        "fastq": "SRR11144449_libA_T0_input.fastq.gz",
+        "published_column": "input",
+        "guides_compared": 65383,
+        "median_cpm_ratio": 0.9723,
+        "fraction_within_25_percent": 0.8885,
+        "spearman": 0.9399,
+        "zero_guides_splicr": 1748,
+        "zero_guides_published": 3013,
+        "reads": 12449815,
+        "mapping_rate": 0.8863
+      },
+      {
+        "fastq": "SRR11144453_libA_DMSO_rep1.fastq.gz",
+        "published_column": "DMSO1",
+        "guides_compared": 65383,
+        "median_cpm_ratio": 0.9763,
+        "fraction_within_25_percent": 0.8401,
+        "spearman": 0.9533,
+        "zero_guides_splicr": 3186,
+        "zero_guides_published": 4713,
+        "reads": 5896213,
+        "mapping_rate": 0.8143
+      },
+      {
+        "fastq": "SRR11144451_libA_olaparib_rep1.fastq.gz",
+        "published_column": "Olaparib1",
+        "guides_compared": 65383,
+        "median_cpm_ratio": 0.9762,
+        "fraction_within_25_percent": 0.8409,
+        "spearman": 0.9548,
+        "zero_guides_splicr": 4188,
+        "zero_guides_published": 5734,
+        "reads": 4871170,
+        "mapping_rate": 0.871
+      }
+    ]
+  },
+  "postscreen": {
+    "dataset": "GSE145743",
+    "source": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE145743",
+    "input_sha256": "a14192f5d84a23f08aaaa5dad5e253ffaf5e03e92b4a3a83eeacc628e13edb00",
+    "n_guides": 123411,
+    "n_genes": 21524,
+    "original_min_directional_fdr_hits": 39,
+    "corrected_two_family_fdr_hits": 22,
+    "statistical_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
+    "CHD1L": {
+      "gene": "CHD1L",
+      "n_guides": 6,
+      "n_good_guides": 5,
+      "lfc": -1.5486,
+      "rra_score": 0.00035339,
+      "p_value": 0.0037394,
+      "fdr": 1.0,
+      "rank": 67,
+      "direction": "depleted",
+      "mle_beta": null,
+      "mle_fdr": null,
+      "bayes_factor": null,
+      "norm_z": -3.92,
+      "drugz_fdr": 0.161,
+      "guide_lfcs": [
+        -3.3551,
+        -3.8542,
+        -1.618,
+        -1.4791,
+        -0.85796,
+        0.32767
+      ],
+      "depleted_p_value": 0.0018697,
+      "enriched_p_value": 0.91779,
+      "depleted_fdr": 0.559153,
+      "enriched_fdr": 1.0
+    },
+    "CHD1L_rank": 313
+  },
+  "postscreen_qc": "fail",
+  "sources_sha256": {
+    "research/artifacts/official_references.json": "9d64ca66c4627ce4307aee594d6607885f7ed7271d326f95ada9a3ca23db2e2e",
+    "research/artifacts/router_replay_summary.json": "20fd78f34a0ba45dc8cbcea9d24a65b0d415fc6776dcd7afa47b1eb493cd228d",
+    "research/artifacts/raw_count_reproduction.json": "3a770f4f996c124466c2579633cb364650d6cf1f8366c8e36a69adace794f226",
+    "research/artifacts/postscreen_unpaired_audit.json": "697d272cf7c48ca169b3d6d8c480fc0783e657484353c1eccc132c5034222cc2"
+  },
+  "limitations": [
+    "Public retrospective test; independent prospective validation outstanding.",
+    "No demonstrated superiority over the published ensemble.",
+    "No calibrated probability of independent validation.",
+    "Count agreement and software tests do not certify biological accuracy."
+  ]
+}

@@ -13,9 +13,8 @@
  *
  * It printed "Outcomes logged 7" directly above a reliability curve whose six
  * bin counts summed to 300, headed "Across all logged outcomes". Two
- * irreconcilable counts for the same quantity on one screen. The curve is
- * calibrated on a reference cohort, which is now named with its own denominator
- * in the panel that draws it.
+ * irreconcilable counts for the same quantity on one screen. The curve uses an invented demonstration cohort, labelled separately from
+ * the illustrative outcome table; it is not measured calibration evidence.
  *
  * And its RESULT column ran each bench outcome through VerdictBadge, so a
  * measurement the lab made came out labelled as the model's opinion of it:
@@ -111,7 +110,7 @@ export function TruthLoop() {
       <PageHeader
         dense
         title="Truth Loop"
-        body="What a lab found when it re-tested its hits. Every logged outcome retrains the score."
+        body="Illustrative validation records. Demo interactions do not save outcomes or retrain any model."
       />
       <SampleNote>
         Sample data. These {formatNumber(outcomes.length)} outcomes, the genes they name and the
@@ -167,9 +166,9 @@ export function TruthLoop() {
                 <SortTh label="Gene" {...sortProps("gene")} />
                 <SortTh label="Screen" {...sortProps("screen")} />
                 <SortTh
-                  label="Chance"
+                  label="Demo score"
                   align="right"
-                  title="The calibrated chance real the score gave this gene when it was called, before the bench answered"
+                  title="Illustrative model score at the call; not a validation probability"
                   {...sortProps("predicted", "desc")}
                 />
                 <SortTh label="Result" title="What the bench measured" {...sortProps("result")} />
@@ -194,7 +193,7 @@ export function TruthLoop() {
                       {screenNameOf(outcome)}
                     </Link>
                   </td>
-                  <td className="num-col">{Math.round(outcome.predicted * 100)}%</td>
+                  <td className="num-col">{outcome.predicted.toFixed(3)}</td>
                   <td>
                     <OutcomeBadge result={outcome.result} />
                   </td>
@@ -219,12 +218,12 @@ export function TruthLoop() {
         <Panel
           span={12}
           className="[animation-delay:60ms]"
-          title="Calibration"
-          count={`${formatNumber(calibrationN)} outcomes in the ${calibration.cohort}`}
+          title="Illustrative reliability curve"
+          count={`${formatNumber(calibrationN)} invented outcomes in the ${calibration.cohort}`}
           footer={
             <FootNote>
-              {calibration.source}. Not the {formatNumber(outcomes.length)} rows above, which cannot
-              fill six bins
+              Invented demonstration cohort; this curve is not empirical calibration evidence.
+              It is separate from the {formatNumber(outcomes.length)} illustrative rows above
             </FootNote>
           }
           bodyClassName="py-3"

@@ -9,7 +9,7 @@ import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Careers",
-  description: "Open roles at SplicR.",
+  description: "Discuss research and engineering opportunities with SplicR.",
 };
 
 export default function CareersPage() {
@@ -22,9 +22,9 @@ export default function CareersPage() {
           <div>
             <Reveal>
               <h1 className="display text-ink text-5xl md:text-6xl">
-                Our Open
+                Work with
                 <br />
-                Roles
+                SplicR
               </h1>
             </Reveal>
             <Reveal delay={0.1} className="mt-16">
@@ -51,21 +51,20 @@ export default function CareersPage() {
         </div>
 
         <div>
+          <p className="mb-8 text-body">The areas below describe work relevant to SplicR. Current vacancies, compensation, location and hiring timelines are not confirmed on this page. Contact us to discuss availability.</p>
           <RolesList />
 
           <div className="mt-20 grid md:grid-cols-2 gap-12">
             <div>
               <span className="chip text-xs">How it works</span>
               <p className="mt-5 text-lg text-ink leading-relaxed">
-                Apply with a note and something you built. We reply within a week, do one
-                technical conversation, and make a decision after a paid work trial.
+                Email a note about your interests and relevant work. Discuss any role, process or employment terms directly with the team.
               </p>
             </div>
             <div>
               <span className="chip text-xs">Where</span>
               <p className="mt-5 text-lg text-ink leading-relaxed">
-                {site.location}, near the labs we serve. Hybrid within the city; a twelve-week
-                stretch in San Francisco is possible in early 2027.
+                Location and working arrangements depend on the opportunity and should be confirmed with the team.
               </p>
             </div>
           </div>

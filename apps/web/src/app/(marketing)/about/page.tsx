@@ -19,23 +19,23 @@ const values = [
   },
   {
     title: "The record is the product",
-    body: "The statistics are shared with the field. The record of which hits validated is not.",
+    body: "Useful evidence needs source data, assay context, reproducible analysis and permitted follow-up outcomes.",
   },
   {
-    title: "Never favour famous genes",
-    body: "Our scores come from outcomes, so a never-studied gene can still be called real.",
+    title: "Test for biological bias",
+    body: "Frequent hits and familiar pathways can bias predictions. We examine these limitations and retain failed hypotheses.",
   },
   {
     title: "Private stays private",
-    body: "Your outcomes tune only your model. Public screens stay public and citable.",
+    body: "Workspace records are access-scoped. No automatic training on customer outcomes is implemented; future reuse needs explicit permission.",
   },
 ];
 
 const timeline = [
-  { when: "2025", what: "SplicR begins as a screen-analysis tool at Cornell University." },
-  { when: "Early 2026", what: "Analysis becomes commodity. We pivot to the answer key." },
-  { when: "Mid 2026", what: "Atlas v0: every public screen, cleaned and re-run one way." },
-  { when: "Now", what: "Blind tests with design partners, benchmarked on AssayBench." },
+  { when: "Implemented", what: "Local analysis, method-specific statistics, QC and evidence reports." },
+  { when: "Reproduced", what: "Official AssayBench references and four actual sequencing samples." },
+  { when: "Measured", what: "New prediction candidates did not establish a benchmark advantage." },
+  { when: "Outstanding", what: "Independent blinded validation and complete connected workspace workflows." },
 ];
 
 /**
@@ -88,7 +88,7 @@ export default function AboutPage() {
                 <FounderLink href="https://ishaansamantray.com/">
                   Ishaan Samantray
                 </FounderLink>{" "}
-                turn the world&apos;s CRISPR screens into ground truth for the next one.
+                are building tools to make CRISPR screen evidence easier to inspect and test.
               </p>
             </Reveal>
           </div>
@@ -103,8 +103,8 @@ export default function AboutPage() {
                 ensemble, so it was not a result of ours, and the technology
                 page says plainly that the models are ahead of us. */}
             {[
-              ["2,217", "Published screens indexed"],
-              ["334", "Held-out test screens"],
+              ["2,217", "ORCS v2.0.18 reference screens"],
+              ["334", "Public test screens replayed"],
             ].map(([v, l]) => (
               <div key={l} className="px-6 first:pl-0">
                 <div className="text-2xl md:text-3xl font-medium tabular-nums">{v}</div>
@@ -127,7 +127,7 @@ export default function AboutPage() {
                   Value moved to ground truth.
                 </>
               }
-              body="Anyone can get a screen analysed now. What nobody has is an answer key: the record of which hits turned out to be real. We are building it."
+              body="Established tools analyze CRISPR screens. We are building traceable evidence and follow-up workflows around them. Independent outcomes are still needed to test whether our recommendations improve experimental decisions."
             />
           </Reveal>
           <Stagger className="grid sm:grid-cols-2 gap-4">
@@ -145,7 +145,7 @@ export default function AboutPage() {
       <section className="py-16 md:py-24">
         <div className="container-x grid lg:grid-cols-[1fr_1.4fr] gap-12 lg:gap-16">
           <Reveal>
-            <SectionHeading eyebrow="How we got here" title="A short timeline." />
+            <SectionHeading eyebrow="Current status" title="What the evidence supports." />
           </Reveal>
           <div className="divide-y divide-line border-y border-line">
             {timeline.map((t) => (

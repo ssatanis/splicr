@@ -140,9 +140,9 @@ def median_ratio_size_factors(matrix: CountMatrix) -> list[float]:
 class SampleQc:
     label: str
     role: str                      # plasmid | reference | control | treatment
-    total_reads: int
+    total_reads: int | None
     mapped_reads: int
-    mapping_rate: float
+    mapping_rate: float | None
     n_guides: int
     zero_guides: int
     zero_fraction: float
@@ -153,6 +153,11 @@ class SampleQc:
     represented_fraction: float = 1.0
     verdict: Verdict = "pass"
     notes: list[str] = field(default_factory=list)
+    mapping_source: str = "count_table"
+
+    @property
+    def mapping_rate_available(self) -> bool:
+        return self.mapping_rate is not None
 
     def as_dict(self) -> dict:
         return {
@@ -160,7 +165,10 @@ class SampleQc:
             "role": self.role,
             "total_reads": self.total_reads,
             "mapped_reads": self.mapped_reads,
-            "mapping_rate": round(self.mapping_rate, 4),
+            "mapping_rate": None if self.mapping_rate is None else round(self.mapping_rate, 4),
+            "mapping_rate_available": self.mapping_rate_available,
+            "mapping_source": self.mapping_source,
+            "count_sum": self.mapped_reads,
             "zero_guides": self.zero_guides,
             "zero_fraction": round(self.zero_fraction, 5),
             "represented_fraction": round(self.represented_fraction, 4),
@@ -198,8 +206,10 @@ def sample_qc(
     total_mapped = sum(counts)
 
     source = next((s for s in matrix.per_sample if s.label == sample), None)
-    total_reads = source.total_reads if source else total_mapped
-    mapping_rate = source.mapping_rate if source else 1.0
+    # A count table contains retained guide counts, not unmapped input reads.
+    # Its column sum cannot establish the sequencing total or mapping rate.
+    total_reads = source.total_reads if source else None
+    mapping_rate = source.mapping_rate if source and source.total_reads > 0 else None
 
     q = SampleQc(
         label=sample,
@@ -215,6 +225,7 @@ def sample_qc(
         gini=gini(counts),
         skew_ratio=skew_ratio(counts),
         mean_reads_per_guide=total_mapped / n if n else 0.0,
+        mapping_source="read_counting_summary" if source else "count_table",
     )
 
     verdicts: list[Verdict] = []
@@ -239,7 +250,7 @@ def sample_qc(
         verdicts.append("warn")
         q.notes.append(f"{q.zero_fraction:.1%} of guides have no reads.")
 
-    if source is not None:
+    if q.mapping_rate is not None:
         if q.mapping_rate < thresholds.mapping_rate_min:
             verdicts.append("fail")
             q.notes.append(
@@ -249,6 +260,13 @@ def sample_qc(
         elif q.mapping_rate < thresholds.mapping_rate_warn:
             verdicts.append("warn")
             q.notes.append(f"{q.mapping_rate:.1%} of reads mapped.")
+    elif source is None:
+        q.notes.append("Mapping rate is unavailable for count-only input: unmapped reads "
+                       "and total sequenced reads were not supplied. Count sums describe "
+                       "the uploaded table, not sequencing mapping efficiency.")
+    else:
+        q.notes.append("Mapping rate is undefined because the read-counting summary "
+                       "contains zero total reads.")
 
     if not math.isinf(q.skew_ratio) and q.skew_ratio > thresholds.skew_ratio_max:
         verdicts.append("warn")
@@ -538,6 +556,7 @@ def screen_qc(
     control: list[str],
     library: Library,
     thresholds: QcThresholds = SETTINGS.qc,
+    assess_essentiality: bool = True,
 ) -> ScreenQc:
     samples = [sample_qc(matrix, s, roles.get(s, "treatment"), thresholds) for s in matrix.samples]
 
@@ -549,7 +568,7 @@ def screen_qc(
     # NNMD -2.63 against its plasmid, the drug contrast gives -0.02, which would
     # be reported as a failed screen.
     dropout_t, dropout_c, dropout_label = dropout_contrast(roles, treatment, control)
-    lfc = gene_log_fold_changes(matrix, dropout_t, dropout_c) if dropout_c else {}
+    lfc = gene_log_fold_changes(matrix, dropout_t, dropout_c) if dropout_c and assess_essentiality else {}
     value, n_ess, n_non, nnmd_reason = nnmd(lfc, library.taxid)
     if not dropout_c:
         # Say what is actually missing. This message used to assert that no
@@ -570,6 +589,8 @@ def screen_qc(
                 "essentiality out, so it cannot stand in. Pass --role <label>=plasmid "
                 "for the plasmid pool or --role <label>=reference for a T0 sample"
             )
+    if not assess_essentiality:
+        nnmd_reason = "essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay"
 
     area = None
     if lfc:
@@ -613,7 +634,7 @@ def screen_qc(
     # an arm that lost its dropout signal, and unlike peer agreement this works
     # with two replicates, which is what most labs run.
     nnmd_by_arm: dict[str, float | None] = {}
-    if dropout_c:
+    if dropout_c and assess_essentiality:
         for label in dropout_t:
             arm_lfc = gene_log_fold_changes(matrix, [label], dropout_c)
             nnmd_by_arm[label] = nnmd(arm_lfc, library.taxid)[0]
@@ -701,7 +722,9 @@ def screen_qc(
             "only. If this was meant to be genome-wide, the library call is wrong."
         )
 
-    if value is None:
+    if not assess_essentiality:
+        notes.append(f"NNMD/AUROC not assessed: {nnmd_reason}.")
+    elif value is None:
         notes.append(f"NNMD could not be computed: {nnmd_reason}.")
         verdicts.append("warn")
     elif value > thresholds.nnmd_max:
@@ -767,7 +790,8 @@ def screen_qc(
         verdicts.append("warn")
         notes.append(
             f"{label} lost markedly more guides than its peers and is treated as "
-            "bottlenecked; its contribution is down-weighted."
+            "bottlenecked. Its counts are retained; inspect the sample and compare "
+            "results with and without it before interpreting hits."
         )
 
     return ScreenQc(

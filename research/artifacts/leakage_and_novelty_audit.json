@@ -1,0 +1,289 @@
+{
+  "absolute_label_cross_split": [],
+  "absolute_label_duplicate_groups": 182,
+  "exact_label_cross_split": [],
+  "exact_label_duplicate_groups": 6,
+  "id_cross_split": {},
+  "limitations": [
+    "Exact signatures do not detect all related experiments or alternate processing.",
+    "Publication IDs alone cannot certify independence.",
+    "Free-text metadata and LLM pretraining can contain post-publication clues.",
+    "Year extracted from author string is descriptive and not an independently verified date."
+  ],
+  "publication_cross_split": {},
+  "retrospective_subgroups": {
+    "ensemble": {
+      "author_year:2022": {
+        "ci95": [
+          0.11222148455825472,
+          0.2575060305203087
+        ],
+        "mean": 0.17241256992300083,
+        "n_publications": 31,
+        "n_screens": 187,
+        "repeats": 5000,
+        "seed": 20260927,
+        "unit": "publication"
+      },
+      "author_year:2023": {
+        "ci95": [
+          0.08991810887261746,
+          0.21138297492069671
+        ],
+        "mean": 0.14364719511161117,
+        "n_publications": 26,
+        "n_screens": 81,
+        "repeats": 5000,
+        "seed": 20260927,
+        "unit": "publication"
+      },
+      "author_year:2024": {
+        "ci95": [
+          0.0,
+          0.1633680749084373
+        ],
+        "mean": 0.1576184203387584,
+        "n_publications": 3,
+        "n_screens": 60,
+        "repeats": 5000,
+        "seed": 20260927,
+        "unit": "publication"
+      },
+      "author_year:2025": {
+        "ci95": [
+          0.0,
+          0.29677984789140904
+        ],
+        "mean": 0.18978887346709528,
+        "n_publications": 3,
+        "n_screens": 6,
+        "repeats": 5000,
+        "seed": 20260927,
+        "unit": "publication"
+      },
+      "cell_line:seen": {
+        "ci95": [
+          0.12020346924088625,
+          0.21725911993724106
+        ],
+        "mean": 0.1623697944439661,
+        "n_publications": 45,
+        "n_screens": 223,
+        "repeats": 5000,
+        "seed": 20260927,
+        "unit": "publication"
+      },
+      "cell_line:unseen": {
+        "ci95": [
+          0.1037286290988122,
+          0.2367530375659446
+        ],
+        "mean": 0.16454006918707467,
+        "n_publications": 22,
+        "n_screens": 111,
+        "repeats": 5000,
+        "seed": 20260927,
+        "unit": "publication"
+      },
+      "cleaned_phenotype:seen": {
+        "ci95": [
+          0.12381328755352793,
+          0.2114883545433936
+        ],
+        "mean": 0.16309105341547825,
+        "n_publications": 63,
+        "n_screens": 334,
+        "repeats": 5000,
+        "seed": 20260927,
+        "unit": "publication"
+      },
+      "condition_name:missing": {
+        "ci95": [
+          0.04971942799165164,
+          0.3847378517034759
+        ],
+        "mean": 0.18020050339805382,
+        "n_publications": 13,
+        "n_screens": 43,
+        "repeats": 5000,
+        "seed": 20260927,
+        "unit": "publication"
+      },
+      "condition_name:seen": {
+        "ci95": [
+          0.1399473547636696,
+          0.2259481192325421
+        ],
+        "mean": 0.17821056561796977,
+        "n_publications": 18,
+        "n_screens": 70,
+        "repeats": 5000,
+        "seed": 20260927,
+        "unit": "publication"
+      },
+      "condition_name:unseen": {
+        "ci95": [
+          0.11495618296089243,
+          0.2033750726414451
+        ],
+        "mean": 0.1549730796443237,
+        "n_publications": 45,
+        "n_screens": 221,
+        "repeats": 5000,
+        "seed": 20260927,
+        "unit": "publication"
+      },
+      "library_methodology:seen": {
+        "ci95": [
+          0.12381328755352793,
+          0.2114883545433936
+        ],
+        "mean": 0.16309105341547825,
+        "n_publications": 63,
+        "n_screens": 334,
+        "repeats": 5000,
+        "seed": 20260927,
+        "unit": "publication"
+      }
+    },
+    "router": {
+      "author_year:2022": {
+        "ci95": [
+          0.11551273334577244,
+          0.2699530607509806
+        ],
+        "mean": 0.17859775426679894,
+        "n_publications": 31,
+        "n_screens": 187,
+        "repeats": 5000,
+        "seed": 20260927,
+        "unit": "publication"
+      },
+      "author_year:2023": {
+        "ci95": [
+          0.07183230676932742,
+          0.18158217231130028
+        ],
+        "mean": 0.11814551883581587,
+        "n_publications": 26,
+        "n_screens": 81,
+        "repeats": 5000,
+        "seed": 20260927,
+        "unit": "publication"
+      },
+      "author_year:2024": {
+        "ci95": [
+          0.0,
+          0.1633680749084373
+        ],
+        "mean": 0.1576184203387584,
+        "n_publications": 3,
+        "n_screens": 60,
+        "repeats": 5000,
+        "seed": 20260927,
+        "unit": "publication"
+      },
+      "author_year:2025": {
+        "ci95": [
+          0.0,
+          0.29677984789140904
+        ],
+        "mean": 0.18978887346709528,
+        "n_publications": 3,
+        "n_screens": 6,
+        "repeats": 5000,
+        "seed": 20260927,
+        "unit": "publication"
+      },
+      "cell_line:seen": {
+        "ci95": [
+          0.11174800754661358,
+          0.2088446656287592
+        ],
+        "mean": 0.15520993309948858,
+        "n_publications": 45,
+        "n_screens": 223,
+        "repeats": 5000,
+        "seed": 20260927,
+        "unit": "publication"
+      },
+      "cell_line:unseen": {
+        "ci95": [
+          0.10820120717087817,
+          0.24814130785270277
+        ],
+        "mean": 0.17073504913094248,
+        "n_publications": 22,
+        "n_screens": 111,
+        "repeats": 5000,
+        "seed": 20260927,
+        "unit": "publication"
+      },
+      "cleaned_phenotype:seen": {
+        "ci95": [
+          0.12049942103739764,
+          0.21079013444977887
+        ],
+        "mean": 0.16036947764886397,
+        "n_publications": 63,
+        "n_screens": 334,
+        "repeats": 5000,
+        "seed": 20260927,
+        "unit": "publication"
+      },
+      "condition_name:missing": {
+        "ci95": [
+          0.02817415401772788,
+          0.40356635200838165
+        ],
+        "mean": 0.17227299435118018,
+        "n_publications": 13,
+        "n_screens": 43,
+        "repeats": 5000,
+        "seed": 20260927,
+        "unit": "publication"
+      },
+      "condition_name:seen": {
+        "ci95": [
+          0.1399473547636696,
+          0.2259481192325421
+        ],
+        "mean": 0.17821056561796977,
+        "n_publications": 18,
+        "n_screens": 70,
+        "repeats": 5000,
+        "seed": 20260927,
+        "unit": "publication"
+      },
+      "condition_name:unseen": {
+        "ci95": [
+          0.11313422583821506,
+          0.19935320345481178
+        ],
+        "mean": 0.15240238544960152,
+        "n_publications": 45,
+        "n_screens": 221,
+        "repeats": 5000,
+        "seed": 20260927,
+        "unit": "publication"
+      },
+      "library_methodology:seen": {
+        "ci95": [
+          0.12049942103739764,
+          0.21079013444977887
+        ],
+        "mean": 0.16036947764886397,
+        "n_publications": 63,
+        "n_screens": 334,
+        "repeats": 5000,
+        "seed": 20260927,
+        "unit": "publication"
+      }
+    }
+  },
+  "splits": {
+    "test": 334,
+    "train": 1349,
+    "validation": 218
+  }
+}

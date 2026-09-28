@@ -1,0 +1,40 @@
+==============================================================================
+SplicR benchmark.py self-test
+==============================================================================
+[1] perfect ranking          AnDCG@100 = 1.000000  (expect 1.0)
+[2] random ranking (200x)    AnDCG@100 = 0.021243 clamped, -0.004083 unclamped  (expect ~0)
+[3] reversed ranking         AnDCG@100 = 0.000000 clamped, -0.204433 unclamped  (expect < 0 unclamped)
+[4a] nDCG_rand analytic      0.169733993 vs closed form 0.169733993  (delta 8.33e-17)
+[4b] IDCG clips negatives    IDCG@5=1.504744; ranking two negatives gives nDCG=-1.041929 (expect < 0)
+[4c] short list is penalised top-10 only scores 0.185743 vs 1.000000 (delta -0.814257, expect < 0)
+[4d] condensed burns slots   50 distinct unmeasured genes first -> 0.867561 vs 1.000000 clean; 50 copies of one name -> 1.000000 (dedup)
+------------------------------------------------------------------------------
+loading real AssayBench splits ...
+    train=1349 validation=218 test=334
+[5a] upstream parity         max |mine - upstream| = 0.000e+00 over 2338 (screen, prediction-style) pairs
+------------------------------------------------------------------------------
+scorer smoke test on 40 train / 25 validation screens (NOT the benchmark run)
+    random                       AnDCG@100 = 0.0314 +/- 0.0119 (n=25, clamped@0=14, missing=0)
+    gene_frequency_prior         AnDCG@100 = 0.0936 +/- 0.0197 (n=25, clamped@0=9, missing=0)
+    gene_frequency_prior+s25+np0.5 AnDCG@100 = 0.0929 +/- 0.0197 (n=25, clamped@0=9, missing=0)
+    retrieval_knn[k=25,p=3,s=8]  AnDCG@100 = 0.0924 +/- 0.0196 (n=25, clamped@0=9, missing=0)
+  alpha=0.00  val AnDCG@100=0.0929
+  alpha=0.50  val AnDCG@100=0.0932
+  alpha=1.00  val AnDCG@100=0.0924
+  selected alpha=0.50 (val 0.0932)
+    hybrid[alpha=0.50]           AnDCG@100 = 0.0932 +/- 0.0197 (n=25, clamped@0=9, missing=0)
+    oracle_knn[ORACLE:reads_test_labels] AnDCG@100 = 0.2948 +/- 0.0468 (n=10, clamped@0=0, missing=0)   <-- ORACLE, reads eval labels
+    DepMap 24Q4 inferred common essentials loaded: 1523 genes (external)
+/Users/sahaj/Documents/Projects/SplicR/engine/.tools/env/lib/python3.11/site-packages/lightgbm/sklearn.py:1106: LGBMDeprecationWarning: The argument 'eval_set' is deprecated, use 'eval_X' and 'eval_y' instead.
+  eval_set = _validate_eval_set_Xy(eval_set=eval_set, eval_X=eval_X, eval_y=eval_y)
+    gbm_lambdarank               AnDCG@100 = 0.1275 +/- 0.0276 (n=25, clamped@0=9, missing=0)
+    top features: knn_rate=593, stratum_rate_screen_type=460, stratum_rate_phenotype=393, prior_rate_smoothed=294, mean_relevance=265
+------------------------------------------------------------------------------
+all checks passed
+------------------------------------------------------------------------------
+calibration on yearfold0: train=1349 test=334
+  gene_frequency_prior, unstratified                   0.1216  [0.1214, 0.1217] over 4 seeds
+  gene_frequency_prior, coarse-phenotype (published 0.1334) 0.1332  [0.1325, 0.1338] over 4 seeds
+  random                                               0.0132  [0.0129, 0.0135] over 4 seeds
+  sweeping oracle: 450,566 metric evaluations ...
+  oracle_knn (published 0.2918) [ORACLE]               0.2918

@@ -29,7 +29,9 @@ async function resolveUser(): Promise<ShellUser> {
 
   // Demo mode (cookie set by /api/demo). The proxy already redirected
   // anyone without a session or the demo cookie to /login.
-  return { name: "Demo user", email: "demo@splicr.org", org: demo ? "Demo workspace" : "Workspace", demo: true };
+  return demo
+    ? { name: "Demo user", email: "demo@splicr.org", org: "Demo workspace", demo: true }
+    : { name: "Session unavailable", email: "", org: "No active workspace", demo: false };
 }
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {

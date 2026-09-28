@@ -24,10 +24,10 @@ export const metadata: Metadata = {
     template: "%s | SplicR",
   },
   description:
-    "For every hit in a CRISPR screen, SplicR tells you how likely it is to be real, why, and what to do next. Built on every public screen re-analyzed the same way, plus the record of which hits held up.",
+    "CRISPR screen analysis and prediction research with traceable evidence, measured benchmarks and explicit uncertainty.",
   openGraph: {
-    title: "SplicR | The Answer Key for CRISPR Screens",
-    description: "Know which hits are real before you spend months finding out.",
+    title: "SplicR | CRISPR Screen Evidence",
+    description: "Explore measured results, analysis capabilities and scientific limitations.",
     siteName: "SplicR",
     type: "website",
   },

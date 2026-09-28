@@ -48,7 +48,7 @@ export default function ContactPage() {
           <div className="mt-20 grid lg:grid-cols-[1fr_1fr] gap-16 items-start">
             <div>
               <Reveal>
-                <h2 className="display text-ink text-4xl md:text-5xl">Send a Request</h2>
+                <h2 className="display text-ink text-4xl md:text-5xl">Prepare an email</h2>
               </Reveal>
               <Reveal delay={0.1} className="mt-10 max-w-md">
                 <ContactForm />
@@ -57,25 +57,23 @@ export default function ContactPage() {
 
             <Reveal delay={0.15}>
               <div className="rounded-[1.75rem] bg-orange-500 text-white p-8 md:p-10 max-w-lg">
-                <h3 className="text-3xl md:text-4xl font-medium text-white">The blind test</h3>
+                <h3 className="text-3xl md:text-4xl font-medium text-white">A proposed blinded evaluation</h3>
                 <div className="mt-8 flex items-end gap-8">
                   <Orb size={96} />
                   <Orb size={140} tone="cyan" />
                 </div>
                 <div className="mt-10 grid grid-cols-2 gap-8">
                   <div>
-                    <div className="text-4xl font-medium">3 labs</div>
-                    <div className="text-white/85 mt-1">To start the pilot</div>
+                    <div className="text-4xl font-medium">1. Freeze</div>
+                    <div className="text-white/85 mt-1">Predictions and outcome definitions</div>
                   </div>
                   <div>
-                    <div className="text-4xl font-medium">2 wks</div>
-                    <div className="text-white/85 mt-1">From upload to reveal</div>
+                    <div className="text-4xl font-medium">2. Reveal</div>
+                    <div className="text-white/85 mt-1">Independent outcomes after scoring</div>
                   </div>
                 </div>
                 <p className="mt-8 text-white/90 leading-relaxed">
-                  Send a screen you finished a year or two ago. Do not tell us which hits worked.
-                  SplicR makes its calls first, then you reveal the truth and we score it on the
-                  spot.
+                  Discuss a study whose validation outcomes can be withheld from model development. Agree on eligibility, timing and the analysis plan before sharing data. No completed independent pilot result is claimed here.
                 </p>
               </div>
             </Reveal>

@@ -10,13 +10,13 @@ import { Reveal } from "@/components/ui/reveal";
 export const metadata: Metadata = {
   title: "Pipeline",
   description:
-    "From reads to a calibrated Hit Report in nine stages: ingest, detect, count, QC, hit calling, artifact flags, Atlas context, score and report.",
+    "From reads to an evidence report: ingest, detect, count, QC, hit calling, artifact flags, Atlas context and review.",
 };
 
 const numbers = [
   { value: "9", label: "Stages, start to finish" },
-  { value: "4", label: "Hit callers, run side by side" },
-  { value: "6", label: "Artifact checks per hit" },
+  { value: "4", label: "Caller options, selected by design" },
+  { value: "6", label: "Artifact categories, when data permit" },
 ];
 
 export default function PipelinePage() {
@@ -34,13 +34,14 @@ export default function PipelinePage() {
               <h1 className="font-serif text-white leading-[0.95] tracking-[-0.02em] text-[clamp(2.4rem,6vw,4.4rem)]">
                 From reads to a
                 <br />
-                calibrated answer
+                traceable report
               </h1>
             </Reveal>
             <Reveal delay={0.1}>
               <p className="mt-6 text-lg text-white/90 leading-relaxed">
-                One pipeline runs on your screen and on every screen in the Atlas. That is
-                what makes the numbers comparable.
+                Analyze available reads or counts with explicit QC and statistical methods.
+                Atlas entries retain their source studies&apos; methods; they have not all
+                been reprocessed through this pipeline. Validation probability is not yet available.
               </p>
             </Reveal>
           </div>

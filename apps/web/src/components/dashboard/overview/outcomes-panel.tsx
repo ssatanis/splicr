@@ -101,7 +101,7 @@ export function OutcomesPanel({
       control={<PanelLink href="/dashboard/validation">Truth Loop</PanelLink>}
       footer={
         <>
-          <FootNote>Chance real as recorded at the call, not recomputed after.</FootNote>
+          <FootNote>Model score recorded at the call; calibration is not established.</FootNote>
           <span className="num shrink-0">
             {resolved.length === 0
               ? "None resolved"
@@ -114,7 +114,7 @@ export function OutcomesPanel({
         <div className="px-[var(--panel-gutter)] py-3.5">
           <Empty
             title="No outcomes logged"
-            body="When a candidate is re-tested at the bench, log what happened. That is what tells you whether the chance real column is worth anything."
+            body="No independent validation records are available in this workspace. Outcomes are needed to evaluate model scores."
             action={
               <Link href="/dashboard/validation" className="btn btn-teal btn-sm rounded-lg">
                 Open Truth Loop
@@ -144,7 +144,7 @@ export function OutcomesPanel({
                 active={key === "predicted"}
                 dir={dir}
                 onToggle={() => toggle("predicted", "desc")}
-                title="Chance real the gene carried at the moment it was called, in percent."
+                title="Recorded model score at the call, not a calibrated probability."
               />
               <SortTh
                 label="Result"
@@ -179,7 +179,7 @@ export function OutcomesPanel({
                 </td>
                 <td className="num-col">
                   {row.predicted !== null ? (
-                    `${Math.round(row.predicted * 100)}%`
+                    row.predicted.toFixed(3)
                   ) : (
                     <NotRecorded />
                   )}

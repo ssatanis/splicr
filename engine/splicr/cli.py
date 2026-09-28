@@ -249,6 +249,11 @@ def cmd_run(args: argparse.Namespace) -> int:
         cell_line=args.cell_line,
         model_id=args.model_id,
         phenotype=args.phenotype,
+        modality=args.modality,
+        condition=args.condition,
+        fitness_assay=args.fitness_assay,
+        run_drugz=args.drugz,
+        drugz_paired=args.drugz_paired,
     )
     result = run_pipeline(spec, Path(args.workdir or WORK_DIR) / "run",
                           org_id=org_id, persist=args.persist)
@@ -296,6 +301,13 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument("--cell-line")
     r.add_argument("--model-id", help="DepMap ModelID, enables measured copy-number flagging")
     r.add_argument("--phenotype")
+    r.add_argument("--modality", choices=("knockout", "inhibition", "activation"), default="knockout")
+    r.add_argument("--condition", help="chemical or experimental condition for Atlas context")
+    r.add_argument("--fitness-assay", action=argparse.BooleanOptionalAction, default=None,
+                   help="declare whether essential-gene dropout QC is appropriate")
+    r.add_argument("--drugz", action="store_true", help="run DrugZ for a chemogenetic contrast")
+    r.add_argument("--drugz-paired", action="store_true",
+                   help="with --drugz: treatment/control lists are matched pairs in the listed order")
     r.add_argument("--workdir")
     r.add_argument("--persist", action="store_true", help="write results to Postgres")
     r.add_argument("--org", help="organization uuid")

@@ -62,11 +62,12 @@ export default async function MembersPage({
   ]);
   const joined = query.joined === "1";
 
-  // No session means read-only browsing. The proxy only lets that happen with
-  // the demo cookie, but falling back on a missing user as well means this page
-  // cannot crash on an expired session either.
-  if (isDemo || user === null) {
+  // Only an explicit demo session may display illustrative people or invites.
+  if (isDemo) {
     return <MembersView {...demoView()} />;
+  }
+  if (user === null) {
+    return <Card title="Session unavailable"><p>Sign in again to view your workspace members.</p></Card>;
   }
 
   if (org === null) {

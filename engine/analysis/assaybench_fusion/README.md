@@ -1,12 +1,20 @@
 # AssayBench fusion — the measurement scripts
 
+**Archived exploratory scripts.** Public test labels have been inspected in this
+workstream. Its results are not untouched prospective evidence. The supplied
+measured gene library and cached published predictions give some experiments
+additional inputs beyond a description-only task. For current controlled replays,
+limitations and the absence of a demonstrated benchmark win, see
+[the final report](../../../research/10_FINAL_RESULTS.md) and
+[analysis index](../README.md). No archived script is a production scorer.
+
 Everything reported in `data/references/assaybench/RESULTS.md` section 8 and in
 `docs/08-assaybench-headroom.md` is produced here. The order below is the order
 the work happened in, and the negative results are kept.
 
-## The rule every script in this directory follows
+## Historical input policy and limitations
 
-A channel may read, for a query screen:
+The original exploratory policy allowed, for a query screen:
 
 * that screen's own **metadata** (any field in the parquet except `hit`,
   `relevance_genes` and `relevance_scores`),
@@ -14,10 +22,19 @@ A channel may read, for a query screen:
 * sources that are not derived from the screens being predicted — pharmacology,
   pathway membership, cell-line-independent DepMap summaries.
 
+The measured gene universe in the parquet is additional experimental-library
+information. Filtering to it before top-k changes the official description-only
+input/evaluation contract. Every baseline must receive the same inputs before
+comparison. Pre-2022 donors include validation screens; that is not a train-only
+validation protocol. External aggregate/pathway data also need release-specific
+temporal and contamination audits; “no direct screen labels” is insufficient.
+
 Two scripts break that rule **on purpose** and say so in their docstring and
 their output: `ceiling.py` and `transfer_ceiling.py` fit or select on test in
 order to bound what a channel set can express. Their numbers are diagnostics and
-are never quoted as results.
+must not be quoted as deployable performance. Their existing diagnostic values
+are retained below. Neither fitted channel scores nor donor selection defines
+a mathematical upper bound for every possible predictor.
 
 ## Build
 
@@ -48,22 +65,25 @@ are never quoted as results.
 
 | script | what it establishes |
 |---|---|
-| `ceiling.py` | fitting the blend weights **on test** caps at 0.245, so the limit is the channel set, not the tuning |
-| `transfer_ceiling.py` | even with a perfect donor-similarity function, multi-donor transfer tops out near the single-donor oracle — donor retrieval has bounded upside |
+| `ceiling.py` | historical test-fitted blend reached 0.245; diagnostic for those channels/optimizer, not a proved capacity bound |
+| `transfer_ceiling.py` | hindsight donor-transfer diagnostic for the tested algorithm; not a universal ceiling |
 | `diag_donor.py` | the best-transferring donor sits at median rank 815 of 1567 under any similarity we can compute, and shares the query's compound 1% of the time |
-| `oracle_split.py` | **the important one.** Split each screen's measured genes in half, choose the best donor on half A, score it on half B: it keeps 0.097 of 0.284, about a third. Two-thirds of the published oracle row is the maximum of 1349 noisy draws, not transferable signal |
+| `oracle_split.py` | **the important one.** Split each screen's measured genes in half, choose the best donor on half A, score it on half B: it keeps 0.097 of 0.284, about a third. The gap indicates selection optimism under this split experiment; it does not identify exactly what fraction of the official oracle is nontransferable biology |
 
 ## Reproducing
 
 ```bash
-PY=engine/.tools/env/bin/python
+PY="$PWD/engine/.tools/env/bin/python"
+export PYTHONPATH="$PWD/engine${PYTHONPATH:+:$PYTHONPATH}"
 cd engine/analysis/assaybench_fusion
 $PY build.py && $PY build_runs.py && $PY build_all3.py
 $PY run12.py          # choose the consensus size
 $PY final_fit.py      # choose the weighting scheme
-$PY evaluate.py       # score every split once, write results_fusion.json
+$PY evaluate.py       # retrospective replay; writes results_fusion.json
 $PY oracle_split.py   # the oracle selection-maximum experiment
 ```
 
-`build_all3.py` takes about a minute and rewrites the four feature caches;
-everything downstream reads those.
+These commands rebuild and overwrite local caches/results; preserve existing
+artifacts first. Source data and optional dependencies must already be available.
+A historical `build_all3.py` run took about a minute, not a runtime guarantee.
+Replaying an already exposed test set does not restore independence.

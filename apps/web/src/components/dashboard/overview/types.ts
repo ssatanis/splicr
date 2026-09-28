@@ -16,11 +16,11 @@ export interface CandidateRow {
   gene: string;
   /** Null until the artifact stage has classified the hit. */
   verdict: Verdict | null;
-  /** Calibrated probability the hit is real, 0 to 1, or null when unscored. */
+  /** Uncalibrated stored model score, or null when unscored. */
   chance: number | null;
-  /** log2 fold change at the endpoint against T0, signed. */
+  /** Recorded signed log2 fold change for the recorded comparison. */
   lfc: number | null;
-  /** Benjamini-Hochberg q-value. */
+  /** Recorded method-specific false-discovery estimate. */
   fdr: number | null;
   /**
    * How little of the Atlas has called this gene, 0 to 1.
@@ -68,7 +68,7 @@ export interface OutcomeRow {
   /** Null when the read cannot say which screen the outcome belongs to. */
   screenId: string | null;
   assay: string | null;
-  /** The chance real this gene carried when it was called, not recomputed. */
+  /** The model score recorded when called, not recomputed or assumed calibrated. */
   predicted: number | null;
   result: "validated" | "failed" | "inconclusive" | "pending";
 }

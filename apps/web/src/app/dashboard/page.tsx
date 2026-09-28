@@ -33,12 +33,11 @@
  * Two states, and the page never pretends to be in the other one:
  *
  *  - A signed-in lab sees its own rows, counted in Postgres. Where the engine has
- *    not produced a number yet, for instance a calibrated chance on a screen whose
+ *    not produced a number yet, for instance a model score on a screen whose
  *    `score` stage was skipped, the table says so rather than showing a figure
  *    nobody computed.
- *  - A demo visitor, or a signed-in account with no workspace, sees the sample
- *    screens from `@/lib/mock/data`, labelled as sample data beside the title and
- *    again in the rail.
+ *  - An explicit demo visitor sees labelled sample screens. A signed-in account
+ *    with no workspace receives a missing-workspace state, never sample records.
  */
 import { Plus } from "lucide-react";
 import Link from "next/link";
@@ -84,8 +83,11 @@ export const metadata = { title: "Overview" };
 export default async function OverviewPage() {
   const { org, isDemo } = await getCurrentContext();
 
-  if (isDemo || org === null) {
-    return <SampleOverview signedIn={!isDemo} />;
+  if (isDemo) {
+    return <SampleOverview signedIn={false} />;
+  }
+  if (org === null) {
+    return <div className="space-y-4"><PageHeader dense title="Workspace unavailable" body="No active workspace could be resolved for this session." /><p className="text-sm text-muted">Sign in with an account that belongs to a workspace. If you already have one, reload to try again.</p></div>;
   }
 
   const [stats, recent, headline, loggedOutcomes, catalog] = await Promise.all([
@@ -193,7 +195,7 @@ const CANDIDATES_CELL = "panel-in min-h-0 max-h-[70vh] md:col-span-12 lg:col-spa
 const STACK_CELL = "md:col-span-12 lg:col-span-6";
 
 /** Where the likely-real cut sits, spelled out once for every label that cites it. */
-const REAL_CUT = `chance real ${LIKELY_REAL_THRESHOLD.toFixed(2)} or above`;
+const REAL_CUT = `model score ${LIKELY_REAL_THRESHOLD.toFixed(2)} or above`;
 
 // ---------------------------------------------------------------------------
 // The real thing
@@ -332,8 +334,8 @@ function WorkspaceOverview({
             denominator={`of ${formatNumber(stats.hits)} called`}
             definition={
               headline.scored
-                ? "Ranked by calibrated chance real."
-                : "No calibrated chance yet, so ranked by FDR."
+                ? "Ranked by recorded model score; calibration is not established."
+                : "No recorded model score, so ranked by FDR."
             }
             tone="orange"
             href="/dashboard/screens"
@@ -379,8 +381,8 @@ function WorkspaceOverview({
         } : null}
         provenance={
           headline.scored
-            ? `Ranked by calibrated chance real, net of artifact flags.`
-            : `Ranked by FDR, because no hit here carries a calibrated chance yet.`
+            ? `Ranked by recorded model score. This is not a validation probability.`
+            : `Ranked by FDR; no model score is recorded.`
         }
         emptyBody="Either no run has called a hit yet, or the read did not complete. Nothing is being reported as zero."
       />

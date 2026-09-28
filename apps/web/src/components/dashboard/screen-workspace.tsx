@@ -142,7 +142,7 @@ export function ScreenWorkspace({ screen, tab }: { screen: Screen; tab: string }
                   <Kpi
                     label="Likely real"
                     value={screen.realHits}
-                    hint={`chance ≥ ${Math.round(LIKELY_REAL_THRESHOLD * 100)}%`}
+                    hint={`demo score ≥ ${LIKELY_REAL_THRESHOLD.toFixed(2)}`}
                     tone="orange"
                   />
                   <Kpi label="Real and new" value={counts["Real and new"]} hint="Validate first" tone="cyan" />
@@ -325,7 +325,7 @@ function QcPanel({ hits }: { hits: Hit[] }) {
             <ul className="mt-3 flex flex-wrap gap-2">
               {movedHits.map((h) => (
                 <li key={h.gene} className="chip bg-mist-soft text-xs">
-                  {h.gene} · {Math.round(h.chance * 100)}%
+                  {h.gene} · {h.chance.toFixed(3)}
                 </li>
               ))}
             </ul>
@@ -507,7 +507,7 @@ function HitsTable({ hits, onSelect }: { hits: Hit[]; onSelect: (h: Hit) => void
             onChange={(e) => setSort(e.target.value as typeof sort)}
             className="rounded-full border border-line px-3 py-1.5 bg-white text-ink"
           >
-            <option value="chance">Sort: chance real</option>
+            <option value="chance">Sort: demo score</option>
             <option value="novelty">Sort: novelty</option>
             <option value="rank">Sort: statistical rank</option>
           </select>
@@ -522,7 +522,7 @@ function HitsTable({ hits, onSelect }: { hits: Hit[]; onSelect: (h: Hit) => void
             <tr>
               <th scope="col">#</th>
               <th scope="col">Gene</th>
-              <th scope="col">Chance real</th>
+              <th scope="col">Demo score</th>
               <th scope="col">Verdict</th>
               <th scope="col">Arm</th>
               <th scope="col">LFC</th>
@@ -610,7 +610,7 @@ function ArtifactsPanel({ hits, onSelect }: { hits: Hit[]; onSelect: (h: Hit) =>
     <div className="space-y-4">
       <Card>
         <p className="text-sm text-body">
-          Every flag below costs its gene log-odds on the calibrated score, so a flagged candidate cannot outrank a
+          In this illustrative dataset, flags reduce a heuristic score. These scores are not calibrated probabilities. A flagged candidate scores below an otherwise identical
           clean candidate carrying the same statistics. The flag is still printed next to the statistic that raised it
           rather than folded into it, so you can disagree with the call.
         </p>
@@ -628,7 +628,7 @@ function ArtifactsPanel({ hits, onSelect }: { hits: Hit[]; onSelect: (h: Hit) =>
                   aria-haspopup="dialog"
                   className="chip bg-mist-soft hover:bg-teal-800 hover:text-white text-xs"
                 >
-                  {h.gene} · {Math.round(h.chance * 100)}%
+                  {h.gene} · {h.chance.toFixed(3)}
                 </button>
               ))}
               {list.length > 14 && <span className="chip text-xs">+{list.length - 14} more</span>}
@@ -654,7 +654,7 @@ function AtlasPanel({ screen, hits }: { screen: Screen; hits: Hit[] }) {
     <div className="grid lg:grid-cols-[1.4fr_1fr] gap-4">
       <Card
         title="Similar screens"
-        subtitle={`Public screens in the Atlas matching ${screen.organism} and ${screen.modality}, ranked by learned similarity`}
+        subtitle={`Public screens in the Atlas matching ${screen.organism} and ${screen.modality}, illustrative similarity ordering`}
       >
         {similar.length === 0 ? (
           <p className="text-sm text-muted">
@@ -705,7 +705,7 @@ function planCsv(screen: Screen, plan: Hit[]): string {
     "# SplicR validation plan. SAMPLE DATA, not a measurement of any real screen.",
     `# screen: ${screen.id} · ${screen.name}`,
     `# assay: ${screen.benchAssay}`,
-    `# ranked by calibrated chance real, artifacts and genes already answered at the bench removed`,
+    `# ranked by illustrative model score, artifacts and genes already answered at the bench removed`,
     "# guide sequences are not in this file: the sample dataset carries no guide table, so none is invented here",
     "screen_id,gene_symbol,chance_real,verdict,log2_fold_change,direction,guides_agreeing,guides_in_library,assay",
   ];
@@ -749,7 +749,7 @@ function ValidationPanel({ screen }: { screen: Screen }) {
       <div className="space-y-4">
         <Card
           title="Validation plan"
-          subtitle={`The top ${plan.length} by calibrated chance real, of ${queue.length} candidates not yet answered at the bench`}
+          subtitle={`The top ${plan.length} by illustrative model score, of ${queue.length} candidates not yet answered at the bench`}
           action={
             <button type="button" onClick={download} className="btn btn-orange btn-sm">
               <Download className="w-4 h-4" aria-hidden="true" /> Order file
@@ -759,13 +759,13 @@ function ValidationPanel({ screen }: { screen: Screen }) {
           <div className="overflow-x-auto thin-scroll">
             <table className="table-base min-w-[820px]">
               <caption className="sr-only">
-                Genes to re-test on this screen, ranked by calibrated chance real. The guide counts are in the order
+                Genes to re-test on this screen, ranked by illustrative model score. The guide counts are in the order
                 file.
               </caption>
               <thead>
                 <tr>
                   <th scope="col">Gene</th>
-                  <th scope="col">Chance</th>
+                  <th scope="col">Demo score</th>
                   <th scope="col">Call</th>
                   <th scope="col">Arm</th>
                   <th scope="col">Flags</th>
@@ -837,9 +837,7 @@ function ValidationPanel({ screen }: { screen: Screen }) {
               outcome retrains the score", directly beneath controls that wrote
               to component state and lost it on the next navigation. */}
           <p className="mt-3 rounded-2xl border-l-4 border-orange-500 bg-orange-50 px-4 py-3 text-xs text-ink">
-            <span className="font-medium">Nothing here is saved.</span> The workspace database is unreachable, so an
-            outcome you mark stays in this tab and is gone when you leave it. Logged outcomes are what retrains the
-            score, and none of these will be logged until the database is back.
+            <span className="font-medium">Nothing here is saved.</span> These demo controls only update this tab and reset when you leave it. They do not save validation outcomes or retrain any model.
           </p>
           <p className="mt-2 text-xs text-muted">
             The order file carries the genes, the arm and the assay. It carries no guide sequences, because the sample
@@ -865,7 +863,7 @@ function ValidationPanel({ screen }: { screen: Screen }) {
                   </span>
                   <span className="shrink-0 text-right">
                     <span className="text-ink">{OUTCOME_RESULT[outcome.result].label}</span>
-                    <span className="block text-xs text-muted">called at {Math.round(hit.chance * 100)}%</span>
+                    <span className="block text-xs text-muted">called at {hit.chance.toFixed(3)}</span>
                   </span>
                 </li>
               ))}

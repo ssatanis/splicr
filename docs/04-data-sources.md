@@ -1,7 +1,11 @@
 # Data sources
 
-`bash scripts/data/download.sh` fetches everything below into
-`data/references`. Nothing here is committed to the repository.
+`bash scripts/data/download.sh` attempts reference downloads into
+`data/references`; large archives require `--all`, and gated sources can require
+manual retrieval. Large reference files are ignored. This document retains
+historical ingestion observations; current provenance and licensing limitations
+are in [the data audit](../research/04_DATA_AUDIT.md). Source-specific terms and
+file manifests take precedence over shorthand in this table.
 
 ## What downloads
 
@@ -11,24 +15,29 @@
 | `annotation/human_mouse_hcop.txt.gz` | HGNC HCOP | 3.3 MB | CC0 | Yes |
 | `annotation/*.gene_info.gz` | NCBI Gene | 8.6 MB | Public domain | Yes |
 | `annotation/*.gtf.gz` | Ensembl 116 | 238 MB | No restrictions on data | Yes |
-| `genesets/CEGv2.txt`, `NEGv1.txt`, mouse sets | Hart lab | 43 KB | Open | Yes |
+| `genesets/CEGv2.txt`, `NEGv1.txt`, mouse sets | Hart lab | 43 KB | Record exact file/repository terms | Review |
 | `cells/cellosaurus.txt` | Cellosaurus 56.0 | 117 MB | CC BY 4.0 | Yes |
 | `cells/sanger_model_list.csv.gz` | Cell Model Passports | 142 KB | Internal research only | **No** |
 | `libraries/*.txt`, `*.csv`, `*.xlsx` | Addgene / Broad GPP | 24 MB | Terms of use | **No** |
 | `opentargets/*.parquet` | Open Targets 26.09 | 1 MB | CC0 | Yes |
 | `orcs/*.tar.gz` (`--all`) | BioGRID ORCS 2.0.18 | 718 MB | MIT | Yes |
-| `depmap/*.csv` (DepMap 24Q4) | Broad DepMap | 3.6 GB | CC BY 4.0 | Yes, with attribution |
-| `depmap/26Q1/*.csv` (Chronos only) | Broad DepMap | 444 MB | CC BY 4.0 | Yes, with attribution |
+| `depmap/*.csv` (DepMap 24Q4) | Broad DepMap | 3.6 GB | File-specific; local release licence recorded | Review each file |
+| `depmap/26Q1/*.csv` (Chronos only) | Broad DepMap | 444 MB | File-specific; do not extend to third-party portal data | Review each file |
 
-**Three sources may not be redistributed.** Addgene forbids reproducing their
-content commercially. Sanger's Project Score is licensed for internal research
-and explicitly not for resale, even combined with other data. COSMIC needs a
-paid commercial licence. Plan any public Atlas export so values derived from
-these are recomputed locally rather than shipped.
+**Public access is not unrestricted commercial permission.** Addgene content
+and library-specific terms require review. Direct Sanger Project Score/Cell Model
+Passports data permit internal proprietary research under their policy but
+restrict resale, commercial services and direct third-party API access without
+consent. COSMIC has separate commercial licensing. Recomputing a derived value
+locally does not automatically remove source restrictions. Open Targets has its
+own data agreements; do not transfer its licence to a direct Sanger download.
+See the [Sanger policy](https://depmap.sanger.ac.uk/documentation/data-usage-policy/)
+and [Open Targets licence](https://platform-docs.opentargets.org/licence).
 
 ## Verified counts
 
-Checked against the downloaded files, not the documentation:
+Historical checks against the then-downloaded files, not guarantees for a new
+release. Recheck the manifest and identifiers when refreshing data:
 
 | Thing | Expected | Got |
 |---|---|---|
@@ -56,7 +65,7 @@ content before accepting.
 coordinates. Gattinara, Calabrese and Dolcetto have 3 columns and no
 coordinates. There is no single "GPP format".
 
-**The BioGRID ORCS human archive cannot be scripted.** The four smaller
+**Historical BioGRID ORCS download failures.** The four smaller
 species download cleanly. The 718 MB human archive was truncated on all 27
 attempts, at points from 28 MB to 105 MB, and capping the rate at 2 MB/s made
 no difference. The host also ignores `Range`, so nothing resumes. ORCS
@@ -69,7 +78,7 @@ https://downloads.thebiogrid.org/BioGRID-ORCS and move it to
 gzip stream before reading it, so a partial file fails loudly rather than
 silently producing a short Atlas.
 
-**SourceForge cannot be scripted.** MAGeCK's library mirror serves a 142 KB
+**Historical SourceForge download failures.** MAGeCK's library mirror serves a 142 KB
 HTML interstitial to non-browser clients, then a bot challenge. Use Addgene.
 
 **DepMap is bot-gated.** Get the release's Figshare id from the portal in a
@@ -81,35 +90,37 @@ files.
 
 - HGNC: refreshed Tuesdays and Fridays. Pin a quarterly archive for
   reproducibility; monthly files older than a year are deleted.
-- Ensembl: release 116 is the last numbered release. Newer data is
-  date-versioned, and filenames no longer carry the assembly, so record the
-  accession yourself.
-- DepMap: 24Q4 is the newest COMPLETE release on Figshare. Later releases go
-  through the portal only, which is behind a Cloudflare challenge that answers
-  200 with an HTML page, so a naive fetcher saves the challenge as a CSV. For
-  26Q1 only the Chronos model output was deposited, in `depmap/26Q1/`. The
+- Ensembl: the downloader specifies release 116. Record the release, assembly
+  accession, annotation build and checksum; do not infer them from a filename
+  or assume this pinned release is current.
+- DepMap: this checkout uses 24Q4 and a separately obtained 26Q1 Chronos
+  file. This is a local inventory, not a claim about the newest public release.
+  Portal challenges can return HTML with HTTP 200; validate content before use. The
   engine reads common essentials and copy number from the 24Q4 files. The two
   releases have different gene and model sets (18,531 and 1,208 for 26Q1
   against 17,916 and 1,178 for 24Q4), so never join them without reindexing on
   the intersection. See `depmap/26Q1/SOURCES.txt`.
-- BioGRID ORCS: 2.0.18 dated September 2025 is current.
+- BioGRID ORCS: the archived local source is 2.0.18. Record the downloaded
+  archive hash and release date rather than treating “current” as a version.
 
 ## One caution about ORCS
 
 ORCS applies the original authors' own hit thresholds, and `SCORE.1` has no
 fixed meaning: across screens it is variously a p-value, an FDR, a Z-score, a
 log fold change or a Bayes factor, with opposite sign conventions. Always join
-`SCORE.n_TYPE` from the screen index. This heterogeneity is precisely what
-re-analyzing every screen through one pipeline is meant to fix.
+`SCORE.n_TYPE` from the screen index. Uniform reanalysis could address some heterogeneity where raw counts and
+designs exist, but SplicR has not reprocessed the entire Atlas. Original scores
+and source thresholds must remain inspectable.
 
 ## Sources to add next
 
-Verified as live and usable, not yet wired into the downloader.
+Earlier candidates for further investigation; not implemented data integrations.
+Availability, historical releases and licensing must be rechecked before use.
 
 | Source | Why | Access |
 |---|---|---|
 | **MorPhiC v4.0** | Pooled Perturb-seq, manifest-indexed, CC BY 4.0, no embargo | `ftp.ebi.ac.uk/pub/databases/morphic/`, raw reads at ENA `PRJEB81155` (1,925 runs) |
-| **PubTator3 bulk** | 36M abstracts plus ~6.3M full texts, pre-annotated. Public domain | `ftp.ncbi.nlm.nih.gov/pub/lu/PubTator3/` |
+| **PubTator3 bulk** | Biomedical annotations; underlying article/abstract reuse has separate rights | `ftp.ncbi.nlm.nih.gov/pub/lu/PubTator3/` |
 | **GenomeCRISPR** | 84 experiments, 48 human cell lines, frozen at 2017 but clean | `POST` to `genomecrispr.dkfz.de/api/experiments` |
 | **iCSDB** | 1,375 screens harmonised to z-scores. A second precedent to compare against | `kobic.re.kr/icsdb/` |
 | **ENCODE FCE** | `CRISPR screen` and `Flow-FISH CRISPR screen`, guide-level TSVs | GEO mirror; `encodeproject.org` returns 504s |
@@ -120,7 +131,13 @@ API is at `/europepmc/annotations_api/`, not under `/webservices/rest/`, which
 404s. And **OpenAlex became metered and key-gated in February 2026**, so the
 widely quoted 100k/day free tier no longer holds.
 
-## Discovering screens in SRA
+## Historical SRA discovery sample
+
+The following exploration is retained as a local historical sample; it is not a
+current census or a guaranteed storage forecast. A reproducible refresh needs
+query text, accession list, retrieval date and per-file metadata.
+
+### Discovering screens in SRA
 
 Do not filter on one `library_strategy`. Across roughly 3,000 runs whose study
 title matches CRISPR screen, the split is **POOLCLONE 1,001, WGS 875, AMPLICON
@@ -132,7 +149,7 @@ AMPLICON median is roughly **8 to 12 million reads and 0.13 to 0.27 GB
 gzipped**, with outliers past 170M reads. Budget against the distribution, not
 an average.
 
-## How much is actually deposited
+### How much was deposited in that sample
 
 Measured rather than assumed, on 80 random GEO series from the CRISPR-screen
 hit list: 71% carry a count or guide file, but that number is carried almost
@@ -140,8 +157,8 @@ entirely by ENCODE-mirrored series. Among the **22 non-consortium series, only
 41% have any count or sgRNA file**, and most of the remainder are not pooled
 screens at all.
 
-Read that as: **outside consortium deposits, a usable count table is the
-exception.** CRISP-view, which reprocessed 167 papers, states plainly that raw
+This small, query-dependent sample cannot establish a population-wide
+deposition rate outside consortia. CRISP-view, which reprocessed 167 papers, states plainly that raw
 data came from GEO, from paper supplements, *or from the author directly*.
 Expect author contact to be part of Atlas growth, and treat any single headline
 deposition percentage as an artefact of how the denominator was chosen.

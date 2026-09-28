@@ -1,19 +1,6 @@
-/**
- * The versions, thresholds and reference releases the analysis pipeline pins.
- *
- * This lives in one place because provenance is worthless when it is written
- * twice. The old Report tab carried a prose paragraph with "Brunello (76,441
- * guides)" baked into it, so a TKOv3 screen reported a library it never ran
- * against. Everything a report claims about how it was produced now comes from
- * here or from the run record, never from a sentence typed into a component.
- *
- * These are the values recorded for the sample dataset the console ships with.
- * A signed-in workspace reads the same shape out of the run row, so the report
- * builder does not care which one it was handed. Nothing here is a measurement,
- * so nothing here changes when a screen changes.
+/** Illustrative demo settings, not the versions or methods of an executed run.
+ * Workspace reports must load recorded provenance with a separate adapter.
  */
-import { CALIBRATION_BAND } from "@/lib/mock/data";
-
 export const PIPELINE = {
   name: "splicr-pipeline",
   version: "2.6.0",
@@ -30,9 +17,8 @@ export interface ToolRecord {
 }
 
 /**
- * Third-party versions are the releases the pipeline pins, not a range. MAGeCK
- * 0.5.9.5 is the version the counting stage records on the run; the rest are the
- * releases that stage was built against.
+ * Versions below are illustrative demo metadata; they do not assert execution
+ * or identify the currently deployed engine configuration.
  */
 export const TOOLS: ToolRecord[] = [
   { stage: "ingest", name: "splicr.ingest", version: "2.6.0", role: "Resumable upload, checksum verification, FASTQ validation" },
@@ -45,7 +31,7 @@ export const TOOLS: ToolRecord[] = [
   { stage: "hits", name: "CRISPRcleanR", version: "3.0.0", role: "Copy-number bias correction of guide fold changes" },
   { stage: "artifacts", name: "splicr.artifacts", version: "0.7.4", role: "Positional clustering, guide dominance, off-target multiplicity" },
   { stage: "atlas", name: "splicr.atlas", version: "1.2.0", role: "Novelty and frequent-hitter context from public screens" },
-  { stage: "score", name: "splicr.score", version: "0.3.0", role: "Chance real, calibrated on logged validation outcomes" },
+  { stage: "score", name: "splicr.score", version: "0.3.0", role: "Illustrative heuristic score; no fitted validation probability" },
   { stage: "report", name: "splicr.report", version: "1.0.0", role: "Report document, CSV, JSON and PDF rendering" },
 ];
 
@@ -64,21 +50,21 @@ export const PARAMETERS: ParameterRecord[] = [
   {
     label: "Fitness threshold",
     value: "Bayes factor > 7",
-    note: "BAGEL2 multi-target correction moves the operating point from 10 to 7, so the number is not portable to an uncorrected run",
+    note: "Illustrative threshold; Bayes factor cutoffs require validation for the chosen method and screen",
   },
   {
     label: "Minimum non-targeting controls",
     value: "300 guides",
-    note: "Below this the empirical null is too thin for an FDR to mean anything",
+    note: "Illustrative QC threshold; sufficient control coverage depends on the experimental design",
   },
   { label: "Gini index ceiling", value: "0.30 at the endpoint", note: "0.10 for plasmid and T0, where unevenness is synthesis or transduction rather than selection" },
   { label: "Zero-count guide ceiling", value: "5% of the library" },
   { label: "Skew ratio ceiling", value: "10 (90th over 10th percentile)" },
   { label: "Bottlenecked replicate policy", value: "Down-weighted, not dropped" },
   {
-    label: "Calibration band",
-    value: `Plus or minus ${CALIBRATION_BAND.toFixed(2)} on chance real`,
-    note: "The top of any list ranked by chance real is ordered inside this band, so its order is not evidence",
+    label: "Score interpretation",
+    value: "Illustrative, uncalibrated model score",
+    note: "No validated probability or uncertainty interval is available",
   },
 ];
 

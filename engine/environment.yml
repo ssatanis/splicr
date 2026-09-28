@@ -1,10 +1,11 @@
 # SplicR analysis environment.
 #
-# Pins matter here. Two of them are not optional:
+# This specification reflects the tested local toolchain, not a solved lock.
 #
-#   python 3.11  MAGeCK's bioconda package pins python >=3.10,<3.11 in its own
-#                metadata and will not solve against 3.12+. It is also the last
-#                interpreter the 0.5.9.5 build (frozen since 2021) was made for.
+#   python 3.11  Selected for this checkout. Verify package build constraints
+#                when solving on another platform. MAGeCK2 is a separate newer
+#                project and has not replaced or been validated against this
+#                pipeline's MAGeCK 0.5.9.5 wrappers.
 #
 #   numpy <2     BAGEL2 calls np.in1d, removed in NumPy 2.0. With NumPy 2.x the
 #                `bf` step dies with AttributeError after `fc` has already
@@ -30,17 +31,19 @@ dependencies:
   - bowtie=1.3.1
 
   # Hit calling
-  - mageck=0.5.9.5        # RRA and MLE. Frozen upstream since Dec 2021.
+  - mageck=0.5.9.5        # RRA and MLE; legacy version retained for reproducibility.
 
   # Scientific stack
   - numpy<2               # see note above
   - scipy
   - pandas
-  - scikit-learn          # calibration: isotonic and Platt
+  - scikit-learn          # statistical/research utilities; no fitted calibration model
   - click                 # BAGEL2 dependency
   - pyarrow               # Parquet artifacts
   - polars
   - duckdb
 
 # Installed separately by engine/setup.sh because they are not on bioconda:
-#   BAGEL2  git clone https://github.com/hart-lab/bagel  (v2.0 build 115)
+#   BAGEL2  git clone https://github.com/hart-lab/bagel
+#           Recorded local version: v2.0 build 115. setup.sh does not pin the
+#           clone revision; record/pin the commit before a fresh reproduction.

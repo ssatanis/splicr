@@ -1,151 +1,120 @@
 # The pipeline
 
-Nine stages. The same nine run on an uploaded screen and on every public screen
-in the Atlas, which is what makes the numbers comparable.
-
-Each stage reads the previous stage's artifact, writes its own, and records a
-row in `run_stages`. Nothing is recomputed unless its inputs changed.
-
----
+Status reviewed 2026-09-27 against `engine/splicr/pipeline.py`. Nine stage names
+organize local analysis. Browser upload and queue execution are not connected;
+calibrated scoring is skipped. Atlas imports preserve original authors' summaries.
+With `--persist`, completed stages record database progress; content-addressed
+stage caching and worker orchestration are not implemented.
 
 ## 01 Ingest
 
-**In:** FASTQ(.gz), a count table, MAGeCK output, or an SRA accession.
-**Out:** a screen with files, samples and a proposed design.
-
-Files go straight to object storage in 6 MB resumable chunks, so a dropped
-connection costs one chunk and not the whole upload. Checksums are recorded on
-arrival; the engine verifies them before counting.
+**Implemented inputs:** local FASTQ(.gz) files or a guide count table, with sample
+roles and treatment/control labels. The CLI does not directly ingest an SRA
+accession or arbitrary MAGeCK results. Browser resumable uploads are planned.
+Malformed, missing, negative, nonfinite and fractional counts fail explicitly.
+Design validation checks the declared contrast before analysis. Use explicit
+replicate pairing when biological pairs exist; array order alone is not evidence.
 
 ## 02 Detect
 
-**In:** the first 200,000 reads of each file, or the guide column of a table.
-**Out:** a library call with a match rate, guide offset and strand.
+Library identification uses reference guide sequence overlap and coverage rather
+than file names. FASTQ detection samples reads according to `CountConfig`; the
+pipeline detects from its first FASTQ or accepts an explicit library. Vector
+anchors, offsets and strand are considered; unsupported layouts can still fail.
 
-Library identification is by **sequence-set overlap, not file name**. Guides are
-matched against every library in the Atlas and ranked by what fraction of the
-candidate library was hit. Ranking by coverage rather than raw intersection
-matters because composite libraries such as MinLibCas9 borrow guides from four
-parents and would otherwise outrank all of them.
-
-Guide position is found by scanning for the vector anchor upstream of the
-spacer, not by assuming a fixed offset. Staggered primers shift the spacer by
-0, 1, 2, 3, 4, 6, 7 or 8 bases, so a hardcoded trim loses most reads. Note that
-TKOv3's pLCKO2 backbone uses a different anchor from lentiGuide, and that a
-plain `--trim-5` will silently fail on it.
-
-*Validated: 500 random Brunello guides fingerprint to Brunello at 100%, with
-every decoy library under 2%.*
+An archived test fingerprinted 500 sampled Brunello guides with 100% coverage and
+decoys below 2%. This establishes that fixture's result, not universal detection
+accuracy or robustness to every vector/library.
 
 ## 03 Count
 
-**In:** reads plus the detected library.
-**Out:** a guide by sample count matrix, plus a mapping summary.
+Reads are assigned by exact matching with a limited mismatch fallback. Ambiguous
+duplicate and near-duplicate guides need explicit handling; they do not establish
+unique biological attribution. A common in-memory count matrix feeds subsequent
+stages and MAGeCK-format TSV output. The pipeline does not use immutable Parquet
+as its count-stage contract. Reference lake Parquet is a separate storage feature.
 
-Exact match first, then a single-mismatch fallback. Mismatch tolerance is
-deliberately limited: several libraries contain duplicate or near-duplicate
-sequences, and a permissive aligner assigns those reads arbitrarily.
-
-Counts are produced once and stored as Parquet. Every later stage reads the
-same matrix, so two stages can never disagree about a count.
+Count-table input has unknown sequencing read totals and mapping rate. These are
+reported as unavailable; observed count totals are retained. FASTQ inputs supply
+actual sequencing/mapping information.
 
 ## 04 QC
 
-**In:** the count matrix, the design, and essential/nonessential gene sets.
-**Out:** per-sample and per-screen verdicts.
+| Metric | Implemented interpretation |
+|---|---|
+| Gini | Inequality of `log(count+1)`, following MAGeCK; not raw-count Gini |
+| Zero fraction, count skew, coverage | Library representation and sequencing/count depth |
+| Replicate agreement | Guide-level fold-change agreement against an appropriate reference, with raw count agreement kept distinct |
+| NNMD | Median essential/nonessential separation scaled by nonessential MAD |
+| Essential-gene AUROC | Fitness-control separation when assay/modality make it applicable |
 
-| Metric | Definition | Guide |
-|---|---|---|
-| Gini index | Inequality of guide counts, on `log(count+1)` | ~0.1 plasmid, 0.2 to 0.3 at endpoint |
-| Zero fraction | Guides with no reads | Under 1% |
-| Mapping rate | Reads assigned to a guide | At least 60% |
-| Skew ratio | 90th over 10th percentile guide count | Under 10 |
-| Replicate r | Pearson on log counts | Compare against the Atlas, not a fixed number |
-| NNMD | `(median(ess) - median(non)) / MAD(non)` | At most -1.25 |
-| AUROC | Essential vs nonessential separation | Higher is better |
-
-The Gini definition matters: MAGeCK computes it on `log(count+1)`, so a Gini
-computed on raw counts is much higher and not comparable to the usual
-thresholds.
-
-Every metric is also compared against the Atlas distribution **for the same
-library**, so "high" means high for that library rather than in the abstract.
-This matters more than it sounds: across cell lines screened with more than one
-library, library choice has been reported to outweigh both cell line and
-culture medium in its effect on gene scores, and guides that were
-under-represented in the plasmid pool produce more extreme and more variable
-results (*BMC Genomics* 2026). Per-guide plasmid abundance is therefore carried
-forward as a scoring covariate, not just used as a QC filter.
+Thresholds come from `QcThresholds` and applicability checks. They are not fitted
+to same-library Atlas distributions. Essentiality controls are inappropriate for
+many reporter/activation assays. Declare fitness applicability explicitly when
+metadata are ambiguous. A QC failure remains visible even if analysis continues
+to produce an explanatory report; absent statistics are not evidence of a pass.
 
 ## 05 Call hits
 
-**In:** the count matrix, design and control guides.
-**Out:** one consensus table with each method's statistics side by side.
+MAGeCK RRA and eligible BAGEL2 analyses produce method-specific columns. DrugZ
+is opt-in for a suitable chemogenetic contrast. `--drugz-paired` requires an
+explicitly matched treatment/control ordering; the default is unpaired. The
+Python MLE interface requires an explicit design matrix and chosen coefficient;
+the CLI does not expose those MLE settings yet.
 
-MAGeCK RRA and MLE, BAGEL2 Bayes factors, DrugZ where the design is
-chemogenetic, and CRISPRcleanR copy-number correction when guide coordinates
-are known. Methods run in parallel and are never silently overwritten: each
-gets its own columns, and disagreement between them is a signal worth showing.
+These wrappers are not a fitted consensus probability and do not run all methods
+in parallel. CRISPRcleanR and Chronos are not integrated pipeline callers.
+MAGeCK positive/negative statistics are retained, with conservative adjustment
+when selecting across both directions. Native statistics stay inspectable.
+DrugZ preserves the correct FDR tail and exact zero values. Caller failures and
+missing outputs must remain visible. Method significance is not validation chance.
 
 ## 06 Flag artifacts
 
-**In:** the hit table, guide coordinates and Atlas hit frequencies.
-**Out:** named flags with evidence.
+Named evidence covers copy-number/neighborhood concerns, guide concentration,
+published off-target annotations, multiple target genes, frequent hitters and
+poor plasmid representation where the necessary inputs exist. Copy-number
+cutting-toxicity warnings apply to cutting assays, not indiscriminately to
+CRISPRi/a. Missing copy number or guide annotations limit what can be assessed.
 
-| Flag | What it catches |
-|---|---|
-| Copy-number cluster | Neighbouring genes in an amplified segment depleting together |
-| Single guide | One guide carrying most of the gene-level effect |
-| Promiscuous guide | A guide with many perfect genomic matches |
-| Multi-gene guide | A guide that perfectly targets more than one gene |
-| Frequent hitter | A gene that hits across many unrelated screens |
-| Bottleneck | Signal concentrated in a replicate that lost guides |
-
-Copy-number artifacts are real and large: guides in amplified regions deplete
-because of DNA damage, not biology, and unexpressed genes in those regions
-score as lethal. About 5.4% of Avana guides perfectly target more than one
-gene, so a gene-level call can belong to its neighbour.
+Amplified regions can contain genuine dependencies as well as DNA-cutting
+artifacts. A critical warning increases uncertainty; it does not prove the gene
+is false. Published annotation agreement verifies import fidelity, not the
+sensitivity or specificity of SplicR's biological artifact detection.
 
 ## 07 Atlas context
 
-**In:** screen metadata and the hit profile.
-**Out:** nearest public screens, plus each hit's history and novelty.
+The pipeline loads historical screen evidence and metadata comparability. The
+current metadata weights are fixed heuristics, not a trained mechanistic retriever.
+Availability and compatibility determine which evidence can be supplied.
 
-This is the stage that justifies the whole product. On a public benchmark,
-retrieving the right past screen scores about 1.8 times the best language
-model, while retrieving by text similarity scores far below both. The
-information is in the screens; the difficulty is finding the right one.
+AssayBench's oracle selects donors using target answers. Its advantage motivates
+research but is not achieved retrieval performance or a universal upper bound.
+Historical evidence can be contaminated by the target experiment, related studies
+or future releases; publication and temporal audits are required for benchmarking.
 
 ## 08 Score
 
-**In:** statistics, flags, Atlas features and logged validation outcomes.
-**Out:** a calibrated chance, a band, and the reasons behind it.
+**Current output:** no calibrated validation probability. The stage is explicitly
+skipped and confidence fields remain null. A future model needs a specified
+independent assay endpoint, consented positive and negative outcomes, and a
+separate evaluation cohort. Unvalidated genes cannot be treated as failed genes.
 
-Calibration is the point. When the model says 80%, about 8 in 10 of those hits
-should validate. The model is trained on outcomes labs logged, and retrained as
-more arrive. A score without a calibration curve is not shipped.
-
-**Validation probability is conditional, not a single number.** An LDL-uptake
-screen found that the secondary-screen validation rate was strongly correlated
-with the strength of the primary signal, reported stratified by FDR tier
-(*PLoS Genet* 2021, PMC7875399). So the model fits a curve against primary
-effect size and FDR, never one global rate. Published rates vary widely for
-exactly this reason: 66% in an arrayed dynein-transport screen against 50% for
-a prior screen using a subset of the same library (*J Cell Biol* 2024,
-PMC10916854), and 88% for HIV-1 host factors (*mBio* 2023, PMC9973025).
-
-The honest baseline to beat: between two well-run genome-wide screens of the
-same gene in the same cell line, a dependency called by one is confirmed by the
-other only about a quarter of the time at matched recall (precision 0.255 at
-recall 0.781, Cohen's kappa 0.737 over 1,031 jointly called dependencies).
-That is a *marginal* figure across all effect sizes. The conditional curve is
-what the model actually fits, and it sits well above that floor at the top of
-the ranking.
+Published validation rates are assay- and selection-dependent. For example,
+[Dempster et al.](https://www.nature.com/articles/s41467-019-13805-y) reported
+precision 0.255 at recall 0.781 in a particular selective-dependency comparison
+before batch correction; that is not a universal chance a CRISPR hit validates.
+See [the scientific review](../research/02_SCIENTIFIC_RESEARCH.md).
 
 ## 09 Report
 
-**In:** everything above.
-**Out:** an interactive report, a PDF, a CSV, and a validation plan.
+Local execution writes `postscreen_report.json` with observed statistics, QC,
+flags, missing-evidence information and provenance. Optional persistence writes
+run/hit records. Authenticated screen details display recorded workspace data;
+illustrative reports are restricted to explicit demo contexts.
 
-Reports are versioned. Re-running a screen never overwrites what a lab already
-cited.
+A complete workspace PDF/export and experimental validation-plan workflow is not
+implemented. Database runs have identities, but reusing a local work directory
+can replace files: choose distinct directories and retain input/output hashes
+when archiving a scientific analysis. Do not infer immutable local reports from
+the existence of version columns in the schema.

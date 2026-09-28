@@ -65,6 +65,12 @@ data/lake/
 engine/analysis/**/cache/
 engine/analysis/**/*.log
 
+# Reproducible external-tool intermediates; compact audit summaries are kept.
+data/research/*/tools/
+
 # Temporary measurement routes. Agents create these to measure geometry; they
 # are never part of the app.
 apps/web/src/app/dashboard/zz-probe/
+
+# Keep reproducibility and test logs with the research evidence.
+!research/artifacts/**/*.log

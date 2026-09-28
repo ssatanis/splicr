@@ -9,7 +9,7 @@
  * choosing the best genes. They are choosing the most defensible ones, under
  * three constraints at once, and every column here is one of those constraints:
  *
- *   real        chance real, guides agree, and the flag marker on the call
+ *   real        model score, guides agree, and the flag marker on the call
  *   interesting the call, and novelty: how little of the Atlas has called it
  *   testable    which screen it came from, and that screen's re-test assay
  *
@@ -26,10 +26,7 @@
  * is a digit a reader was not deciding on. Novelty is not available anywhere else
  * on this page.
  *
- * The Real column carries its calibration band in the heading. The band is ±0.06
- * and rows one to twenty span 96% to 88%, so the default order is noise at the
- * top of the list and a column that prints an integer percent without saying so
- * is claiming precision the score does not have.
+ * Stored model scores are uncalibrated. No probability or interval is inferred.
  *
  * The header carries the QC verdict of the screen the rows came from, and the
  * caveat line under it says what that verdict means, because every row on this
@@ -53,7 +50,7 @@ import {
   SortTh,
   Th,
 } from "@/components/dashboard/ui";
-import { CALIBRATION_BAND, type Verdict } from "@/lib/mock/data";
+import { type Verdict } from "@/lib/mock/data";
 import { cn, formatNumber } from "@/lib/utils";
 
 import { candidatesCsv, downloadCsv } from "./export-rows";
@@ -135,16 +132,16 @@ const VIEWS: ViewSpec[] = [
   },
   {
     value: "c90",
-    label: "Chance real 90% or more",
+    label: "Model score 0.90 or more",
     group: "How defensible",
-    described: "candidates at chance real 0.90 or above",
+    described: "candidates at model score 0.90 or above",
     keep: (row) => row.chance !== null && row.chance >= 0.9,
   },
   {
     value: "c80",
-    label: "Chance real 80% or more",
+    label: "Model score 0.80 or more",
     group: "How defensible",
-    described: "candidates at chance real 0.80 or above",
+    described: "candidates at model score 0.80 or above",
     keep: (row) => row.chance !== null && row.chance >= 0.8,
   },
   {
@@ -205,7 +202,7 @@ const cellOf = (row: CandidateRow, key: string): Cell => {
 /** What each sort key is called in a sentence, for the export preamble. */
 const SORT_LABEL: Record<string, string> = {
   gene: "gene symbol",
-  chance: "chance real",
+  chance: "model score",
   lfc: "size of effect",
   novelty: "novelty",
   guides: "guides agreeing",
@@ -216,11 +213,6 @@ const SORT_LABEL: Record<string, string> = {
 const lfc = (value: number) => `${value > 0 ? "+" : ""}${value.toFixed(2)}`;
 
 const pct = (value: number) => `${Math.round(value * 100)}%`;
-
-/** The calibration interval, as the two ends a reader would quote. */
-function interval(chance: number): string {
-  return `${pct(Math.max(0, chance - CALIBRATION_BAND))} to ${pct(Math.min(1, chance + CALIBRATION_BAND))}`;
-}
 
 export function CandidatesPanel({
   rows,
@@ -287,7 +279,6 @@ export function CandidatesPanel({
       provenance,
       caveat: qc === null ? null : qc.note,
       sample,
-      band: CALIBRATION_BAND,
       picked,
       keyOf: (row) => pickKey(row.screenId, row.gene),
     });
@@ -393,23 +384,12 @@ export function CandidatesPanel({
               />
               <Th>Call</Th>
               <SortTh
-                /* The band is in the heading, not only in a tooltip. Rows one to
-                   twenty span 96% to 88%, which is inside ±0.06, so a reader who
-                   cannot see the band reads the order at the top of the list as
-                   a ranking when it is noise. */
-                label={
-                  <>
-                    Real
-                    <span className="ml-0.5 font-normal normal-case tracking-normal opacity-70">
-                      ±{Math.round(CALIBRATION_BAND * 100)}
-                    </span>
-                  </>
-                }
+                label="Score"
                 align="right"
                 active={key === "chance"}
                 dir={dir}
                 onToggle={() => sort("chance", "desc")}
-                title={`Calibrated probability the hit is real, in percent, net of any flag. Calibrated to plus or minus ${Math.round(CALIBRATION_BAND * 100)} points, so two rows within that are not ordered by evidence.`}
+                title="Recorded model score. Calibration and uncertainty are not established; this is not a validation probability."
               />
               <SortTh
                 label="LFC"
@@ -417,7 +397,7 @@ export function CandidatesPanel({
                 active={key === "lfc"}
                 dir={dir}
                 onToggle={() => sort("lfc", "desc")}
-                title="log2 fold change at the endpoint against T0. Positive is the enriched arm."
+                title="Recorded log2 fold change for this comparison. Interpret the sign with the recorded contrast."
               />
               <SortTh
                 label="New"
@@ -425,7 +405,7 @@ export function CandidatesPanel({
                 active={key === "novelty"}
                 dir={dir}
                 onToggle={() => sort("novelty", "desc")}
-                title="Novelty: how little of the Atlas has called this gene. Low means a core essential or a frequent hitter, which is real but not worth a bench slot."
+                title="Historical novelty score when available. Frequent hits may still matter for this assay; novelty alone does not determine experimental value."
               />
               <SortTh
                 label="Agree"
@@ -477,8 +457,8 @@ export function CandidatesPanel({
                       {row.flags.length > 0 && <FlagMark flags={row.flags} />}
                     </span>
                   </td>
-                  <td className="num-col" title={row.chance === null ? undefined : interval(row.chance)}>
-                    {row.chance !== null ? pct(row.chance) : <NotRecorded />}
+                  <td className="num-col" title="Uncalibrated model score">
+                    {row.chance !== null ? row.chance.toFixed(3) : <NotRecorded />}
                   </td>
                   <td className="num-col">{row.lfc !== null ? lfc(row.lfc) : <NotRecorded />}</td>
                   <td className="num-col">
@@ -583,7 +563,6 @@ function Evidence({
       provenance: row.screenName ?? row.screenId,
       caveat: qc === null ? null : qc.note,
       sample,
-      band: CALIBRATION_BAND,
       picked: picked ? [pickKey(row.screenId, row.gene)] : [],
       keyOf: (candidate) => pickKey(candidate.screenId, candidate.gene),
     });
@@ -613,29 +592,29 @@ function Evidence({
 
       <dl className="mt-4 divide-y divide-line border-y border-line text-[13px]">
         <Fact
-          term="Chance real"
-          value={row.chance !== null ? `${pct(row.chance)}, calibrated to ${interval(row.chance)}` : null}
-          note={`Calibrated probability from the scoring stage, net of every flag below. The band is plus or minus ${Math.round(CALIBRATION_BAND * 100)} points, so two candidates inside it are not ranked by evidence.`}
+          term="Model score"
+          value={row.chance !== null ? row.chance.toFixed(3) : null}
+          note="Recorded model output. No validated probability or uncertainty interval is available."
         />
         <Fact
           term="Novelty"
           value={row.novelty !== null ? pct(row.novelty) : null}
-          note="How little of the Atlas has called this gene. Low novelty on a high chance is a core essential: real, and a wasted bench slot."
+          note="Historical novelty score when available. Frequent hits may be relevant; interpret them in the assay context."
         />
         <Fact
           term="Effect size"
           value={row.lfc !== null ? `${lfc(row.lfc)} log2` : null}
-          note="Fold change at the endpoint against T0. Positive is the enriched arm."
+          note="Recorded log2 fold change; the comparison defines its reference and direction."
         />
         <Fact
           term="FDR"
           value={row.fdr !== null ? row.fdr.toExponential(2) : null}
-          note="Benjamini-Hochberg q-value, from the hit-calling stage. Every row on this panel is already past the cut, which is why it is not a column."
+          note="Recorded false-discovery estimate from the hit-calling method. Check run provenance for the test and correction."
         />
         <Fact
           term="Bayes factor"
           value={row.bayes !== null ? row.bayes.toFixed(1) : null}
-          note="BAGEL2, against the core-essential and non-essential reference sets. Evidence the score is built from, not a restatement of it."
+          note="Recorded Bayes factor when available. Check the analysis method and reference sets in run provenance."
         />
         <Fact
           term="Guide agreement"

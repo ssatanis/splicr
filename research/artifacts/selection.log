@@ -1,0 +1,11 @@
+select: 1349 training / 218 evaluation screens
+global 0.11255970861557762 prediction_seconds 0.3063723749946803
+phenotype 0.08280060955201371 prediction_seconds 0.3543802909553051
+phenotype_shrink 0.08147904335569553 prediction_seconds 0.6468587908893824
+direction 0.058143950335224466 prediction_seconds 0.9587788749486208
+direction_signed 0.04529825896077971 prediction_seconds 1.020100082969293
+study_balanced 0.0612194846787261 prediction_seconds 0.4216621669474989
+study_direction 0.046706762599157146 prediction_seconds 1.0513256250414997
+condition 0.04760183023987108 prediction_seconds 5.751668167067692
+text_transfer 0.047256157359585924 prediction_seconds 3.243073374964297
+FROZEN global
