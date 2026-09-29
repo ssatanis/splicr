@@ -69,6 +69,7 @@ export const modules = [
     blurb:
       "Explore published CRISPR screen results and their source metadata. Atlas records retain the original studies' analysis methods and hit definitions.",
     points: ["BioGRID ORCS reference data", "Original methods and thresholds", "Source-linked screen history"],
+    status: "Reference ingestion implemented; workspace explorer unavailable",
   },
   {
     id: "hit-report",
@@ -77,6 +78,7 @@ export const modules = [
     blurb:
       "Inspect effect sizes, statistical results, guide support and available Atlas evidence. A calibrated probability of independent validation is not available yet.",
     points: ["Effect size and significance", "Artifact risks with evidence", "Missing evidence shown explicitly"],
+    status: "Local JSON report and recorded workspace results; no calibration",
   },
   {
     id: "planner",
@@ -85,6 +87,7 @@ export const modules = [
     blurb:
       "Explore how library size and coverage change guide, cell and read requirements, with approximate cost and timing assumptions.",
     points: ["Design arithmetic", "No statistical power estimate", "Costs and timing are estimates"],
+    status: "Demonstration only; workspace planning unavailable",
   },
   {
     id: "truth-loop",
@@ -93,6 +96,7 @@ export const modules = [
     blurb:
       "Record follow-up outcomes alongside a screen's evidence. Validation records support review; automatic model retraining is not implemented.",
     points: ["Positive and negative outcomes", "Pending and inconclusive stay distinct", "Workspace-scoped records"],
+    status: "Stored outcome reader; entry and retraining unavailable",
   },
   {
     id: "connect",
@@ -101,6 +105,7 @@ export const modules = [
     blurb:
       "Read screen hit results through the REST API using a scoped organization key. A remote MCP server is not available yet.",
     points: ["Read-only hits endpoint", "Scoped keys per organization", "Screen and FDR filters"],
+    status: "Read-only REST code; public workspace access disabled",
   },
 ] as const;
 

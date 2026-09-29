@@ -102,16 +102,19 @@ function footer() {
 
 const strong = (text: string) => `<strong style="color:${HEADING};font-weight:600;">${text}</strong>`;
 
+const wordmark = () =>
+  `<div style="font-family:${FONT};font-size:22px;font-weight:700;color:${HEADING};letter-spacing:-0.02em;">${esc(site.name)}</div>`;
+
 const h1 = (text: string) =>
-  `<h1 style="margin:0;font-family:${FONT};font-size:28px;line-height:36px;font-weight:500;color:${HEADING};letter-spacing:-0.015em;">${text}</h1>`;
+  `<h1 style="margin:0;font-family:${FONT};font-size:32px;line-height:40px;font-weight:600;color:${HEADING};letter-spacing:-0.015em;">${text}</h1>`;
 
 const p = (text: string, top = 28) =>
   `<p style="margin:${top}px 0 0;font-family:${FONT};font-size:15px;line-height:24px;color:${BODY};">${text}</p>`;
 
 const button = (href: string, label: string) =>
   `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:40px 0 0;">
-    <tr><td bgcolor="${BLUE}" style="background:${BLUE};border-radius:5px;">
-      <a href="${href}" style="display:inline-block;padding:11px 18px;font-family:${FONT};font-size:15px;line-height:20px;font-weight:500;color:#ffffff;text-decoration:none;border-radius:5px;">${label}</a>
+    <tr><td bgcolor="${BLUE}" style="background:${BLUE};border-radius:8px;">
+      <a href="${href}" style="display:inline-block;padding:12px 22px;font-family:${FONT};font-size:15px;line-height:20px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;">${label}</a>
     </td></tr>
   </table>`;
 
@@ -121,8 +124,9 @@ export function confirmationEmail(request: DemoRequest) {
 
   const inner =
     card(
-      `${h1(`Thanks, ${who}!`)}
-      ${p(`We have your request. A real person on the ${strong("SplicR team")} is reading it, and you can expect a reply within ${strong("two business days")}, usually sooner.`, 34)}
+      `${wordmark()}
+      <div style="margin-top:36px;">${h1(`Thanks, ${who}!`)}</div>
+      ${p(`We have your request. A real person on the ${strong("SplicR team")} is reading it, and you can expect a reply within ${strong("two business days")}, usually sooner.`, 22)}
       ${p("To make the first call useful, reply to this message with the organism, library and phenotype of the screen you have in mind.")}
       ${button(`${site.url}/evidence`, "Read the evidence")}`,
     ) + footer();
@@ -173,7 +177,8 @@ export function notificationEmail(request: DemoRequest) {
 
   const inner =
     card(
-      `${h1("New demo request")}
+      `${wordmark()}
+      <div style="margin-top:36px;">${h1("New demo request")}</div>
       ${p(`${strong(esc(request.name))} from ${esc(request.company)} filled in the form on splicr.org.`, 22)}
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0 0;">${table}</table>
       ${button(`mailto:${esc(request.email)}?subject=${encodeURIComponent("Re: your SplicR demo request")}`, `Reply to ${esc(firstName(request.name))}`)}`,
