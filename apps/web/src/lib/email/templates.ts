@@ -118,9 +118,36 @@ const button = (href: string, label: string) =>
     </td></tr>
   </table>`;
 
+/** A read-only recap of the form, styled as a quiet inset block inside the
+ *  card. Row labels are the field names as the form shows them, so it reads
+ *  back as an echo rather than a database dump. */
+function recap(rows: Array<[string, string]>) {
+  const body = rows
+    .map(
+      ([label, value], index) => `<tr>
+    <td style="padding:${index === 0 ? "0" : "14px"} 0 0;font-family:${FONT};font-size:12px;letter-spacing:0.05em;text-transform:uppercase;color:${SOFT};width:130px;vertical-align:top;">${esc(label)}</td>
+    <td style="padding:${index === 0 ? "0" : "14px"} 0 0;font-family:${FONT};font-size:15px;line-height:23px;color:${HEADING};vertical-align:top;">${esc(value).replace(/\n/g, "<br>")}</td>
+  </tr>`,
+    )
+    .join("");
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:32px 0 0;background:${CANVAS};border-radius:8px;">
+    <tr><td style="padding:22px 24px;">
+      <div style="font-family:${FONT};font-size:12px;letter-spacing:0.05em;text-transform:uppercase;color:${SOFT};font-weight:600;padding-bottom:14px;">What you sent</div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${body}</table>
+    </td></tr>
+  </table>`;
+}
+
 /** The message the person who filled in the form receives. */
 export function confirmationEmail(request: DemoRequest) {
   const who = esc(firstName(request.name));
+
+  const rows: Array<[string, string]> = [
+    ["Name", request.name],
+    ["Lab or company", request.company],
+    ["Topic", request.topic],
+  ];
+  if (request.message?.trim()) rows.push(["Message", request.message.trim()]);
 
   const inner =
     card(
@@ -128,6 +155,7 @@ export function confirmationEmail(request: DemoRequest) {
       <div style="margin-top:36px;">${h1(`Thanks, ${who}!`)}</div>
       ${p(`We have your request. A real person on the ${strong("SplicR team")} is reading it, and you can expect a reply within ${strong("two business days")}, usually sooner.`, 22)}
       ${p("To make the first call useful, reply to this message with the organism, library and phenotype of the screen you have in mind.")}
+      ${recap(rows)}
       ${button(`${site.url}/evidence`, "Read the evidence")}`,
     ) + footer();
 
@@ -140,6 +168,9 @@ export function confirmationEmail(request: DemoRequest) {
       "We have your request. A real person on the SplicR team is reading it, and you can expect a reply within two business days, usually sooner.",
       "",
       "To make the first call useful, reply to this message with the organism, library and phenotype of the screen you have in mind.",
+      "",
+      "What you sent",
+      ...rows.map(([label, value]) => `${label}: ${value}`),
       "",
       `Read the evidence: ${site.url}/evidence`,
       "",
