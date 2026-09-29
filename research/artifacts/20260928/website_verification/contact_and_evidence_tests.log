@@ -1,0 +1,14 @@
+✔ public evidence exactly regenerates from actual research artifacts (132.9985ms)
+✔ published download checksums match every downloadable artifact (1.166208ms)
+✔ website benchmark values are full-precision measured values (91.900583ms)
+✔ homepage report renders actual nonsignificant result and QC limitation (35.61125ms)
+✔ evidence page renders exact measurements, uncertainty and downloadable sources (70.419ms)
+✔ contact action prepares an encoded email draft without claiming delivery (97.494041ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1080.0535

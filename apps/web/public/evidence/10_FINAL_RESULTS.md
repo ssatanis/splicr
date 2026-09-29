@@ -79,6 +79,82 @@ Published expert rankings were replayed from existing files with **no new paid m
 
 No adequate independent validation-outcome dataset was established. Consequently there is no empirical basis here for a validation-success percentage, calibration chart, Brier score, laboratory ROI claim, or adaptive acquisition benefit. Public LaTest data are also already exposed. Those values have not been invented.
 
+## 2026-09-28 addendum: two further prediction experiments, both negative
+
+Two preregistered experiments were run after the 2026-09-27 checkpoint and are
+published here under contract `20260928-research-addendum`. **Neither is
+promoted, neither changes any public-test number above, and neither accessed the
+334-screen public test.** They were scored once on the 2021 validation split
+(218 screens, 34 publications). Full configurations, per-screen results and
+hashes are registered in [the experiment registry](06_EXPERIMENT_REGISTRY.md)
+as experiments D and E.
+
+| Experiment | Selected by publication-grouped CV | 2021 validation AnDCG@100 | Result |
+|---|---|---:|---|
+| D — gene-level LambdaRank, 57 features | `E2_history_lambdarank` | 0.180985 | −0.005452 [−0.016147, +0.010805] vs ensemble 0.186437 |
+| E — requested-effect polarity | `P0_baseline_D3` — the baseline won | 0.099450 | polarity prior −0.007931 [−0.023172, +0.004531] vs that baseline |
+
+Experiment D tested whether a regularized LambdaRank over smoothed rates,
+measured exposure, publication support, donor transfer and independently
+generated expert ranks beats the published ensemble. Its paired interval
+contains zero and its point estimate is lower, over 10,000 publication-cluster
+resamples. Fourteen configurations were compared, so the cross-validation
+estimate is not unbiased and is recorded as such.
+
+Experiment E tested whether parsing the requested outcome polarity from fine
+phenotype text helps. The parser works: it separates all 47 metadata-matched
+increase/decrease comparisons that every previous feature set collapsed into
+identical rankings. Conditioning the estimator on it made ranking slightly
+worse, so cross-validation selected the unconditioned baseline. The useful
+distinction is between a **representation** gap, which this closed, and a
+**ranking** gap, which it did not.
+
+Two runs of experiment D were discarded rather than reported: one for a
+gene-alias defect that treated `P53` as unmeasured although the official
+evaluator maps it to `TP53` (3,931 training prediction entries affected,
+including 1,216 positive-hit entries), and one aborted by a type-guard review.
+Both are preserved and labelled INVALID, and excluded from every aggregate.
+
+## 2026-09-28: which hits reproduce (post-screen replication)
+
+A different task from every table above. Those predict a screen's hits from its
+description, before it is run. This one asks the product question: **given the
+screen a lab actually ran, which of its candidates reproduce in an independent
+screen?** The benchmark is the cross-screen replication set documented in
+`docs/07-replication-benchmark.md` — screen pairs from different publications,
+first authors and libraries, in the same cell line, unperturbed proliferation.
+
+Held out, **scored once**, model frozen beforehand, 124 screen pairs that share no
+publication and no cell line with anything used to fit it.
+
+| ranking | average precision | precision@10 |
+|---|---:|---:|
+| **SplicR reliability ranking** | **0.3538** | **0.915** |
+| the screen's own effect size | 0.2464 | 0.696 |
+| the screen's own hit call | 0.1334 | 0.276 |
+| chance | 0.0298 | 0.030 |
+
+Paired and resampled by screen pair: **+0.1074 [+0.1020, +0.1128]**, Wilcoxon
+p = 4.3e-22. On the 11 pairs outside the dominant Behan-2019 / Meyers-2017 library
+comparison, which was declared as a separate stratum in advance:
+**+0.0721 [+0.0474, +0.0979]**, p = 9.8e-04.
+
+Four checks were run against it rather than argued. The model was selected by
+leave-one-publication-out cross-validation inside development and then amended,
+before any held-out label was read, to a DepMap-free feature set — because DepMap
+`CRISPRGeneEffect` *is* the Broad Avana experiment and Meyers 2017 is the Avana
+publication, the label side of 113 of the 124 pairs. The clean model then scored
+*higher* on held out (0.3538 against 0.3464). Removing a second common-essential
+list retains 95% of the gain, so this is not textbook essentiality. The leakage
+assertion passes over all 248 units. An independently written bootstrap
+reproduces the headline to six decimal places.
+
+**Promotion status: research_only.** Cross-screen replication is a proxy for
+reproducibility, not proof that a candidate passes an independent biological
+validation assay, and this is a ranking rather than a calibrated probability.
+`research/15_PROSPECTIVE_VALIDATION_PROTOCOL.md` is the blinded design that would
+convert it.
+
 ## Outstanding blockers and next experiments
 
 1. **Independent biological outcomes:** a laboratory/custodian must supply a blinded, consented future cohort, with predictions and assay success criteria frozen before reveal. The receipt interface supports this; it does not create the cohort.

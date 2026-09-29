@@ -1,0 +1,98 @@
+{
+  "dependencies": {
+    "engine/analysis/direction_development.py": "abb52f655307cd2cc11513de661f5beee529cd1a8c813b4ba151597f2fae9613",
+    "engine/splicr/benchmark.py": "cdb513f7ad0ae0a26f86cd33fb99aba46b6c882293d51b5e28eb9a3526fbde2b",
+    "engine/splicr/context_ranking.py": "e009f05bf4948af8a91bda3f2e2c4e23f57ff17a36070c4ce5d6484d51564fdc",
+    "engine/splicr/direction_ranking.py": "6793acd2feb895caa0ba849a706f7355676d82a39b835e67cdba417cbed634bd",
+    "engine/splicr/effect_direction.py": "b249e25742919a09bb66816d0dd209f9841fb694d54ec7bca69febb4353d6856",
+    "engine/splicr/prescreen.py": "cdfb02576fb89cc67807d00672b438db6f07d5698efcc64c53ad13f0853a9683",
+    "engine/splicr/research_protocol.py": "2287b13c5d0946a1e2e92e9ad470113abe5b325fe38692e6aa87469a09b91264"
+  },
+  "paired_vs_D3": {
+    "P0_baseline_D3": {
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "mean": 0.0,
+      "n_publications": 134,
+      "n_screens": 1349,
+      "repeats": 4000,
+      "seed": 20260928,
+      "unit": "publication"
+    },
+    "P1_requested_effect_prior": {
+      "ci95": [
+        -0.023172068129698988,
+        0.0045313011613174565
+      ],
+      "mean": -0.007931349860298387,
+      "n_publications": 134,
+      "n_screens": 1349,
+      "repeats": 4000,
+      "seed": 20260928,
+      "unit": "publication"
+    },
+    "P2_requested_effect_transfer": {
+      "ci95": [
+        -0.024030336117880424,
+        0.0010689961227668798
+      ],
+      "mean": -0.010679664194782282,
+      "n_publications": 134,
+      "n_screens": 1349,
+      "repeats": 4000,
+      "seed": 20260928,
+      "unit": "publication"
+    }
+  },
+  "results": {
+    "P0_baseline_D3": {
+      "ci95": [
+        0.17421041716918606,
+        0.7671184626464554
+      ],
+      "mean": 0.5902388684806166,
+      "measured_at100": 84.39733135656041,
+      "n_publications": 134,
+      "n_screens": 1349,
+      "repeats": 4000,
+      "seed": 20260928,
+      "slot_precision_at100": 0.5969903632320238,
+      "unit": "publication",
+      "wrong_direction_fraction_returned": 0.00810229799851742
+    },
+    "P1_requested_effect_prior": {
+      "ci95": [
+        0.1748758268609238,
+        0.7566548767912358
+      ],
+      "mean": 0.5823075186203182,
+      "measured_at100": 84.95478131949592,
+      "n_publications": 134,
+      "n_screens": 1349,
+      "repeats": 4000,
+      "seed": 20260928,
+      "slot_precision_at100": 0.590533728687917,
+      "unit": "publication",
+      "wrong_direction_fraction_returned": 0.008747220163083767
+    },
+    "P2_requested_effect_transfer": {
+      "ci95": [
+        0.1723662123707967,
+        0.7542939308365832
+      ],
+      "mean": 0.5795592042858342,
+      "measured_at100": 85.16456634544107,
+      "n_publications": 134,
+      "n_screens": 1349,
+      "repeats": 4000,
+      "seed": 20260928,
+      "slot_precision_at100": 0.587479614529281,
+      "unit": "publication",
+      "wrong_direction_fraction_returned": 0.008554484803558192
+    }
+  },
+  "selected": "P0_baseline_D3",
+  "selection_estimate_not_unbiased": true
+}

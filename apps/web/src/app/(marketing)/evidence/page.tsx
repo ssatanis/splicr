@@ -1,14 +1,14 @@
-import type { Metadata } from "next";
+import { marketingMetadata } from "@/lib/marketing-metadata";
 import Link from "next/link";
 
 import { MarketingNav } from "@/components/marketing/nav";
 import { benchmark } from "@/lib/content";
 import evidence from "../../../../public/evidence/summary.json";
 
-export const metadata: Metadata = {
+export const metadata = marketingMetadata("/evidence", {
   title: "Evidence and limitations",
   description: "Measured AssayBench results, real sequencing agreement, analysis limitations and downloadable provenance for SplicR.",
-};
+});
 
 const files = [
   ["summary.json", "Machine-readable measurements"],
@@ -33,7 +33,7 @@ export default function EvidencePage() {
       </header>
       <section id="prediction" className="scroll-mt-8">
         <h2 className="text-3xl font-medium">Pre-screen prediction</h2>
-        <p className="mt-4 text-body">{evidence.dataset}: {evidence.split.train.toLocaleString("en-US")} training, {evidence.split.validation} validation and {evidence.split.test} public test screens. The task ranks genes from experimental context before seeing target measurements. The official evaluator uses adjusted nDCG@100.</p>
+        <p className="mt-4 text-body">{evidence.dataset}: {evidence.split.train.toLocaleString("en-US")} training, {evidence.split.validation} validation and {evidence.split.test} public test screens. The benchmark ranks genes from released experimental context without using target measurements as scoring inputs. Published expert prompts can include post-hoc notes, significance criteria and ranking rationale; this comparison does not establish a clean pre-experiment historical forecast. The official evaluator uses adjusted nDCG@100.</p>
         <div className="mt-6 overflow-x-auto">
           <table className="table-base w-full"><caption className="text-left text-sm text-muted pb-3">Official evaluation replay. Higher is better; these scores are not percentages of accuracy.</caption>
             <thead><tr><th scope="col">Method</th><th scope="col">AnDCG@100</th></tr></thead>
@@ -44,6 +44,35 @@ export default function EvidencePage() {
         <p className="mt-4 text-body">Published model rankings were replayed from saved files. No fresh model API calls were made. The oracle selects with test answers and is not deployable. The public test had already been explored historically, so it is not an untouched prospective cohort.</p>
         <details className="mt-5 rounded-xl border border-line p-5"><summary className="cursor-pointer font-medium">Why earlier SplicR numbers differ</summary><p className="mt-3 text-body">The original supplied-library phenotype prior reproduced at {evidence.legacy_prior.andcg100.toFixed(6)}. A separate archived fusion scored 0.219952 versus 0.219324 for an equally filtered/padded ensemble, with a paired interval spanning zero. Those experiments used the target&apos;s measured gene library and different training inputs. Their scores cannot be compared directly with the unaltered rankings above. Full details remain in the reproduction report.</p></details>
         <p className="mt-4 text-sm"><a className="underline" href="https://github.com/Genentech/AssayBench">Official implementation</a>{" · "}<a className="underline" href="https://huggingface.co/datasets/Genentech/assaybench">Official dataset</a></p>
+      </section>
+      <section id="post-screen" className="scroll-mt-8">
+        <h2 className="text-3xl font-medium">Which hits reproduce</h2>
+        <p className="mt-4 text-body">{evidence.post_screen_replication.note} Measured {evidence.post_screen_replication.measurement_date} on the {evidence.post_screen_replication.benchmark}. The model was frozen before this split was scored, and this split was scored once.</p>
+        <div className="mt-6 overflow-x-auto">
+          <table className="table-base w-full"><caption className="text-left text-sm text-muted pb-3">Ranking {evidence.post_screen_replication.cohort.n_units} evaluation units across {evidence.post_screen_replication.cohort.n_screen_pairs} screen pairs. Average precision over non-common-essential genes; higher is better.</caption>
+            <thead><tr><th scope="col">Ranking</th><th scope="col">Average precision</th><th scope="col">Precision@10</th></tr></thead>
+            <tbody>
+              <tr><th scope="row" className="text-left font-normal">SplicR reliability ranking</th><td className="tabular-nums">{evidence.post_screen_replication.primary_mean.toFixed(4)}</td><td className="tabular-nums">{evidence.post_screen_replication.precision_at_10.primary.toFixed(3)}</td></tr>
+              <tr><th scope="row" className="text-left font-normal">The screen&apos;s own effect size</th><td className="tabular-nums">{evidence.post_screen_replication.comparator_mean.toFixed(4)}</td><td className="tabular-nums">{evidence.post_screen_replication.precision_at_10.comparator.toFixed(3)}</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-5 text-body">Paired difference, resampled by screen pair: {evidence.post_screen_replication.paired_difference.mean_difference.toFixed(6)}, 95% interval [{evidence.post_screen_replication.paired_difference.ci95.map(v=>v.toFixed(6)).join(", ")}] over {evidence.post_screen_replication.paired_difference.n_screen_pairs} pairs. On the {evidence.post_screen_replication.non_hub_paired_difference.n_screen_pairs} pairs outside the dominant library comparison the difference is {evidence.post_screen_replication.non_hub_paired_difference.mean_difference.toFixed(6)} [{evidence.post_screen_replication.non_hub_paired_difference.ci95.map(v=>v.toFixed(6)).join(", ")}].</p>
+        <ul className="mt-5 space-y-2 text-body list-disc pl-5">{evidence.post_screen_replication.limitations.map(l=><li key={l}>{l}</li>)}</ul>
+      </section>
+      <section id="research" className="scroll-mt-8">
+        <h2 className="text-3xl font-medium">Later research results</h2>
+        <p className="mt-4 text-body">Measured {evidence.research_addendum.measurement_date} on the {evidence.research_addendum.split} split. {evidence.research_addendum.note} These are development measurements, shown separately from the public-test table above because the two are not interchangeable.</p>
+        <div className="mt-6 overflow-x-auto">
+          <table className="table-base w-full"><caption className="text-left text-sm text-muted pb-3">Development results on held-out 2021 screens. Every figure is recomputed from the experiment&apos;s own per-screen results.</caption>
+            <thead><tr><th scope="col">Experiment</th><th scope="col">Selected model</th><th scope="col">AnDCG@100</th><th scope="col">95% interval</th><th scope="col">Status</th></tr></thead>
+            <tbody>{Object.entries(evidence.research_addendum.experiments).map(([id,x])=>
+              <tr key={id}><th scope="row" className="text-left font-normal">{x.title}</th><td>{x.selected_model}</td><td className="tabular-nums">{x.mean.toFixed(6)}</td><td className="tabular-nums">[{x.ci95.map(v=>v.toFixed(6)).join(", ")}]</td><td>{x.promotion_status.replace("_"," ")}</td></tr>)}</tbody>
+          </table>
+        </div>
+        <dl className="mt-6 space-y-5">{Object.entries(evidence.research_addendum.experiments).map(([id,x])=>
+          <div key={id}><dt className="font-medium">{x.title}</dt><dd className="mt-2 text-body">{x.comparison} {x.finding}</dd></div>)}</dl>
+        <p className="mt-5 text-body">Neither experiment accessed the {evidence.split.test}-screen public test, and neither model is promoted. The comparison table above is unchanged by this work.</p>
       </section>
       <section id="counting" className="scroll-mt-8">
         <h2 className="text-3xl font-medium">Actual sequencing, compared with deposited counts</h2>

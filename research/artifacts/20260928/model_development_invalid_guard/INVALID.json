@@ -1,0 +1,5 @@
+{
+  "status": "INVALID_ABORTED_IMPLEMENTATION_RUN",
+  "reason": "Regression test found dict inputs raised AttributeError instead of explicit TypeError before context guard; stopped before model selection. Preserve partial output; exclude from scientific selection.",
+  "fix": "Type guard moved before context.source_id access."
+}

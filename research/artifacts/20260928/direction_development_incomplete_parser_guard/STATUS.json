@@ -1,0 +1,5 @@
+{
+  "status": "interrupted before selection",
+  "reason": "adversarial review found nominal increase in without target must abstain; preserve partial training-fold output, no model/parameter adjustment based on scores",
+  "eligible_for_performance_claim": false
+}

@@ -1,0 +1,76 @@
+{
+  "baselines": [
+    "F0_base_rrf60 (same input contract)",
+    "published LLM RRF Ensemble (validation only)"
+  ],
+  "configurations": {
+    "F0_base_rrf60": {
+      "kind": "residual_blend",
+      "lambda": 0.0
+    },
+    "F1_residual_025": {
+      "kind": "residual_blend",
+      "lambda": 0.25
+    },
+    "F2_residual_050": {
+      "kind": "residual_blend",
+      "lambda": 0.5
+    },
+    "F3_residual_100": {
+      "kind": "residual_blend",
+      "lambda": 1.0
+    },
+    "F4_residual_200": {
+      "kind": "residual_blend",
+      "lambda": 2.0
+    },
+    "L0_uniform_prior_small": {
+      "kind": "rank_aggregation",
+      "variant": "L0_uniform_prior_small"
+    },
+    "L1_weighted_rrf": {
+      "kind": "rank_aggregation",
+      "variant": "L1_weighted_rrf"
+    }
+  },
+  "created_utc": "2026-09-28T17:46:45.547046+00:00",
+  "experiment_family": "20260928_frontier_residual",
+  "expert_hashes": {
+    "gemini-3-flash": "1eef9fbeda42df8817629cf47c27fe6451bffd7d3de92034e89ebf16e1d9d459",
+    "gemini-3-pro": "4ddc041c7b57558bc534f3479476be835c011e497ea2d66f1c601908bb23b7bb",
+    "gemini-3.1-pro": "ff3c67e97859cbfa55eecacee498cdec3cead27fe57c3b6bd2234cb9e76c506f",
+    "gpt-5.2": "56069c522733c95fcb10b96d7839636a4a12ceb46f1dab4d5c6c9749f2edfdb5",
+    "gpt-5.4": "af487d74d311a26a4b701430ee3da17667eef3fb97e6bd8e12cd935230fc6239"
+  },
+  "grouping": "source_id; no publication overlap; corpus, ranker and aggregation weights refit inside each outer training fold; the prior excludes the query publication by construction",
+  "historical_public_test_exposure": true,
+  "hypotheses": {
+    "F": "A historical residual blended into the frontier reciprocal-rank base with weight lambda improves on the base; lambda=0 recovers the base exactly, so the blend must earn any movement.",
+    "L": "Re-weighting individual experts and adding a small historical prior term inside the same reciprocal-rank aggregation improves on uniform weights."
+  },
+  "provenance": {
+    "assaybench_version": "0.2.0",
+    "base": "reciprocal-rank fusion (constant 60) over the five expert files",
+    "context_ranking_sha256": "e009f05bf4948af8a91bda3f2e2c4e23f57ff17a36070c4ce5d6484d51564fdc",
+    "data_sha256": "25e00c380358486137d1f25c490db98d007dfc5230f8ad502276dc6ccc741a5c",
+    "git_revision": "25e0feec0b226158b732b3a662383a8f62529c0c",
+    "input": "pre-experimental metadata; train-union genes; no target library",
+    "input_contract": "description metadata + separately generated zero-shot expert rankings; no target library",
+    "loader_code_sha256": "6e3dc144928252f96af66e1b7966ace7556aa23935a10005f05a1a0b3aa84044",
+    "metric_sha256": "d1b638c9aa3ee1cbd984028595b7af009f00736d203fa9cc10405732d182fbae",
+    "model_code_sha256": "cdfb02576fb89cc67807d00672b438db6f07d5698efcc64c53ad13f0853a9683",
+    "modern_model_memorization_risk": true,
+    "protocol": "train <=2020; validation 2021; public test >=2022 already explored historically",
+    "protocol_code_sha256": "2287b13c5d0946a1e2e92e9ad470113abe5b325fe38692e6aa87469a09b91264",
+    "public_test_accessed": false,
+    "published_ensemble_has_no_training_predictions": true,
+    "runner_code_sha256": "5056075e24de9e480eecbd2738125ce1c5fbab72d6397a30355f9466738e6dc3",
+    "runner_sha256": "7a714ad2be29bfde15e3cdcfc5982b5c9d8455c21296339ee9c00b77002277e3",
+    "seed": 20260928
+  },
+  "public_test_phase_exists_in_this_runner": false,
+  "selection": "three publication-grouped folds inside the 1349 training screens; the single best configuration by pooled out-of-fold mean is confirmed once on the 2021 validation split",
+  "selection_multiplicity": 7,
+  "stochastic_training": "deterministic LightGBM with fixed seed and full feature/row fractions; the aggregation search is deterministic coordinate ascent",
+  "test_labels_loaded_in_selection": false
+}

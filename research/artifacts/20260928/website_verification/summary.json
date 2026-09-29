@@ -1,0 +1,187 @@
+{
+  "date": "2026-09-28",
+  "status": "browser_verification_blocked_static_checks_pass_with_metadata_findings",
+  "target": "local production build; no deployment",
+  "viewport_matrix": [
+    {
+      "route": "/",
+      "width": 390,
+      "status": "not_run",
+      "reason": "Local server listen EPERM; no connected browser; standalone browser socket directory denied"
+    },
+    {
+      "route": "/",
+      "width": 768,
+      "status": "not_run",
+      "reason": "Local server listen EPERM; no connected browser; standalone browser socket directory denied"
+    },
+    {
+      "route": "/",
+      "width": 1440,
+      "status": "not_run",
+      "reason": "Local server listen EPERM; no connected browser; standalone browser socket directory denied"
+    },
+    {
+      "route": "/technology",
+      "width": 390,
+      "status": "not_run",
+      "reason": "Local server listen EPERM; no connected browser; standalone browser socket directory denied"
+    },
+    {
+      "route": "/technology",
+      "width": 768,
+      "status": "not_run",
+      "reason": "Local server listen EPERM; no connected browser; standalone browser socket directory denied"
+    },
+    {
+      "route": "/technology",
+      "width": 1440,
+      "status": "not_run",
+      "reason": "Local server listen EPERM; no connected browser; standalone browser socket directory denied"
+    },
+    {
+      "route": "/pipeline",
+      "width": 390,
+      "status": "not_run",
+      "reason": "Local server listen EPERM; no connected browser; standalone browser socket directory denied"
+    },
+    {
+      "route": "/pipeline",
+      "width": 768,
+      "status": "not_run",
+      "reason": "Local server listen EPERM; no connected browser; standalone browser socket directory denied"
+    },
+    {
+      "route": "/pipeline",
+      "width": 1440,
+      "status": "not_run",
+      "reason": "Local server listen EPERM; no connected browser; standalone browser socket directory denied"
+    },
+    {
+      "route": "/evidence",
+      "width": 390,
+      "status": "not_run",
+      "reason": "Local server listen EPERM; no connected browser; standalone browser socket directory denied"
+    },
+    {
+      "route": "/evidence",
+      "width": 768,
+      "status": "not_run",
+      "reason": "Local server listen EPERM; no connected browser; standalone browser socket directory denied"
+    },
+    {
+      "route": "/evidence",
+      "width": 1440,
+      "status": "not_run",
+      "reason": "Local server listen EPERM; no connected browser; standalone browser socket directory denied"
+    },
+    {
+      "route": "/about",
+      "width": 390,
+      "status": "not_run",
+      "reason": "Local server listen EPERM; no connected browser; standalone browser socket directory denied"
+    },
+    {
+      "route": "/about",
+      "width": 768,
+      "status": "not_run",
+      "reason": "Local server listen EPERM; no connected browser; standalone browser socket directory denied"
+    },
+    {
+      "route": "/about",
+      "width": 1440,
+      "status": "not_run",
+      "reason": "Local server listen EPERM; no connected browser; standalone browser socket directory denied"
+    },
+    {
+      "route": "/careers",
+      "width": 390,
+      "status": "not_run",
+      "reason": "Local server listen EPERM; no connected browser; standalone browser socket directory denied"
+    },
+    {
+      "route": "/careers",
+      "width": 768,
+      "status": "not_run",
+      "reason": "Local server listen EPERM; no connected browser; standalone browser socket directory denied"
+    },
+    {
+      "route": "/careers",
+      "width": 1440,
+      "status": "not_run",
+      "reason": "Local server listen EPERM; no connected browser; standalone browser socket directory denied"
+    },
+    {
+      "route": "/contact",
+      "width": 390,
+      "status": "not_run",
+      "reason": "Local server listen EPERM; no connected browser; standalone browser socket directory denied"
+    },
+    {
+      "route": "/contact",
+      "width": 768,
+      "status": "not_run",
+      "reason": "Local server listen EPERM; no connected browser; standalone browser socket directory denied"
+    },
+    {
+      "route": "/contact",
+      "width": 1440,
+      "status": "not_run",
+      "reason": "Local server listen EPERM; no connected browser; standalone browser socket directory denied"
+    }
+  ],
+  "attempts": {
+    "standard_production_build": {
+      "command": "npm run build -w apps/web",
+      "exit_code": 1,
+      "reason": "Turbopack CSS processing subprocess cannot bind a port: Operation not permitted (os error 1)",
+      "log": "standard_build.log"
+    },
+    "webpack_production_build": {
+      "command": "npm run build -w apps/web -- --webpack",
+      "exit_code": 0,
+      "log": "webpack_build.log"
+    },
+    "local_server": {
+      "command": "npm run start -w apps/web -- --hostname 127.0.0.1 --port 3100",
+      "exit_code": 1,
+      "reason": "listen EPERM: operation not permitted 127.0.0.1:3100",
+      "log": "local_server.log"
+    },
+    "in_app_browser": {
+      "bootstrap": "agent.browsers.getForUrl(http://127.0.0.1:3100/)",
+      "error": "No browser is available",
+      "available_browsers": []
+    },
+    "standalone_browser": {
+      "session": "splicr-web-20260928",
+      "profile": "/private/tmp/splicr-web-20260928-profile",
+      "exit_code": 1,
+      "reason": "Socket directory '/Users/sahaj/.agent-browser' is not writable: Operation not permitted (os error 1)",
+      "log": "browser_launch.log"
+    }
+  },
+  "static_checks": {
+    "artifact": "static_checks.json",
+    "routes": 7,
+    "download_hashes_verified": 7,
+    "unresolved_internal_links": 0,
+    "missing_canonical_routes": 7,
+    "route_specific_opengraph_metadata": false
+  },
+  "contact_evidence_unit_checks": {
+    "command": "node --test apps/web/tests/evidence.test.mjs",
+    "exit_code": 0,
+    "passed": 7,
+    "log": "contact_and_evidence_tests.log",
+    "message_sent": false
+  },
+  "not_verified": [
+    "visual layout at all requested viewport sizes",
+    "browser console and hydration",
+    "interactive navigation and contact behavior in an actual browser",
+    "HTTP status of deployed or local links/downloads",
+    "external link availability"
+  ],
+  "historical_browser_checks": "Existing earlier website_browser_verification.json was not reused as current browser evidence."
+}

@@ -1,0 +1,110 @@
+{
+  "created_utc": "2026-09-28T22:00:58+00:00",
+  "independent_aggregation": {
+    "average_precision": {
+      "agrees_with_runner": true,
+      "ci95": [
+        0.10197799314762336,
+        0.1128678555322216
+      ],
+      "mean": 0.10743770250101319,
+      "n_screen_pairs": 124
+    },
+    "p_at_10": {
+      "agrees_with_runner": true,
+      "ci95": [
+        0.2004032258064516,
+        0.2383064516129032
+      ],
+      "mean": 0.21895161290322582,
+      "n_screen_pairs": 124
+    },
+    "p_at_50": {
+      "agrees_with_runner": true,
+      "ci95": [
+        0.06951612903225807,
+        0.09338709677419353
+      ],
+      "mean": 0.08161290322580646,
+      "n_screen_pairs": 124
+    }
+  },
+  "leakage_assertion": {
+    "checked_units": 248,
+    "note": "allowed_background_screens also removes both publications and every screen in the pair's cell line; excluding the publication removes all Behan and all Meyers screens for every hub unit.",
+    "pair_screen_in_background": [],
+    "passed": true
+  },
+  "prospective_power_caveat": "These rates are cross-screen replication, not arrayed wet-lab confirmation. An arrayed assay will have a different and probably lower confirmation rate, so a prospective study sized from these numbers should treat them as an upper bound on the effect and include an interim futility look.",
+  "prospective_power_inputs": {
+    "k=10": {
+      "confirmation_rate_in_comparator_only": 0.5854470686123912,
+      "confirmation_rate_in_splicr_only": 0.8983598950332821,
+      "expected_excess_confirmations_per_screen": 2.056644786556662,
+      "mean_discordant_per_screen": 6.57258064516129,
+      "validations_per_screen_if_union_tested": 16.57258064516129
+    },
+    "k=20": {
+      "confirmation_rate_in_comparator_only": 0.555167127569879,
+      "confirmation_rate_in_splicr_only": 0.7873036853379596,
+      "expected_excess_confirmations_per_screen": 2.845544901673246,
+      "mean_discordant_per_screen": 12.258064516129032,
+      "validations_per_screen_if_union_tested": 32.25806451612903
+    },
+    "k=50": {
+      "confirmation_rate_in_comparator_only": 0.47558193096109924,
+      "confirmation_rate_in_splicr_only": 0.6238037684858692,
+      "expected_excess_confirmations_per_screen": 3.958957466790629,
+      "mean_discordant_per_screen": 26.70967741935484,
+      "validations_per_screen_if_union_tested": 76.70967741935485
+    }
+  },
+  "provenance": {
+    "runner_sha256": "46fc48291e7c4d3bfef0d67f709f43928c33da6f48c086e7c239d252fe56bbc1",
+    "seconds": 152.4
+  },
+  "textbook_biology_objection": {
+    "all_primary_space": {
+      "average_precision": {
+        "ci95": [
+          0.10197799314762336,
+          0.1128678555322216
+        ],
+        "mean": 0.10743770250101319,
+        "n_screen_pairs": 124
+      },
+      "mean_genes_in_space": 15690.290322580646,
+      "n_units_scored": 248,
+      "p_at_10": {
+        "ci95": [
+          0.2004032258064516,
+          0.2383064516129032
+        ],
+        "mean": 0.21895161290322582,
+        "n_screen_pairs": 124
+      }
+    },
+    "excluding_achilles_essentials": {
+      "average_precision": {
+        "ci95": [
+          0.09692193957056436,
+          0.1064855391265808
+        ],
+        "mean": 0.10181905687794653,
+        "n_screen_pairs": 124
+      },
+      "mean_genes_in_space": 15455.911290322581,
+      "n_units_scored": 248,
+      "p_at_10": {
+        "ci95": [
+          0.22903225806451616,
+          0.2645161290322581
+        ],
+        "mean": 0.2467741935483871,
+        "n_screen_pairs": 124
+      }
+    }
+  },
+  "verifies": "research/artifacts/20260928/replication_heldout/heldout_results.json",
+  "verifies_sha256": "b7053926a776350c55f9c0d43a8ba7cf6419f7de287a75f5162c7c0a90c39005"
+}

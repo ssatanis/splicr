@@ -20,7 +20,7 @@
     "db:status": "node scripts/db/status.mjs",
     "db:types": "npx supabase gen types typescript --db-url \"$SUPABASE_DB_URL\" --schema public > packages/db/src/database.types.ts",
     "evidence:generate": "python3 scripts/research/publish_evidence.py",
-    "evidence:check": "python3 scripts/research/publish_evidence.py --check",
+    "evidence:check": "node scripts/research/evidence_gate.mjs --check-public",
     "test:web": "node --test apps/web/tests/*.test.mjs",
     "data:nih": "node scripts/data/nih-summary.mjs",
     "data:seed": "node scripts/data/seed-atlas.mjs"

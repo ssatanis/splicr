@@ -1,0 +1,92 @@
+{
+  "P0_baseline_D3": {
+    "ci95": [
+      0.0806064105992527,
+      0.870006600334015
+    ],
+    "configuration": {
+      "base": {
+        "conditional": true,
+        "exposure_power": 0.5,
+        "retrieval": 0.0,
+        "signed": true,
+        "strength": 10.0,
+        "study_balance": false
+      },
+      "effect_prior": false,
+      "retrieval_k": 25,
+      "retrieval_weight": 0.0
+    },
+    "fit_seconds": 5.368004292016849,
+    "mean": 0.7267558907784629,
+    "measured_at100": 91.7688888888889,
+    "n_publications": 42,
+    "n_screens": 450,
+    "prediction_seconds": 1.1692699159029871,
+    "repeats": 4000,
+    "seed": 20260928,
+    "slot_precision_at100": 0.7380444444444445,
+    "unit": "publication",
+    "wrong_direction_fraction_returned": 0.0012888888888888891
+  },
+  "P1_requested_effect_prior": {
+    "ci95": [
+      0.07807222536774808,
+      0.8340570283342301
+    ],
+    "configuration": {
+      "base": {
+        "conditional": true,
+        "exposure_power": 0.5,
+        "retrieval": 0.0,
+        "signed": true,
+        "strength": 10.0,
+        "study_balance": false
+      },
+      "effect_prior": true,
+      "retrieval_k": 25,
+      "retrieval_weight": 0.0
+    },
+    "fit_seconds": 5.368004292016849,
+    "mean": 0.6974054284696769,
+    "measured_at100": 91.51777777777778,
+    "n_publications": 42,
+    "n_screens": 450,
+    "prediction_seconds": 2.1412401248235255,
+    "repeats": 4000,
+    "seed": 20260928,
+    "slot_precision_at100": 0.7130666666666666,
+    "unit": "publication",
+    "wrong_direction_fraction_returned": 0.0012222222222222224
+  },
+  "P2_requested_effect_transfer": {
+    "ci95": [
+      0.08573639571053698,
+      0.834727316008159
+    ],
+    "configuration": {
+      "base": {
+        "conditional": true,
+        "exposure_power": 0.5,
+        "retrieval": 0.0,
+        "signed": true,
+        "strength": 10.0,
+        "study_balance": false
+      },
+      "effect_prior": true,
+      "retrieval_k": 25,
+      "retrieval_weight": 0.5
+    },
+    "fit_seconds": 5.368004292016849,
+    "mean": 0.6991055783283773,
+    "measured_at100": 91.61777777777777,
+    "n_publications": 42,
+    "n_screens": 450,
+    "prediction_seconds": 7.901609916007146,
+    "repeats": 4000,
+    "seed": 20260928,
+    "slot_precision_at100": 0.7110444444444445,
+    "unit": "publication",
+    "wrong_direction_fraction_returned": 0.001088888888888889
+  }
+}

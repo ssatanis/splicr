@@ -1,0 +1,45 @@
+{
+  "artifacts": {
+    "research/artifacts/20260928/model_development/validation/E2_history_lambdarank_predictions.json": "9ff180df74b5a3499604957f843ac1bcd01a827a45f05635dd9aec4fce9ad7ea",
+    "research/artifacts/20260928/model_development/validation/E2_history_lambdarank_screens.json": "e27db62235a24b2aa8f342de2e458deeaef010ea277123dece0e989fa88e1aaa",
+    "research/artifacts/20260928/publication/experiment_D_summary.json": "0a26785075061fac4ebbb4523a87126a520bccc1d543deb1e60d9d8f4bd39a96"
+  },
+  "calibration_status": "not_fitted",
+  "cohort": {
+    "assaybench_version": "0.2.0",
+    "dataset_sha256": "25e00c380358486137d1f25c490db98d007dfc5230f8ad502276dc6ccc741a5c",
+    "metric_sha256": "d1b638c9aa3ee1cbd984028595b7af009f00736d203fa9cc10405732d182fbae",
+    "n_publications": 34,
+    "n_screens": 218
+  },
+  "configuration": {
+    "history": true,
+    "kind": "ranker",
+    "n_features": 57,
+    "objective": "lambdarank",
+    "selection_multiplicity": 14
+  },
+  "evaluation_kind": "validation_selection",
+  "experiment_id": "20260928_experiment_D",
+  "input_contract": "metadata_only",
+  "notes": "Gene-level LambdaRank over 57 features, selected by publication-grouped cross-validation on the 1349 training screens; scored once on the 2021 validation split. Paired against the published ensemble on the same 218 screens: -0.005452 [-0.016147, +0.010805]. No superiority established.",
+  "predictions": "research/artifacts/20260928/model_development/validation/E2_history_lambdarank_predictions.json",
+  "promotion_status": "research_only",
+  "provenance": {
+    "assaybench_version": "0.2.0",
+    "data_sha256": "25e00c380358486137d1f25c490db98d007dfc5230f8ad502276dc6ccc741a5c",
+    "git_revision": "25e0feec0b226158b732b3a662383a8f62529c0c",
+    "metric_sha256": "d1b638c9aa3ee1cbd984028595b7af009f00736d203fa9cc10405732d182fbae",
+    "model_code": "engine/splicr/context_ranking.py",
+    "model_code_sha256": "e009f05bf4948af8a91bda3f2e2c4e23f57ff17a36070c4ce5d6484d51564fdc",
+    "modern_model_memorization_risk": true,
+    "public_test_accessed": false,
+    "seed": 20260928
+  },
+  "schema_version": 1,
+  "screen_results": "research/artifacts/20260928/model_development/validation/E2_history_lambdarank_screens.json",
+  "split": "validation_2021",
+  "summary": "research/artifacts/20260928/publication/experiment_D_summary.json",
+  "task": "pre_screen_prediction",
+  "validation_probability": null
+}

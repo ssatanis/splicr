@@ -1,0 +1,24 @@
+C0_rrf60 {'mean': 0.8289503365334977, 'measured_at100': 94.43333333333334, 'corpus_fit_seconds': 7.13687220797874, 'model_fit_seconds': 0.0, 'predict_seconds': 0.2145283748395741, 'config': {'kind': 'rrf', 'constant': 60}, 'fit_diagnostics': None}
+Traceback (most recent call last):
+  File "/Users/sahaj/Documents/Projects/SplicR/engine/analysis/advanced_development.py", line 190, in <module>
+    select() if args.phase=='select' else replay(args.repetition)
+    ^^^^^^^^
+  File "/Users/sahaj/Documents/Projects/SplicR/engine/analysis/advanced_development.py", line 138, in select
+    rows,summary=run_models(train,validation,external,OUT/f'cv{fold}',names)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sahaj/Documents/Projects/SplicR/engine/analysis/advanced_development.py", line 109, in run_models
+    rows,metrics=evaluate_save(folder,name,evaluation,predictions,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sahaj/Documents/Projects/SplicR/engine/analysis/advanced_development.py", line 76, in evaluate_save
+    rows=evaluate_predictions(screens,predictions)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sahaj/Documents/Projects/SplicR/engine/splicr/research_protocol.py", line 90, in evaluate_predictions
+    truth = {mapper.normalize(g): float(v) for g, v in zip(genes, rel)}
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sahaj/Documents/Projects/SplicR/engine/splicr/research_protocol.py", line 90, in <dictcomp>
+    truth = {mapper.normalize(g): float(v) for g, v in zip(genes, rel)}
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/sahaj/Documents/Projects/SplicR/engine/splicr/benchmark.py", line 469, in normalize
+    def normalize(self, gene: str) -> str:
+
+KeyboardInterrupt

@@ -1,0 +1,66 @@
+{
+  "archived_per_screen_max_absolute_differences": {
+    "legacy_seed0": {
+      "adjusted_ndcg@10": 0.0,
+      "adjusted_ndcg@100": 0.0,
+      "fdr@10": 0.0,
+      "fdr@100": 0.0,
+      "precision@10": 0.0,
+      "precision@100": 0.0,
+      "recall@10": 0.0,
+      "recall@100": 0.0
+    },
+    "published_ensemble": {
+      "adjusted_ndcg@10": 0.0,
+      "adjusted_ndcg@100": 0.0,
+      "fdr@10": 0.0,
+      "fdr@100": 0.0,
+      "precision@10": 0.0,
+      "precision@100": 0.0,
+      "recall@10": 0.0,
+      "recall@100": 0.0
+    },
+    "router": {
+      "adjusted_ndcg@10": 0.0,
+      "adjusted_ndcg@100": 0.0,
+      "fdr@10": 0.0,
+      "fdr@100": 0.0,
+      "precision@10": 0.0,
+      "precision@100": 0.0,
+      "recall@10": 0.0,
+      "recall@100": 0.0
+    }
+  },
+  "checked_inputs": 18,
+  "checked_outputs": 44,
+  "input_hashes_unchanged": true,
+  "input_manifest_sha256": "5219ed84a2cfb7255e7e8f621f84dd6aef9788cc9e6dbd6dd1954538bf2cbb37",
+  "output_manifest_matches": true,
+  "output_manifest_sha256": "064bbfca9a0ac483843f5369127a681a49ec3efbceb410b4891d74373090a73d",
+  "per_model_three_replay_score_hashes": {
+    "legacy_seed0": "13409fc089d54cd2ee4d1d26b927f6aa94964f43d9daafea6129771f3780d724",
+    "legacy_seed1": "24197ffd45fd96d6526467559d11fcc07b7e97f65a0384fe4c9861a39f8a492b",
+    "legacy_seed2": "9d7a20d5d9262a4d4cf58d7b03da99438b7c361a6eff8fd8ea2a07670f4c56b8",
+    "legacy_seed3": "b9faeb966551830a0fa9dc2a20dd8e4d22c31008e2c2910fa1ddacfd09446f63",
+    "legacy_seed4": "d908f2f375f9f223574b17a9c68775410fdb4f7273efdced49f986097cebaff8",
+    "legacy_seed5": "04a9978797ef51e44062caa4b3eb23334232ab7947cc10e4ddce9128b4feb6ad",
+    "legacy_seed6": "a4602688d549a544f6eb7e99c84da79f8abc2620d1136fb2e61bd28c4ced0700",
+    "legacy_seed7": "ceabc58b638496c34f48a5aa2c606d8a9723ef7decc9852b3c8e6b1298051c33",
+    "published_ensemble": "f9bc101816377afeb4ad448c47f7e4f765e8d532e679ea92e899f2bf841012b2",
+    "router": "a26d4cfb353854fd1040e0c8381102fb87fd3760ebc996739fef59d9da72242c"
+  },
+  "publication_overlap": {
+    "train__test": [],
+    "train__validation": [],
+    "validation__test": []
+  },
+  "summary_sha256": "97b1cd43f10a765a5320b937d68ae43e9732f002460972ef40ea4705f0d8e67f",
+  "test": {
+    "command": "PYTHONPATH=engine engine/.tools/env/bin/python -m pytest engine/tests/test_independent_verification.py -q",
+    "exit_code": 0,
+    "log_sha256": "e931ac46518be9b2e1f8245fcda443b129b1794130cd5d5f9a5b69537002a14a",
+    "passed": 13,
+    "seconds": 2.3592228749766946,
+    "test_source_sha256": "f45be91b705b0b9e58dc1843a6262a8e033a1f7ad4869b9be9e4f372c4441d77"
+  }
+}

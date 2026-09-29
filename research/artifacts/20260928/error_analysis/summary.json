@@ -1,0 +1,1967 @@
+{
+  "correlations": {
+    "direction": {
+      "coverage_vs_andcg": {
+        "note": "descriptive; screens share studies; no independent p-value claim",
+        "rho": 0.31120697334974473
+      }
+    },
+    "ensemble": {
+      "coverage_vs_andcg": {
+        "note": "descriptive; screens share studies; no independent p-value claim",
+        "rho": 0.08112916011824989
+      }
+    },
+    "gemini3pro": {
+      "coverage_vs_andcg": {
+        "note": "descriptive; screens share studies; no independent p-value claim",
+        "rho": 0.14239301544696248
+      }
+    },
+    "global": {
+      "coverage_vs_andcg": {
+        "note": "descriptive; screens share studies; no independent p-value claim",
+        "rho": 0.21100979399477351
+      }
+    },
+    "gpt54": {
+      "coverage_vs_andcg": {
+        "note": "descriptive; screens share studies; no independent p-value claim",
+        "rho": 0.09204825355370286
+      }
+    },
+    "phenotype": {
+      "coverage_vs_andcg": {
+        "note": "descriptive; screens share studies; no independent p-value claim",
+        "rho": 0.38353733511150445
+      }
+    },
+    "ridge10": {
+      "coverage_vs_andcg": {
+        "note": "descriptive; screens share studies; no independent p-value claim",
+        "rho": 0.25853055832713295
+      }
+    },
+    "router": {
+      "coverage_vs_andcg": {
+        "note": "descriptive; screens share studies; no independent p-value claim",
+        "rho": 0.01854621070912686
+      }
+    },
+    "transfer": {
+      "coverage_vs_andcg": {
+        "note": "descriptive; screens share studies; no independent p-value claim",
+        "rho": 0.18307560296638004
+      }
+    }
+  },
+  "donor_diagnostics": {
+    "random5_matched": {
+      "desired_coverage": 0.07147040266483176,
+      "n_assayed": 149.8348623853211,
+      "n_candidates": 312.0321100917431,
+      "n_desired": 18.142201834862384,
+      "n_opposite": 6.8577981651376145
+    },
+    "top5_matched_text": {
+      "desired_coverage": 0.09510183507176834,
+      "n_assayed": 140.86697247706422,
+      "n_candidates": 264.10550458715596,
+      "n_desired": 24.642201834862384,
+      "n_opposite": 1.573394495412844
+    },
+    "top5_text": {
+      "desired_coverage": 0.08669756871994067,
+      "n_assayed": 163.28440366972478,
+      "n_candidates": 301.6238532110092,
+      "n_desired": 27.56422018348624,
+      "n_opposite": 6.628440366972477
+    }
+  },
+  "elapsed_seconds": 36.16394929098897,
+  "expert_complementarity": {
+    "direction__phenotype": {
+      "hindsight_best_of_two_diagnostic_only": 0.08394819437685636,
+      "left_unique_desired_mean": 3.444954128440367,
+      "left_wins": 9,
+      "mean_top100_jaccard": 0.5927944676299104,
+      "paired_delta": {
+        "ci95": [
+          -0.06568471508931265,
+          -0.0006394800726881974
+        ],
+        "mean": -0.024656659216789244,
+        "n_publications": 34,
+        "n_screens": 218,
+        "repeats": 4000,
+        "seed": 20260928,
+        "unit": "publication"
+      },
+      "right_unique_desired_mean": 6.18348623853211,
+      "right_wins": 28,
+      "ties": 181
+    },
+    "gemini3pro__gpt54": {
+      "hindsight_best_of_two_diagnostic_only": 0.19906683215190907,
+      "left_unique_desired_mean": 6.123853211009174,
+      "left_wins": 90,
+      "mean_top100_jaccard": 0.27291615499881783,
+      "paired_delta": {
+        "ci95": [
+          -0.006517875844382247,
+          0.02747285249586081
+        ],
+        "mean": 0.005724708337730681,
+        "n_publications": 34,
+        "n_screens": 218,
+        "repeats": 4000,
+        "seed": 20260928,
+        "unit": "publication"
+      },
+      "right_unique_desired_mean": 5.045871559633028,
+      "right_wins": 80,
+      "ties": 48
+    },
+    "global__ensemble": {
+      "hindsight_best_of_two_diagnostic_only": 0.23266043574905013,
+      "left_unique_desired_mean": 9.220183486238533,
+      "left_wins": 50,
+      "mean_top100_jaccard": 0.01917980997450722,
+      "paired_delta": {
+        "ci95": [
+          -0.14632529790676124,
+          0.06515373273245728
+        ],
+        "mean": -0.07387741206399041,
+        "n_publications": 34,
+        "n_screens": 218,
+        "repeats": 4000,
+        "seed": 20260928,
+        "unit": "publication"
+      },
+      "right_unique_desired_mean": 9.087155963302752,
+      "right_wins": 131,
+      "ties": 37
+    },
+    "phenotype__ensemble": {
+      "hindsight_best_of_two_diagnostic_only": 0.20932210596217612,
+      "left_unique_desired_mean": 5.353211009174312,
+      "left_wins": 40,
+      "mean_top100_jaccard": 0.02022502766562312,
+      "paired_delta": {
+        "ci95": [
+          -0.15089618709382718,
+          -0.0276254351854145
+        ],
+        "mean": -0.10363651112755434,
+        "n_publications": 34,
+        "n_screens": 218,
+        "repeats": 4000,
+        "seed": 20260928,
+        "unit": "publication"
+      },
+      "right_unique_desired_mean": 9.009174311926605,
+      "right_wins": 140,
+      "ties": 38
+    },
+    "ridge10__ensemble": {
+      "hindsight_best_of_two_diagnostic_only": 0.2351919769830054,
+      "left_unique_desired_mean": 9.573394495412844,
+      "left_wins": 49,
+      "mean_top100_jaccard": 0.019902920259339957,
+      "paired_delta": {
+        "ci95": [
+          -0.14598250205395574,
+          0.07190732757239371
+        ],
+        "mean": -0.07152467863681694,
+        "n_publications": 34,
+        "n_screens": 218,
+        "repeats": 4000,
+        "seed": 20260928,
+        "unit": "publication"
+      },
+      "right_unique_desired_mean": 9.045871559633028,
+      "right_wins": 132,
+      "ties": 37
+    }
+  },
+  "experts": {
+    "direction": {
+      "ci95": [
+        0.004820026469055808,
+        0.1415213936938834
+      ],
+      "coverage": {
+        "max": 96.0,
+        "mean": 9.123853211009175,
+        "median": 0.0,
+        "min": 0.0
+      },
+      "fraction_zero": 0.7247706422018348,
+      "invalid_hgnc_fraction": 0.0,
+      "mean": 0.058143950335224466,
+      "n_publications": 34,
+      "n_screens": 218,
+      "repeats": 4000,
+      "seed": 20260928,
+      "slot_precision_at100": 0.04596330275229358,
+      "unit": "publication",
+      "wrong_direction_fraction_returned": 0.013990825688073394
+    },
+    "ensemble": {
+      "ci95": [
+        0.11791057709597418,
+        0.2634291479289618
+      ],
+      "coverage": {
+        "max": 100.0,
+        "mean": 79.09174311926606,
+        "median": 87.0,
+        "min": 2.0
+      },
+      "fraction_zero": 0.26605504587155965,
+      "invalid_hgnc_fraction": 0.0008365179687516908,
+      "mean": 0.18643712067956802,
+      "n_publications": 34,
+      "n_screens": 218,
+      "repeats": 4000,
+      "seed": 20260928,
+      "slot_precision_at100": 0.10990825688073395,
+      "unit": "publication",
+      "wrong_direction_fraction_returned": 0.013287189739078577
+    },
+    "gemini3pro": {
+      "ci95": [
+        0.10589716152364968,
+        0.2532055818663585
+      ],
+      "coverage": {
+        "max": 100.0,
+        "mean": 76.5045871559633,
+        "median": 85.5,
+        "min": 1.0
+      },
+      "fraction_zero": 0.29357798165137616,
+      "invalid_hgnc_fraction": 0.0012606952080889632,
+      "mean": 0.17155953070190672,
+      "n_publications": 34,
+      "n_screens": 218,
+      "repeats": 4000,
+      "seed": 20260928,
+      "slot_precision_at100": 0.1090366972477064,
+      "unit": "publication",
+      "wrong_direction_fraction_returned": 0.01385109598158549
+    },
+    "global": {
+      "ci95": [
+        0.017013308427955176,
+        0.27645376783221903
+      ],
+      "coverage": {
+        "max": 96.0,
+        "mean": 46.27064220183486,
+        "median": 47.0,
+        "min": 0.0
+      },
+      "fraction_zero": 0.6055045871559633,
+      "invalid_hgnc_fraction": 0.0,
+      "mean": 0.11255970861557762,
+      "n_publications": 34,
+      "n_screens": 218,
+      "repeats": 4000,
+      "seed": 20260928,
+      "slot_precision_at100": 0.11123853211009174,
+      "unit": "publication",
+      "wrong_direction_fraction_returned": 0.05004587155963303
+    },
+    "gpt54": {
+      "ci95": [
+        0.10430074954768248,
+        0.23449320662923212
+      ],
+      "coverage": {
+        "max": 100.0,
+        "mean": 84.23853211009174,
+        "median": 93.0,
+        "min": 2.0
+      },
+      "fraction_zero": 0.26146788990825687,
+      "invalid_hgnc_fraction": 0.0007362711556682723,
+      "mean": 0.16583482236417604,
+      "n_publications": 34,
+      "n_screens": 218,
+      "repeats": 4000,
+      "seed": 20260928,
+      "slot_precision_at100": 0.09825688073394497,
+      "unit": "publication",
+      "wrong_direction_fraction_returned": 0.011349906685802703
+    },
+    "phenotype": {
+      "ci95": [
+        0.009275143268748445,
+        0.20746104310073796
+      ],
+      "coverage": {
+        "max": 97.0,
+        "mean": 18.674311926605505,
+        "median": 0.0,
+        "min": 0.0
+      },
+      "fraction_zero": 0.7293577981651376,
+      "invalid_hgnc_fraction": 0.0,
+      "mean": 0.08280060955201371,
+      "n_publications": 34,
+      "n_screens": 218,
+      "repeats": 4000,
+      "seed": 20260928,
+      "slot_precision_at100": 0.073348623853211,
+      "unit": "publication",
+      "wrong_direction_fraction_returned": 0.03573394495412844
+    },
+    "ridge10": {
+      "ci95": [
+        0.01696528700479811,
+        0.2832241512774876
+      ],
+      "coverage": {
+        "max": 99.0,
+        "mean": 46.34862385321101,
+        "median": 46.5,
+        "min": 0.0
+      },
+      "fraction_zero": 0.6192660550458715,
+      "invalid_hgnc_fraction": 0.0,
+      "mean": 0.11491244204275108,
+      "n_publications": 34,
+      "n_screens": 218,
+      "repeats": 4000,
+      "seed": 20260928,
+      "slot_precision_at100": 0.11518348623853208,
+      "unit": "publication",
+      "wrong_direction_fraction_returned": 0.05174311926605504
+    },
+    "router": {
+      "ci95": [
+        0.11768180061528984,
+        0.2765366868599668
+      ],
+      "coverage": {
+        "max": 100.0,
+        "mean": 78.56422018348624,
+        "median": 87.0,
+        "min": 2.0
+      },
+      "fraction_zero": 0.3119266055045872,
+      "invalid_hgnc_fraction": 0.0007447748494856358,
+      "mean": 0.19484942106435008,
+      "n_publications": 34,
+      "n_screens": 218,
+      "repeats": 4000,
+      "seed": 20260928,
+      "slot_precision_at100": 0.11894495412844036,
+      "unit": "publication",
+      "wrong_direction_fraction_returned": 0.04437142660313195
+    },
+    "transfer": {
+      "ci95": [
+        0.005723843859792342,
+        0.10990607871301954
+      ],
+      "coverage": {
+        "max": 97.0,
+        "mean": 7.793577981651376,
+        "median": 0.0,
+        "min": 0.0
+      },
+      "fraction_zero": 0.7155963302752294,
+      "invalid_hgnc_fraction": 0.0,
+      "mean": 0.047256157359585924,
+      "n_publications": 34,
+      "n_screens": 218,
+      "repeats": 4000,
+      "seed": 20260928,
+      "slot_precision_at100": 0.03674311926605505,
+      "unit": "publication",
+      "wrong_direction_fraction_returned": 0.0007339449541284404
+    }
+  },
+  "gene_exposure": {
+    "direction": {
+      "fraction_training_measured_lt10": 0.7708715596330276,
+      "fraction_training_measured_lt100": 0.8753669724770642,
+      "fraction_training_measurement_below_half": 0.8889449541284403,
+      "training_measured_screens": {
+        "max": 1213.0,
+        "mean": 136.64995412844036,
+        "median": 3.0,
+        "min": 2.0
+      },
+      "unique_genes_across_validation": 414
+    },
+    "ensemble": {
+      "fraction_training_measured_lt10": 0.0010169178145511693,
+      "fraction_training_measured_lt100": 0.0015253767218267541,
+      "fraction_training_measurement_below_half": 0.007858001294259037,
+      "training_measured_screens": {
+        "max": 1220.0,
+        "mean": 1126.0136359434223,
+        "median": 1147.0,
+        "min": 0.0
+      },
+      "unique_genes_across_validation": 2844
+    },
+    "gemini3pro": {
+      "fraction_training_measured_lt10": 0.001492467702066135,
+      "fraction_training_measured_lt100": 0.0023786204001679024,
+      "fraction_training_measurement_below_half": 0.00895480621239681,
+      "training_measured_screens": {
+        "max": 1220.0,
+        "mean": 1123.8077981437432,
+        "median": 1146.0,
+        "min": 0.0
+      },
+      "unique_genes_across_validation": 3079
+    },
+    "global": {
+      "fraction_training_measured_lt10": 0.04,
+      "fraction_training_measured_lt100": 0.04,
+      "fraction_training_measurement_below_half": 0.05,
+      "training_measured_screens": {
+        "max": 1185.0,
+        "mean": 1055.98,
+        "median": 1105.5,
+        "min": 3.0
+      },
+      "unique_genes_across_validation": 100
+    },
+    "gpt54": {
+      "fraction_training_measured_lt10": 0.0007816451331095683,
+      "fraction_training_measured_lt100": 0.0008276242585866017,
+      "fraction_training_measurement_below_half": 0.009195825095406686,
+      "training_measured_screens": {
+        "max": 1213.0,
+        "mean": 1126.2955538185663,
+        "median": 1147.0,
+        "min": 0.0
+      },
+      "unique_genes_across_validation": 2818
+    },
+    "phenotype": {
+      "fraction_training_measured_lt10": 0.691743119266055,
+      "fraction_training_measured_lt100": 0.7905045871559633,
+      "fraction_training_measurement_below_half": 0.7963761467889908,
+      "training_measured_screens": {
+        "max": 1198.0,
+        "mean": 237.93715596330276,
+        "median": 3.0,
+        "min": 2.0
+      },
+      "unique_genes_across_validation": 488
+    },
+    "ridge10": {
+      "fraction_training_measured_lt10": 0.0,
+      "fraction_training_measured_lt100": 0.0,
+      "fraction_training_measurement_below_half": 0.058486238532110095,
+      "training_measured_screens": {
+        "max": 1205.0,
+        "mean": 1074.197247706422,
+        "median": 1105.0,
+        "min": 521.0
+      },
+      "unique_genes_across_validation": 289
+    },
+    "router": {
+      "fraction_training_measured_lt10": 0.0009240436148586213,
+      "fraction_training_measured_lt100": 0.006422103123267418,
+      "fraction_training_measurement_below_half": 0.013768249861393458,
+      "training_measured_screens": {
+        "max": 1220.0,
+        "mean": 1119.1653114026983,
+        "median": 1146.0,
+        "min": 0.0
+      },
+      "unique_genes_across_validation": 2688
+    },
+    "transfer": {
+      "fraction_training_measured_lt10": 0.7324770642201834,
+      "fraction_training_measured_lt100": 0.9009174311926605,
+      "fraction_training_measurement_below_half": 0.925091743119266,
+      "training_measured_screens": {
+        "max": 1201.0,
+        "mean": 102.38683486238533,
+        "median": 3.0,
+        "min": 2.0
+      },
+      "unique_genes_across_validation": 628
+    }
+  },
+  "implementation_note": "Initial diagnostic process was interrupted after a review found Counter.update(mapping) adds values rather than observation counts. Changed to update(keys), added count bounds/integer invariants, retained the interrupted log as failed diagnostic history. No results from that run are retained as evidence.",
+  "missing_context": {
+    "cell_line": {
+      "median_train_publications": 4.0,
+      "unique_train_values": 681,
+      "unique_validation_values": 35,
+      "validation_missing_or_placeholder": 0,
+      "validation_unseen_in_training": 18
+    },
+    "cell_type": {
+      "median_train_publications": 5.0,
+      "unique_train_values": 99,
+      "unique_validation_values": 24,
+      "validation_missing_or_placeholder": 0,
+      "validation_unseen_in_training": 4
+    },
+    "cleaned_phenotype": {
+      "median_train_publications": 58.0,
+      "unique_train_values": 5,
+      "unique_validation_values": 5,
+      "validation_missing_or_placeholder": 0,
+      "validation_unseen_in_training": 0
+    },
+    "condition_clause": {
+      "median_train_publications": 0.0,
+      "unique_train_values": 191,
+      "unique_validation_values": 98,
+      "validation_missing_or_placeholder": 22,
+      "validation_unseen_in_training": 193
+    },
+    "condition_dosage": {
+      "median_train_publications": 0.0,
+      "unique_train_values": 107,
+      "unique_validation_values": 71,
+      "validation_missing_or_placeholder": 43,
+      "validation_unseen_in_training": 116
+    },
+    "condition_name": {
+      "median_train_publications": 0.0,
+      "unique_train_values": 151,
+      "unique_validation_values": 86,
+      "validation_missing_or_placeholder": 22,
+      "validation_unseen_in_training": 142
+    },
+    "duration": {
+      "median_train_publications": 8.0,
+      "unique_train_values": 47,
+      "unique_validation_values": 22,
+      "validation_missing_or_placeholder": 6,
+      "validation_unseen_in_training": 12
+    },
+    "experimental_setup": {
+      "median_train_publications": 52.0,
+      "unique_train_values": 11,
+      "unique_validation_values": 11,
+      "validation_missing_or_placeholder": 0,
+      "validation_unseen_in_training": 8
+    },
+    "library_methodology": {
+      "median_train_publications": 127.0,
+      "unique_train_values": 3,
+      "unique_validation_values": 3,
+      "validation_missing_or_placeholder": 0,
+      "validation_unseen_in_training": 0
+    },
+    "library_type": {
+      "median_train_publications": 127.0,
+      "unique_train_values": 3,
+      "unique_validation_values": 4,
+      "validation_missing_or_placeholder": 0,
+      "validation_unseen_in_training": 18
+    },
+    "phenotype": {
+      "median_train_publications": 0.0,
+      "unique_train_values": 340,
+      "unique_validation_values": 108,
+      "validation_missing_or_placeholder": 0,
+      "validation_unseen_in_training": 186
+    },
+    "screen_type": {
+      "median_train_publications": 29.0,
+      "unique_train_values": 5,
+      "unique_validation_values": 5,
+      "validation_missing_or_placeholder": 0,
+      "validation_unseen_in_training": 0
+    }
+  },
+  "nearest_text_direction_mismatch_fraction": 0.4724770642201835,
+  "nearest_text_modality_mismatch_fraction": 0.14220183486238533,
+  "positive_seen_train_fraction": {
+    "max": 1.0,
+    "mean": 0.9986706364289047,
+    "median": 1.0,
+    "min": 0.9333333333333333
+  },
+  "protocol": {
+    "allowed_splits": [
+      "train",
+      "validation"
+    ],
+    "data_sha256": "25e00c380358486137d1f25c490db98d007dfc5230f8ad502276dc6ccc741a5c",
+    "date": "2026-09-28",
+    "gene_library_used_for_diagnostics_only": true,
+    "metric_sha256": "d1b638c9aa3ee1cbd984028595b7af009f00736d203fa9cc10405732d182fbae",
+    "prediction_hashes": {
+      "engine/.tools/assaybench/benchmarking/predictions/ensemble/LLM__RRF__Ensemble.json": "d6df699d8d0cbf77fe2dd0238cd8bd6f3efe21618994eec7deacc21f39deb2e7",
+      "engine/.tools/assaybench/benchmarking/predictions/llm/gemini-3-pro.json": "4ddc041c7b57558bc534f3479476be835c011e497ea2d66f1c601908bb23b7bb",
+      "engine/.tools/assaybench/benchmarking/predictions/llm/gpt-5.4.json": "af487d74d311a26a4b701430ee3da17667eef3fb97e6bd8e12cd935230fc6239",
+      "research/artifacts/residual_select_text_ridge_10_predictions.json": "a8f97849131b2556378b356fe1ee512d85ef8cf4247c52369a2f20d4516190e7",
+      "research/artifacts/residual_select_text_ridge_10_screens.json": "c77d8990baee52edae7227d13cf7ee6f627f3f1a6e0aa39268db0570e94bd516",
+      "research/artifacts/router_select_predictions.json": "69d731fcfe5801e2efbcd5448b97111eced9d022204ec3476cd22e7d3ba259a6",
+      "research/artifacts/router_select_screens.json": "30ab7fc85e2b76a28fd6b822e20e23456584082c0af6c0889b640dae51683d9b",
+      "research/artifacts/select_direction_predictions.json": "6d5c704325b7af268f3a6659638753a58bc7461f37a7949a711ebb8e14896808",
+      "research/artifacts/select_direction_screens.json": "8ef0d3fd3d3e34e4ed2deb8ce6f75f4256cd60ad334b5c5c1a013896c415cc50",
+      "research/artifacts/select_global_predictions.json": "9d99adf5b31c99b88ca301de2454d4f5aa6c9191161d3fb80f8eec127715bc17",
+      "research/artifacts/select_global_screens.json": "8bee917ca200e7c09f2a85018f65e73676502fbf431c7ce6872500f55e10a0cc",
+      "research/artifacts/select_phenotype_predictions.json": "a3dc28b80eb59a01361d5358166bdea817567797724f1e410ee305236f8ebf3d",
+      "research/artifacts/select_phenotype_screens.json": "9682ea91b6d24a7f7e4ddd42cbf512c6eaf6b1becd7f414c7eb75a00dc37c122",
+      "research/artifacts/select_text_transfer_predictions.json": "44fe19c9106fcabd88341c912d7335f2bbd5a89f6fee21ff4da7c7e36e615940",
+      "research/artifacts/select_text_transfer_screens.json": "278ee72b59a3b9b280709fa2742e6b7291788a04ad6ba08ac598c0bfed33baab"
+    },
+    "script_sha256": "e03ca6492e6e396be55a2e80d290dfbe84d7ae4c8b7ccfdab4e5aa2a4a3e49b8",
+    "test_rows_evaluated": 0,
+    "training_publications": 134,
+    "training_screens": 1349,
+    "validation_is_exposed_development_data": true,
+    "validation_publications": 34,
+    "validation_screens": 218
+  },
+  "subgroups": {
+    "cell_line": {
+      "a-375": {
+        "mean_andcg": {
+          "direction": 0.0,
+          "ensemble": 0.2911929643455677,
+          "gemini3pro": 0.351644312716075,
+          "global": 0.0,
+          "gpt54": 0.1701301250544682,
+          "phenotype": 0.0,
+          "ridge10": 0.0,
+          "router": 0.2911929643455677,
+          "transfer": 0.0
+        },
+        "mean_coverage": {
+          "direction": 0.0,
+          "ensemble": 99.0,
+          "gemini3pro": 97.0,
+          "global": 73.0,
+          "gpt54": 99.0,
+          "phenotype": 0.0,
+          "ridge10": 81.0,
+          "router": 99.0,
+          "transfer": 1.0
+        },
+        "publications": 1,
+        "screens": 1
+      },
+      "b16-f10": {
+        "mean_andcg": {
+          "direction": 0.0,
+          "ensemble": 0.14469589600542698,
+          "gemini3pro": 0.10032565542454656,
+          "global": 0.0,
+          "gpt54": 0.08309549418842394,
+          "phenotype": 0.0,
+          "ridge10": 0.0,
+          "router": 0.14469589600542698,
+          "transfer": 0.0
+        },
+        "mean_coverage": {
+          "direction": 0.0,
+          "ensemble": 25.0,
+          "gemini3pro": 23.0,
+          "global": 7.0,
+          "gpt54": 21.0,
+          "phenotype": 0.0,
+          "ridge10": 4.0,
+          "router": 25.0,
+          "transfer": 0.0
+        },
+        "publications": 1,
+        "screens": 1
+      },
+      "blaer1": {
+        "mean_andcg": {
+          "direction": 0.0,
+          "ensemble": 0.2880847307363777,
+          "gemini3pro": 0.2801378076922311,
+          "global": 0.0,
+          "gpt54": 0.2436574019740014,
+          "phenotype": 0.0,
+          "ridge10": 0.0,
+          "router": 0.2880847307363777,
+          "transfer": 0.0
+        },
+        "mean_coverage": {
+          "direction": 11.0,
+          "ensemble": 100.0,
+          "gemini3pro": 100.0,
+          "global": 95.0,
+          "gpt54": 100.0,
+          "phenotype": 16.0,
+          "ridge10": 99.0,
+          "router": 100.0,
+          "transfer": 9.0
+        },
+        "publications": 1,
+        "screens": 1
+      },
+      "bxpc-3": {
+        "mean_andcg": {
+          "direction": 0.0,
+          "ensemble": 0.013467073746829712,
+          "gemini3pro": 0.015174995626040832,
+          "global": 0.009250805116508665,
+          "gpt54": 0.011906748522927812,
+          "phenotype": 0.0,
+          "ridge10": 0.007561979606751061,
+          "router": 0.013467073746829712,
+          "transfer": 0.0011694582928762044
+        },
+        "mean_coverage": {
+          "direction": 0.0,
+          "ensemble": 99.875,
+          "gemini3pro": 98.75,
+          "global": 95.5,
+          "gpt54": 99.75,
+          "phenotype": 0.0,
+          "ridge10": 93.625,
+          "router": 99.875,
+          "transfer": 7.5
+        },
+        "publications": 1,
+        "screens": 8
+      },
+      "calu-3": {
+        "mean_andcg": {
+          "direction": 0.03428056723948569,
+          "ensemble": 0.032651208782972806,
+          "gemini3pro": 0.017399828400290477,
+          "global": 0.03477852919871665,
+          "gpt54": 0.04639025310417375,
+          "phenotype": 0.025613060159834874,
+          "ridge10": 0.03391249502149286,
+          "router": 0.032651208782972806,
+          "transfer": 0.022301534951812318
+        },
+        "mean_coverage": {
+          "direction": 1.5,
+          "ensemble": 18.833333333333332,
+          "gemini3pro": 19.0,
+          "global": 13.0,
+          "gpt54": 17.666666666666668,
+          "phenotype": 4.5,
+          "ridge10": 11.833333333333334,
+          "router": 18.833333333333332,
+          "transfer": 0.0
+        },
+        "publications": 1,
+        "screens": 6
+      },
+      "cardiomyocyte cell line": {
+        "mean_andcg": {
+          "direction": 0.0,
+          "ensemble": 0.0,
+          "gemini3pro": 0.0,
+          "global": 0.0027876817443633455,
+          "gpt54": 0.0,
+          "phenotype": 0.0,
+          "ridge10": 0.013430332928362503,
+          "router": 0.0,
+          "transfer": 0.0
+        },
+        "mean_coverage": {
+          "direction": 0.0,
+          "ensemble": 87.0,
+          "gemini3pro": 85.0,
+          "global": 46.0,
+          "gpt54": 88.0,
+          "phenotype": 0.0,
+          "ridge10": 58.0,
+          "router": 87.0,
+          "transfer": 1.0
+        },
+        "publications": 1,
+        "screens": 1
+      },
+      "cne2-ir": {
+        "mean_andcg": {
+          "direction": 0.0,
+          "ensemble": 0.0,
+          "gemini3pro": 0.03181450184797159,
+          "global": 0.0,
+          "gpt54": 0.0,
+          "phenotype": 0.0,
+          "ridge10": 0.0,
+          "router": 0.0,
+          "transfer": 0.0
+        },
+        "mean_coverage": {
+          "direction": 2.0,
+          "ensemble": 99.0,
+          "gemini3pro": 96.0,
+          "global": 95.0,
+          "gpt54": 100.0,
+          "phenotype": 0.0,
+          "ridge10": 99.0,
+          "router": 99.0,
+          "transfer": 1.0
+        },
+        "publications": 1,
+        "screens": 1
+      },
+      "h1hela": {
+        "mean_andcg": {
+          "direction": 0.01587302239025898,
+          "ensemble": 0.35771561271160923,
+          "gemini3pro": 0.29658402035385073,
+          "global": 0.005268358702190379,
+          "gpt54": 0.22718092637251505,
+          "phenotype": 0.16395641008310158,
+          "ridge10": 0.04514990658011793,
+          "router": 0.35771561271160923,
+          "transfer": 0.03959540922279701
+        },
+        "mean_coverage": {
+          "direction": 2.5,
+          "ensemble": 56.5,
+          "gemini3pro": 58.0,
+          "global": 44.5,
+          "gpt54": 55.0,
+          "phenotype": 28.5,
+          "ridge10": 45.5,
+          "router": 56.5,
+          "transfer": 8.0
+        },
+        "publications": 1,
+        "screens": 2
+      },
+      "h4": {
+        "mean_andcg": {
+          "direction": 0.0,
+          "ensemble": 0.0,
+          "gemini3pro": 0.0,
+          "global": 0.0,
+          "gpt54": 0.0,
+          "phenotype": 0.0,
+          "ridge10": 0.0,
+          "router": 0.0,
+          "transfer": 0.0
+        },
+        "mean_coverage": {
+          "direction": 0.0,
+          "ensemble": 6.0,
+          "gemini3pro": 9.0,
+          "global": 7.0,
+          "gpt54": 5.0,
+          "phenotype": 0.0,
+          "ridge10": 4.0,
+          "router": 6.0,
+          "transfer": 0.0
+        },
+        "publications": 1,
+        "screens": 1
+      },
+      "hap-1": {
+        "mean_andcg": {
+          "direction": 0.017403157876489824,
+          "ensemble": 0.17908533209259495,
+          "gemini3pro": 0.15326999454536597,
+          "global": 0.021991410236061795,
+          "gpt54": 0.16109482896033797,
+          "phenotype": 0.017403157876489824,
+          "ridge10": 0.021991410236061795,
+          "router": 0.17908533209259495,
+          "transfer": 0.017403157876489824
+        },
+        "mean_coverage": {
+          "direction": 0.0,
+          "ensemble": 73.23255813953489,
+          "gemini3pro": 68.5813953488372,
+          "global": 1.0,
+          "gpt54": 85.97674418604652,
+          "phenotype": 0.0,
+          "ridge10": 1.0,
+          "router": 73.23255813953489,
+          "transfer": 0.0
+        },
+        "publications": 1,
+        "screens": 86
+      },
+      "hct 116": {
+        "mean_andcg": {
+          "direction": 0.0,
+          "ensemble": 0.1288075728753828,
+          "gemini3pro": 0.11920966222894713,
+          "global": 0.05640764191986853,
+          "gpt54": 0.13414414779442266,
+          "phenotype": 0.0,
+          "ridge10": 0.06351403185203551,
+          "router": 0.1288075728753828,
+          "transfer": 0.0
+        },
+        "mean_coverage": {
+          "direction": 2.0,
+          "ensemble": 94.66666666666667,
+          "gemini3pro": 91.66666666666667,
+          "global": 66.33333333333333,
+          "gpt54": 96.33333333333333,
+          "phenotype": 0.6666666666666666,
+          "ridge10": 62.0,
+          "router": 94.66666666666667,
+          "transfer": 5.0
+        },
+        "publications": 2,
+        "screens": 3
+      },
+      "hek-293": {
+        "mean_andcg": {
+          "direction": 0.0,
+          "ensemble": 0.016786826929230024,
+          "gemini3pro": 0.04734642381327813,
+          "global": 0.00015298339541966094,
+          "gpt54": 0.004976663735658104,
+          "phenotype": 0.0,
+          "ridge10": 0.0,
+          "router": 0.016786826929230024,
+          "transfer": 0.0
+        },
+        "mean_coverage": {
+          "direction": 10.0,
+          "ensemble": 62.0,
+          "gemini3pro": 62.0,
+          "global": 36.0,
+          "gpt54": 67.0,
+          "phenotype": 0.0,
+          "ridge10": 42.0,
+          "router": 62.0,
+          "transfer": 28.0
+        },
+        "publications": 1,
+        "screens": 1
+      },
+      "hek293-a": {
+        "mean_andcg": {
+          "direction": 0.012033441903438045,
+          "ensemble": 0.12378861516446282,
+          "gemini3pro": 0.1218154942478402,
+          "global": 0.020791782304051768,
+          "gpt54": 0.11786942582131996,
+          "phenotype": 0.0,
+          "ridge10": 0.01310068292492767,
+          "router": 0.12378861516446282,
+          "transfer": 0.0
+        },
+        "mean_coverage": {
+          "direction": 1.75,
+          "ensemble": 94.0,
+          "gemini3pro": 94.625,
+          "global": 76.5,
+          "gpt54": 94.75,
+          "phenotype": 0.0,
+          "ridge10": 67.125,
+          "router": 94.0,
+          "transfer": 6.625
+        },
+        "publications": 1,
+        "screens": 8
+      },
+      "hek293t": {
+        "mean_andcg": {
+          "direction": 0.004017341613797448,
+          "ensemble": 0.14527021616840743,
+          "gemini3pro": 0.12756306702330494,
+          "global": 0.1397153812427092,
+          "gpt54": 0.14748228861410637,
+          "phenotype": 0.0,
+          "ridge10": 0.1328050753664087,
+          "router": 0.14527021616840743,
+          "transfer": 0.02081123176678108
+        },
+        "mean_coverage": {
+          "direction": 11.0,
+          "ensemble": 99.0,
+          "gemini3pro": 96.0,
+          "global": 95.0,
+          "gpt54": 99.0,
+          "phenotype": 15.0,
+          "ridge10": 97.0,
+          "router": 99.0,
+          "transfer": 12.0
+        },
+        "publications": 1,
+        "screens": 1
+      },
+      "hela": {
+        "mean_andcg": {
+          "direction": 0.32854515920608884,
+          "ensemble": 0.4982268357012702,
+          "gemini3pro": 0.4889458765048362,
+          "global": 0.4310817907111515,
+          "gpt54": 0.49283180729606063,
+          "phenotype": 0.4669179953772281,
+          "ridge10": 0.4259630937163604,
+          "router": 0.48312184621063026,
+          "transfer": 0.24394464829090948
+        },
+        "mean_coverage": {
+          "direction": 45.285714285714285,
+          "ensemble": 97.57142857142857,
+          "gemini3pro": 96.85714285714286,
+          "global": 92.42857142857143,
+          "gpt54": 97.57142857142857,
+          "phenotype": 86.28571428571429,
+          "ridge10": 92.57142857142857,
+          "router": 93.0,
+          "transfer": 27.714285714285715
+        },
+        "publications": 2,
+        "screens": 7
+      },
+      "htert-rpe1": {
+        "mean_andcg": {
+          "direction": 0.3387638790075984,
+          "ensemble": 0.5850755894474249,
+          "gemini3pro": 0.561522693914852,
+          "global": 0.48199550592732665,
+          "gpt54": 0.5023920886326319,
+          "phenotype": 0.5074840507071295,
+          "ridge10": 0.4805747719477676,
+          "router": 0.5074840507071295,
+          "transfer": 0.25431836447624373
+        },
+        "mean_coverage": {
+          "direction": 52.666666666666664,
+          "ensemble": 96.33333333333333,
+          "gemini3pro": 94.33333333333333,
+          "global": 92.0,
+          "gpt54": 97.83333333333333,
+          "phenotype": 92.0,
+          "ridge10": 94.16666666666667,
+          "router": 92.0,
+          "transfer": 31.666666666666668
+        },
+        "publications": 1,
+        "screens": 6
+      },
+      "hues 62": {
+        "mean_andcg": {
+          "direction": 0.0,
+          "ensemble": 0.05692020016348576,
+          "gemini3pro": 0.0,
+          "global": 0.0,
+          "gpt54": 0.08571300902687885,
+          "phenotype": 0.0,
+          "ridge10": 0.0,
+          "router": 0.0,
+          "transfer": 0.0
+        },
+        "mean_coverage": {
+          "direction": 96.0,
+          "ensemble": 96.0,
+          "gemini3pro": 94.0,
+          "global": 87.0,
+          "gpt54": 98.0,
+          "phenotype": 94.0,
+          "ridge10": 90.0,
+          "router": 94.0,
+          "transfer": 92.0
+        },
+        "publications": 1,
+        "screens": 1
+      },
+      "huh-7": {
+        "mean_andcg": {
+          "direction": 0.0,
+          "ensemble": 0.13969667269403635,
+          "gemini3pro": 0.13638350531866966,
+          "global": 0.00635140000131381,
+          "gpt54": 0.15714368880033813,
+          "phenotype": 0.015230611034963381,
+          "ridge10": 0.00021364431921511005,
+          "router": 0.13969667269403635,
+          "transfer": 0.0
+        },
+        "mean_coverage": {
+          "direction": 4.0,
+          "ensemble": 97.875,
+          "gemini3pro": 96.5,
+          "global": 95.0,
+          "gpt54": 99.625,
+          "phenotype": 74.5,
+          "ridge10": 94.0,
+          "router": 97.875,
+          "transfer": 16.625
+        },
+        "publications": 2,
+        "screens": 8
+      },
+      "huh-7.5": {
+        "mean_andcg": {
+          "direction": 0.0,
+          "ensemble": 0.49875629866264976,
+          "gemini3pro": 0.5030514996047374,
+          "global": 0.0,
+          "gpt54": 0.4566709000559796,
+          "phenotype": 0.0,
+          "ridge10": 0.0,
+          "router": 0.49875629866264976,
+          "transfer": 0.0
+        },
+        "mean_coverage": {
+          "direction": 0.0,
+          "ensemble": 98.0,
+          "gemini3pro": 98.0,
+          "global": 91.0,
+          "gpt54": 99.0,
+          "phenotype": 50.0,
+          "ridge10": 87.0,
+          "router": 98.0,
+          "transfer": 2.0
+        },
+        "publications": 1,
+        "screens": 1
+      },
+      "huh-7.5.1": {
+        "mean_andcg": {
+          "direction": 0.0,
+          "ensemble": 0.27032458615226934,
+          "gemini3pro": 0.18078203293275413,
+          "global": 0.0,
+          "gpt54": 0.2977410785975314,
+          "phenotype": 0.0,
+          "ridge10": 0.0,
+          "router": 0.27032458615226934,
+          "transfer": 0.0
+        },
+        "mean_coverage": {
+          "direction": 4.0,
+          "ensemble": 99.0,
+          "gemini3pro": 99.0,
+          "global": 95.0,
+          "gpt54": 99.0,
+          "phenotype": 97.0,
+          "ridge10": 94.0,
+          "router": 99.0,
+          "transfer": 6.0
+        },
+        "publications": 1,
+        "screens": 1
+      },
+      "jurkat": {
+        "mean_andcg": {
+          "direction": 0.0,
+          "ensemble": 0.09070718575919101,
+          "gemini3pro": 0.1209553746963888,
+          "global": 0.0,
+          "gpt54": 0.0,
+          "phenotype": 0.0,
+          "ridge10": 0.0,
+          "router": 0.09070718575919101,
+          "transfer": 0.0
+        },
+        "mean_coverage": {
+          "direction": 0.0,
+          "ensemble": 4.5,
+          "gemini3pro": 4.5,
+          "global": 1.0,
+          "gpt54": 5.5,
+          "phenotype": 0.5,
+          "ridge10": 1.0,
+          "router": 4.5,
+          "transfer": 0.0
+        },
+        "publications": 1,
+        "screens": 2
+      },
+      "k-562": {
+        "mean_andcg": {
+          "direction": 0.2979460010807838,
+          "ensemble": 0.37193208334684846,
+          "gemini3pro": 0.35482094775244205,
+          "global": 0.37957905685951104,
+          "gpt54": 0.34364892669181984,
+          "phenotype": 0.390443034324582,
+          "ridge10": 0.4087906261659553,
+          "router": 0.390443034324582,
+          "transfer": 0.21231353312191634
+        },
+        "mean_coverage": {
+          "direction": 52.666666666666664,
+          "ensemble": 96.16666666666667,
+          "gemini3pro": 93.83333333333333,
+          "global": 92.0,
+          "gpt54": 97.33333333333333,
+          "phenotype": 92.0,
+          "ridge10": 92.66666666666667,
+          "router": 92.0,
+          "transfer": 31.666666666666668
+        },
+        "publications": 1,
+        "screens": 6
+      },
+      "mel juso": {
+        "mean_andcg": {
+          "direction": 0.0,
+          "ensemble": 0.08489180481451136,
+          "gemini3pro": 0.04123172528485697,
+          "global": 0.0,
+          "gpt54": 0.08004526008557307,
+          "phenotype": 0.0,
+          "ridge10": 0.0,
+          "router": 0.08489180481451136,
+          "transfer": 0.0
+        },
+        "mean_coverage": {
+          "direction": 0.0,
+          "ensemble": 99.0,
+          "gemini3pro": 95.0,
+          "global": 95.0,
+          "gpt54": 100.0,
+          "phenotype": 0.0,
+          "ridge10": 98.0,
+          "router": 99.0,
+          "transfer": 1.0
+        },
+        "publications": 1,
+        "screens": 1
+      },
+      "mv4-11": {
+        "mean_andcg": {
+          "direction": 0.0,
+          "ensemble": 0.03873304598817514,
+          "gemini3pro": 0.0416709078640529,
+          "global": 0.0,
+          "gpt54": 0.007079424540967731,
+          "phenotype": 0.0,
+          "ridge10": 0.0,
+          "router": 0.03873304598817514,
+          "transfer": 0.0
+        },
+        "mean_coverage": {
+          "direction": 0.0,
+          "ensemble": 96.0,
+          "gemini3pro": 93.0,
+          "global": 51.5,
+          "gpt54": 97.5,
+          "phenotype": 0.0,
+          "ridge10": 62.0,
+          "router": 96.0,
+          "transfer": 1.0
+        },
+        "publications": 1,
+        "screens": 2
+      },
+      "nalm-6": {
+        "mean_andcg": {
+          "direction": 0.008573034802274462,
+          "ensemble": 0.054086768805558495,
+          "gemini3pro": 0.03870222524588655,
+          "global": 0.011813467717297,
+          "gpt54": 0.046732204764995275,
+          "phenotype": 0.010674717914723828,
+          "ridge10": 0.013389979250813387,
+          "router": 0.05476463830490679,
+          "transfer": 0.004283953386772695
+        },
+        "mean_coverage": {
+          "direction": 22.0,
+          "ensemble": 95.125,
+          "gemini3pro": 92.625,
+          "global": 78.5,
+          "gpt54": 95.875,
+          "phenotype": 35.25,
+          "ridge10": 78.625,
+          "router": 93.875,
+          "transfer": 12.0
+        },
+        "publications": 3,
+        "screens": 8
+      },
+      "oci-aml-1": {
+        "mean_andcg": {
+          "direction": 0.0,
+          "ensemble": 0.21047796808647762,
+          "gemini3pro": 0.21463173668208488,
+          "global": 0.18095757440727753,
+          "gpt54": 0.15837426492135712,
+          "phenotype": 0.0,
+          "ridge10": 0.20657131901859127,
+          "router": 0.21047796808647762,
+          "transfer": 0.0
+        },
+        "mean_coverage": {
+          "direction": 3.0,
+          "ensemble": 99.5,
+          "gemini3pro": 98.5,
+          "global": 94.0,
+          "gpt54": 98.5,
+          "phenotype": 0.0,
+          "ridge10": 97.0,
+          "router": 99.5,
+          "transfer": 3.0
+        },
+        "publications": 1,
+        "screens": 2
+      },
+      "oci-aml-2": {
+        "mean_andcg": {
+          "direction": 0.0,
+          "ensemble": 0.0,
+          "gemini3pro": 0.0,
+          "global": 0.0,
+          "gpt54": 0.014601427769979882,
+          "phenotype": 0.0,
+          "ridge10": 0.0,
+          "router": 0.0,
+          "transfer": 0.0
+        },
+        "mean_coverage": {
+          "direction": 0.0,
+          "ensemble": 94.0,
+          "gemini3pro": 88.0,
+          "global": 77.0,
+          "gpt54": 93.0,
+          "phenotype": 0.0,
+          "ridge10": 68.5,
+          "router": 94.0,
+          "transfer": 1.0
+        },
+        "publications": 1,
+        "screens": 2
+      },
+      "oci-aml-5": {
+        "mean_andcg": {
+          "direction": 0.0,
+          "ensemble": 0.12067864647888911,
+          "gemini3pro": 0.0910123022114705,
+          "global": 0.01786545171227565,
+          "gpt54": 0.15316896000657063,
+          "phenotype": 0.0,
+          "ridge10": 0.01555977165138772,
+          "router": 0.12067864647888911,
+          "transfer": 0.0
+        },
+        "mean_coverage": {
+          "direction": 3.0,
+          "ensemble": 100.0,
+          "gemini3pro": 99.0,
+          "global": 94.0,
+          "gpt54": 100.0,
+          "phenotype": 0.0,
+          "ridge10": 97.0,
+          "router": 100.0,
+          "transfer": 3.0
+        },
+        "publications": 1,
+        "screens": 1
+      },
+      "panc-1": {
+        "mean_andcg": {
+          "direction": 0.0,
+          "ensemble": 0.010558619370378945,
+          "gemini3pro": 0.009694706005733543,
+          "global": 0.020584130463241777,
+          "gpt54": 0.01911602426087602,
+          "phenotype": 0.0,
+          "ridge10": 0.017631108305805752,
+          "router": 0.010558619370378945,
+          "transfer": 0.0
+        },
+        "mean_coverage": {
+          "direction": 0.0,
+          "ensemble": 96.875,
+          "gemini3pro": 94.75,
+          "global": 94.25,
+          "gpt54": 96.75,
+          "phenotype": 0.0,
+          "ridge10": 92.375,
+          "router": 96.875,
+          "transfer": 7.5
+        },
+        "publications": 1,
+        "screens": 8
+      },
+      "pc-9": {
+        "mean_andcg": {
+          "direction": 0.1938473165521235,
+          "ensemble": 0.23367354910610574,
+          "gemini3pro": 0.2596969267861637,
+          "global": 0.5346191046816191,
+          "gpt54": 0.19744202038928563,
+          "phenotype": 0.3003766256003037,
+          "ridge10": 0.5509649528595316,
+          "router": 0.350045416166094,
+          "transfer": 0.15955304334745343
+        },
+        "mean_coverage": {
+          "direction": 26.375,
+          "ensemble": 85.91666666666667,
+          "gemini3pro": 84.625,
+          "global": 87.25,
+          "gpt54": 85.5,
+          "phenotype": 43.375,
+          "ridge10": 90.75,
+          "router": 85.5,
+          "transfer": 16.458333333333332
+        },
+        "publications": 1,
+        "screens": 24
+      },
+      "plc/prf/5": {
+        "mean_andcg": {
+          "direction": 0.0,
+          "ensemble": 0.1350089179939742,
+          "gemini3pro": 0.1202403880236652,
+          "global": 0.0,
+          "gpt54": 0.1122808602622319,
+          "phenotype": 0.0,
+          "ridge10": 0.0,
+          "router": 0.1350089179939742,
+          "transfer": 0.04146461113419283
+        },
+        "mean_coverage": {
+          "direction": 0.0,
+          "ensemble": 100.0,
+          "gemini3pro": 99.0,
+          "global": 95.0,
+          "gpt54": 100.0,
+          "phenotype": 0.0,
+          "ridge10": 99.0,
+          "router": 100.0,
+          "transfer": 1.0
+        },
+        "publications": 1,
+        "screens": 1
+      },
+      "primary melanoma cell line": {
+        "mean_andcg": {
+          "direction": 0.0,
+          "ensemble": 0.2696998631784341,
+          "gemini3pro": 0.24950797243153341,
+          "global": 0.0,
+          "gpt54": 0.2581283636765806,
+          "phenotype": 0.0,
+          "ridge10": 0.0,
+          "router": 0.21378390963109845,
+          "transfer": 0.0
+        },
+        "mean_coverage": {
+          "direction": 1.0,
+          "ensemble": 15.5,
+          "gemini3pro": 14.875,
+          "global": 7.0,
+          "gpt54": 13.75,
+          "phenotype": 1.75,
+          "ridge10": 7.125,
+          "router": 14.25,
+          "transfer": 1.0
+        },
+        "publications": 1,
+        "screens": 8
+      },
+      "stat1\u2212/\u2212 fibroblasts": {
+        "mean_andcg": {
+          "direction": 0.0,
+          "ensemble": 0.0,
+          "gemini3pro": 0.0,
+          "global": 0.0,
+          "gpt54": 0.0,
+          "phenotype": 0.0,
+          "ridge10": 0.0,
+          "router": 0.0,
+          "transfer": 0.0
+        },
+        "mean_coverage": {
+          "direction": 3.0,
+          "ensemble": 99.0,
+          "gemini3pro": 97.0,
+          "global": 96.0,
+          "gpt54": 100.0,
+          "phenotype": 55.0,
+          "ridge10": 95.0,
+          "router": 99.0,
+          "transfer": 1.0
+        },
+        "publications": 1,
+        "screens": 1
+      },
+      "thp-1": {
+        "mean_andcg": {
+          "direction": 0.0,
+          "ensemble": 0.21234512569365174,
+          "gemini3pro": 0.10090842644425789,
+          "global": 0.009231348579273413,
+          "gpt54": 0.10302994208890413,
+          "phenotype": 0.0,
+          "ridge10": 0.018315484589979534,
+          "router": 0.21234512569365174,
+          "transfer": 0.02493176642546061
+        },
+        "mean_coverage": {
+          "direction": 0.0,
+          "ensemble": 98.33333333333333,
+          "gemini3pro": 98.0,
+          "global": 94.5,
+          "gpt54": 99.5,
+          "phenotype": 0.0,
+          "ridge10": 94.16666666666667,
+          "router": 98.33333333333333,
+          "transfer": 18.333333333333332
+        },
+        "publications": 1,
+        "screens": 6
+      },
+      "u2os": {
+        "mean_andcg": {
+          "direction": 0.0,
+          "ensemble": 0.2094943402564005,
+          "gemini3pro": 0.2048054311812377,
+          "global": 0.11228853227610906,
+          "gpt54": 0.1975993623102244,
+          "phenotype": 0.0,
+          "ridge10": 0.034231412064182204,
+          "router": 0.2094943402564005,
+          "transfer": 0.0
+        },
+        "mean_coverage": {
+          "direction": 11.0,
+          "ensemble": 94.0,
+          "gemini3pro": 95.0,
+          "global": 95.0,
+          "gpt54": 94.0,
+          "phenotype": 16.0,
+          "ridge10": 94.0,
+          "router": 94.0,
+          "transfer": 11.0
+        },
+        "publications": 1,
+        "screens": 1
+      }
+    },
+    "cleaned_phenotype": {
+      "drug / chemical / environmental response": {
+        "mean_andcg": {
+          "direction": 0.015482266090075334,
+          "ensemble": 0.15026384428422762,
+          "gemini3pro": 0.12869223874059596,
+          "global": 0.05843557830244959,
+          "gpt54": 0.13567110789641984,
+          "phenotype": 0.014630763901472218,
+          "ridge10": 0.05957816679790762,
+          "router": 0.15026384428422762,
+          "transfer": 0.015907266296567545
+        },
+        "mean_coverage": {
+          "direction": 0.4585987261146497,
+          "ensemble": 78.56687898089172,
+          "gemini3pro": 75.37579617834395,
+          "global": 34.560509554140125,
+          "gpt54": 85.71337579617834,
+          "phenotype": 0.012738853503184714,
+          "ridge10": 34.30573248407644,
+          "router": 78.56687898089172,
+          "transfer": 2.254777070063694
+        },
+        "publications": 20,
+        "screens": 157
+      },
+      "fitness / proliferation / viability": {
+        "mean_andcg": {
+          "direction": 0.2778671835307188,
+          "ensemble": 0.36649466290571,
+          "gemini3pro": 0.3803639572050542,
+          "global": 0.41226687996070344,
+          "gpt54": 0.3108072259544647,
+          "phenotype": 0.417435815235779,
+          "ridge10": 0.4231838820215205,
+          "router": 0.417435815235779,
+          "transfer": 0.21029417321959384
+        },
+        "mean_coverage": {
+          "direction": 50.833333333333336,
+          "ensemble": 88.94444444444444,
+          "gemini3pro": 87.5,
+          "global": 85.13888888888889,
+          "gpt54": 88.83333333333333,
+          "phenotype": 85.75,
+          "ridge10": 87.13888888888889,
+          "router": 85.75,
+          "transfer": 31.97222222222222
+        },
+        "publications": 5,
+        "screens": 36
+      },
+      "host-pathogen / infection response": {
+        "mean_andcg": {
+          "direction": 0.007802799945673139,
+          "ensemble": 0.1784586607198217,
+          "gemini3pro": 0.1593101808202939,
+          "global": 0.0112968677813771,
+          "gpt54": 0.17771562344654662,
+          "phenotype": 0.041837231695025644,
+          "ridge10": 0.01269961081961612,
+          "router": 0.1784586607198217,
+          "transfer": 0.01059366898479526
+        },
+        "mean_coverage": {
+          "direction": 2.823529411764706,
+          "ensemble": 80.0,
+          "gemini3pro": 79.70588235294117,
+          "global": 74.41176470588235,
+          "gpt54": 80.29411764705883,
+          "phenotype": 54.411764705882355,
+          "ridge10": 73.47058823529412,
+          "router": 80.0,
+          "transfer": 9.529411764705882
+        },
+        "publications": 8,
+        "screens": 17
+      },
+      "molecular output / reporter / pathway activity": {
+        "mean_andcg": {
+          "direction": 0.001004335403449362,
+          "ensemble": 0.20606591466989188,
+          "gemini3pro": 0.19848016935378893,
+          "global": 0.06300097837970457,
+          "gpt54": 0.14718476322458304,
+          "phenotype": 0.0,
+          "ridge10": 0.04175912185764773,
+          "router": 0.20606591466989188,
+          "transfer": 0.00520280794169527
+        },
+        "mean_coverage": {
+          "direction": 8.25,
+          "ensemble": 73.75,
+          "gemini3pro": 73.0,
+          "global": 71.25,
+          "gpt54": 73.75,
+          "phenotype": 12.0,
+          "ridge10": 72.5,
+          "router": 73.75,
+          "transfer": 8.0
+        },
+        "publications": 4,
+        "screens": 4
+      },
+      "trafficking / localization / structural phenotypes": {
+        "mean_andcg": {
+          "direction": 0.026195462285247197,
+          "ensemble": 0.0,
+          "gemini3pro": 0.0,
+          "global": 0.0194930850809451,
+          "gpt54": 0.013165637450528282,
+          "phenotype": 0.003645165626092976,
+          "ridge10": 0.01989763847735996,
+          "router": 0.0,
+          "transfer": 0.008226913853737127
+        },
+        "mean_coverage": {
+          "direction": 1.5,
+          "ensemble": 12.5,
+          "gemini3pro": 11.75,
+          "global": 11.5,
+          "gpt54": 12.25,
+          "phenotype": 2.25,
+          "ridge10": 10.5,
+          "router": 12.5,
+          "transfer": 0.0
+        },
+        "publications": 2,
+        "screens": 4
+      }
+    },
+    "library_methodology": {
+      "activation": {
+        "mean_andcg": {
+          "direction": 0.0,
+          "ensemble": 0.018279918950954495,
+          "gemini3pro": 0.020614652893069015,
+          "global": 0.017914141250383365,
+          "gpt54": 0.025365008127419868,
+          "phenotype": 0.0,
+          "ridge10": 0.010894053094672356,
+          "router": 0.018279918950954495,
+          "transfer": 0.0
+        },
+        "mean_coverage": {
+          "direction": 0.3333333333333333,
+          "ensemble": 97.44444444444444,
+          "gemini3pro": 96.22222222222223,
+          "global": 94.88888888888889,
+          "gpt54": 97.44444444444444,
+          "phenotype": 6.111111111111111,
+          "ridge10": 95.77777777777777,
+          "router": 97.44444444444444,
+          "transfer": 0.1111111111111111
+        },
+        "publications": 2,
+        "screens": 9
+      },
+      "inhibition": {
+        "mean_andcg": {
+          "direction": 0.03428056723948569,
+          "ensemble": 0.032651208782972806,
+          "gemini3pro": 0.017399828400290477,
+          "global": 0.03477852919871665,
+          "gpt54": 0.04639025310417375,
+          "phenotype": 0.025613060159834874,
+          "ridge10": 0.03391249502149286,
+          "router": 0.032651208782972806,
+          "transfer": 0.022301534951812318
+        },
+        "mean_coverage": {
+          "direction": 1.5,
+          "ensemble": 18.833333333333332,
+          "gemini3pro": 19.0,
+          "global": 13.0,
+          "gpt54": 17.666666666666668,
+          "phenotype": 4.5,
+          "ridge10": 11.833333333333334,
+          "router": 18.833333333333332,
+          "transfer": 0.0
+        },
+        "publications": 1,
+        "screens": 6
+      },
+      "knockout": {
+        "mean_andcg": {
+          "direction": 0.06142708260907399,
+          "ensemble": 0.19843776248713996,
+          "gemini3pro": 0.18280811254471083,
+          "global": 0.11905476862931119,
+          "gpt54": 0.1755929294759535,
+          "phenotype": 0.0881618449329063,
+          "ridge10": 0.12191818185881145,
+          "router": 0.20747166142252166,
+          "transfer": 0.05008883297871359
+        },
+        "mean_coverage": {
+          "direction": 9.738916256157635,
+          "ensemble": 80.05911330049261,
+          "gemini3pro": 77.33004926108374,
+          "global": 45.09852216748769,
+          "gpt54": 85.62068965517241,
+          "phenotype": 19.65024630541872,
+          "ridge10": 45.17733990147783,
+          "router": 79.49261083743842,
+          "transfer": 8.364532019704434
+        },
+        "publications": 32,
+        "screens": 203
+      }
+    },
+    "library_size_group": {
+      "1000-9999": {
+        "mean_andcg": {
+          "direction": 0.054979517637136086,
+          "ensemble": 0.09364625077978558,
+          "gemini3pro": 0.07817207798491016,
+          "global": 0.18493609211301482,
+          "gpt54": 0.09267295146231216,
+          "phenotype": 0.11423787342981478,
+          "ridge10": 0.19128254739173356,
+          "router": 0.14012042802605312,
+          "transfer": 0.06108813379344456
+        },
+        "mean_coverage": {
+          "direction": 7.230769230769231,
+          "ensemble": 31.153846153846153,
+          "gemini3pro": 31.23076923076923,
+          "global": 35.92307692307692,
+          "gpt54": 28.692307692307693,
+          "phenotype": 16.076923076923077,
+          "ridge10": 36.23076923076923,
+          "router": 32.69230769230769,
+          "transfer": 4.923076923076923
+        },
+        "publications": 3,
+        "screens": 13
+      },
+      "<1000": {
+        "mean_andcg": {
+          "direction": 0.015272158952838006,
+          "ensemble": 0.18250048707055558,
+          "gemini3pro": 0.15836244607317412,
+          "global": 0.01929858449287055,
+          "gpt54": 0.16328854789989933,
+          "phenotype": 0.015272158952838006,
+          "ridge10": 0.01929858449287055,
+          "router": 0.17793591943403841,
+          "transfer": 0.015272158952838006
+        },
+        "mean_coverage": {
+          "direction": 0.08163265306122448,
+          "ensemble": 65.93877551020408,
+          "gemini3pro": 61.816326530612244,
+          "global": 1.6122448979591837,
+          "gpt54": 76.94897959183673,
+          "phenotype": 0.15306122448979592,
+          "ridge10": 1.5612244897959184,
+          "router": 65.83673469387755,
+          "transfer": 0.08163265306122448
+        },
+        "publications": 5,
+        "screens": 98
+      },
+      ">=10000": {
+        "mean_andcg": {
+          "direction": 0.09779416697586954,
+          "ensemble": 0.20131629266443152,
+          "gemini3pro": 0.19499271929010067,
+          "global": 0.18918304673294778,
+          "gpt54": 0.17705574964663723,
+          "phenotype": 0.1408296163586287,
+          "ridge10": 0.19320540157874663,
+          "router": 0.2169896086276062,
+          "transfer": 0.07486939240838156
+        },
+        "mean_coverage": {
+          "direction": 17.635514018691588,
+          "ensemble": 96.96261682242991,
+          "gemini3pro": 95.45794392523365,
+          "global": 88.42990654205607,
+          "gpt54": 97.66355140186916,
+          "phenotype": 35.953271028037385,
+          "ridge10": 88.59813084112149,
+          "router": 95.79439252336448,
+          "transfer": 15.205607476635514
+        },
+        "publications": 28,
+        "screens": 107
+      }
+    },
+    "screen_type": {
+      "bidirectional": {
+        "mean_andcg": {
+          "direction": 0.06344419664280142,
+          "ensemble": 0.19561153962383743,
+          "gemini3pro": 0.18200027720874148,
+          "global": 0.13298533485228653,
+          "gpt54": 0.18341555980246363,
+          "phenotype": 0.10638477917561587,
+          "ridge10": 0.13533281057418337,
+          "router": 0.19840214109034665,
+          "transfer": 0.028999559513338737
+        },
+        "mean_coverage": {
+          "direction": 8.863157894736842,
+          "ensemble": 76.23157894736842,
+          "gemini3pro": 72.78947368421052,
+          "global": 29.33684210526316,
+          "gpt54": 84.18947368421053,
+          "phenotype": 21.094736842105263,
+          "ridge10": 30.08421052631579,
+          "router": 75.69473684210526,
+          "transfer": 0.6947368421052632
+        },
+        "publications": 5,
+        "screens": 95
+      },
+      "negative selection": {
+        "mean_andcg": {
+          "direction": 0.006876252516250312,
+          "ensemble": 0.10616351988547724,
+          "gemini3pro": 0.09740015475758657,
+          "global": 0.02358334558934341,
+          "gpt54": 0.10291677145028581,
+          "phenotype": 0.0,
+          "ridge10": 0.021096254211109135,
+          "router": 0.10209779130237111,
+          "transfer": 0.0
+        },
+        "mean_coverage": {
+          "direction": 9.142857142857142,
+          "ensemble": 83.5,
+          "gemini3pro": 82.5,
+          "global": 65.78571428571429,
+          "gpt54": 84.14285714285714,
+          "phenotype": 11.285714285714286,
+          "ridge10": 60.785714285714285,
+          "router": 83.35714285714286,
+          "transfer": 7.142857142857143
+        },
+        "publications": 6,
+        "screens": 14
+      },
+      "phenotype screen": {
+        "mean_andcg": {
+          "direction": 0.00040173416137974485,
+          "ensemble": 0.2650882902805003,
+          "gemini3pro": 0.20801406108969828,
+          "global": 0.025739425946003036,
+          "gpt54": 0.1878383509775023,
+          "phenotype": 0.012237753191488834,
+          "ridge10": 0.01670364874305909,
+          "router": 0.2650882902805003,
+          "transfer": 0.0020811231766781077
+        },
+        "mean_coverage": {
+          "direction": 3.4,
+          "ensemble": 69.3,
+          "gemini3pro": 69.7,
+          "global": 66.2,
+          "gpt54": 70.0,
+          "phenotype": 15.0,
+          "ridge10": 65.5,
+          "router": 69.3,
+          "transfer": 15.4
+        },
+        "publications": 9,
+        "screens": 10
+      },
+      "positive and negative selection": {
+        "mean_andcg": {
+          "direction": 0.1277676778508035,
+          "ensemble": 0.24720117031165406,
+          "gemini3pro": 0.2311850374212868,
+          "global": 0.21487539988715618,
+          "gpt54": 0.20572322282509495,
+          "phenotype": 0.14454595333911144,
+          "ridge10": 0.2218634196647755,
+          "router": 0.2878486639019732,
+          "transfer": 0.14208767106627862
+        },
+        "mean_coverage": {
+          "direction": 18.49019607843137,
+          "ensemble": 80.23529411764706,
+          "gemini3pro": 77.19607843137256,
+          "global": 40.64705882352941,
+          "gpt54": 87.07843137254902,
+          "phenotype": 19.647058823529413,
+          "ridge10": 41.3921568627451,
+          "router": 79.2156862745098,
+          "transfer": 20.235294117647058
+        },
+        "publications": 9,
+        "screens": 51
+      },
+      "positive selection": {
+        "mean_andcg": {
+          "direction": 0.0006613759329274575,
+          "ensemble": 0.11074508701635905,
+          "gemini3pro": 0.10157857650409174,
+          "global": 0.007462566151518721,
+          "gpt54": 0.1024252170832806,
+          "phenotype": 0.009369952259289797,
+          "ridge10": 0.008684935655888562,
+          "router": 0.10142576142513644,
+          "transfer": 0.00582503530157417
+        },
+        "mean_coverage": {
+          "direction": 0.875,
+          "ensemble": 84.29166666666667,
+          "gemini3pro": 82.79166666666667,
+          "global": 75.91666666666667,
+          "gpt54": 84.3125,
+          "phenotype": 15.770833333333334,
+          "ridge10": 75.60416666666667,
+          "router": 84.08333333333333,
+          "transfer": 7.229166666666667
+        },
+        "publications": 13,
+        "screens": 48
+      }
+    }
+  },
+  "train_genes": 23723
+}

@@ -1,0 +1,5 @@
+{
+  "status": "INVALID_ABORTED_IMPLEMENTATION_RUN",
+  "reason": "Raw gene-symbol membership disagreed with official HGNC-normalized training labels; stopped before new test replay. Exclude all partial scores from scientific model selection.",
+  "test_replay_executed": false
+}

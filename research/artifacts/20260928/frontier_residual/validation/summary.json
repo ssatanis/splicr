@@ -1,0 +1,24 @@
+{
+  "F0_base_rrf60": {
+    "corpus_fit_seconds": 8.753629541955888,
+    "expert_weights": null,
+    "lambda": 0.0,
+    "mean": 0.17968473979647556,
+    "measured_at100": 82.3211009174312,
+    "predict_seconds": 0.03805508301593363,
+    "prior_weight": null,
+    "ranker_fit_seconds": 28.576713666087016,
+    "weight_fit_seconds": 0.0
+  },
+  "F4_residual_200": {
+    "corpus_fit_seconds": 8.753629541955888,
+    "expert_weights": null,
+    "lambda": 2.0,
+    "mean": 0.1882835554139735,
+    "measured_at100": 78.05045871559633,
+    "predict_seconds": 2.0695821249391884,
+    "prior_weight": null,
+    "ranker_fit_seconds": 28.576713666087016,
+    "weight_fit_seconds": 0.0
+  }
+}

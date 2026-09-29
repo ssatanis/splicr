@@ -1,0 +1,85 @@
+{
+  "F0_base_rrf60": {
+    "corpus_fit_seconds": 5.041032874956727,
+    "expert_weights": null,
+    "lambda": 0.0,
+    "mean": 0.7067854195741716,
+    "measured_at100": 92.15333333333334,
+    "predict_seconds": 0.09132666699588299,
+    "prior_weight": null,
+    "ranker_fit_seconds": 12.669065915979445,
+    "weight_fit_seconds": 37.60334716690704
+  },
+  "F1_residual_025": {
+    "corpus_fit_seconds": 5.041032874956727,
+    "expert_weights": null,
+    "lambda": 0.25,
+    "mean": 0.719468755094007,
+    "measured_at100": 92.13111111111111,
+    "predict_seconds": 4.564171708188951,
+    "prior_weight": null,
+    "ranker_fit_seconds": 12.669065915979445,
+    "weight_fit_seconds": 37.60334716690704
+  },
+  "F2_residual_050": {
+    "corpus_fit_seconds": 5.041032874956727,
+    "expert_weights": null,
+    "lambda": 0.5,
+    "mean": 0.7272308894933817,
+    "measured_at100": 92.08,
+    "predict_seconds": 0.41416845796629786,
+    "prior_weight": null,
+    "ranker_fit_seconds": 12.669065915979445,
+    "weight_fit_seconds": 37.60334716690704
+  },
+  "F3_residual_100": {
+    "corpus_fit_seconds": 5.041032874956727,
+    "expert_weights": null,
+    "lambda": 1.0,
+    "mean": 0.7343849035881291,
+    "measured_at100": 91.9088888888889,
+    "predict_seconds": 0.399791874922812,
+    "prior_weight": null,
+    "ranker_fit_seconds": 12.669065915979445,
+    "weight_fit_seconds": 37.60334716690704
+  },
+  "F4_residual_200": {
+    "corpus_fit_seconds": 5.041032874956727,
+    "expert_weights": null,
+    "lambda": 2.0,
+    "mean": 0.7381879368045401,
+    "measured_at100": 91.73777777777778,
+    "predict_seconds": 0.43791737500578165,
+    "prior_weight": null,
+    "ranker_fit_seconds": 12.669065915979445,
+    "weight_fit_seconds": 37.60334716690704
+  },
+  "L0_uniform_prior_small": {
+    "corpus_fit_seconds": 5.041032874956727,
+    "expert_weights": null,
+    "lambda": null,
+    "mean": 0.7104121214609197,
+    "measured_at100": 92.15333333333334,
+    "predict_seconds": 2.26670949999243,
+    "prior_weight": null,
+    "ranker_fit_seconds": 12.669065915979445,
+    "weight_fit_seconds": 37.60334716690704
+  },
+  "L1_weighted_rrf": {
+    "corpus_fit_seconds": 5.041032874956727,
+    "expert_weights": [
+      1.0,
+      1.0,
+      0.25,
+      1.0,
+      0.0
+    ],
+    "lambda": null,
+    "mean": 0.7221488868875942,
+    "measured_at100": 92.11111111111111,
+    "predict_seconds": 2.6345226250123233,
+    "prior_weight": 0.5,
+    "ranker_fit_seconds": 12.669065915979445,
+    "weight_fit_seconds": 37.60334716690704
+  }
+}

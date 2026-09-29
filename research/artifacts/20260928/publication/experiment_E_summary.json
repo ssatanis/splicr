@@ -1,0 +1,13 @@
+{
+  "ci95": [
+    0.03114703090902138,
+    0.217460825450562
+  ],
+  "mean": 0.09945010274065483,
+  "n_publications": 34,
+  "n_screens": 218,
+  "recomputed_from": "research/artifacts/20260928/direction_development/validation/P0_baseline_D3_screens.json",
+  "repeats": 10000,
+  "seed": 20260928,
+  "unit": "publication"
+}

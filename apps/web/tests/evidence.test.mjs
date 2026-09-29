@@ -26,18 +26,19 @@ function load(relative, overrides = {}) {
   const adapter = (name) => {
     if (name in overrides) return overrides[name];
     if (name === "@/lib/content") return load("apps/web/src/lib/content.ts");
+    if (name === "@/lib/marketing-metadata") return load("apps/web/src/lib/marketing-metadata.ts");
     if (name === "@/lib/site") return load("apps/web/src/lib/site.ts");
     if (name === "@/components/marketing/nav") return { MarketingNav: () => null };
     if (name === "@/components/ui/reveal") return { Reveal: ({ children }) => children };
     if (name === "next/link") return function TestLink({ children, ...props }) { return React.createElement("a", props, children); };
     return native(name);
   };
-  vm.runInNewContext(output, { exports, require: adapter, ...overrides.globals });
+  vm.runInNewContext(output, { exports, require: adapter, URL, ...overrides.globals });
   return exports;
 }
 
 test("public evidence exactly regenerates from actual research artifacts", () => {
-  execFileSync("python3", ["scripts/research/publish_evidence.py", "--check"], { cwd: root });
+  execFileSync(process.execPath, ["scripts/research/evidence_gate.mjs", "--check-public"], { cwd: root });
   for (const [name, expected] of Object.entries(evidence.sources_sha256)) {
     assert.equal(createHash("sha256").update(fs.readFileSync(path.join(root, name))).digest("hex"), expected);
   }
@@ -76,6 +77,9 @@ test("evidence page renders exact measurements, uncertainty and downloadable sou
   const html = renderToStaticMarkup(React.createElement(EvidencePage));
   for (const value of ["0.160369", "0.163091", "-0.015581", "0.006268", "26,336,701", "0.9289", "0.9548"]) assert.ok(html.includes(value), value);
   assert.match(html, /not an untouched prospective cohort/);
+  assert.match(html, /post-hoc notes, significance criteria and ranking rationale/);
+  assert.match(html, /does not establish a clean pre-experiment historical forecast/);
+  assert.doesNotMatch(html, /before seeing target measurements/);
   assert.match(html, /workspace access is not enabled/);
   assert.match(html, /summary.json/);
   assert.doesNotMatch(html, /Chance real|calibrated confidence for every/);

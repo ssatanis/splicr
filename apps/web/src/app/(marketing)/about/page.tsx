@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { marketingMetadata } from "@/lib/marketing-metadata";
 
 import { MarketingNav } from "@/components/marketing/nav";
 import { CtaSection } from "@/components/marketing/sections/cta";
@@ -6,11 +6,11 @@ import { DarkHero, SideFrame } from "@/components/three";
 import { SectionHeading } from "@/components/ui/bits";
 import { Reveal, Stagger, StaggerItem } from "@/components/ui/reveal";
 
-export const metadata: Metadata = {
+export const metadata = marketingMetadata("/about", {
   title: "About Us",
   description:
     "SplicR was started by researchers at Cornell University to answer one question: which hits are real?",
-};
+});
 
 const values = [
   {

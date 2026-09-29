@@ -1,0 +1,4782 @@
+{
+  "checks": [
+    {
+      "a": "U_1471_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "increase resistance to the specified drug"
+      },
+      "b": "U_1471_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "decrease resistance to the specified drug"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1472_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance to the specified drug",
+        "text": "increase drug resistance to the specified drug"
+      },
+      "b": "U_1472_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance to the specified drug",
+        "text": "decrease drug resistance to the specified drug"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1473_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "increase resistance to the specified drug"
+      },
+      "b": "U_1473_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "decrease resistance to the specified drug"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1474_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "increase resistance to the specified drug"
+      },
+      "b": "U_1474_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "decrease resistance to the specified drug"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1475_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "increase resistance to the specified drug"
+      },
+      "b": "U_1475_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "decrease resistance to the specified drug"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1476_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified dna-damaging drug",
+        "text": "increase resistance to the specified dna-damaging drug"
+      },
+      "b": "U_1476_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified dna-damaging drug",
+        "text": "decrease resistance to the specified dna-damaging drug"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1491_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance to the specified drug",
+        "text": "increase drug resistance to the specified drug"
+      },
+      "b": "U_1491_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance to the specified drug",
+        "text": "decrease drug resistance to the specified drug"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1492_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance to the specified drug",
+        "text": "increase drug resistance to the specified drug"
+      },
+      "b": "U_1492_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance to the specified drug",
+        "text": "decrease drug resistance to the specified drug"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1493_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance to the specified drug",
+        "text": "increase drug resistance to the specified drug"
+      },
+      "b": "U_1493_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance to the specified drug",
+        "text": "decrease drug resistance to the specified drug"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1494_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "increase resistance to the specified drug"
+      },
+      "b": "U_1494_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "decrease resistance to the specified drug"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1495_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "increase resistance to the specified drug"
+      },
+      "b": "U_1495_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "decrease resistance to the specified drug"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1496_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "increase resistance to the specified drug"
+      },
+      "b": "U_1496_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "decrease resistance to the specified drug"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1497_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance",
+        "text": "increase drug resistance"
+      },
+      "b": "U_1497_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance",
+        "text": "decrease drug resistance"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1500_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "increase resistance to the specified drug"
+      },
+      "b": "U_1500_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "decrease resistance to the specified drug"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1501_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "increase resistance to the specified drug"
+      },
+      "b": "U_1501_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "decrease resistance to the specified drug"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1502_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "increase resistance to the specified drug"
+      },
+      "b": "U_1502_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "decrease resistance to the specified drug"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1503_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "increase resistance to the specified drug"
+      },
+      "b": "U_1503_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "decrease resistance to the specified drug"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1504_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "increase resistance to the specified drug"
+      },
+      "b": "U_1504_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "decrease resistance to the specified drug"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1505_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance to the specified drug",
+        "text": "increase drug resistance to the specified drug"
+      },
+      "b": "U_1505_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance to the specified drug",
+        "text": "decrease drug resistance to the specified drug"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1507_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance to the specified drug",
+        "text": "increase drug resistance to the specified drug"
+      },
+      "b": "U_1507_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance to the specified drug",
+        "text": "decrease drug resistance to the specified drug"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1509_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "increase resistance to the specified drug"
+      },
+      "b": "U_1509_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "decrease resistance to the specified drug"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1510_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "increase resistance to the specified drug"
+      },
+      "b": "U_1510_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the specified drug",
+        "text": "decrease resistance to the specified drug"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1516_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance to the specified drug",
+        "text": "increase drug resistance to the specified drug"
+      },
+      "b": "U_1516_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance to the specified drug",
+        "text": "decrease drug resistance to the specified drug"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1517_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance to the specified drug",
+        "text": "increase drug resistance to the specified drug"
+      },
+      "b": "U_1517_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance to the specified drug",
+        "text": "decrease drug resistance to the specified drug"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1712_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "sars-cov-2 spike-rbd binding to human cells",
+        "text": "increase sars-cov-2 spike-rbd binding to human cells"
+      },
+      "b": "U_1712_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "sars-cov-2 spike-rbd binding to human cells",
+        "text": "decrease sars-cov-2 spike-rbd binding to human cells"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "10.1101/2021.01.19.427194"
+    },
+    {
+      "a": "U_1718_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell-surface tfrc/cd71 levels",
+        "text": "increase cell-surface tfrc/cd71 levels"
+      },
+      "b": "U_1718_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell-surface tfrc/cd71 levels",
+        "text": "decrease cell-surface tfrc/cd71 levels"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "10.1101/2021.01.19.427194"
+    },
+    {
+      "a": "U_1787_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "increase cell proliferation"
+      },
+      "b": "U_1787_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "decrease cell proliferation"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "34155407"
+    },
+    {
+      "a": "U_1788_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "increase cell proliferation"
+      },
+      "b": "U_1788_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "decrease cell proliferation"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "34155407"
+    },
+    {
+      "a": "U_1789_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "increase cell proliferation"
+      },
+      "b": "U_1789_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "decrease cell proliferation"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "34155407"
+    },
+    {
+      "a": "U_1789_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "increase cell proliferation"
+      },
+      "b": "U_1790_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "decrease cell proliferation"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "34155407"
+    },
+    {
+      "a": "U_1790_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "increase cell proliferation"
+      },
+      "b": "U_1789_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "decrease cell proliferation"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "34155407"
+    },
+    {
+      "a": "U_1790_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "increase cell proliferation"
+      },
+      "b": "U_1790_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "decrease cell proliferation"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "34155407"
+    },
+    {
+      "a": "U_1791_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "increase cell proliferation"
+      },
+      "b": "U_1791_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "decrease cell proliferation"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "34155407"
+    },
+    {
+      "a": "U_1792_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "increase cell proliferation"
+      },
+      "b": "U_1792_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "decrease cell proliferation"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "34155407"
+    },
+    {
+      "a": "U_1793_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in an egfr-t790m/l858r mutant background",
+        "text": "increase cell proliferation in an egfr-t790m/l858r mutant background"
+      },
+      "b": "U_1793_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in an egfr-t790m/l858r mutant background",
+        "text": "decrease cell proliferation in an egfr-t790m/l858r mutant background"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "34373451"
+    },
+    {
+      "a": "U_1794_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell growth in the presence of erlotinib in egfr-t790m/l858r mutant cells",
+        "text": "increase cell growth in the presence of erlotinib in egfr-t790m/l858r mutant cells"
+      },
+      "b": "U_1794_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell growth in the presence of erlotinib in egfr-t790m/l858r mutant cells",
+        "text": "decrease cell growth in the presence of erlotinib in egfr-t790m/l858r mutant cells"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "34373451"
+    },
+    {
+      "a": "U_1795_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in a krasg12v mutant background",
+        "text": "increase cell proliferation in a krasg12v mutant background"
+      },
+      "b": "U_1795_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in a krasg12v mutant background",
+        "text": "decrease cell proliferation in a krasg12v mutant background"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "34373451"
+    },
+    {
+      "a": "U_1796_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell growth in the presence of erlotinib in a krasg12v mutant background",
+        "text": "increase cell growth in the presence of erlotinib in a krasg12v mutant background"
+      },
+      "b": "U_1796_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell growth in the presence of erlotinib in a krasg12v mutant background",
+        "text": "decrease cell growth in the presence of erlotinib in a krasg12v mutant background"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "34373451"
+    },
+    {
+      "a": "U_1797_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in a rit1m90i mutant background",
+        "text": "increase cell proliferation in a rit1m90i mutant background"
+      },
+      "b": "U_1797_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in a rit1m90i mutant background",
+        "text": "decrease cell proliferation in a rit1m90i mutant background"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "34373451"
+    },
+    {
+      "a": "U_1797_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in a rit1m90i mutant background",
+        "text": "increase cell proliferation in a rit1m90i mutant background"
+      },
+      "b": "U_1799_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in a rit1m90i mutant background",
+        "text": "decrease cell proliferation in a rit1m90i mutant background"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "34373451"
+    },
+    {
+      "a": "U_1799_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in a rit1m90i mutant background",
+        "text": "increase cell proliferation in a rit1m90i mutant background"
+      },
+      "b": "U_1797_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in a rit1m90i mutant background",
+        "text": "decrease cell proliferation in a rit1m90i mutant background"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "34373451"
+    },
+    {
+      "a": "U_1799_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in a rit1m90i mutant background",
+        "text": "increase cell proliferation in a rit1m90i mutant background"
+      },
+      "b": "U_1799_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in a rit1m90i mutant background",
+        "text": "decrease cell proliferation in a rit1m90i mutant background"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "34373451"
+    },
+    {
+      "a": "U_1798_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell growth in the presence of erlotinib in a rit1m90i mutant background",
+        "text": "increase cell growth in the presence of erlotinib in a rit1m90i mutant background"
+      },
+      "b": "U_1798_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell growth in the presence of erlotinib in a rit1m90i mutant background",
+        "text": "decrease cell growth in the presence of erlotinib in a rit1m90i mutant background"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "34373451"
+    },
+    {
+      "a": "U_1798_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell growth in the presence of erlotinib in a rit1m90i mutant background",
+        "text": "increase cell growth in the presence of erlotinib in a rit1m90i mutant background"
+      },
+      "b": "U_1800_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell growth in the presence of erlotinib in a rit1m90i mutant background",
+        "text": "decrease cell growth in the presence of erlotinib in a rit1m90i mutant background"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "34373451"
+    },
+    {
+      "a": "U_1800_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell growth in the presence of erlotinib in a rit1m90i mutant background",
+        "text": "increase cell growth in the presence of erlotinib in a rit1m90i mutant background"
+      },
+      "b": "U_1798_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell growth in the presence of erlotinib in a rit1m90i mutant background",
+        "text": "decrease cell growth in the presence of erlotinib in a rit1m90i mutant background"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "34373451"
+    },
+    {
+      "a": "U_1800_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell growth in the presence of erlotinib in a rit1m90i mutant background",
+        "text": "increase cell growth in the presence of erlotinib in a rit1m90i mutant background"
+      },
+      "b": "U_1800_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell growth in the presence of erlotinib in a rit1m90i mutant background",
+        "text": "decrease cell growth in the presence of erlotinib in a rit1m90i mutant background"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "34373451"
+    },
+    {
+      "a": "U_1996_inc",
+      "a_parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in the tapr1 (hapstr1) knockout background",
+        "text": "increase cell proliferation in the tapr1 (hapstr1) knockout background"
+      },
+      "b": "U_1996_dec",
+      "b_parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in the tapr1 (hapstr1) knockout background",
+        "text": "decrease cell proliferation in the tapr1 (hapstr1) knockout background"
+      },
+      "distinguishes_opposite_requests": true,
+      "same_target": true,
+      "source_id": "33660365"
+    }
+  ],
+  "data_sha256": "25e00c380358486137d1f25c490db98d007dfc5230f8ad502276dc6ccc741a5c",
+  "distinguished": 47,
+  "interpretation": "implementation diagnostic only; grammar based on training and synthetic semantics, no model-performance claim; no test accessed",
+  "parser_sha256": "b249e25742919a09bb66816d0dd209f9841fb694d54ec7bca69febb4353d6856",
+  "same_target": 47,
+  "script_sha256": "c82a95cc0e4db0a17e729df439061917783476389dc0c3cfdf16b66279d1acd1",
+  "training_polarity_counts": {
+    "decrease": 972,
+    "increase": 251,
+    "unknown": 126
+  },
+  "training_screens": 1349,
+  "training_unique_phenotypes": 343,
+  "training_vocabulary": [
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "BI-2536 sensitivity",
+        "text": "decrease BI-2536 sensitivity"
+      },
+      "phenotype": "decrease BI-2536 sensitivity"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "BJAB cell proliferation",
+        "text": "decrease BJAB cell proliferation"
+      },
+      "phenotype": "decrease BJAB cell proliferation"
+    },
+    {
+      "n_screens": 7,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "Cell Proliferation",
+        "text": "decrease Cell Proliferation"
+      },
+      "phenotype": "decrease Cell Proliferation"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "HBL-1 cell proliferation",
+        "text": "decrease HBL-1 cell proliferation"
+      },
+      "phenotype": "decrease HBL-1 cell proliferation"
+    },
+    {
+      "n_screens": 3,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "JQ1 resistance",
+        "text": "decrease JQ1 resistance"
+      },
+      "phenotype": "decrease JQ1 resistance"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "JQ1 resistance in a BBDI-resistant cell line",
+        "text": "decrease JQ1 resistance in a BBDI-resistant cell line"
+      },
+      "phenotype": "decrease JQ1 resistance in a BBDI-resistant cell line"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "SARS-CoV-2 infectivity",
+        "text": "decrease SARS-CoV-2 infectivity"
+      },
+      "phenotype": "decrease SARS-CoV-2 infectivity"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "STLC sensitivity",
+        "text": "decrease STLC sensitivity"
+      },
+      "phenotype": "decrease STLC sensitivity"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "UV light resistance",
+        "text": "decrease UV light resistance"
+      },
+      "phenotype": "decrease UV light resistance"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell fitness under chemical treatment",
+        "text": "decrease cell fitness under chemical treatment"
+      },
+      "phenotype": "decrease cell fitness under chemical treatment"
+    },
+    {
+      "n_screens": 6,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "decrease cell proliferation"
+      },
+      "phenotype": "decrease cell proliferation"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in 3D spheroid growth conditions",
+        "text": "decrease cell proliferation in 3D spheroid growth conditions"
+      },
+      "phenotype": "decrease cell proliferation in 3D spheroid growth conditions"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in 3D spheroid growth conditions relative to 2D monolayer conditions",
+        "text": "decrease cell proliferation in 3D spheroid growth conditions relative to 2D monolayer conditions"
+      },
+      "phenotype": "decrease cell proliferation in 3D spheroid growth conditions relative to 2D monolayer conditions"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in 3D spheroid growth conditions relative to 2D monolayer growth",
+        "text": "decrease cell proliferation in 3D spheroid growth conditions relative to 2D monolayer growth"
+      },
+      "phenotype": "decrease cell proliferation in 3D spheroid growth conditions relative to 2D monolayer growth"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in BL-41 cells",
+        "text": "decrease cell proliferation in BL-41 cells"
+      },
+      "phenotype": "decrease cell proliferation in BL-41 cells"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in Jiyoye cells",
+        "text": "decrease cell proliferation in Jiyoye cells"
+      },
+      "phenotype": "decrease cell proliferation in Jiyoye cells"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in Ly3 cells",
+        "text": "decrease cell proliferation in Ly3 cells"
+      },
+      "phenotype": "decrease cell proliferation in Ly3 cells"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in SU-DHL-4 cells",
+        "text": "decrease cell proliferation in SU-DHL-4 cells"
+      },
+      "phenotype": "decrease cell proliferation in SU-DHL-4 cells"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation of HEK-HT cells expressing HRASG12V",
+        "text": "decrease cell proliferation of HEK-HT cells expressing HRASG12V"
+      },
+      "phenotype": "decrease cell proliferation of HEK-HT cells expressing HRASG12V"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation under 3D spheroid growth conditions",
+        "text": "decrease cell proliferation under 3D spheroid growth conditions"
+      },
+      "phenotype": "decrease cell proliferation under 3D spheroid growth conditions"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation under doxorubicin treatment",
+        "text": "decrease cell proliferation under doxorubicin treatment"
+      },
+      "phenotype": "decrease cell proliferation under doxorubicin treatment"
+    },
+    {
+      "n_screens": 5,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation under mitochondrial inhibitor treatment",
+        "text": "decrease cell proliferation under mitochondrial inhibitor treatment"
+      },
+      "phenotype": "decrease cell proliferation under mitochondrial inhibitor treatment"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell sensitivity to rigosertib",
+        "text": "decrease cell sensitivity to rigosertib"
+      },
+      "phenotype": "decrease cell sensitivity to rigosertib"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cellular resistance to viral infection",
+        "text": "decrease cellular resistance to viral infection"
+      },
+      "phenotype": "decrease cellular resistance to viral infection"
+    },
+    {
+      "n_screens": 25,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance",
+        "text": "decrease drug resistance"
+      },
+      "phenotype": "decrease drug resistance"
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "ambiguous_main_request",
+        "target": null,
+        "text": "decrease extracellular bEXOmiR abundance and activate EV production"
+      },
+      "phenotype": "decrease extracellular bEXOmiR abundance and activate EV production"
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "formaldehyde resistance",
+        "text": "decrease formaldehyde resistance"
+      },
+      "phenotype": "decrease formaldehyde resistance"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "proliferation in 3D spheroid growth conditions relative to 2D monolayer",
+        "text": "decrease proliferation in 3D spheroid growth conditions relative to 2D monolayer"
+      },
+      "phenotype": "decrease proliferation in 3D spheroid growth conditions relative to 2D monolayer"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "proliferation of NRASG12V-expressing HEK-HT cells",
+        "text": "decrease proliferation of NRASG12V-expressing HEK-HT cells"
+      },
+      "phenotype": "decrease proliferation of NRASG12V-expressing HEK-HT cells"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "radiation resistance",
+        "text": "decrease radiation resistance"
+      },
+      "phenotype": "decrease radiation resistance"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to Dieldrin",
+        "text": "decrease resistance to Dieldrin"
+      },
+      "phenotype": "decrease resistance to Dieldrin"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to PARP inhibitor olaparib",
+        "text": "decrease resistance to PARP inhibitor olaparib"
+      },
+      "phenotype": "decrease resistance to PARP inhibitor olaparib"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to mitochondrial inhibitors",
+        "text": "decrease resistance to mitochondrial inhibitors"
+      },
+      "phenotype": "decrease resistance to mitochondrial inhibitors"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the drug",
+        "text": "decrease resistance to the drug"
+      },
+      "phenotype": "decrease resistance to the drug"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "ambiguous_main_request",
+        "target": null,
+        "text": "decrease resistance to the drug and confer drug sensitivity"
+      },
+      "phenotype": "decrease resistance to the drug and confer drug sensitivity"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the screened drug",
+        "text": "decrease resistance to the screened drug"
+      },
+      "phenotype": "decrease resistance to the screened drug"
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "sensitivity to Abt-751",
+        "text": "decrease sensitivity to Abt-751"
+      },
+      "phenotype": "decrease sensitivity to Abt-751"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "sensitivity to alisertib",
+        "text": "decrease sensitivity to alisertib"
+      },
+      "phenotype": "decrease sensitivity to alisertib"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "sensitivity to blebbistatin",
+        "text": "decrease sensitivity to blebbistatin"
+      },
+      "phenotype": "decrease sensitivity to blebbistatin"
+    },
+    {
+      "n_screens": 3,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "sensitivity to rigosertib",
+        "text": "decrease sensitivity to rigosertib"
+      },
+      "phenotype": "decrease sensitivity to rigosertib"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "sensitivity to the KRAS inhibitor ARS-853",
+        "text": "decrease sensitivity to the KRAS inhibitor ARS-853"
+      },
+      "phenotype": "decrease sensitivity to the KRAS inhibitor ARS-853"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "sensitivity to vinblastine",
+        "text": "decrease sensitivity to vinblastine"
+      },
+      "phenotype": "decrease sensitivity to vinblastine"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "spheroid cell proliferation",
+        "text": "decrease spheroid cell proliferation"
+      },
+      "phenotype": "decrease spheroid cell proliferation"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "tf-NBR1 accumulation (defective autophagy)",
+        "text": "decrease tf-NBR1 accumulation (defective autophagy)"
+      },
+      "phenotype": "decrease tf-NBR1 accumulation (defective autophagy)"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "tf-NBR1 reporter accumulation",
+        "text": "decrease tf-NBR1 reporter accumulation"
+      },
+      "phenotype": "decrease tf-NBR1 reporter accumulation"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "tf-NBR1 reporter accumulation (defective autophagy)",
+        "text": "decrease tf-NBR1 reporter accumulation (defective autophagy)"
+      },
+      "phenotype": "decrease tf-NBR1 reporter accumulation (defective autophagy)"
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "venetoclax resistance",
+        "text": "decrease venetoclax resistance"
+      },
+      "phenotype": "decrease venetoclax resistance"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "AML cell proliferation",
+        "text": "decreases AML cell proliferation."
+      },
+      "phenotype": "decreases AML cell proliferation."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": "as measured by decreased reporter expression.",
+        "reason": "explicit_leading_effect",
+        "target": "BMP-2 signaling pathway activity",
+        "text": "decreases BMP-2 signaling pathway activity as measured by decreased reporter expression."
+      },
+      "phenotype": "decreases BMP-2 signaling pathway activity as measured by decreased reporter expression."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "Gal-3 cell surface localization",
+        "text": "decreases Gal-3 cell surface localization."
+      },
+      "phenotype": "decreases Gal-3 cell surface localization."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": "as measured by reduced HBsAg antibody staining in HepG2(HBV) cells.",
+        "reason": "explicit_leading_effect",
+        "target": "HBV surface antigen (HBsAg) expression",
+        "text": "decreases HBV surface antigen (HBsAg) expression as measured by reduced HBsAg antibody staining in HepG2(HBV) cells."
+      },
+      "phenotype": "decreases HBV surface antigen (HBsAg) expression as measured by reduced HBsAg antibody staining in HepG2(HBV) cells."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": "as measured by decreased accumulation of HIV-encoded GFP.",
+        "reason": "explicit_leading_effect",
+        "target": "HIV infection",
+        "text": "decreases HIV infection as measured by decreased accumulation of HIV-encoded GFP."
+      },
+      "phenotype": "decreases HIV infection as measured by decreased accumulation of HIV-encoded GFP."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "MYC protein accumulation",
+        "text": "decreases MYC protein accumulation."
+      },
+      "phenotype": "decreases MYC protein accumulation."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": "as measured by reporter expression.",
+        "reason": "explicit_leading_effect",
+        "target": "NFkB signaling activity",
+        "text": "decreases NFkB signaling activity as measured by reporter expression."
+      },
+      "phenotype": "decreases NFkB signaling activity as measured by reporter expression."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": "as measured by reduced reporter expression.",
+        "reason": "explicit_leading_effect",
+        "target": "NFkB signaling",
+        "text": "decreases NFkB signaling as measured by reduced reporter expression."
+      },
+      "phenotype": "decreases NFkB signaling as measured by reduced reporter expression."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": "as measured by FACS of GFP-tagged SQSTM1.",
+        "reason": "explicit_leading_effect",
+        "target": "SQSTM1 protein accumulation",
+        "text": "decreases SQSTM1 protein accumulation as measured by FACS of GFP-tagged SQSTM1."
+      },
+      "phenotype": "decreases SQSTM1 protein accumulation as measured by FACS of GFP-tagged SQSTM1."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": "as determined by GFP-tag and FACS sorting.",
+        "reason": "explicit_leading_effect",
+        "target": "TAX1BP1 protein abundance",
+        "text": "decreases TAX1BP1 protein abundance as determined by GFP-tag and FACS sorting."
+      },
+      "phenotype": "decreases TAX1BP1 protein abundance as determined by GFP-tag and FACS sorting."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "TAX1BP1 protein accumulation in a FIP200 knockout background",
+        "text": "decreases TAX1BP1 protein accumulation in a FIP200 knockout background."
+      },
+      "phenotype": "decreases TAX1BP1 protein accumulation in a FIP200 knockout background."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": "as measured by reduced cell proliferation.",
+        "reason": "explicit_leading_effect",
+        "target": "cell fitness",
+        "text": "decreases cell fitness as measured by reduced cell proliferation."
+      },
+      "phenotype": "decreases cell fitness as measured by reduced cell proliferation."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell fitness",
+        "text": "decreases cell fitness."
+      },
+      "phenotype": "decreases cell fitness."
+    },
+    {
+      "n_screens": 8,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation (cell fitness)",
+        "text": "decreases cell proliferation (cell fitness)."
+      },
+      "phenotype": "decreases cell proliferation (cell fitness)."
+    },
+    {
+      "n_screens": 6,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation (cellular fitness)",
+        "text": "decreases cell proliferation (cellular fitness)."
+      },
+      "phenotype": "decreases cell proliferation (cellular fitness)."
+    },
+    {
+      "n_screens": 4,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation (fitness) in the oral squamous carcinoma cell line",
+        "text": "decreases cell proliferation (fitness) in the oral squamous carcinoma cell line."
+      },
+      "phenotype": "decreases cell proliferation (fitness) in the oral squamous carcinoma cell line."
+    },
+    {
+      "n_screens": 3,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation (fitness)",
+        "text": "decreases cell proliferation (fitness)."
+      },
+      "phenotype": "decreases cell proliferation (fitness)."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation (reduced cellular fitness)",
+        "text": "decreases cell proliferation (reduced cellular fitness)."
+      },
+      "phenotype": "decreases cell proliferation (reduced cellular fitness)."
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation (reduced fitness) in the oral squamous carcinoma cell line",
+        "text": "decreases cell proliferation (reduced fitness) in the oral squamous carcinoma cell line."
+      },
+      "phenotype": "decreases cell proliferation (reduced fitness) in the oral squamous carcinoma cell line."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation (reduced fitness)",
+        "text": "decreases cell proliferation (reduced fitness)."
+      },
+      "phenotype": "decreases cell proliferation (reduced fitness)."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": "as evidenced by reduced cell fitness/growth.",
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "decreases cell proliferation as evidenced by reduced cell fitness/growth."
+      },
+      "phenotype": "decreases cell proliferation as evidenced by reduced cell fitness/growth."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": "as measured by decreased cell fitness/viability.",
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "decreases cell proliferation as measured by decreased cell fitness/viability."
+      },
+      "phenotype": "decreases cell proliferation as measured by decreased cell fitness/viability."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": "as measured by decreased fitness in an oral squamous carcinoma cell line.",
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "decreases cell proliferation as measured by decreased fitness in an oral squamous carcinoma cell line."
+      },
+      "phenotype": "decreases cell proliferation as measured by decreased fitness in an oral squamous carcinoma cell line."
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": "as measured by decreased fitness in the oral squamous carcinoma cell line.",
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "decreases cell proliferation as measured by decreased fitness in the oral squamous carcinoma cell line."
+      },
+      "phenotype": "decreases cell proliferation as measured by decreased fitness in the oral squamous carcinoma cell line."
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": "as measured by decreased fitness in this oral squamous carcinoma cell line.",
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "decreases cell proliferation as measured by decreased fitness in this oral squamous carcinoma cell line."
+      },
+      "phenotype": "decreases cell proliferation as measured by decreased fitness in this oral squamous carcinoma cell line."
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": "as measured by decreased fitness.",
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "decreases cell proliferation as measured by decreased fitness."
+      },
+      "phenotype": "decreases cell proliferation as measured by decreased fitness."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": "as measured by reduced cell fitness.",
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "decreases cell proliferation as measured by reduced cell fitness."
+      },
+      "phenotype": "decreases cell proliferation as measured by reduced cell fitness."
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": "as measured by reduced cellular fitness.",
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "decreases cell proliferation as measured by reduced cellular fitness."
+      },
+      "phenotype": "decreases cell proliferation as measured by reduced cellular fitness."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": "as measured by reduced fitness.",
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "decreases cell proliferation as measured by reduced fitness."
+      },
+      "phenotype": "decreases cell proliferation as measured by reduced fitness."
+    },
+    {
+      "n_screens": 3,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in AML cells",
+        "text": "decreases cell proliferation in AML cells."
+      },
+      "phenotype": "decreases cell proliferation in AML cells."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in an oral squamous carcinoma cell line",
+        "text": "decreases cell proliferation in an oral squamous carcinoma cell line."
+      },
+      "phenotype": "decreases cell proliferation in an oral squamous carcinoma cell line."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in low oxygen (1%) conditions",
+        "text": "decreases cell proliferation in low oxygen (1%) conditions."
+      },
+      "phenotype": "decreases cell proliferation in low oxygen (1%) conditions."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in the CDC34 (UBE2R1)/UBE2R2 mutant background",
+        "text": "decreases cell proliferation in the CDC34 (UBE2R1)/UBE2R2 mutant background."
+      },
+      "phenotype": "decreases cell proliferation in the CDC34 (UBE2R1)/UBE2R2 mutant background."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in this oral squamous carcinoma cell line",
+        "text": "decreases cell proliferation in this oral squamous carcinoma cell line."
+      },
+      "phenotype": "decreases cell proliferation in this oral squamous carcinoma cell line."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation of AML cells",
+        "text": "decreases cell proliferation of AML cells."
+      },
+      "phenotype": "decreases cell proliferation of AML cells."
+    },
+    {
+      "n_screens": 800,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "decreases cell proliferation."
+      },
+      "phenotype": "decreases cell proliferation."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation/fitness in this oral squamous carcinoma cell line",
+        "text": "decreases cell proliferation/fitness in this oral squamous carcinoma cell line."
+      },
+      "phenotype": "decreases cell proliferation/fitness in this oral squamous carcinoma cell line."
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation/fitness",
+        "text": "decreases cell proliferation/fitness."
+      },
+      "phenotype": "decreases cell proliferation/fitness."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell viability in KSHV-latently infected cells",
+        "text": "decreases cell viability in KSHV-latently infected cells."
+      },
+      "phenotype": "decreases cell viability in KSHV-latently infected cells."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell viability",
+        "text": "decreases cell viability."
+      },
+      "phenotype": "decreases cell viability."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "hepatitis B virus surface antigen (HBsAg) expression in RG7834-treated HBV-integrated cells",
+        "text": "decreases hepatitis B virus surface antigen (HBsAg) expression in RG7834-treated HBV-integrated cells."
+      },
+      "phenotype": "decreases hepatitis B virus surface antigen (HBsAg) expression in RG7834-treated HBV-integrated cells."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "inflammasome-induced pyroptotic cell death",
+        "text": "decreases inflammasome-induced pyroptotic cell death."
+      },
+      "phenotype": "decreases inflammasome-induced pyroptotic cell death."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "lysosomal accumulation of NA-647 cargo mediated by biotinylated LYTACs",
+        "text": "decreases lysosomal accumulation of NA-647 cargo mediated by biotinylated LYTACs."
+      },
+      "phenotype": "decreases lysosomal accumulation of NA-647 cargo mediated by biotinylated LYTACs."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": "as indicated by reduced mt-mKeima reporter signal.",
+        "reason": "explicit_leading_effect",
+        "target": "mitophagic flux",
+        "text": "decreases mitophagic flux as indicated by reduced mt-mKeima reporter signal."
+      },
+      "phenotype": "decreases mitophagic flux as indicated by reduced mt-mKeima reporter signal."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": "as measured by low mt-mKeima reporter levels.",
+        "reason": "explicit_leading_effect",
+        "target": "mitophagic flux",
+        "text": "decreases mitophagic flux as measured by low mt-mKeima reporter levels."
+      },
+      "phenotype": "decreases mitophagic flux as measured by low mt-mKeima reporter levels."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": "as measured by reduced mt-mKeima reporter levels.",
+        "reason": "explicit_leading_effect",
+        "target": "mitophagic flux",
+        "text": "decreases mitophagic flux as measured by reduced mt-mKeima reporter levels."
+      },
+      "phenotype": "decreases mitophagic flux as measured by reduced mt-mKeima reporter levels."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": "as measured by reduced GFP-p62 levels in FACS.",
+        "reason": "explicit_leading_effect",
+        "target": "p62 protein accumulation",
+        "text": "decreases p62 protein accumulation as measured by reduced GFP-p62 levels in FACS."
+      },
+      "phenotype": "decreases p62 protein accumulation as measured by reduced GFP-p62 levels in FACS."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": "as measured by reduced GFP-p62 levels in a FIP200 knockout background.",
+        "reason": "explicit_leading_effect",
+        "target": "p62 protein accumulation",
+        "text": "decreases p62 protein accumulation as measured by reduced GFP-p62 levels in a FIP200 knockout background."
+      },
+      "phenotype": "decreases p62 protein accumulation as measured by reduced GFP-p62 levels in a FIP200 knockout background."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "phagocytosis (uptake of 0.43 \u03bcm superparamagnetic beads)",
+        "text": "decreases phagocytosis (uptake of 0.43 \u03bcm superparamagnetic beads)."
+      },
+      "phenotype": "decreases phagocytosis (uptake of 0.43 \u03bcm superparamagnetic beads)."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "phagocytosis (zymosan particle uptake)",
+        "text": "decreases phagocytosis (zymosan particle uptake)."
+      },
+      "phenotype": "decreases phagocytosis (zymosan particle uptake)."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": "as measured by magnetic capture of IgG/complement-opsonized RBC\u2013nanoparticle uptake.",
+        "reason": "explicit_leading_effect",
+        "target": "phagocytosis",
+        "text": "decreases phagocytosis as measured by magnetic capture of IgG/complement-opsonized RBC\u2013nanoparticle uptake."
+      },
+      "phenotype": "decreases phagocytosis as measured by magnetic capture of IgG/complement-opsonized RBC\u2013nanoparticle uptake."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": "as measured by reduced uptake of 4.3 \u03bcm superparamagnetic beads in the magnetic selection assay.",
+        "reason": "explicit_leading_effect",
+        "target": "phagocytosis",
+        "text": "decreases phagocytosis as measured by reduced uptake of 4.3 \u03bcm superparamagnetic beads in the magnetic selection assay."
+      },
+      "phenotype": "decreases phagocytosis as measured by reduced uptake of 4.3 \u03bcm superparamagnetic beads in the magnetic selection assay."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "phagocytosis of IgG-opsonized, magnetically labeled red blood cells",
+        "text": "decreases phagocytosis of IgG-opsonized, magnetically labeled red blood cells."
+      },
+      "phenotype": "decreases phagocytosis of IgG-opsonized, magnetically labeled red blood cells."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "phagocytosis of cationic 1.3 \u00b5m magnetic iron oxide nanoparticles",
+        "text": "decreases phagocytosis of cationic 1.3 \u00b5m magnetic iron oxide nanoparticles."
+      },
+      "phenotype": "decreases phagocytosis of cationic 1.3 \u00b5m magnetic iron oxide nanoparticles."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "proliferation of MKL-1 Merkel cell carcinoma cells",
+        "text": "decreases proliferation of MKL-1 Merkel cell carcinoma cells."
+      },
+      "phenotype": "decreases proliferation of MKL-1 Merkel cell carcinoma cells."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "proliferation of acute myeloid leukemia cells",
+        "text": "decreases proliferation of acute myeloid leukemia cells."
+      },
+      "phenotype": "decreases proliferation of acute myeloid leukemia cells."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "decrease",
+        "qualifier": "as measured by decreased cell growth in latently infected cells.",
+        "reason": "explicit_leading_effect",
+        "target": "resistance to KSHV infection",
+        "text": "decreases resistance to KSHV infection as measured by decreased cell growth in latently infected cells."
+      },
+      "phenotype": "decreases resistance to KSHV infection as measured by decreased cell growth in latently infected cells."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases BI-2536 sensitivity"
+      },
+      "phenotype": "either increases or decreases BI-2536 sensitivity"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases BJAB cell proliferation"
+      },
+      "phenotype": "either increases or decreases BJAB cell proliferation"
+    },
+    {
+      "n_screens": 7,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases Cell Proliferation"
+      },
+      "phenotype": "either increases or decreases Cell Proliferation"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases HBL-1 cell proliferation"
+      },
+      "phenotype": "either increases or decreases HBL-1 cell proliferation"
+    },
+    {
+      "n_screens": 3,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases JQ1 resistance"
+      },
+      "phenotype": "either increases or decreases JQ1 resistance"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases JQ1 resistance in a BBDI-resistant cell line"
+      },
+      "phenotype": "either increases or decreases JQ1 resistance in a BBDI-resistant cell line"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases SARS-CoV-2 infectivity"
+      },
+      "phenotype": "either increases or decreases SARS-CoV-2 infectivity"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases STLC sensitivity"
+      },
+      "phenotype": "either increases or decreases STLC sensitivity"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases cell fitness under chemical treatment"
+      },
+      "phenotype": "either increases or decreases cell fitness under chemical treatment"
+    },
+    {
+      "n_screens": 6,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases cell proliferation"
+      },
+      "phenotype": "either increases or decreases cell proliferation"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases cell proliferation in 3D spheroid growth conditions"
+      },
+      "phenotype": "either increases or decreases cell proliferation in 3D spheroid growth conditions"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases cell proliferation in 3D spheroid growth conditions relative to 2D monolayer conditions"
+      },
+      "phenotype": "either increases or decreases cell proliferation in 3D spheroid growth conditions relative to 2D monolayer conditions"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases cell proliferation in 3D spheroid growth conditions relative to 2D monolayer growth"
+      },
+      "phenotype": "either increases or decreases cell proliferation in 3D spheroid growth conditions relative to 2D monolayer growth"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases cell proliferation in BL-41 cells"
+      },
+      "phenotype": "either increases or decreases cell proliferation in BL-41 cells"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases cell proliferation in Jiyoye cells"
+      },
+      "phenotype": "either increases or decreases cell proliferation in Jiyoye cells"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases cell proliferation in Ly3 cells"
+      },
+      "phenotype": "either increases or decreases cell proliferation in Ly3 cells"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases cell proliferation in SU-DHL-4 cells"
+      },
+      "phenotype": "either increases or decreases cell proliferation in SU-DHL-4 cells"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases cell proliferation under 3D spheroid growth conditions"
+      },
+      "phenotype": "either increases or decreases cell proliferation under 3D spheroid growth conditions"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases cell proliferation under doxorubicin treatment"
+      },
+      "phenotype": "either increases or decreases cell proliferation under doxorubicin treatment"
+    },
+    {
+      "n_screens": 5,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases cell proliferation under mitochondrial inhibitor treatment"
+      },
+      "phenotype": "either increases or decreases cell proliferation under mitochondrial inhibitor treatment"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases cell sensitivity to rigosertib"
+      },
+      "phenotype": "either increases or decreases cell sensitivity to rigosertib"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases cellular resistance to viral infection"
+      },
+      "phenotype": "either increases or decreases cellular resistance to viral infection"
+    },
+    {
+      "n_screens": 8,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases drug resistance"
+      },
+      "phenotype": "either increases or decreases drug resistance"
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases extracellular bEXOmiR abundance and activate EV production"
+      },
+      "phenotype": "either increases or decreases extracellular bEXOmiR abundance and activate EV production"
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases formaldehyde resistance"
+      },
+      "phenotype": "either increases or decreases formaldehyde resistance"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases proliferation in 3D spheroid growth conditions relative to 2D monolayer"
+      },
+      "phenotype": "either increases or decreases proliferation in 3D spheroid growth conditions relative to 2D monolayer"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases resistance to Dieldrin"
+      },
+      "phenotype": "either increases or decreases resistance to Dieldrin"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases resistance to PARP inhibitor olaparib"
+      },
+      "phenotype": "either increases or decreases resistance to PARP inhibitor olaparib"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases resistance to mitochondrial inhibitors"
+      },
+      "phenotype": "either increases or decreases resistance to mitochondrial inhibitors"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases resistance to the drug"
+      },
+      "phenotype": "either increases or decreases resistance to the drug"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases resistance to the drug and confer drug sensitivity"
+      },
+      "phenotype": "either increases or decreases resistance to the drug and confer drug sensitivity"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases resistance to the screened drug"
+      },
+      "phenotype": "either increases or decreases resistance to the screened drug"
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases sensitivity to Abt-751"
+      },
+      "phenotype": "either increases or decreases sensitivity to Abt-751"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases sensitivity to KRAS inhibitor in 3D spheroid growth conditions"
+      },
+      "phenotype": "either increases or decreases sensitivity to KRAS inhibitor in 3D spheroid growth conditions"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases sensitivity to alisertib"
+      },
+      "phenotype": "either increases or decreases sensitivity to alisertib"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases sensitivity to blebbistatin"
+      },
+      "phenotype": "either increases or decreases sensitivity to blebbistatin"
+    },
+    {
+      "n_screens": 3,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases sensitivity to rigosertib"
+      },
+      "phenotype": "either increases or decreases sensitivity to rigosertib"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases sensitivity to the KRAS inhibitor ARS-853"
+      },
+      "phenotype": "either increases or decreases sensitivity to the KRAS inhibitor ARS-853"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases sensitivity to vinblastine"
+      },
+      "phenotype": "either increases or decreases sensitivity to vinblastine"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases spheroid cell proliferation"
+      },
+      "phenotype": "either increases or decreases spheroid cell proliferation"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases tf-NBR1 accumulation (defective autophagy)"
+      },
+      "phenotype": "either increases or decreases tf-NBR1 accumulation (defective autophagy)"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases tf-NBR1 reporter accumulation"
+      },
+      "phenotype": "either increases or decreases tf-NBR1 reporter accumulation"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases tf-NBR1 reporter accumulation (defective autophagy)"
+      },
+      "phenotype": "either increases or decreases tf-NBR1 reporter accumulation (defective autophagy)"
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "either increases or decreases venetoclax resistance"
+      },
+      "phenotype": "either increases or decreases venetoclax resistance"
+    },
+    {
+      "n_screens": 18,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "impacts cell proliferation"
+      },
+      "phenotype": "impacts cell proliferation"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "impacts phagocytosis"
+      },
+      "phenotype": "impacts phagocytosis"
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "impacts protein/peptide accumulation"
+      },
+      "phenotype": "impacts protein/peptide accumulation"
+    },
+    {
+      "n_screens": 23,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "no_explicit_leading_effect",
+        "target": null,
+        "text": "impacts response to chemicals"
+      },
+      "phenotype": "impacts response to chemicals"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "BI-2536 sensitivity",
+        "text": "increase BI-2536 sensitivity"
+      },
+      "phenotype": "increase BI-2536 sensitivity"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "BJAB cell proliferation",
+        "text": "increase BJAB cell proliferation"
+      },
+      "phenotype": "increase BJAB cell proliferation"
+    },
+    {
+      "n_screens": 7,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "Cell Proliferation",
+        "text": "increase Cell Proliferation"
+      },
+      "phenotype": "increase Cell Proliferation"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "HBL-1 cell proliferation",
+        "text": "increase HBL-1 cell proliferation"
+      },
+      "phenotype": "increase HBL-1 cell proliferation"
+    },
+    {
+      "n_screens": 3,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "JQ1 resistance",
+        "text": "increase JQ1 resistance"
+      },
+      "phenotype": "increase JQ1 resistance"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "JQ1 resistance in a BBDI-resistant cell line",
+        "text": "increase JQ1 resistance in a BBDI-resistant cell line"
+      },
+      "phenotype": "increase JQ1 resistance in a BBDI-resistant cell line"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "SARS-CoV-2 infectivity",
+        "text": "increase SARS-CoV-2 infectivity"
+      },
+      "phenotype": "increase SARS-CoV-2 infectivity"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "STLC sensitivity",
+        "text": "increase STLC sensitivity"
+      },
+      "phenotype": "increase STLC sensitivity"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell fitness under chemical treatment",
+        "text": "increase cell fitness under chemical treatment"
+      },
+      "phenotype": "increase cell fitness under chemical treatment"
+    },
+    {
+      "n_screens": 6,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "increase cell proliferation"
+      },
+      "phenotype": "increase cell proliferation"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in 3D spheroid growth conditions",
+        "text": "increase cell proliferation in 3D spheroid growth conditions"
+      },
+      "phenotype": "increase cell proliferation in 3D spheroid growth conditions"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in 3D spheroid growth conditions relative to 2D monolayer conditions",
+        "text": "increase cell proliferation in 3D spheroid growth conditions relative to 2D monolayer conditions"
+      },
+      "phenotype": "increase cell proliferation in 3D spheroid growth conditions relative to 2D monolayer conditions"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in 3D spheroid growth conditions relative to 2D monolayer growth",
+        "text": "increase cell proliferation in 3D spheroid growth conditions relative to 2D monolayer growth"
+      },
+      "phenotype": "increase cell proliferation in 3D spheroid growth conditions relative to 2D monolayer growth"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in BL-41 cells",
+        "text": "increase cell proliferation in BL-41 cells"
+      },
+      "phenotype": "increase cell proliferation in BL-41 cells"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in Jiyoye cells",
+        "text": "increase cell proliferation in Jiyoye cells"
+      },
+      "phenotype": "increase cell proliferation in Jiyoye cells"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in Ly3 cells",
+        "text": "increase cell proliferation in Ly3 cells"
+      },
+      "phenotype": "increase cell proliferation in Ly3 cells"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in SU-DHL-4 cells",
+        "text": "increase cell proliferation in SU-DHL-4 cells"
+      },
+      "phenotype": "increase cell proliferation in SU-DHL-4 cells"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation under 3D spheroid growth conditions",
+        "text": "increase cell proliferation under 3D spheroid growth conditions"
+      },
+      "phenotype": "increase cell proliferation under 3D spheroid growth conditions"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation under doxorubicin treatment",
+        "text": "increase cell proliferation under doxorubicin treatment"
+      },
+      "phenotype": "increase cell proliferation under doxorubicin treatment"
+    },
+    {
+      "n_screens": 5,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation under mitochondrial inhibitor treatment",
+        "text": "increase cell proliferation under mitochondrial inhibitor treatment"
+      },
+      "phenotype": "increase cell proliferation under mitochondrial inhibitor treatment"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell sensitivity to rigosertib",
+        "text": "increase cell sensitivity to rigosertib"
+      },
+      "phenotype": "increase cell sensitivity to rigosertib"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cellular resistance to viral infection",
+        "text": "increase cellular resistance to viral infection"
+      },
+      "phenotype": "increase cellular resistance to viral infection"
+    },
+    {
+      "n_screens": 8,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance",
+        "text": "increase drug resistance"
+      },
+      "phenotype": "increase drug resistance"
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "ambiguous_main_request",
+        "target": null,
+        "text": "increase extracellular bEXOmiR abundance and suppress EV production"
+      },
+      "phenotype": "increase extracellular bEXOmiR abundance and suppress EV production"
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "formaldehyde resistance",
+        "text": "increase formaldehyde resistance"
+      },
+      "phenotype": "increase formaldehyde resistance"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "proliferation in 3D spheroid growth conditions relative to 2D monolayer",
+        "text": "increase proliferation in 3D spheroid growth conditions relative to 2D monolayer"
+      },
+      "phenotype": "increase proliferation in 3D spheroid growth conditions relative to 2D monolayer"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to Dieldrin",
+        "text": "increase resistance to Dieldrin"
+      },
+      "phenotype": "increase resistance to Dieldrin"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to KRAS inhibitor in 3D spheroid growth conditions",
+        "text": "increase resistance to KRAS inhibitor in 3D spheroid growth conditions"
+      },
+      "phenotype": "increase resistance to KRAS inhibitor in 3D spheroid growth conditions"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to PARP inhibitor olaparib",
+        "text": "increase resistance to PARP inhibitor olaparib"
+      },
+      "phenotype": "increase resistance to PARP inhibitor olaparib"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to mitochondrial inhibitors",
+        "text": "increase resistance to mitochondrial inhibitors"
+      },
+      "phenotype": "increase resistance to mitochondrial inhibitors"
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the drug",
+        "text": "increase resistance to the drug"
+      },
+      "phenotype": "increase resistance to the drug"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the screened drug",
+        "text": "increase resistance to the screened drug"
+      },
+      "phenotype": "increase resistance to the screened drug"
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "sensitivity to Abt-751",
+        "text": "increase sensitivity to Abt-751"
+      },
+      "phenotype": "increase sensitivity to Abt-751"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "sensitivity to KRAS inhibitor in 3D spheroid growth conditions",
+        "text": "increase sensitivity to KRAS inhibitor in 3D spheroid growth conditions"
+      },
+      "phenotype": "increase sensitivity to KRAS inhibitor in 3D spheroid growth conditions"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "sensitivity to alisertib",
+        "text": "increase sensitivity to alisertib"
+      },
+      "phenotype": "increase sensitivity to alisertib"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "sensitivity to blebbistatin",
+        "text": "increase sensitivity to blebbistatin"
+      },
+      "phenotype": "increase sensitivity to blebbistatin"
+    },
+    {
+      "n_screens": 3,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "sensitivity to rigosertib",
+        "text": "increase sensitivity to rigosertib"
+      },
+      "phenotype": "increase sensitivity to rigosertib"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "sensitivity to the KRAS inhibitor ARS-853",
+        "text": "increase sensitivity to the KRAS inhibitor ARS-853"
+      },
+      "phenotype": "increase sensitivity to the KRAS inhibitor ARS-853"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "sensitivity to vinblastine",
+        "text": "increase sensitivity to vinblastine"
+      },
+      "phenotype": "increase sensitivity to vinblastine"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "spheroid cell proliferation",
+        "text": "increase spheroid cell proliferation"
+      },
+      "phenotype": "increase spheroid cell proliferation"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "tf-NBR1 accumulation (defective autophagy)",
+        "text": "increase tf-NBR1 accumulation (defective autophagy)"
+      },
+      "phenotype": "increase tf-NBR1 accumulation (defective autophagy)"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "tf-NBR1 reporter accumulation",
+        "text": "increase tf-NBR1 reporter accumulation"
+      },
+      "phenotype": "increase tf-NBR1 reporter accumulation"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "tf-NBR1 reporter accumulation (defective autophagy)",
+        "text": "increase tf-NBR1 reporter accumulation (defective autophagy)"
+      },
+      "phenotype": "increase tf-NBR1 reporter accumulation (defective autophagy)"
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "venetoclax resistance",
+        "text": "increase venetoclax resistance"
+      },
+      "phenotype": "increase venetoclax resistance"
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased reporter expression.",
+        "reason": "explicit_leading_effect",
+        "target": "BMP-2 signaling activity",
+        "text": "increases BMP-2 signaling activity as measured by increased reporter expression."
+      },
+      "phenotype": "increases BMP-2 signaling activity as measured by increased reporter expression."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "ERAD substrate accumulation (GFP-tagged CYP51A1TM reporter)",
+        "text": "increases ERAD substrate accumulation (GFP-tagged CYP51A1TM reporter)."
+      },
+      "phenotype": "increases ERAD substrate accumulation (GFP-tagged CYP51A1TM reporter)."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased GFP-LC3B reporter signal.",
+        "reason": "explicit_leading_effect",
+        "target": "LC3B protein accumulation",
+        "text": "increases LC3B protein accumulation as measured by increased GFP-LC3B reporter signal."
+      },
+      "phenotype": "increases LC3B protein accumulation as measured by increased GFP-LC3B reporter signal."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by fluorescent-tagged antibody.",
+        "reason": "explicit_leading_effect",
+        "target": "LDLR protein accumulation",
+        "text": "increases LDLR protein accumulation as measured by fluorescent-tagged antibody."
+      },
+      "phenotype": "increases LDLR protein accumulation as measured by fluorescent-tagged antibody."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as indicated by high GFP expression.",
+        "reason": "explicit_leading_effect",
+        "target": "MYC protein accumulation",
+        "text": "increases MYC protein accumulation as indicated by high GFP expression."
+      },
+      "phenotype": "increases MYC protein accumulation as indicated by high GFP expression."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by GFP-tagged NCOA4 in cells.",
+        "reason": "explicit_leading_effect",
+        "target": "NCOA4 protein accumulation",
+        "text": "increases NCOA4 protein accumulation as measured by GFP-tagged NCOA4 in cells."
+      },
+      "phenotype": "increases NCOA4 protein accumulation as measured by GFP-tagged NCOA4 in cells."
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased NFkB reporter expression.",
+        "reason": "explicit_leading_effect",
+        "target": "NFkB signaling activity",
+        "text": "increases NFkB signaling activity as measured by increased NFkB reporter expression."
+      },
+      "phenotype": "increases NFkB signaling activity as measured by increased NFkB reporter expression."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased proliferation.",
+        "reason": "explicit_leading_effect",
+        "target": "Olaparib resistance in BRCA2 knockout cells",
+        "text": "increases Olaparib resistance in BRCA2 knockout cells as measured by increased proliferation."
+      },
+      "phenotype": "increases Olaparib resistance in BRCA2 knockout cells as measured by increased proliferation."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "SQSTM1 protein accumulation",
+        "text": "increases SQSTM1 protein accumulation."
+      },
+      "phenotype": "increases SQSTM1 protein accumulation."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by decreased CFSE fluorescence.",
+        "reason": "explicit_leading_effect",
+        "target": "T cell proliferation",
+        "text": "increases T cell proliferation as measured by decreased CFSE fluorescence."
+      },
+      "phenotype": "increases T cell proliferation as measured by decreased CFSE fluorescence."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased T cell proliferation (CFSE dilution).",
+        "reason": "explicit_leading_effect",
+        "target": "T cell resistance to immunosuppressive factor",
+        "text": "increases T cell resistance to immunosuppressive factor as measured by increased T cell proliferation (CFSE dilution)."
+      },
+      "phenotype": "increases T cell resistance to immunosuppressive factor as measured by increased T cell proliferation (CFSE dilution)."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by GFP-tag and FACS sorting.",
+        "reason": "explicit_leading_effect",
+        "target": "TAX1BP1 protein accumulation",
+        "text": "increases TAX1BP1 protein accumulation as measured by GFP-tag and FACS sorting."
+      },
+      "phenotype": "increases TAX1BP1 protein accumulation as measured by GFP-tag and FACS sorting."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by GFP-tag levels via FACS sorting.",
+        "reason": "explicit_leading_effect",
+        "target": "TAX1BP1 protein accumulation in a FIP200 knockout background",
+        "text": "increases TAX1BP1 protein accumulation in a FIP200 knockout background as measured by GFP-tag levels via FACS sorting."
+      },
+      "phenotype": "increases TAX1BP1 protein accumulation in a FIP200 knockout background as measured by GFP-tag levels via FACS sorting."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased STF-GFP reporter signal.",
+        "reason": "explicit_leading_effect",
+        "target": "Wnt signaling activity",
+        "text": "increases Wnt signaling activity as measured by increased STF-GFP reporter signal."
+      },
+      "phenotype": "increases Wnt signaling activity as measured by increased STF-GFP reporter signal."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "accumulation of EBV latency III surface marker proteins (ICAM-1/CD10)",
+        "text": "increases accumulation of EBV latency III surface marker proteins (ICAM-1/CD10)."
+      },
+      "phenotype": "increases accumulation of EBV latency III surface marker proteins (ICAM-1/CD10)."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "accumulation of autophagy substrates (protein/peptide)",
+        "text": "increases accumulation of autophagy substrates (protein/peptide)."
+      },
+      "phenotype": "increases accumulation of autophagy substrates (protein/peptide)."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "accumulation of the GFP-SIL1 (R-end) fusion protein by inhibiting its degradation",
+        "text": "increases accumulation of the GFP-SIL1 (R-end) fusion protein by inhibiting its degradation."
+      },
+      "phenotype": "increases accumulation of the GFP-SIL1 (R-end) fusion protein by inhibiting its degradation."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "accumulation of the GFP-peptide fusion (GIPLRGLLKRPCLRG*)",
+        "text": "increases accumulation of the GFP-peptide fusion (GIPLRGLLKRPCLRG*)."
+      },
+      "phenotype": "increases accumulation of the GFP-peptide fusion (GIPLRGLLKRPCLRG*)."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "accumulation of the GFP-peptide fusion (GIPLRPHKRLLKGSQYG*) by inhibiting its degradation",
+        "text": "increases accumulation of the GFP-peptide fusion (GIPLRPHKRLLKGSQYG*) by inhibiting its degradation."
+      },
+      "phenotype": "increases accumulation of the GFP-peptide fusion (GIPLRPHKRLLKGSQYG*) by inhibiting its degradation."
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "accumulation of the GFP-peptide fusion by inhibiting its degradation",
+        "text": "increases accumulation of the GFP-peptide fusion by inhibiting its degradation."
+      },
+      "phenotype": "increases accumulation of the GFP-peptide fusion by inhibiting its degradation."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "accumulation of the GFP-peptide fusion protein",
+        "text": "increases accumulation of the GFP-peptide fusion protein."
+      },
+      "phenotype": "increases accumulation of the GFP-peptide fusion protein."
+    },
+    {
+      "n_screens": 4,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "accumulation of the GFP-peptide fusion reporter by inhibiting its degradation",
+        "text": "increases accumulation of the GFP-peptide fusion reporter by inhibiting its degradation."
+      },
+      "phenotype": "increases accumulation of the GFP-peptide fusion reporter by inhibiting its degradation."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "accumulation of the GFP-peptide fusion with the MSRB2 C-terminal R-3 motif",
+        "text": "increases accumulation of the GFP-peptide fusion with the MSRB2 C-terminal R-3 motif."
+      },
+      "phenotype": "increases accumulation of the GFP-peptide fusion with the MSRB2 C-terminal R-3 motif."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "accumulation of the GFP-peptide fusion",
+        "text": "increases accumulation of the GFP-peptide fusion."
+      },
+      "phenotype": "increases accumulation of the GFP-peptide fusion."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "accumulation of the GFP\u2013CDK5R1 (R-end) peptide fusion",
+        "text": "increases accumulation of the GFP\u2013CDK5R1 (R-end) peptide fusion."
+      },
+      "phenotype": "increases accumulation of the GFP\u2013CDK5R1 (R-end) peptide fusion."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "accumulation of the GFP\u2013MAGEA3 (EE-end) fusion protein",
+        "text": "increases accumulation of the GFP\u2013MAGEA3 (EE-end) fusion protein."
+      },
+      "phenotype": "increases accumulation of the GFP\u2013MAGEA3 (EE-end) fusion protein."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "accumulation of the GFP\u2013SAT1 (EE-end) peptide fusion by inhibiting its degradation",
+        "text": "increases accumulation of the GFP\u2013SAT1 (EE-end) peptide fusion by inhibiting its degradation."
+      },
+      "phenotype": "increases accumulation of the GFP\u2013SAT1 (EE-end) peptide fusion by inhibiting its degradation."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "accumulation of the GFP\u2013peptide fusion (GIPLRNLGIR*)",
+        "text": "increases accumulation of the GFP\u2013peptide fusion (GIPLRNLGIR*)."
+      },
+      "phenotype": "increases accumulation of the GFP\u2013peptide fusion (GIPLRNLGIR*)."
+    },
+    {
+      "n_screens": 3,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "accumulation of the GFP\u2013peptide fusion by inhibiting its degradation",
+        "text": "increases accumulation of the GFP\u2013peptide fusion by inhibiting its degradation."
+      },
+      "phenotype": "increases accumulation of the GFP\u2013peptide fusion by inhibiting its degradation."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "accumulation of the GFP\u2013peptide fusion substrate (protein/peptide accumulation)",
+        "text": "increases accumulation of the GFP\u2013peptide fusion substrate (protein/peptide accumulation)."
+      },
+      "phenotype": "increases accumulation of the GFP\u2013peptide fusion substrate (protein/peptide accumulation)."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "accumulation of the GFP\u2013peptide fusion substrate",
+        "text": "increases accumulation of the GFP\u2013peptide fusion substrate."
+      },
+      "phenotype": "increases accumulation of the GFP\u2013peptide fusion substrate."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "accumulation of the NPPB (R-3 motif) GFP-peptide fusion by inhibiting its degradation",
+        "text": "increases accumulation of the NPPB (R-3 motif) GFP-peptide fusion by inhibiting its degradation."
+      },
+      "phenotype": "increases accumulation of the NPPB (R-3 motif) GFP-peptide fusion by inhibiting its degradation."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by the GFP-LC3-RFP reporter.",
+        "reason": "explicit_leading_effect",
+        "target": "autophagic flux",
+        "text": "increases autophagic flux as measured by the GFP-LC3-RFP reporter."
+      },
+      "phenotype": "increases autophagic flux as measured by the GFP-LC3-RFP reporter."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "indicating decreased autophagy flux.",
+        "reason": "explicit_leading_effect",
+        "target": "autophagy reporter GFP accumulation",
+        "text": "increases autophagy reporter GFP accumulation, indicating decreased autophagy flux."
+      },
+      "phenotype": "increases autophagy reporter GFP accumulation, indicating decreased autophagy flux."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "beta-arrestin accumulation at S1PR1",
+        "text": "increases beta-arrestin accumulation at S1PR1."
+      },
+      "phenotype": "increases beta-arrestin accumulation at S1PR1."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in 3D growth conditions",
+        "text": "increases cell proliferation in 3D growth conditions."
+      },
+      "phenotype": "increases cell proliferation in 3D growth conditions."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in a p53 KO mutant background",
+        "text": "increases cell proliferation in a p53 KO mutant background."
+      },
+      "phenotype": "increases cell proliferation in a p53 KO mutant background."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": null,
+        "reason": "ambiguous_main_request",
+        "target": null,
+        "text": "increases cell proliferation in the absence of WNT3A and RSPO1."
+      },
+      "phenotype": "increases cell proliferation in the absence of WNT3A and RSPO1."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in the presence of glycine-arginine dipeptide-repeat proteins (GR) derived from C9ORF72 expansion",
+        "text": "increases cell proliferation in the presence of glycine-arginine dipeptide-repeat proteins (GR) derived from C9ORF72 expansion."
+      },
+      "phenotype": "increases cell proliferation in the presence of glycine-arginine dipeptide-repeat proteins (GR) derived from C9ORF72 expansion."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation in the presence of proline-arginine dipeptide repeats derived from C9ORF72 expansion",
+        "text": "increases cell proliferation in the presence of proline-arginine dipeptide repeats derived from C9ORF72 expansion."
+      },
+      "phenotype": "increases cell proliferation in the presence of proline-arginine dipeptide repeats derived from C9ORF72 expansion."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation under 3D growth conditions in a p53 knockout background",
+        "text": "increases cell proliferation under 3D growth conditions in a p53 knockout background."
+      },
+      "phenotype": "increases cell proliferation under 3D growth conditions in a p53 knockout background."
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cell proliferation",
+        "text": "increases cell proliferation."
+      },
+      "phenotype": "increases cell proliferation."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "cisplatin sensitivity in TP53 knockout cells",
+        "text": "increases cisplatin sensitivity in TP53 knockout cells."
+      },
+      "phenotype": "increases cisplatin sensitivity in TP53 knockout cells."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by decreased cytotoxic response to anti-cancer drugs.",
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance",
+        "text": "increases drug resistance as measured by decreased cytotoxic response to anti-cancer drugs."
+      },
+      "phenotype": "increases drug resistance as measured by decreased cytotoxic response to anti-cancer drugs."
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by decreased cytotoxicity to anti-cancer drugs.",
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance",
+        "text": "increases drug resistance as measured by decreased cytotoxicity to anti-cancer drugs."
+      },
+      "phenotype": "increases drug resistance as measured by decreased cytotoxicity to anti-cancer drugs."
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by decreased drug-induced cytotoxicity.",
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance",
+        "text": "increases drug resistance as measured by decreased drug-induced cytotoxicity."
+      },
+      "phenotype": "increases drug resistance as measured by decreased drug-induced cytotoxicity."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased cell proliferation in response to the chemical.",
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance",
+        "text": "increases drug resistance as measured by increased cell proliferation in response to the chemical."
+      },
+      "phenotype": "increases drug resistance as measured by increased cell proliferation in response to the chemical."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased cell proliferation in the presence of the drug.",
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance",
+        "text": "increases drug resistance as measured by increased cell proliferation in the presence of the drug."
+      },
+      "phenotype": "increases drug resistance as measured by increased cell proliferation in the presence of the drug."
+    },
+    {
+      "n_screens": 7,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased cell proliferation.",
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance",
+        "text": "increases drug resistance as measured by increased cell proliferation."
+      },
+      "phenotype": "increases drug resistance as measured by increased cell proliferation."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased cell survival (decreased cytotoxicity) under anti-cancer drug treatment.",
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance",
+        "text": "increases drug resistance as measured by increased cell survival (decreased cytotoxicity) under anti-cancer drug treatment."
+      },
+      "phenotype": "increases drug resistance as measured by increased cell survival (decreased cytotoxicity) under anti-cancer drug treatment."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased proliferation in the presence of the drug.",
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance",
+        "text": "increases drug resistance as measured by increased proliferation in the presence of the drug."
+      },
+      "phenotype": "increases drug resistance as measured by increased proliferation in the presence of the drug."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": "as measured by increased cell proliferation in PEL cells.",
+        "reason": "ambiguous_main_request",
+        "target": null,
+        "text": "increases drug resistance to Cereblon-modulating agents (lenalidomide, pomalidomide, or CC-122) as measured by increased cell proliferation in PEL cells."
+      },
+      "phenotype": "increases drug resistance to Cereblon-modulating agents (lenalidomide, pomalidomide, or CC-122) as measured by increased cell proliferation in PEL cells."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance to TH588, rescuing cells from its cytotoxic effect",
+        "text": "increases drug resistance to TH588, rescuing cells from its cytotoxic effect."
+      },
+      "phenotype": "increases drug resistance to TH588, rescuing cells from its cytotoxic effect."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by decreased cytotoxicity.",
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance to anti-cancer drugs",
+        "text": "increases drug resistance to anti-cancer drugs as measured by decreased cytotoxicity."
+      },
+      "phenotype": "increases drug resistance to anti-cancer drugs as measured by decreased cytotoxicity."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased cell proliferation under treatment.",
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance to cereblon-modulating agents (LEN, POM, CC-122)",
+        "text": "increases drug resistance to cereblon-modulating agents (LEN, POM, CC-122) as measured by increased cell proliferation under treatment."
+      },
+      "phenotype": "increases drug resistance to cereblon-modulating agents (LEN, POM, CC-122) as measured by increased cell proliferation under treatment."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased cell proliferation.",
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance to cereblon-modulating agents (LEN, POM, CC-122)",
+        "text": "increases drug resistance to cereblon-modulating agents (LEN, POM, CC-122) as measured by increased cell proliferation."
+      },
+      "phenotype": "increases drug resistance to cereblon-modulating agents (LEN, POM, CC-122) as measured by increased cell proliferation."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance to gefitinib",
+        "text": "increases drug resistance to gefitinib."
+      },
+      "phenotype": "increases drug resistance to gefitinib."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased cell proliferation.",
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance to methotrexate",
+        "text": "increases drug resistance to methotrexate as measured by increased cell proliferation."
+      },
+      "phenotype": "increases drug resistance to methotrexate as measured by increased cell proliferation."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance to selumetinib",
+        "text": "increases drug resistance to selumetinib."
+      },
+      "phenotype": "increases drug resistance to selumetinib."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance to the ATR inhibitor VE822",
+        "text": "increases drug resistance to the ATR inhibitor VE822."
+      },
+      "phenotype": "increases drug resistance to the ATR inhibitor VE822."
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance to vemurafenib",
+        "text": "increases drug resistance to vemurafenib."
+      },
+      "phenotype": "increases drug resistance to vemurafenib."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance to venetoclax",
+        "text": "increases drug resistance to venetoclax."
+      },
+      "phenotype": "increases drug resistance to venetoclax."
+    },
+    {
+      "n_screens": 4,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "drug resistance",
+        "text": "increases drug resistance."
+      },
+      "phenotype": "increases drug resistance."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by decreased cell proliferation in temozolomide-treated cells.",
+        "reason": "explicit_leading_effect",
+        "target": "drug sensitivity",
+        "text": "increases drug sensitivity as measured by decreased cell proliferation in temozolomide-treated cells."
+      },
+      "phenotype": "increases drug sensitivity as measured by decreased cell proliferation in temozolomide-treated cells."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by decreased cell proliferation in the presence of temozolomide (TMZ).",
+        "reason": "explicit_leading_effect",
+        "target": "drug sensitivity",
+        "text": "increases drug sensitivity as measured by decreased cell proliferation in the presence of temozolomide (TMZ)."
+      },
+      "phenotype": "increases drug sensitivity as measured by decreased cell proliferation in the presence of temozolomide (TMZ)."
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by decreased cell proliferation in the presence of the drug.",
+        "reason": "explicit_leading_effect",
+        "target": "drug sensitivity",
+        "text": "increases drug sensitivity as measured by decreased cell proliferation in the presence of the drug."
+      },
+      "phenotype": "increases drug sensitivity as measured by decreased cell proliferation in the presence of the drug."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by decreased cell proliferation.",
+        "reason": "explicit_leading_effect",
+        "target": "drug sensitivity",
+        "text": "increases drug sensitivity as measured by decreased cell proliferation."
+      },
+      "phenotype": "increases drug sensitivity as measured by decreased cell proliferation."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by decreased cell proliferation under TMZ treatment.",
+        "reason": "explicit_leading_effect",
+        "target": "drug sensitivity to temozolomide (TMZ)",
+        "text": "increases drug sensitivity to temozolomide (TMZ) as measured by decreased cell proliferation under TMZ treatment."
+      },
+      "phenotype": "increases drug sensitivity to temozolomide (TMZ) as measured by decreased cell proliferation under TMZ treatment."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "hepatitis B surface antigen (HBsAg) cell-surface expression in HBV-integrated cells treated with RG7834",
+        "text": "increases hepatitis B surface antigen (HBsAg) cell-surface expression in HBV-integrated cells treated with RG7834."
+      },
+      "phenotype": "increases hepatitis B surface antigen (HBsAg) cell-surface expression in HBV-integrated cells treated with RG7834."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "hepatitis B virus surface antigen (HBsAg) expression",
+        "text": "increases hepatitis B virus surface antigen (HBsAg) expression."
+      },
+      "phenotype": "increases hepatitis B virus surface antigen (HBsAg) expression."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "melanoma cell resistance to T cell-mediated cytolysis",
+        "text": "increases melanoma cell resistance to T cell-mediated cytolysis."
+      },
+      "phenotype": "increases melanoma cell resistance to T cell-mediated cytolysis."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as indicated by higher mt-mKeima reporter levels.",
+        "reason": "explicit_leading_effect",
+        "target": "mitophagic flux",
+        "text": "increases mitophagic flux as indicated by higher mt-mKeima reporter levels."
+      },
+      "phenotype": "increases mitophagic flux as indicated by higher mt-mKeima reporter levels."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by high mt-mKeima reporter levels.",
+        "reason": "explicit_leading_effect",
+        "target": "mitophagic flux",
+        "text": "increases mitophagic flux as measured by high mt-mKeima reporter levels."
+      },
+      "phenotype": "increases mitophagic flux as measured by high mt-mKeima reporter levels."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "p62 protein accumulation in FIP200 knockout cells",
+        "text": "increases p62 protein accumulation in FIP200 knockout cells."
+      },
+      "phenotype": "increases p62 protein accumulation in FIP200 knockout cells."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by enrichment in the magnetically bound fraction.",
+        "reason": "explicit_leading_effect",
+        "target": "phagocytosis, i.e., uptake of 1.3 \u03bcm superparamagnetic beads",
+        "text": "increases phagocytosis, i.e., uptake of 1.3 \u03bcm superparamagnetic beads as measured by enrichment in the magnetically bound fraction."
+      },
+      "phenotype": "increases phagocytosis, i.e., uptake of 1.3 \u03bcm superparamagnetic beads as measured by enrichment in the magnetically bound fraction."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by elevated HT-LC3 expression.",
+        "reason": "explicit_leading_effect",
+        "target": "phagophore accumulation",
+        "text": "increases phagophore accumulation as measured by elevated HT-LC3 expression."
+      },
+      "phenotype": "increases phagophore accumulation as measured by elevated HT-LC3 expression."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased p62 levels.",
+        "reason": "explicit_leading_effect",
+        "target": "protein accumulation",
+        "text": "increases protein accumulation as measured by increased p62 levels."
+      },
+      "phenotype": "increases protein accumulation as measured by increased p62 levels."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased GFP reporter due to decreased autophagy flux.",
+        "reason": "explicit_leading_effect",
+        "target": "protein/peptide accumulation",
+        "text": "increases protein/peptide accumulation as measured by increased GFP reporter due to decreased autophagy flux."
+      },
+      "phenotype": "increases protein/peptide accumulation as measured by increased GFP reporter due to decreased autophagy flux."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "protein/peptide accumulation by inhibiting degradation of the GFP\u2013peptide fusion reporter",
+        "text": "increases protein/peptide accumulation by inhibiting degradation of the GFP\u2013peptide fusion reporter."
+      },
+      "phenotype": "increases protein/peptide accumulation by inhibiting degradation of the GFP\u2013peptide fusion reporter."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "protein/peptide accumulation of the MGAT2 (R-3 motif) GFP-peptide fusion (i.e., inhibits its degradation)",
+        "text": "increases protein/peptide accumulation of the MGAT2 (R-3 motif) GFP-peptide fusion (i.e., inhibits its degradation)."
+      },
+      "phenotype": "increases protein/peptide accumulation of the MGAT2 (R-3 motif) GFP-peptide fusion (i.e., inhibits its degradation)."
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased cell proliferation.",
+        "reason": "explicit_leading_effect",
+        "target": "resistance to Cereblon-modulating agents (lenalidomide, pomalidomide, CC-122)",
+        "text": "increases resistance to Cereblon-modulating agents (lenalidomide, pomalidomide, CC-122) as measured by increased cell proliferation."
+      },
+      "phenotype": "increases resistance to Cereblon-modulating agents (lenalidomide, pomalidomide, CC-122) as measured by increased cell proliferation."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to DNMDP-induced cancer cell killing",
+        "text": "increases resistance to DNMDP-induced cancer cell killing."
+      },
+      "phenotype": "increases resistance to DNMDP-induced cancer cell killing."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased cell proliferation/survival in virus-exposed cells.",
+        "reason": "explicit_leading_effect",
+        "target": "resistance to Ebola virus infection",
+        "text": "increases resistance to Ebola virus infection as measured by increased cell proliferation/survival in virus-exposed cells."
+      },
+      "phenotype": "increases resistance to Ebola virus infection as measured by increased cell proliferation/survival in virus-exposed cells."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased cell proliferation during espZ-mutant EHEC infection.",
+        "reason": "explicit_leading_effect",
+        "target": "resistance to Enterohemorrhagic Escherichia coli",
+        "text": "increases resistance to Enterohemorrhagic Escherichia coli, as measured by increased cell proliferation during espZ-mutant EHEC infection."
+      },
+      "phenotype": "increases resistance to Enterohemorrhagic Escherichia coli, as measured by increased cell proliferation during espZ-mutant EHEC infection."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by protection of H1-HeLa+CHDR3 cells.",
+        "reason": "explicit_leading_effect",
+        "target": "resistance to Enterovirus 68 infection",
+        "text": "increases resistance to Enterovirus 68 infection as measured by protection of H1-HeLa+CHDR3 cells."
+      },
+      "phenotype": "increases resistance to Enterovirus 68 infection as measured by protection of H1-HeLa+CHDR3 cells."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to HCoV-229E infection",
+        "text": "increases resistance to HCoV-229E infection."
+      },
+      "phenotype": "increases resistance to HCoV-229E infection."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to HCoV-OC43 infection",
+        "text": "increases resistance to HCoV-OC43 infection."
+      },
+      "phenotype": "increases resistance to HCoV-OC43 infection."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to IAV infection",
+        "text": "increases resistance to IAV infection."
+      },
+      "phenotype": "increases resistance to IAV infection."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to Olaparib in a BRCA2 mutant background",
+        "text": "increases resistance to Olaparib in a BRCA2 mutant background."
+      },
+      "phenotype": "increases resistance to Olaparib in a BRCA2 mutant background."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased survival of infected Huh7.5.1 cells.",
+        "reason": "explicit_leading_effect",
+        "target": "resistance to SARS-CoV-2 infection",
+        "text": "increases resistance to SARS-CoV-2 infection, as measured by increased survival of infected Huh7.5.1 cells."
+      },
+      "phenotype": "increases resistance to SARS-CoV-2 infection, as measured by increased survival of infected Huh7.5.1 cells."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by improved cell growth in the presence of Salmonella enterica serovar Typhimurium.",
+        "reason": "explicit_leading_effect",
+        "target": "resistance to Salmonella-induced cytotoxicity",
+        "text": "increases resistance to Salmonella-induced cytotoxicity as measured by improved cell growth in the presence of Salmonella enterica serovar Typhimurium."
+      },
+      "phenotype": "increases resistance to Salmonella-induced cytotoxicity as measured by improved cell growth in the presence of Salmonella enterica serovar Typhimurium."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by improved growth in the presence of Salmonella enterica serovar Typhimurium.",
+        "reason": "explicit_leading_effect",
+        "target": "resistance to Salmonella-induced cytotoxicity",
+        "text": "increases resistance to Salmonella-induced cytotoxicity as measured by improved growth in the presence of Salmonella enterica serovar Typhimurium."
+      },
+      "phenotype": "increases resistance to Salmonella-induced cytotoxicity as measured by improved growth in the presence of Salmonella enterica serovar Typhimurium."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to VSV-H18 infection (bat IAV haemagglutinin-expressing virus)",
+        "text": "increases resistance to VSV-H18 infection (bat IAV haemagglutinin-expressing virus)."
+      },
+      "phenotype": "increases resistance to VSV-H18 infection (bat IAV haemagglutinin-expressing virus)."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased cell proliferation.",
+        "reason": "explicit_leading_effect",
+        "target": "resistance to Zika virus",
+        "text": "increases resistance to Zika virus as measured by increased cell proliferation."
+      },
+      "phenotype": "increases resistance to Zika virus as measured by increased cell proliferation."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to a trametinib/palbociclib combination therapy",
+        "text": "increases resistance to a trametinib/palbociclib combination therapy."
+      },
+      "phenotype": "increases resistance to a trametinib/palbociclib combination therapy."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to anti-cancer drug-induced cytotoxicity",
+        "text": "increases resistance to anti-cancer drug-induced cytotoxicity."
+      },
+      "phenotype": "increases resistance to anti-cancer drug-induced cytotoxicity."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to anti-cancer drugs (reduced drug cytotoxicity)",
+        "text": "increases resistance to anti-cancer drugs (reduced drug cytotoxicity)."
+      },
+      "phenotype": "increases resistance to anti-cancer drugs (reduced drug cytotoxicity)."
+    },
+    {
+      "n_screens": 3,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by decreased drug-induced cytotoxicity.",
+        "reason": "explicit_leading_effect",
+        "target": "resistance to anti-cancer drugs",
+        "text": "increases resistance to anti-cancer drugs as measured by decreased drug-induced cytotoxicity."
+      },
+      "phenotype": "increases resistance to anti-cancer drugs as measured by decreased drug-induced cytotoxicity."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased cell survival under drug treatment.",
+        "reason": "explicit_leading_effect",
+        "target": "resistance to anti-cancer drugs",
+        "text": "increases resistance to anti-cancer drugs as measured by increased cell survival under drug treatment."
+      },
+      "phenotype": "increases resistance to anti-cancer drugs as measured by increased cell survival under drug treatment."
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by reduced drug-induced cytotoxicity.",
+        "reason": "explicit_leading_effect",
+        "target": "resistance to anti-cancer drugs",
+        "text": "increases resistance to anti-cancer drugs as measured by reduced drug-induced cytotoxicity."
+      },
+      "phenotype": "increases resistance to anti-cancer drugs as measured by reduced drug-induced cytotoxicity."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to anti-cancer drugs by reducing drug-induced cytotoxicity",
+        "text": "increases resistance to anti-cancer drugs by reducing drug-induced cytotoxicity."
+      },
+      "phenotype": "increases resistance to anti-cancer drugs by reducing drug-induced cytotoxicity."
+    },
+    {
+      "n_screens": 4,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to anti-cancer drugs",
+        "text": "increases resistance to anti-cancer drugs."
+      },
+      "phenotype": "increases resistance to anti-cancer drugs."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased cell proliferation under drug treatment in PEL cells.",
+        "reason": "explicit_leading_effect",
+        "target": "resistance to cereblon-modulating agents (lenalidomide, pomalidomide, CC-122)",
+        "text": "increases resistance to cereblon-modulating agents (lenalidomide, pomalidomide, CC-122) as measured by increased cell proliferation under drug treatment in PEL cells."
+      },
+      "phenotype": "increases resistance to cereblon-modulating agents (lenalidomide, pomalidomide, CC-122) as measured by increased cell proliferation under drug treatment in PEL cells."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to cisplatin",
+        "text": "increases resistance to cisplatin."
+      },
+      "phenotype": "increases resistance to cisplatin."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by decreased viral HA expression.",
+        "reason": "explicit_leading_effect",
+        "target": "resistance to influenza infection",
+        "text": "increases resistance to influenza infection as measured by decreased viral HA expression."
+      },
+      "phenotype": "increases resistance to influenza infection as measured by decreased viral HA expression."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased cell proliferation.",
+        "reason": "explicit_leading_effect",
+        "target": "resistance to interferon gamma",
+        "text": "increases resistance to interferon gamma as measured by increased cell proliferation."
+      },
+      "phenotype": "increases resistance to interferon gamma as measured by increased cell proliferation."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased growth in the presence of venom.",
+        "reason": "explicit_leading_effect",
+        "target": "resistance to jellyfish venom",
+        "text": "increases resistance to jellyfish venom as measured by increased growth in the presence of venom."
+      },
+      "phenotype": "increases resistance to jellyfish venom as measured by increased growth in the presence of venom."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to palbociclib",
+        "text": "increases resistance to palbociclib."
+      },
+      "phenotype": "increases resistance to palbociclib."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to rhinovirus C infection, conferring a protective effect in H1-HeLa+CHDR3 cells",
+        "text": "increases resistance to rhinovirus C infection, conferring a protective effect in H1-HeLa+CHDR3 cells."
+      },
+      "phenotype": "increases resistance to rhinovirus C infection, conferring a protective effect in H1-HeLa+CHDR3 cells."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased cell survival.",
+        "reason": "explicit_leading_effect",
+        "target": "resistance to rituximab-mediated complement-dependent cytotoxicity",
+        "text": "increases resistance to rituximab-mediated complement-dependent cytotoxicity, as measured by increased cell survival."
+      },
+      "phenotype": "increases resistance to rituximab-mediated complement-dependent cytotoxicity, as measured by increased cell survival."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the AR inhibitor apalutamide",
+        "text": "increases resistance to the AR inhibitor apalutamide."
+      },
+      "phenotype": "increases resistance to the AR inhibitor apalutamide."
+    },
+    {
+      "n_screens": 3,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the ATR inhibitor AZD6738",
+        "text": "increases resistance to the ATR inhibitor AZD6738."
+      },
+      "phenotype": "increases resistance to the ATR inhibitor AZD6738."
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the ATR inhibitor VE822",
+        "text": "increases resistance to the ATR inhibitor VE822."
+      },
+      "phenotype": "increases resistance to the ATR inhibitor VE822."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased cell proliferation under JQ1 treatment.",
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the BRD4 inhibitor JQ1",
+        "text": "increases resistance to the BRD4 inhibitor JQ1 as measured by increased cell proliferation under JQ1 treatment."
+      },
+      "phenotype": "increases resistance to the BRD4 inhibitor JQ1 as measured by increased cell proliferation under JQ1 treatment."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased proliferation.",
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the PARP inhibitor Talazoparib in RNASEH2 mutant cells",
+        "text": "increases resistance to the PARP inhibitor Talazoparib in RNASEH2 mutant cells, as measured by increased proliferation."
+      },
+      "phenotype": "increases resistance to the PARP inhibitor Talazoparib in RNASEH2 mutant cells, as measured by increased proliferation."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased proliferation under drug treatment.",
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the PARP inhibitor talazoparib in RNASEH2-mutant cells",
+        "text": "increases resistance to the PARP inhibitor talazoparib in RNASEH2-mutant cells, as measured by increased proliferation under drug treatment."
+      },
+      "phenotype": "increases resistance to the PARP inhibitor talazoparib in RNASEH2-mutant cells, as measured by increased proliferation under drug treatment."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to the anti-CD20 monoclonal antibody rituximab under complement-dependent cytotoxicity conditions",
+        "text": "increases resistance to the anti-CD20 monoclonal antibody rituximab under complement-dependent cytotoxicity conditions."
+      },
+      "phenotype": "increases resistance to the anti-CD20 monoclonal antibody rituximab under complement-dependent cytotoxicity conditions."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "unknown",
+        "qualifier": "evidenced by decreased drug sensitivity.",
+        "reason": "ambiguous_main_request",
+        "target": null,
+        "text": "increases resistance to the chemotherapy drug combination erlotinib and THZ-1, evidenced by decreased drug sensitivity."
+      },
+      "phenotype": "increases resistance to the chemotherapy drug combination erlotinib and THZ-1, evidenced by decreased drug sensitivity."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to trametinib",
+        "text": "increases resistance to trametinib."
+      },
+      "phenotype": "increases resistance to trametinib."
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased cell proliferation.",
+        "reason": "explicit_leading_effect",
+        "target": "resistance to typhoid toxin",
+        "text": "increases resistance to typhoid toxin as measured by increased cell proliferation."
+      },
+      "phenotype": "increases resistance to typhoid toxin as measured by increased cell proliferation."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased cell survival/proliferation under treatment.",
+        "reason": "explicit_leading_effect",
+        "target": "resistance to vemurafenib",
+        "text": "increases resistance to vemurafenib as measured by increased cell survival/proliferation under treatment."
+      },
+      "phenotype": "increases resistance to vemurafenib as measured by increased cell survival/proliferation under treatment."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to vemurafenib in A-375 cells",
+        "text": "increases resistance to vemurafenib in A-375 cells."
+      },
+      "phenotype": "increases resistance to vemurafenib in A-375 cells."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to vemurafenib",
+        "text": "increases resistance to vemurafenib."
+      },
+      "phenotype": "increases resistance to vemurafenib."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to venetoclax",
+        "text": "increases resistance to venetoclax."
+      },
+      "phenotype": "increases resistance to venetoclax."
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to viral infection",
+        "text": "increases resistance to viral infection."
+      },
+      "phenotype": "increases resistance to viral infection."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as indicated by enrichment among the top hits.",
+        "reason": "explicit_leading_effect",
+        "target": "resistance to virus",
+        "text": "increases resistance to virus as indicated by enrichment among the top hits."
+      },
+      "phenotype": "increases resistance to virus as indicated by enrichment among the top hits."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased cell proliferation after repeated rounds of infection.",
+        "reason": "explicit_leading_effect",
+        "target": "resistance to virus",
+        "text": "increases resistance to virus as measured by increased cell proliferation after repeated rounds of infection."
+      },
+      "phenotype": "increases resistance to virus as measured by increased cell proliferation after repeated rounds of infection."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased cell proliferation after two rounds of infection.",
+        "reason": "explicit_leading_effect",
+        "target": "resistance to virus",
+        "text": "increases resistance to virus as measured by increased cell proliferation after two rounds of infection."
+      },
+      "phenotype": "increases resistance to virus as measured by increased cell proliferation after two rounds of infection."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased cell proliferation.",
+        "reason": "explicit_leading_effect",
+        "target": "resistance to virus",
+        "text": "increases resistance to virus as measured by increased cell proliferation."
+      },
+      "phenotype": "increases resistance to virus as measured by increased cell proliferation."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to virus infection",
+        "text": "increases resistance to virus infection."
+      },
+      "phenotype": "increases resistance to virus infection."
+    },
+    {
+      "n_screens": 2,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "resistance to virus",
+        "text": "increases resistance to virus."
+      },
+      "phenotype": "increases resistance to virus."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased cell proliferation.",
+        "reason": "explicit_leading_effect",
+        "target": "selumetinib resistance",
+        "text": "increases selumetinib resistance as measured by increased cell proliferation."
+      },
+      "phenotype": "increases selumetinib resistance as measured by increased cell proliferation."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by decreased viability and increased apoptosis.",
+        "reason": "explicit_leading_effect",
+        "target": "sensitivity to CDK9 inhibition",
+        "text": "increases sensitivity to CDK9 inhibition, as measured by decreased viability and increased apoptosis."
+      },
+      "phenotype": "increases sensitivity to CDK9 inhibition, as measured by decreased viability and increased apoptosis."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased apoptosis (decreased viability).",
+        "reason": "explicit_leading_effect",
+        "target": "sensitivity to MCL1 inhibition",
+        "text": "increases sensitivity to MCL1 inhibition as measured by increased apoptosis (decreased viability)."
+      },
+      "phenotype": "increases sensitivity to MCL1 inhibition as measured by increased apoptosis (decreased viability)."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by decreased cell proliferation in the presence of Olaparib.",
+        "reason": "explicit_leading_effect",
+        "target": "sensitivity to Olaparib",
+        "text": "increases sensitivity to Olaparib as measured by decreased cell proliferation in the presence of Olaparib."
+      },
+      "phenotype": "increases sensitivity to Olaparib as measured by decreased cell proliferation in the presence of Olaparib."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "sensitivity to asparaginase",
+        "text": "increases sensitivity to asparaginase."
+      },
+      "phenotype": "increases sensitivity to asparaginase."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by decreased cell proliferation.",
+        "reason": "explicit_leading_effect",
+        "target": "sensitivity to high oxygen",
+        "text": "increases sensitivity to high oxygen as measured by decreased cell proliferation."
+      },
+      "phenotype": "increases sensitivity to high oxygen as measured by decreased cell proliferation."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by decreased cell proliferation.",
+        "reason": "explicit_leading_effect",
+        "target": "sensitivity to temozolomide",
+        "text": "increases sensitivity to temozolomide, as measured by decreased cell proliferation."
+      },
+      "phenotype": "increases sensitivity to temozolomide, as measured by decreased cell proliferation."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "sensitivity to the PRMT5 inhibitor EPZ015666",
+        "text": "increases sensitivity to the PRMT5 inhibitor EPZ015666."
+      },
+      "phenotype": "increases sensitivity to the PRMT5 inhibitor EPZ015666."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "sensitivity to the erlotinib+THZ-1 drug combination",
+        "text": "increases sensitivity to the erlotinib+THZ-1 drug combination."
+      },
+      "phenotype": "increases sensitivity to the erlotinib+THZ-1 drug combination."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by enrichment in the presence of sorafenib.",
+        "reason": "explicit_leading_effect",
+        "target": "sorafenib resistance",
+        "text": "increases sorafenib resistance as measured by enrichment in the presence of sorafenib."
+      },
+      "phenotype": "increases sorafenib resistance as measured by enrichment in the presence of sorafenib."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by decreased cell proliferation in the presence of TMZ.",
+        "reason": "explicit_leading_effect",
+        "target": "temozolomide (TMZ) sensitivity",
+        "text": "increases temozolomide (TMZ) sensitivity as measured by decreased cell proliferation in the presence of TMZ."
+      },
+      "phenotype": "increases temozolomide (TMZ) sensitivity as measured by decreased cell proliferation in the presence of TMZ."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by decreased cell proliferation in the presence of temozolomide.",
+        "reason": "explicit_leading_effect",
+        "target": "temozolomide sensitivity",
+        "text": "increases temozolomide sensitivity as measured by decreased cell proliferation in the presence of temozolomide."
+      },
+      "phenotype": "increases temozolomide sensitivity as measured by decreased cell proliferation in the presence of temozolomide."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "the proportion of EBV latency III cells (ICAM-1high/CD10low)",
+        "text": "increases the proportion of EBV latency III cells (ICAM-1high/CD10low)."
+      },
+      "phenotype": "increases the proportion of EBV latency III cells (ICAM-1high/CD10low)."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "venetoclax resistance",
+        "text": "increases venetoclax resistance."
+      },
+      "phenotype": "increases venetoclax resistance."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": "as measured by increased viral reporter signal in FACS-sorted cells.",
+        "reason": "explicit_leading_effect",
+        "target": "viral infection",
+        "text": "increases viral infection as measured by increased viral reporter signal in FACS-sorted cells."
+      },
+      "phenotype": "increases viral infection as measured by increased viral reporter signal in FACS-sorted cells."
+    },
+    {
+      "n_screens": 1,
+      "parsed": {
+        "polarity": "increase",
+        "qualifier": null,
+        "reason": "explicit_leading_effect",
+        "target": "yellow fever virus infection despite IFN-\u03b1 treatment",
+        "text": "increases yellow fever virus infection despite IFN-\u03b1 treatment."
+      },
+      "phenotype": "increases yellow fever virus infection despite IFN-\u03b1 treatment."
+    }
+  ],
+  "validation_pair_comparisons": 47,
+  "validation_publications": 5,
+  "validation_unique_screens": 82
+}

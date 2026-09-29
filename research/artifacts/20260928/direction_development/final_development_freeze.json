@@ -1,0 +1,77 @@
+{
+  "configs": {
+    "P0_baseline_D3": {
+      "base": {
+        "conditional": true,
+        "exposure_power": 0.5,
+        "retrieval": 0.0,
+        "signed": true,
+        "strength": 10.0,
+        "study_balance": false
+      },
+      "effect_prior": false,
+      "retrieval_k": 25,
+      "retrieval_weight": 0.0
+    }
+  },
+  "data_sha256": "25e00c380358486137d1f25c490db98d007dfc5230f8ad502276dc6ccc741a5c",
+  "dependencies": {
+    "engine/analysis/direction_development.py": "abb52f655307cd2cc11513de661f5beee529cd1a8c813b4ba151597f2fae9613",
+    "engine/splicr/benchmark.py": "cdb513f7ad0ae0a26f86cd33fb99aba46b6c882293d51b5e28eb9a3526fbde2b",
+    "engine/splicr/context_ranking.py": "e009f05bf4948af8a91bda3f2e2c4e23f57ff17a36070c4ce5d6484d51564fdc",
+    "engine/splicr/direction_ranking.py": "6793acd2feb895caa0ba849a706f7355676d82a39b835e67cdba417cbed634bd",
+    "engine/splicr/effect_direction.py": "b249e25742919a09bb66816d0dd209f9841fb694d54ec7bca69febb4353d6856",
+    "engine/splicr/prescreen.py": "cdfb02576fb89cc67807d00672b438db6f07d5698efcc64c53ad13f0853a9683",
+    "engine/splicr/research_protocol.py": "2287b13c5d0946a1e2e92e9ad470113abe5b325fe38692e6aa87469a09b91264"
+  },
+  "interpretation": "held-publication CV selects; exposed temporal validation confirms/describes; no further tuning or superiority claim",
+  "no_public_test_access": true,
+  "paired_vs_D3": {
+    "P0_baseline_D3": {
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "mean": 0.0,
+      "n_publications": 34,
+      "n_screens": 218,
+      "repeats": 4000,
+      "seed": 20260928,
+      "unit": "publication"
+    }
+  },
+  "promotion_status": "research_only",
+  "selected": "P0_baseline_D3",
+  "validation_results": {
+    "P0_baseline_D3": {
+      "ci95": [
+        0.03134687079210054,
+        0.21587097716002918
+      ],
+      "configuration": {
+        "base": {
+          "conditional": true,
+          "exposure_power": 0.5,
+          "retrieval": 0.0,
+          "signed": true,
+          "strength": 10.0,
+          "study_balance": false
+        },
+        "effect_prior": false,
+        "retrieval_k": 25,
+        "retrieval_weight": 0.0
+      },
+      "fit_seconds": 19.02364195906557,
+      "mean": 0.09945010274065483,
+      "measured_at100": 52.472477064220186,
+      "n_publications": 34,
+      "n_screens": 218,
+      "prediction_seconds": 1.5490570000838488,
+      "repeats": 4000,
+      "seed": 20260928,
+      "slot_precision_at100": 0.0948623853211009,
+      "unit": "publication",
+      "wrong_direction_fraction_returned": 0.034954128440366966
+    }
+  }
+}

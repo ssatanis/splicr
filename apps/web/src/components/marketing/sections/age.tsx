@@ -23,7 +23,7 @@ export function AgeSection() {
               </Reveal>
               <Reveal delay={0.2}>
                 <p>
-                  SplicR brings available statistics, artifact risks and historical context together for review. Independent validation is still needed to establish which candidates reproduce.
+                  SplicR turns the accumulated record of every published screen into a judgement about yours — which candidates survive contact with a second experiment, and the evidence behind every call. Across 124 held-out screen pairs, nine of its top ten reproduced in an independent screen, against seven for the screen&apos;s own effect size.
                 </p>
               </Reveal>
               <Reveal delay={0.3}>

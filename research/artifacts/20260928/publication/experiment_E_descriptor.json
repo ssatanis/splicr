@@ -1,0 +1,46 @@
+{
+  "artifacts": {
+    "research/artifacts/20260928/direction_development/validation/P0_baseline_D3_predictions.json": "90e098b67ac6569a80c8e90a3ac690fe29d1390a3a536fe3ec848c6f3c7e5840",
+    "research/artifacts/20260928/direction_development/validation/P0_baseline_D3_screens.json": "f525af81719338aa33c589667d48e3ecb8b2c472cd6286444d92659cef62c6e5",
+    "research/artifacts/20260928/publication/experiment_E_summary.json": "3bba4b721b644d402464e547e8503d06093d06c42412e5a6d64bdcfaf4e43a29"
+  },
+  "calibration_status": "not_fitted",
+  "cohort": {
+    "assaybench_version": "0.2.0",
+    "dataset_sha256": "25e00c380358486137d1f25c490db98d007dfc5230f8ad502276dc6ccc741a5c",
+    "metric_sha256": "d1b638c9aa3ee1cbd984028595b7af009f00736d203fa9cc10405732d182fbae",
+    "n_publications": 34,
+    "n_screens": 218
+  },
+  "configuration": {
+    "conditional": true,
+    "exposure_power": 0.5,
+    "kind": "prior",
+    "requested_effect_prior": false,
+    "signed": true,
+    "strength": 10.0
+  },
+  "evaluation_kind": "validation_selection",
+  "experiment_id": "20260928_experiment_E",
+  "input_contract": "metadata_only",
+  "notes": "Requested-effect polarity conditioning. Cross-validation selected the unconditioned baseline P0_baseline_D3; the polarity prior scored -0.007931 [-0.023172, +0.004531] against it. The parser separates all 47 metadata-matched increase/decrease comparisons, which is a representation improvement, not an established ranking improvement.",
+  "predictions": "research/artifacts/20260928/direction_development/validation/P0_baseline_D3_predictions.json",
+  "promotion_status": "research_only",
+  "provenance": {
+    "assaybench_version": "0.2.0",
+    "data_sha256": "25e00c380358486137d1f25c490db98d007dfc5230f8ad502276dc6ccc741a5c",
+    "git_revision": "25e0feec0b226158b732b3a662383a8f62529c0c",
+    "metric_sha256": "d1b638c9aa3ee1cbd984028595b7af009f00736d203fa9cc10405732d182fbae",
+    "model_code": "engine/splicr/direction_ranking.py",
+    "model_code_sha256": "6793acd2feb895caa0ba849a706f7355676d82a39b835e67cdba417cbed634bd",
+    "modern_model_memorization_risk": false,
+    "public_test_accessed": false,
+    "seed": 20260928
+  },
+  "schema_version": 1,
+  "screen_results": "research/artifacts/20260928/direction_development/validation/P0_baseline_D3_screens.json",
+  "split": "validation_2021",
+  "summary": "research/artifacts/20260928/publication/experiment_E_summary.json",
+  "task": "pre_screen_prediction",
+  "validation_probability": null
+}

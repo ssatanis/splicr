@@ -1,0 +1,72 @@
+{
+  "additional_parameter_search": false,
+  "configs": {
+    "P0_baseline_D3": {
+      "base": {
+        "conditional": true,
+        "exposure_power": 0.5,
+        "retrieval": 0.0,
+        "signed": true,
+        "strength": 10.0,
+        "study_balance": false
+      },
+      "effect_prior": false,
+      "retrieval_k": 25,
+      "retrieval_weight": 0.0
+    },
+    "P1_requested_effect_prior": {
+      "base": {
+        "conditional": true,
+        "exposure_power": 0.5,
+        "retrieval": 0.0,
+        "signed": true,
+        "strength": 10.0,
+        "study_balance": false
+      },
+      "effect_prior": true,
+      "retrieval_k": 25,
+      "retrieval_weight": 0.0
+    },
+    "P2_requested_effect_transfer": {
+      "base": {
+        "conditional": true,
+        "exposure_power": 0.5,
+        "retrieval": 0.0,
+        "signed": true,
+        "strength": 10.0,
+        "study_balance": false
+      },
+      "effect_prior": true,
+      "retrieval_k": 25,
+      "retrieval_weight": 0.5
+    }
+  },
+  "created_utc": "2026-09-28T15:32:25.912103+00:00",
+  "data_sha256": "25e00c380358486137d1f25c490db98d007dfc5230f8ad502276dc6ccc741a5c",
+  "dependencies": {
+    "engine/analysis/direction_development.py": "abb52f655307cd2cc11513de661f5beee529cd1a8c813b4ba151597f2fae9613",
+    "engine/splicr/benchmark.py": "cdb513f7ad0ae0a26f86cd33fb99aba46b6c882293d51b5e28eb9a3526fbde2b",
+    "engine/splicr/context_ranking.py": "e009f05bf4948af8a91bda3f2e2c4e23f57ff17a36070c4ce5d6484d51564fdc",
+    "engine/splicr/direction_ranking.py": "6793acd2feb895caa0ba849a706f7355676d82a39b835e67cdba417cbed634bd",
+    "engine/splicr/effect_direction.py": "b249e25742919a09bb66816d0dd209f9841fb694d54ec7bca69febb4353d6856",
+    "engine/splicr/prescreen.py": "cdfb02576fb89cc67807d00672b438db6f07d5698efcc64c53ad13f0853a9683",
+    "engine/splicr/research_protocol.py": "2287b13c5d0946a1e2e92e9ad470113abe5b325fe38692e6aa87469a09b91264"
+  },
+  "experiment": "requested-effect polarity, 3 fixed configs",
+  "hypothesis": "requested increase/decrease is lost when only screen_type conditions donors; preserve phenotype target and polarity",
+  "limitations": "validation diagnostics motivated hypothesis; confirmatory validation is therefore exposed development data; publication identifiers do not prove experiment independence; prior public-test exposure disclosed",
+  "metric_sha256": "d1b638c9aa3ee1cbd984028595b7af009f00736d203fa9cc10405732d182fbae",
+  "modern_external_annotations": false,
+  "root_dependency_freeze_required": true,
+  "selection": "3 GroupKFold folds over training source_id; highest screen-mean official AnDCG@100; stable config order breaks ties toward baseline; fit selected candidate + D3 on all training and confirm on validation",
+  "target_library_input": false,
+  "test_access": false,
+  "threads": 2,
+  "versions": {
+    "assaybench": "0.2.0",
+    "numpy": "1.26.4",
+    "pyarrow": "25.0.1",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.17.1"
+  }
+}

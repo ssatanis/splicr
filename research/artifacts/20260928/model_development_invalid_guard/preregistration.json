@@ -1,0 +1,160 @@
+{
+  "created_utc": "2026-09-28T14:29:30.094140+00:00",
+  "experiment_family": "20260928_context_ranking",
+  "expert_hashes": {
+    "gemini-3-flash": "1eef9fbeda42df8817629cf47c27fe6451bffd7d3de92034e89ebf16e1d9d459",
+    "gemini-3-pro": "4ddc041c7b57558bc534f3479476be835c011e497ea2d66f1c601908bb23b7bb",
+    "gemini-3.1-pro": "ff3c67e97859cbfa55eecacee498cdec3cead27fe57c3b6bd2234cb9e76c506f",
+    "gpt-5.2": "56069c522733c95fcb10b96d7839636a4a12ceb46f1dab4d5c6c9749f2edfdb5",
+    "gpt-5.4": "af487d74d311a26a4b701430ee3da17667eef3fb97e6bd8e12cd935230fc6239"
+  },
+  "grouping": "source_id; no publication overlap; vocabulary and evidence fit per outer training fold; own-publication historical labels excluded from training features",
+  "historical_public_test_exposure": true,
+  "hypotheses": {
+    "C0_rrf60": {
+      "constant": 60,
+      "kind": "rrf"
+    },
+    "C1_rrf10": {
+      "constant": 10,
+      "kind": "rrf"
+    },
+    "D0_global_shrink": {
+      "config": {
+        "conditional": false,
+        "exposure_power": 0,
+        "retrieval": 0.0,
+        "signed": false,
+        "strength": 10.0,
+        "study_balance": false
+      },
+      "kind": "prior"
+    },
+    "D1_global_coverage": {
+      "config": {
+        "conditional": false,
+        "exposure_power": 0.5,
+        "retrieval": 0.0,
+        "signed": false,
+        "strength": 10.0,
+        "study_balance": false
+      },
+      "kind": "prior"
+    },
+    "D2_context_coverage": {
+      "config": {
+        "conditional": true,
+        "exposure_power": 0.5,
+        "retrieval": 0.0,
+        "signed": false,
+        "strength": 10.0,
+        "study_balance": false
+      },
+      "kind": "prior"
+    },
+    "D3_context_signed": {
+      "config": {
+        "conditional": true,
+        "exposure_power": 0.5,
+        "retrieval": 0.0,
+        "signed": true,
+        "strength": 10.0,
+        "study_balance": false
+      },
+      "kind": "prior"
+    },
+    "D4_context_exposure": {
+      "config": {
+        "conditional": true,
+        "exposure_power": 1,
+        "retrieval": 0.0,
+        "signed": true,
+        "strength": 10.0,
+        "study_balance": false
+      },
+      "kind": "prior"
+    },
+    "D5_study_context": {
+      "config": {
+        "conditional": true,
+        "exposure_power": 0.5,
+        "retrieval": 0.0,
+        "signed": true,
+        "strength": 2,
+        "study_balance": true
+      },
+      "kind": "prior"
+    },
+    "D6_lexical_transfer": {
+      "config": {
+        "conditional": true,
+        "exposure_power": 0.5,
+        "retrieval": 0.5,
+        "signed": true,
+        "strength": 10.0,
+        "study_balance": false
+      },
+      "kind": "prior"
+    },
+    "E0_external_signed": {
+      "config": {
+        "history": false,
+        "objective": "regression"
+      },
+      "kind": "ranker"
+    },
+    "E1_history_signed": {
+      "config": {
+        "history": true,
+        "objective": "regression"
+      },
+      "kind": "ranker"
+    },
+    "E2_history_lambdarank": {
+      "config": {
+        "history": true,
+        "objective": "lambdarank"
+      },
+      "kind": "ranker"
+    },
+    "E3_history_coverage": {
+      "config": {
+        "coverage": true,
+        "history": true,
+        "objective": "regression"
+      },
+      "kind": "ranker"
+    },
+    "E4_augmented_signed": {
+      "config": {
+        "augment": true,
+        "coverage": true,
+        "history": true,
+        "objective": "regression"
+      },
+      "kind": "ranker"
+    }
+  },
+  "provenance": {
+    "advanced_runner_sha256": "25359a1f97c0018a65b31eefd8944b96e564e02864df60ada2f57f204793f6a7",
+    "assaybench_version": "0.2.0",
+    "context_ranking_sha256": "d33488b07bcb35217e354b9f2763335a8be5ef80f76b6c6a102a3ae0ae3f3181",
+    "data_sha256": "25e00c380358486137d1f25c490db98d007dfc5230f8ad502276dc6ccc741a5c",
+    "git_revision": "25e0feec0b226158b732b3a662383a8f62529c0c",
+    "input": "pre-experimental metadata; train-union genes; no target library",
+    "input_contract": "description metadata + separately generated zero-shot expert rankings; no target library",
+    "loader_code_sha256": "6e3dc144928252f96af66e1b7966ace7556aa23935a10005f05a1a0b3aa84044",
+    "metric_sha256": "d1b638c9aa3ee1cbd984028595b7af009f00736d203fa9cc10405732d182fbae",
+    "model_code_sha256": "cdfb02576fb89cc67807d00672b438db6f07d5698efcc64c53ad13f0853a9683",
+    "modern_model_memorization_risk": true,
+    "protocol": "train <=2020; validation 2021; public test >=2022 already explored historically",
+    "protocol_code_sha256": "2287b13c5d0946a1e2e92e9ad470113abe5b325fe38692e6aa87469a09b91264",
+    "runner_code_sha256": "5056075e24de9e480eecbd2738125ce1c5fbab72d6397a30355f9466738e6dc3",
+    "seed": 20260928
+  },
+  "reproducibility": "selected candidate reconstructed in three clean executions",
+  "resource_budget": "CPU only, two model threads; no downloads or paid inference; at most14 configurations x3 train folds",
+  "selection": "three publication-grouped folds within1349 training screens; select best historical and best model-assisted candidate; fixed temporal validation confirmation before final freeze",
+  "stochastic_training": "disabled: deterministic LightGBM, full feature/row fractions; bin sample larger than dataset; fixed grouped split",
+  "test_labels_loaded_in_selection": false
+}

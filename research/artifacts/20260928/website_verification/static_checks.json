@@ -1,0 +1,507 @@
+{
+  "verification_kind": "static_generated_html_and_download_checks_not_browser",
+  "routes": [
+    {
+      "route": "/",
+      "title": [
+        "SplicR"
+      ],
+      "h1": [
+        "Traceable evidencefor CRISPR screens"
+      ],
+      "description": "CRISPR screen analysis and prediction research with traceable evidence, measured benchmarks and explicit uncertainty.",
+      "viewport": "width=device-width, initial-scale=1",
+      "canonical": [],
+      "og_title": "SplicR | CRISPR Screen Evidence",
+      "og_description": "Explore measured results, analysis capabilities and scientific limitations.",
+      "og_url": null,
+      "links": [
+        {
+          "href": "/",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/about",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/careers",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/contact",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/evidence",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/evidence#counting",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/evidence#postscreen",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/pipeline",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/technology",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "https://doi.org/10.1038/s41467-019-13805-y",
+          "status": "external_not_requested"
+        },
+        {
+          "href": "https://doi.org/10.1186/s13059-019-1621-7",
+          "status": "external_not_requested"
+        },
+        {
+          "href": "mailto:hello@splicr.org",
+          "status": "email_link_no_message_sent"
+        }
+      ]
+    },
+    {
+      "route": "/technology",
+      "title": [
+        "Technology | SplicR"
+      ],
+      "h1": [
+        "CRISPR screens,with context."
+      ],
+      "description": "Explore SplicR's screen analysis, published evidence, planning estimates, outcome records and REST integration.",
+      "viewport": "width=device-width, initial-scale=1",
+      "canonical": [],
+      "og_title": "SplicR | CRISPR Screen Evidence",
+      "og_description": "Explore measured results, analysis capabilities and scientific limitations.",
+      "og_url": null,
+      "links": [
+        {
+          "href": "/",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/about",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/careers",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/contact",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/evidence",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/pipeline",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/technology",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "mailto:hello@splicr.org",
+          "status": "email_link_no_message_sent"
+        }
+      ]
+    },
+    {
+      "route": "/pipeline",
+      "title": [
+        "Pipeline | SplicR"
+      ],
+      "h1": [
+        "From reads to atraceable report"
+      ],
+      "description": "From reads to an evidence report: ingest, detect, count, QC, hit calling, artifact flags, Atlas context and review.",
+      "viewport": "width=device-width, initial-scale=1",
+      "canonical": [],
+      "og_title": "SplicR | CRISPR Screen Evidence",
+      "og_description": "Explore measured results, analysis capabilities and scientific limitations.",
+      "og_url": null,
+      "links": [
+        {
+          "href": "/",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/about",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/careers",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/contact",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/evidence",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/pipeline",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/technology",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "mailto:hello@splicr.org",
+          "status": "email_link_no_message_sent"
+        }
+      ]
+    },
+    {
+      "route": "/evidence",
+      "title": [
+        "Evidence and limitations | SplicR"
+      ],
+      "h1": [
+        "Evidence you can inspect."
+      ],
+      "description": "Measured AssayBench results, real sequencing agreement, analysis limitations and downloadable provenance for SplicR.",
+      "viewport": "width=device-width, initial-scale=1",
+      "canonical": [],
+      "og_title": "SplicR | CRISPR Screen Evidence",
+      "og_description": "Explore measured results, analysis capabilities and scientific limitations.",
+      "og_url": null,
+      "links": [
+        {
+          "href": "/",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/about",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/careers",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/contact",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/evidence",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/evidence/05_BENCHMARK_REPRODUCTION.md",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/evidence/08_VALIDATION_REPORT.md",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/evidence/10_FINAL_RESULTS.md",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/evidence/11_HOW_TO_READ_THE_EVIDENCE.md",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/evidence/12_WEBSITE_CONSISTENCY.md",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/evidence/POSTSCREEN_IMPLEMENTATION.md",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/evidence/manifest.json",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/evidence/summary.json",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/pipeline",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/technology",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "https://github.com/Genentech/AssayBench",
+          "status": "external_not_requested"
+        },
+        {
+          "href": "https://huggingface.co/datasets/Genentech/assaybench",
+          "status": "external_not_requested"
+        },
+        {
+          "href": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE145743",
+          "status": "external_not_requested"
+        },
+        {
+          "href": "mailto:hello@splicr.org",
+          "status": "email_link_no_message_sent"
+        }
+      ]
+    },
+    {
+      "route": "/about",
+      "title": [
+        "About Us | SplicR"
+      ],
+      "h1": [
+        "Started by researchersat Cornell University"
+      ],
+      "description": "SplicR was started by researchers at Cornell University to answer one question: which hits are real?",
+      "viewport": "width=device-width, initial-scale=1",
+      "canonical": [],
+      "og_title": "SplicR | CRISPR Screen Evidence",
+      "og_description": "Explore measured results, analysis capabilities and scientific limitations.",
+      "og_url": null,
+      "links": [
+        {
+          "href": "/",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/about",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/careers",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/contact",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/evidence",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/pipeline",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/technology",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "https://ishaansamantray.com/",
+          "status": "external_not_requested"
+        },
+        {
+          "href": "https://www.linkedin.com/in/sahajsatani/",
+          "status": "external_not_requested"
+        },
+        {
+          "href": "mailto:hello@splicr.org",
+          "status": "email_link_no_message_sent"
+        }
+      ]
+    },
+    {
+      "route": "/careers",
+      "title": [
+        "Careers | SplicR"
+      ],
+      "h1": [
+        "Work withSplicR"
+      ],
+      "description": "Discuss research and engineering opportunities with SplicR.",
+      "viewport": "width=device-width, initial-scale=1",
+      "canonical": [],
+      "og_title": "SplicR | CRISPR Screen Evidence",
+      "og_description": "Explore measured results, analysis capabilities and scientific limitations.",
+      "og_url": null,
+      "links": [
+        {
+          "href": "/",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/about",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/careers",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/contact",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/evidence",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/pipeline",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/technology",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "mailto:hello@splicr.org",
+          "status": "email_link_no_message_sent"
+        },
+        {
+          "href": "mailto:hello@splicr.org?subject=Interest%3A%20Computational%20biology",
+          "status": "email_link_no_message_sent"
+        },
+        {
+          "href": "mailto:hello@splicr.org?subject=Interest%3A%20Machine%20learning%20research",
+          "status": "email_link_no_message_sent"
+        },
+        {
+          "href": "mailto:hello@splicr.org?subject=Interest%3A%20Product%20engineering",
+          "status": "email_link_no_message_sent"
+        }
+      ]
+    },
+    {
+      "route": "/contact",
+      "title": [
+        "Contact | SplicR"
+      ],
+      "h1": [
+        "Interested in SplicR?"
+      ],
+      "description": "Request a blind test, ask about the Atlas, or talk to us about a pharma pilot.",
+      "viewport": "width=device-width, initial-scale=1",
+      "canonical": [],
+      "og_title": "SplicR | CRISPR Screen Evidence",
+      "og_description": "Explore measured results, analysis capabilities and scientific limitations.",
+      "og_url": null,
+      "links": [
+        {
+          "href": "/",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/about",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/careers",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/contact",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/evidence",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/pipeline",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "/technology",
+          "status": "local_target_exists"
+        },
+        {
+          "href": "mailto:hello@splicr.org",
+          "status": "email_link_no_message_sent"
+        }
+      ]
+    }
+  ],
+  "downloads": [
+    {
+      "path": "/evidence/summary.json",
+      "exists": true,
+      "sha256": "9d0dedda29f7a8575d0651cdda841ac5cf27edfba2b104d5e11cab1945d05daa",
+      "matches_manifest": true
+    },
+    {
+      "path": "/evidence/05_BENCHMARK_REPRODUCTION.md",
+      "exists": true,
+      "sha256": "633bc8511c0536b1413d0b7128e5d196f8517f30209d39fafe98f42607b82f68",
+      "matches_manifest": true
+    },
+    {
+      "path": "/evidence/08_VALIDATION_REPORT.md",
+      "exists": true,
+      "sha256": "680dfe6bc10d606463865598aaa22e1660d644baa8dc67ad28b0d94c34ecdef2",
+      "matches_manifest": true
+    },
+    {
+      "path": "/evidence/10_FINAL_RESULTS.md",
+      "exists": true,
+      "sha256": "a94f6f9417235c7b7e1d2175b376703435d480ce8dbfd1367284d5be5462a287",
+      "matches_manifest": true
+    },
+    {
+      "path": "/evidence/11_HOW_TO_READ_THE_EVIDENCE.md",
+      "exists": true,
+      "sha256": "d47f8742921ea2e94ae4391ed72a0d741e04cd232cc0b7d87a0c4dca5f43f7a6",
+      "matches_manifest": true
+    },
+    {
+      "path": "/evidence/POSTSCREEN_IMPLEMENTATION.md",
+      "exists": true,
+      "sha256": "1bd7c34b369849518b4776f474d492738f2827e76cac8e8d08220f0e30b74b2c",
+      "matches_manifest": true
+    },
+    {
+      "path": "/evidence/12_WEBSITE_CONSISTENCY.md",
+      "exists": true,
+      "sha256": "8ca64e784863ad0ef14edff32f0d47ef317d6b89aeea6a756ed82576719c8720",
+      "matches_manifest": true
+    }
+  ],
+  "issues": [
+    {
+      "route": "/",
+      "issue": "missing_canonical"
+    },
+    {
+      "route": "/technology",
+      "issue": "missing_canonical"
+    },
+    {
+      "route": "/pipeline",
+      "issue": "missing_canonical"
+    },
+    {
+      "route": "/evidence",
+      "issue": "missing_canonical"
+    },
+    {
+      "route": "/about",
+      "issue": "missing_canonical"
+    },
+    {
+      "route": "/careers",
+      "issue": "missing_canonical"
+    },
+    {
+      "route": "/contact",
+      "issue": "missing_canonical"
+    }
+  ],
+  "limitations": [
+    "No HTTP requests made; filesystem existence does not verify deployed status.",
+    "No viewport layout, browser console, hydration or interactive navigation tested.",
+    "External links not requested."
+  ]
+}

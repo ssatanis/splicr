@@ -1,0 +1,56 @@
+{
+  "C0_rrf60": {
+    "config": {
+      "constant": 60,
+      "kind": "rrf"
+    },
+    "corpus_fit_seconds": 10.133455999894068,
+    "fit_diagnostics": null,
+    "mean": 0.17968473979647556,
+    "measured_at100": 82.3211009174312,
+    "model_fit_seconds": 0.0,
+    "predict_seconds": 0.819831958040595
+  },
+  "D4_context_exposure": {
+    "config": {
+      "config": {
+        "conditional": true,
+        "exposure_power": 1,
+        "retrieval": 0.0,
+        "signed": true,
+        "strength": 10.0,
+        "study_balance": false
+      },
+      "kind": "prior"
+    },
+    "corpus_fit_seconds": 10.133455999894068,
+    "fit_diagnostics": null,
+    "mean": 0.10634837931626621,
+    "measured_at100": 53.403669724770644,
+    "model_fit_seconds": 0.0,
+    "predict_seconds": 0.5934256671462208
+  },
+  "E2_history_lambdarank": {
+    "config": {
+      "config": {
+        "history": true,
+        "objective": "lambdarank"
+      },
+      "kind": "ranker"
+    },
+    "corpus_fit_seconds": 10.133455999894068,
+    "fit_diagnostics": {
+      "candidate_rows": 351171,
+      "features": 57,
+      "hit_loss_weighting": "equal publication mass, equal observed-query mass within publication",
+      "observed_publications": 134,
+      "observed_rows": 304848,
+      "training_publications": 134,
+      "unmeasured_in_hit_loss": false
+    },
+    "mean": 0.18098516821887162,
+    "measured_at100": 74.95412844036697,
+    "model_fit_seconds": 29.27707566600293,
+    "predict_seconds": 2.1665163340512663
+  }
+}

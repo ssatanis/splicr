@@ -1,0 +1,11 @@
+cv0 P0_baseline_D3 0.8374158445870598 prediction_seconds=0.756
+cv0 P1_requested_effect_prior 0.8422555751898269 prediction_seconds=1.778
+cv0 P2_requested_effect_transfer 0.8377553822589917 prediction_seconds=10.218
+cv1 P0_baseline_D3 0.7267558907784629 prediction_seconds=1.169
+cv1 P1_requested_effect_prior 0.6974054284696769 prediction_seconds=2.141
+cv1 P2_requested_effect_transfer 0.6991055783283773 prediction_seconds=7.902
+cv2 P0_baseline_D3 0.2056903177413504 prediction_seconds=0.849
+cv2 P1_requested_effect_prior 0.20642626051677593 prediction_seconds=1.794
+cv2 P2_requested_effect_transfer 0.20097535482689147 prediction_seconds=6.153
+validation P0_baseline_D3 0.09945010274065483 prediction_seconds=1.549
+DEVELOPMENT FREEZE P0_baseline_D3 {'mean': 0.0, 'n_screens': 218, 'n_publications': 34, 'seed': 20260928, 'repeats': 4000, 'unit': 'publication', 'ci95': [0.0, 0.0]}

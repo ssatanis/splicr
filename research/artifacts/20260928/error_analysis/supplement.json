@@ -1,0 +1,1031 @@
+{
+  "donor_recall_matched_minus_random": {
+    "ci95": [
+      0.01187945008213162,
+      0.05075503888115141
+    ],
+    "mean": 0.023631432406936582,
+    "n_publications": 34,
+    "n_screens": 218,
+    "repeats": 4000,
+    "seed": 20260928,
+    "unit": "publication"
+  },
+  "exact_context_duplicate_groups": [
+    [
+      "1751",
+      "1752"
+    ],
+    [
+      "U_1789_dec",
+      "U_1790_dec"
+    ],
+    [
+      "U_1789_inc",
+      "U_1790_inc"
+    ],
+    [
+      "U_1789_merged",
+      "U_1790_merged"
+    ],
+    [
+      "U_1797_dec",
+      "U_1799_dec"
+    ],
+    [
+      "U_1797_inc",
+      "U_1799_inc"
+    ],
+    [
+      "U_1797_merged",
+      "U_1799_merged"
+    ],
+    [
+      "U_1798_dec",
+      "U_1800_dec"
+    ],
+    [
+      "U_1798_inc",
+      "U_1800_inc"
+    ],
+    [
+      "U_1798_merged",
+      "U_1800_merged"
+    ],
+    [
+      "1815",
+      "1816"
+    ],
+    [
+      "1817",
+      "1818"
+    ],
+    [
+      "TR_1971_1972",
+      "TR_1977_1978"
+    ]
+  ],
+  "input_hashes": {
+    "summary.json": "8a09f78c47cffbac063bced64e44eba8013f953ac8d296b6670389dbf4a13b0e",
+    "validation_donor_diagnostics.json": "01e4be11d93227d2e96f1fb4771d259490cdac0ce78f40d9ff24b739069f1c2b",
+    "validation_screen_diagnostics.json": "5c7c7e92b0ab4b3bf3e259dcdab31f991aba951fc34a909b09a63bd47834dcb0"
+  },
+  "largest_publications": [
+    [
+      "33539788",
+      86
+    ],
+    [
+      "34373451",
+      24
+    ],
+    [
+      "34155407",
+      18
+    ],
+    [
+      "34049503",
+      16
+    ],
+    [
+      "34320214",
+      10
+    ],
+    [
+      "33649592",
+      8
+    ],
+    [
+      "34004147",
+      8
+    ],
+    [
+      "10.1101/2021.01.19.427194",
+      6
+    ],
+    [
+      "33686287",
+      4
+    ],
+    [
+      "34962926",
+      4
+    ],
+    [
+      "33660365",
+      4
+    ],
+    [
+      "33417871",
+      3
+    ],
+    [
+      "34316707",
+      3
+    ],
+    [
+      "33476303",
+      2
+    ],
+    [
+      "33547076",
+      2
+    ],
+    [
+      "34686207",
+      2
+    ],
+    [
+      "33110234",
+      1
+    ],
+    [
+      "33730579",
+      1
+    ],
+    [
+      "33577797",
+      1
+    ],
+    [
+      "33523994",
+      1
+    ],
+    [
+      "33604667",
+      1
+    ],
+    [
+      "33483422",
+      1
+    ],
+    [
+      "34437126",
+      1
+    ],
+    [
+      "33953401",
+      1
+    ],
+    [
+      "34907164",
+      1
+    ],
+    [
+      "34834920",
+      1
+    ],
+    [
+      "34230586",
+      1
+    ],
+    [
+      "34662547",
+      1
+    ],
+    [
+      "34373448",
+      1
+    ],
+    [
+      "34108663",
+      1
+    ],
+    [
+      "34215620",
+      1
+    ],
+    [
+      "34759314",
+      1
+    ],
+    [
+      "34644148",
+      1
+    ],
+    [
+      "34615851",
+      1
+    ]
+  ],
+  "leave_one_publication_out_delta_vs_ensemble_range": {
+    "direction": [
+      -0.13923753378232642,
+      -0.10653972842789286
+    ],
+    "ensemble": [
+      0.0,
+      0.0
+    ],
+    "gemini3pro": [
+      -0.019937503502327605,
+      -0.007751481712639925
+    ],
+    "global": [
+      -0.12024726373073316,
+      -0.019660595077939828
+    ],
+    "gpt54": [
+      -0.022511275594496106,
+      -0.017962393753488345
+    ],
+    "phenotype": [
+      -0.12470944980241028,
+      -0.0658188821456197
+    ],
+    "ridge10": [
+      -0.11962563728303255,
+      -0.015775020175486675
+    ],
+    "router": [
+      -0.004943522296686779,
+      0.013893041544564274
+    ],
+    "transfer": [
+      -0.1493000006196111,
+      -0.12452108349372015
+    ]
+  },
+  "novelty": {
+    "cell_line": {
+      "seen": {
+        "means": {
+          "direction": 0.06321817564149208,
+          "ensemble": 0.1842980270710845,
+          "gemini3pro": 0.1698460221726339,
+          "global": 0.12081388465116312,
+          "gpt54": 0.16451694039100342,
+          "phenotype": 0.08861310031086393,
+          "ridge10": 0.12267019790596978,
+          "router": 0.1959886736332078,
+          "transfer": 0.05111325742972068
+        },
+        "publications": 26,
+        "screens": 200
+      },
+      "unseen": {
+        "means": {
+          "direction": 0.0017636691544732198,
+          "ensemble": 0.21020482744049648,
+          "gemini3pro": 0.1905985143604938,
+          "global": 0.02084664155351662,
+          "gpt54": 0.18047795539942743,
+          "phenotype": 0.0182173788981224,
+          "ridge10": 0.028715154673654493,
+          "router": 0.18219105918815368,
+          "transfer": 0.004399489913644112
+        },
+        "publications": 9,
+        "screens": 18
+      }
+    },
+    "condition_name": {
+      "seen": {
+        "means": {
+          "direction": 0.08667798859835452,
+          "ensemble": 0.22584515309493888,
+          "gemini3pro": 0.2049409179062755,
+          "global": 0.12225148644056583,
+          "gpt54": 0.20558004046534228,
+          "phenotype": 0.11955432877333284,
+          "ridge10": 0.12224448392384535,
+          "router": 0.21978964713428295,
+          "transfer": 0.06535779908665185
+        },
+        "publications": 18,
+        "screens": 76
+      },
+      "unseen": {
+        "means": {
+          "direction": 0.04287221154650698,
+          "ensemble": 0.16534549769669352,
+          "gemini3pro": 0.15369343614182204,
+          "global": 0.10737255992051353,
+          "gpt54": 0.14456273380298854,
+          "phenotype": 0.06312960489834996,
+          "ridge10": 0.11098825061343305,
+          "router": 0.18150113105509022,
+          "transfer": 0.037567954745099934
+        },
+        "publications": 22,
+        "screens": 142
+      }
+    },
+    "phenotype": {
+      "seen": {
+        "means": {
+          "direction": 0.19155824719095704,
+          "ensemble": 0.3355060697236767,
+          "gemini3pro": 0.324808610296094,
+          "global": 0.278883620908875,
+          "gpt54": 0.30499443637038287,
+          "phenotype": 0.2682809475868826,
+          "ridge10": 0.28365619903405326,
+          "router": 0.32112424306711884,
+          "transfer": 0.14086347230135204
+        },
+        "publications": 8,
+        "screens": 32
+      },
+      "unseen": {
+        "means": {
+          "direction": 0.03519095302671134,
+          "ensemble": 0.16079084987628053,
+          "gemini3pro": 0.14519409765344443,
+          "global": 0.0839448419844727,
+          "gpt54": 0.14189338339536628,
+          "phenotype": 0.050890013761068525,
+          "ridge10": 0.0858812580442475,
+          "router": 0.17312472050473396,
+          "transfer": 0.031151673068529385
+        },
+        "publications": 29,
+        "screens": 186
+      }
+    }
+  },
+  "publication_macro_means": {
+    "direction": 0.018804982683790872,
+    "ensemble": 0.14591968574150754,
+    "gemini3pro": 0.13467581727785183,
+    "global": 0.04491067171431168,
+    "gpt54": 0.1293070637951298,
+    "phenotype": 0.033989027662627194,
+    "ridge10": 0.04472261751904874,
+    "router": 0.14531156105074233,
+    "transfer": 0.01704093465085004
+  },
+  "requested_direction_pairs": [
+    {
+      "a": "U_1471_inc",
+      "b": "U_1471_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase resistance to the specified drug",
+        "decrease resistance to the specified drug"
+      ],
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1472_inc",
+      "b": "U_1472_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase drug resistance to the specified drug",
+        "decrease drug resistance to the specified drug"
+      ],
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1473_inc",
+      "b": "U_1473_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase resistance to the specified drug",
+        "decrease resistance to the specified drug"
+      ],
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1474_inc",
+      "b": "U_1474_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase resistance to the specified drug",
+        "decrease resistance to the specified drug"
+      ],
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1475_inc",
+      "b": "U_1475_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase resistance to the specified drug",
+        "decrease resistance to the specified drug"
+      ],
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1476_inc",
+      "b": "U_1476_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase resistance to the specified dna-damaging drug",
+        "decrease resistance to the specified dna-damaging drug"
+      ],
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1491_inc",
+      "b": "U_1491_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase drug resistance to the specified drug",
+        "decrease drug resistance to the specified drug"
+      ],
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1492_inc",
+      "b": "U_1492_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase drug resistance to the specified drug",
+        "decrease drug resistance to the specified drug"
+      ],
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1493_inc",
+      "b": "U_1493_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase drug resistance to the specified drug",
+        "decrease drug resistance to the specified drug"
+      ],
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1494_inc",
+      "b": "U_1494_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase resistance to the specified drug",
+        "decrease resistance to the specified drug"
+      ],
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1495_inc",
+      "b": "U_1495_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase resistance to the specified drug",
+        "decrease resistance to the specified drug"
+      ],
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1496_inc",
+      "b": "U_1496_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase resistance to the specified drug",
+        "decrease resistance to the specified drug"
+      ],
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1497_inc",
+      "b": "U_1497_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase drug resistance",
+        "decrease drug resistance"
+      ],
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1500_inc",
+      "b": "U_1500_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase resistance to the specified drug",
+        "decrease resistance to the specified drug"
+      ],
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1501_inc",
+      "b": "U_1501_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase resistance to the specified drug",
+        "decrease resistance to the specified drug"
+      ],
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1502_inc",
+      "b": "U_1502_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase resistance to the specified drug",
+        "decrease resistance to the specified drug"
+      ],
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1503_inc",
+      "b": "U_1503_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase resistance to the specified drug",
+        "decrease resistance to the specified drug"
+      ],
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1504_inc",
+      "b": "U_1504_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase resistance to the specified drug",
+        "decrease resistance to the specified drug"
+      ],
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1505_inc",
+      "b": "U_1505_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase drug resistance to the specified drug",
+        "decrease drug resistance to the specified drug"
+      ],
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1507_inc",
+      "b": "U_1507_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase drug resistance to the specified drug",
+        "decrease drug resistance to the specified drug"
+      ],
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1509_inc",
+      "b": "U_1509_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase resistance to the specified drug",
+        "decrease resistance to the specified drug"
+      ],
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1510_inc",
+      "b": "U_1510_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase resistance to the specified drug",
+        "decrease resistance to the specified drug"
+      ],
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1516_inc",
+      "b": "U_1516_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase drug resistance to the specified drug",
+        "decrease drug resistance to the specified drug"
+      ],
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1517_inc",
+      "b": "U_1517_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase drug resistance to the specified drug",
+        "decrease drug resistance to the specified drug"
+      ],
+      "source_id": "33539788"
+    },
+    {
+      "a": "U_1712_inc",
+      "b": "U_1712_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase sars-cov-2 spike-rbd binding to human cells",
+        "decrease sars-cov-2 spike-rbd binding to human cells"
+      ],
+      "source_id": "10.1101/2021.01.19.427194"
+    },
+    {
+      "a": "U_1718_inc",
+      "b": "U_1718_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase cell-surface tfrc/cd71 levels",
+        "decrease cell-surface tfrc/cd71 levels"
+      ],
+      "source_id": "10.1101/2021.01.19.427194"
+    },
+    {
+      "a": "U_1787_inc",
+      "b": "U_1787_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase cell proliferation",
+        "decrease cell proliferation"
+      ],
+      "source_id": "34155407"
+    },
+    {
+      "a": "U_1788_inc",
+      "b": "U_1788_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase cell proliferation",
+        "decrease cell proliferation"
+      ],
+      "source_id": "34155407"
+    },
+    {
+      "a": "U_1789_inc",
+      "b": "U_1789_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase cell proliferation",
+        "decrease cell proliferation"
+      ],
+      "source_id": "34155407"
+    },
+    {
+      "a": "U_1789_inc",
+      "b": "U_1790_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase cell proliferation",
+        "decrease cell proliferation"
+      ],
+      "source_id": "34155407"
+    },
+    {
+      "a": "U_1790_inc",
+      "b": "U_1789_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase cell proliferation",
+        "decrease cell proliferation"
+      ],
+      "source_id": "34155407"
+    },
+    {
+      "a": "U_1790_inc",
+      "b": "U_1790_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase cell proliferation",
+        "decrease cell proliferation"
+      ],
+      "source_id": "34155407"
+    },
+    {
+      "a": "U_1791_inc",
+      "b": "U_1791_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase cell proliferation",
+        "decrease cell proliferation"
+      ],
+      "source_id": "34155407"
+    },
+    {
+      "a": "U_1792_inc",
+      "b": "U_1792_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase cell proliferation",
+        "decrease cell proliferation"
+      ],
+      "source_id": "34155407"
+    },
+    {
+      "a": "U_1793_inc",
+      "b": "U_1793_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase cell proliferation in an egfr-t790m/l858r mutant background",
+        "decrease cell proliferation in an egfr-t790m/l858r mutant background"
+      ],
+      "source_id": "34373451"
+    },
+    {
+      "a": "U_1794_inc",
+      "b": "U_1794_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase cell growth in the presence of erlotinib in egfr-t790m/l858r mutant cells",
+        "decrease cell growth in the presence of erlotinib in egfr-t790m/l858r mutant cells"
+      ],
+      "source_id": "34373451"
+    },
+    {
+      "a": "U_1795_inc",
+      "b": "U_1795_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase cell proliferation in a krasg12v mutant background",
+        "decrease cell proliferation in a krasg12v mutant background"
+      ],
+      "source_id": "34373451"
+    },
+    {
+      "a": "U_1796_inc",
+      "b": "U_1796_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase cell growth in the presence of erlotinib in a krasg12v mutant background",
+        "decrease cell growth in the presence of erlotinib in a krasg12v mutant background"
+      ],
+      "source_id": "34373451"
+    },
+    {
+      "a": "U_1797_inc",
+      "b": "U_1797_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase cell proliferation in a rit1m90i mutant background",
+        "decrease cell proliferation in a rit1m90i mutant background"
+      ],
+      "source_id": "34373451"
+    },
+    {
+      "a": "U_1797_inc",
+      "b": "U_1799_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase cell proliferation in a rit1m90i mutant background",
+        "decrease cell proliferation in a rit1m90i mutant background"
+      ],
+      "source_id": "34373451"
+    },
+    {
+      "a": "U_1799_inc",
+      "b": "U_1797_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase cell proliferation in a rit1m90i mutant background",
+        "decrease cell proliferation in a rit1m90i mutant background"
+      ],
+      "source_id": "34373451"
+    },
+    {
+      "a": "U_1799_inc",
+      "b": "U_1799_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase cell proliferation in a rit1m90i mutant background",
+        "decrease cell proliferation in a rit1m90i mutant background"
+      ],
+      "source_id": "34373451"
+    },
+    {
+      "a": "U_1798_inc",
+      "b": "U_1798_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase cell growth in the presence of erlotinib in a rit1m90i mutant background",
+        "decrease cell growth in the presence of erlotinib in a rit1m90i mutant background"
+      ],
+      "source_id": "34373451"
+    },
+    {
+      "a": "U_1798_inc",
+      "b": "U_1800_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase cell growth in the presence of erlotinib in a rit1m90i mutant background",
+        "decrease cell growth in the presence of erlotinib in a rit1m90i mutant background"
+      ],
+      "source_id": "34373451"
+    },
+    {
+      "a": "U_1800_inc",
+      "b": "U_1798_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase cell growth in the presence of erlotinib in a rit1m90i mutant background",
+        "decrease cell growth in the presence of erlotinib in a rit1m90i mutant background"
+      ],
+      "source_id": "34373451"
+    },
+    {
+      "a": "U_1800_inc",
+      "b": "U_1800_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase cell growth in the presence of erlotinib in a rit1m90i mutant background",
+        "decrease cell growth in the presence of erlotinib in a rit1m90i mutant background"
+      ],
+      "source_id": "34373451"
+    },
+    {
+      "a": "U_1996_inc",
+      "b": "U_1996_dec",
+      "identical_rankings": {
+        "direction": true,
+        "phenotype": true,
+        "ridge10": false
+      },
+      "phenotypes": [
+        "increase cell proliferation in the tapr1 (hapstr1) knockout background",
+        "decrease cell proliferation in the tapr1 (hapstr1) knockout background"
+      ],
+      "source_id": "33660365"
+    }
+  ],
+  "scope": "validation-only descriptive analyses; no selection or hypothesis-test claim",
+  "script_sha256": "01a352284f27ecfc3f60011adf098614f7c7645aadecb40ac4f559014d954523",
+  "zero_measured_positive_andcg": {
+    "direction": 29,
+    "ensemble": 0,
+    "gemini3pro": 0,
+    "global": 0,
+    "gpt54": 0,
+    "phenotype": 29,
+    "ridge10": 0,
+    "router": 0,
+    "transfer": 31
+  }
+}

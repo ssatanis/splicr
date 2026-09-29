@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { marketingMetadata } from "@/lib/marketing-metadata";
 import { Search } from "lucide-react";
 import Link from "next/link";
 
@@ -7,10 +7,10 @@ import { RolesList } from "@/components/marketing/roles-list";
 import { Reveal } from "@/components/ui/reveal";
 import { site } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata = marketingMetadata("/careers", {
   title: "Careers",
   description: "Discuss research and engineering opportunities with SplicR.",
-};
+});
 
 export default function CareersPage() {
   return (

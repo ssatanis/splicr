@@ -1,0 +1,32 @@
+{
+  "P0_baseline_D3": {
+    "ci95": [
+      0.03134687079210054,
+      0.21587097716002918
+    ],
+    "configuration": {
+      "base": {
+        "conditional": true,
+        "exposure_power": 0.5,
+        "retrieval": 0.0,
+        "signed": true,
+        "strength": 10.0,
+        "study_balance": false
+      },
+      "effect_prior": false,
+      "retrieval_k": 25,
+      "retrieval_weight": 0.0
+    },
+    "fit_seconds": 19.02364195906557,
+    "mean": 0.09945010274065483,
+    "measured_at100": 52.472477064220186,
+    "n_publications": 34,
+    "n_screens": 218,
+    "prediction_seconds": 1.5490570000838488,
+    "repeats": 4000,
+    "seed": 20260928,
+    "slot_precision_at100": 0.0948623853211009,
+    "unit": "publication",
+    "wrong_direction_fraction_returned": 0.034954128440366966
+  }
+}

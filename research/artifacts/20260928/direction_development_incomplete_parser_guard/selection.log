@@ -1,0 +1,31 @@
+cv0 P0_baseline_D3 0.8374158445870598 prediction_seconds=1.702
+cv0 P1_requested_effect_prior 0.8422555751898269 prediction_seconds=0.731
+cv0 P2_requested_effect_transfer 0.8377553822589917 prediction_seconds=8.309
+Traceback (most recent call last):
+  File "/Users/sahaj/Documents/Projects/SplicR/engine/analysis/direction_development.py", line 158, in <module>
+    main()
+  File "/Users/sahaj/Documents/Projects/SplicR/engine/analysis/direction_development.py", line 137, in main
+    scores,_=execute(train,evaluation,list(CONFIGS),f'cv{fold}',frozen)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sahaj/Documents/Projects/SplicR/engine/analysis/direction_development.py", line 98, in execute
+    scored=evaluate_predictions(evaluation,predictions,metric=metric)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sahaj/Documents/Projects/SplicR/engine/splicr/research_protocol.py", line 74, in evaluate_predictions
+    evaluated = metric.evaluate(predicted_genes=list(ranked), ground_truth_genes=genes,
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sahaj/Documents/Projects/SplicR/engine/.tools/env/lib/python3.11/site-packages/assaybench/benchmark/metrics.py", line 582, in evaluate
+    results['adjusted_ndcg'] = self.compute_adjusted_ndcg(predicted_values, relevance_scores, k = len(predicted_values))
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sahaj/Documents/Projects/SplicR/engine/.tools/env/lib/python3.11/site-packages/assaybench/benchmark/metrics.py", line 230, in compute_adjusted_ndcg
+    ndcg = self.compute_ndcg(predicted_relevances, all_relevances, k)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sahaj/Documents/Projects/SplicR/engine/.tools/env/lib/python3.11/site-packages/assaybench/benchmark/metrics.py", line 204, in compute_ndcg
+    idcg = self.compute_dcg(ideal_relevances, k = k)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sahaj/Documents/Projects/SplicR/engine/.tools/env/lib/python3.11/site-packages/assaybench/benchmark/metrics.py", line 177, in compute_dcg
+    dcg = sum(rel / np.log2(i + 2) for i, rel in enumerate(condensed_relevances))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sahaj/Documents/Projects/SplicR/engine/.tools/env/lib/python3.11/site-packages/assaybench/benchmark/metrics.py", line 177, in <genexpr>
+    dcg = sum(rel / np.log2(i + 2) for i, rel in enumerate(condensed_relevances))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt

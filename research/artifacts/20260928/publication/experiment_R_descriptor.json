@@ -1,0 +1,87 @@
+{
+  "artifacts": {
+    "research/artifacts/20260928/publication/experiment_R_summary.json": "a4b9229a59475e863c00aa201afefc45312291563945b38e9e8d29de286d05a6",
+    "research/artifacts/20260928/replication_heldout/heldout_results.json": "b7053926a776350c55f9c0d43a8ba7cf6419f7de287a75f5162c7c0a90c39005",
+    "research/artifacts/20260928/replication_selection/selection.json": "ec6c88113346b240bd39b50f892425c203dfae16f6a7a6cbe7e34dd3cad3b3bc",
+    "research/artifacts/20260928/replication_verify/verification.json": "ac3b4b7b3c6f9613fc4a39721b2b3e5987a2282ede1479e4bf8262f870663dc3"
+  },
+  "calibration_status": "not_fitted",
+  "cohort": {
+    "benchmark_artifact_sha256": "d525ec0a8dd30ac95a61acf732ec34e7ed75c6070898b248e4c045c67701558a",
+    "n_screen_pairs": 124,
+    "n_units": 248
+  },
+  "comparator": "effect_score1",
+  "evaluation_kind": "heldout_replication",
+  "experiment_id": "20260928_experiment_R_replication",
+  "headline": {
+    "comparator_mean": 0.24636521237071196,
+    "non_hub_paired_difference": {
+      "ci95": [
+        0.04736208500111694,
+        0.09793373313036204
+      ],
+      "mean_difference": 0.07212556753352574,
+      "n_screen_pairs": 11,
+      "n_units": 22,
+      "resampling_unit": "pair_key",
+      "significant": true,
+      "wilcoxon_p": 0.0009765625
+    },
+    "paired_difference": {
+      "ci95": [
+        0.10197492297346228,
+        0.11278569643377552
+      ],
+      "mean_difference": 0.10743770250101319,
+      "n_screen_pairs": 124,
+      "n_units": 248,
+      "resampling_unit": "pair_key",
+      "significant": true,
+      "wilcoxon_p": 4.330109895931127e-22
+    },
+    "precision_at_10": {
+      "comparator": 0.6963709677419354,
+      "paired_difference": {
+        "ci95": [
+          0.2004032258064516,
+          0.2383064516129032
+        ],
+        "mean_difference": 0.21895161290322582,
+        "n_screen_pairs": 124,
+        "n_units": 248,
+        "resampling_unit": "pair_key",
+        "significant": true,
+        "wilcoxon_p": 5.725557880076196e-22
+      },
+      "primary": 0.9153225806451614
+    },
+    "primary_mean": 0.3538029148717251
+  },
+  "input_contract": "screen_measurements_plus_permitted_background",
+  "notes": "Cross-screen replication is a proxy for reproducibility, not proof that a candidate passes an independent biological validation assay. The model was selected by leave-one-publication-out cross-validation inside development and amended to a DepMap-free feature set on provenance grounds before any held-out label was read.",
+  "primary_metric": "average_precision",
+  "primary_model": "lr_effect_freq",
+  "promotion_status": "research_only",
+  "provenance": {
+    "benchmark_artifact_sha256": "d525ec0a8dd30ac95a61acf732ec34e7ed75c6070898b248e4c045c67701558a",
+    "git_revision": "25e0feec0b226158b732b3a662383a8f62529c0c",
+    "heldout_labels_read_by_selection": false,
+    "metric_code_sha256": "1cfb4cd91befce3bc1f626164c05090557c615d88e55361487aa55d96b346a0c",
+    "model_code_sha256": "348b828e95fa871a413b1d7a334c975c6f914173f6901676cea6eca215e0cca6",
+    "runner_sha256": "1b10c45f72f41a28be8c6d5316b3b22abf06067d412ef02108bf500890ae7437",
+    "seed": 20260928,
+    "selection_sha256": "ec6c88113346b240bd39b50f892425c203dfae16f6a7a6cbe7e34dd3cad3b3bc"
+  },
+  "results": "research/artifacts/20260928/replication_heldout/heldout_results.json",
+  "schema_version": 1,
+  "scored_once": true,
+  "split": "heldout",
+  "strata": {
+    "hub": "pairs whose publications are Behan 2019 and Meyers 2017",
+    "rest": "every other held-out pair"
+  },
+  "summary": "research/artifacts/20260928/publication/experiment_R_summary.json",
+  "task": "post_screen_replication",
+  "validation_probability": null
+}

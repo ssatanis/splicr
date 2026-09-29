@@ -1,0 +1,29 @@
+{
+  "created_utc": "2026-09-28T15:32:50.918482+00:00",
+  "new_test_data_read": false,
+  "packages": {
+    "assaybench": "0.2.0",
+    "lightgbm": "4.7.0",
+    "numpy": "1.26.4",
+    "pyarrow": "25.0.1",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.17.1"
+  },
+  "purpose": "supplemental source commitment before new test replay; independent verification must reject drift",
+  "sha256": {
+    "/Users/sahaj/Documents/Projects/SplicR/engine/.tools/env/lib/python3.11/site-packages/assaybench/benchmark/metrics.py": "d1b638c9aa3ee1cbd984028595b7af009f00736d203fa9cc10405732d182fbae",
+    "/Users/sahaj/Documents/Projects/SplicR/engine/.tools/env/lib/python3.11/site-packages/assaybench/data/hgnc/all_genes.tsv": "c11a0dc8ada72a0db2adcb51818b6eefc4f785d1979173785193ccc46c7889a7",
+    "/Users/sahaj/Documents/Projects/SplicR/engine/.tools/env/lib/python3.11/site-packages/assaybench/data/hgnc/hgnc_symbols_cache.tsv": "b0998cc77f86ca7674e295aa1843024c631aaa2d768091204886af338490a096",
+    "/Users/sahaj/Documents/Projects/SplicR/engine/.tools/env/lib/python3.11/site-packages/assaybench/data/hgnc/manual_mappings.json": "6875bafed32e13d327584f350b3b5c7222fe1e483302ad26fc3495b7bb1865dc",
+    "/Users/sahaj/Documents/Projects/SplicR/engine/.tools/env/lib/python3.11/site-packages/assaybench/data/hgnc/uniprot_protein_to_gene.json": "0a8b370c6da2b16f2214de3d753757b9e998d8a868ee164229184a14f8b466a7",
+    "/Users/sahaj/Documents/Projects/SplicR/engine/.tools/env/lib/python3.11/site-packages/assaybench/utils/gene_mapper.py": "a8c81f3d28aa81c13718e0f033f9700fcf26af0aee21b9d5b5da3a793b9051ec",
+    "/Users/sahaj/Documents/Projects/SplicR/engine/analysis/advanced_development.py": "464b3e3086899799ff29e5037f4daabf448dff0971eb700b8e98d9f234c53dbe",
+    "/Users/sahaj/Documents/Projects/SplicR/engine/analysis/independent_verification.py": "9ddf4ebedac3a9296b804c81ff8b1ccfa58636507dcd1fead4693e8028e91513",
+    "/Users/sahaj/Documents/Projects/SplicR/engine/analysis/reproduce_references.py": "4b0ba272e3e79759a703cc17ffec601f3d46e7c9c3a105cff551ebdf54e8cc87",
+    "/Users/sahaj/Documents/Projects/SplicR/engine/splicr/assaybench_io.py": "6e3dc144928252f96af66e1b7966ace7556aa23935a10005f05a1a0b3aa84044",
+    "/Users/sahaj/Documents/Projects/SplicR/engine/splicr/context_ranking.py": "e009f05bf4948af8a91bda3f2e2c4e23f57ff17a36070c4ce5d6484d51564fdc",
+    "/Users/sahaj/Documents/Projects/SplicR/engine/splicr/prescreen.py": "cdfb02576fb89cc67807d00672b438db6f07d5698efcc64c53ad13f0853a9683",
+    "/Users/sahaj/Documents/Projects/SplicR/engine/splicr/research_protocol.py": "2287b13c5d0946a1e2e92e9ad470113abe5b325fe38692e6aa87469a09b91264"
+  },
+  "timestamp_trust": "local clock only; not externally timestamped"
+}

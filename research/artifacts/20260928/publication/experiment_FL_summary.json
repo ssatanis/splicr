@@ -1,0 +1,13 @@
+{
+  "ci95": [
+    0.1117046110035548,
+    0.2745976431334482
+  ],
+  "mean": 0.1882835554139735,
+  "n_publications": 34,
+  "n_screens": 218,
+  "recomputed_from": "research/artifacts/20260928/frontier_residual/validation/F4_residual_200_screens.json",
+  "repeats": 10000,
+  "seed": 20260928,
+  "unit": "publication"
+}

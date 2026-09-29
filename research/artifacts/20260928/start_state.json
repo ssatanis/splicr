@@ -1,0 +1,14 @@
+{
+  "created_utc": "2026-09-28T13:28:16.118195+00:00",
+  "starting_commit": "25e0feec0b226158b732b3a662383a8f62529c0c",
+  "starting_branch": "main",
+  "starting_tree": "clean",
+  "requested_branch": "research/20260928-description-ranking",
+  "branch_status": "blocked: .git read-only under session sandbox",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "cpu_count": 10,
+  "production_deployment_authorized": false,
+  "paid_API_budget": 0,
+  "historical_public_test_exposure": true,
+  "artifact_policy": "new dated paths; historical outputs retained"
+}

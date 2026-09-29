@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { marketingMetadata } from "@/lib/marketing-metadata";
 
 import { MarketingNav } from "@/components/marketing/nav";
 import { PipelineDiagram } from "@/components/marketing/pipeline-diagram";
@@ -7,11 +7,11 @@ import { SideCoil } from "@/components/three";
 import { LinkButton } from "@/components/ui/bits";
 import { Reveal } from "@/components/ui/reveal";
 
-export const metadata: Metadata = {
+export const metadata = marketingMetadata("/pipeline", {
   title: "Pipeline",
   description:
     "From reads to an evidence report: ingest, detect, count, QC, hit calling, artifact flags, Atlas context and review.",
-};
+});
 
 const numbers = [
   { value: "9", label: "Stages, start to finish" },

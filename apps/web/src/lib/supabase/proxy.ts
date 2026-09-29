@@ -22,7 +22,12 @@ export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const pathname = request.nextUrl.pathname;
-  if (DISABLED_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) {
+  // Public deploys keep the console closed. Local `next dev` needs the
+  // dashboard so the product can be reviewed without a production flip.
+  if (
+    process.env.NODE_ENV !== "development" &&
+    DISABLED_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
+  ) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 

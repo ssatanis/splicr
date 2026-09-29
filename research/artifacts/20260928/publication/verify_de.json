@@ -1,0 +1,92 @@
+{
+  "all_checks_pass": true,
+  "checks": [
+    {
+      "name": "D mean matches runner summary",
+      "ok": true
+    },
+    {
+      "name": "D ensemble matches runner summary",
+      "ok": true
+    },
+    {
+      "name": "D paired difference matches runner",
+      "ok": true
+    },
+    {
+      "name": "E validation mean matches runner summary",
+      "ok": true
+    },
+    {
+      "name": "E cross-validation selected the baseline",
+      "ok": true
+    }
+  ],
+  "experiment_D": {
+    "interval_note": "independent bootstrap; cluster resampling order differs from the runner, so endpoints need not match to the last digit",
+    "n_publications": 34,
+    "n_screens": 218,
+    "paired_as_recorded": {
+      "ci95": [
+        -0.01614718158738915,
+        0.010804853994853232
+      ],
+      "mean": -0.005451952460696429,
+      "n_publications": 34,
+      "n_screens": 218,
+      "repeats": 10000,
+      "seed": 20260928,
+      "unit": "publication"
+    },
+    "paired_difference_recomputed": -0.0054519524606964275,
+    "promotion_status": "research_only",
+    "published_ensemble_mean_recomputed": 0.18643712067956802,
+    "recomputed_ci95": [
+      -0.01614718158738915,
+      0.010804853994853232
+    ],
+    "selected": "E2_history_lambdarank",
+    "selection_multiplicity": 14,
+    "sha256": {
+      "research/artifacts/20260928/model_development/validation/C0_rrf60_screens.json": "458bd726860ff929522ec98e942f8638d71adc7a31e35ce5f972af775fab4a83",
+      "research/artifacts/20260928/model_development/validation/D4_context_exposure_screens.json": "b306f35bcfb96e54ed7ef852ce5ccc261c1e7cc7f326468107ffef123a046df2",
+      "research/artifacts/20260928/model_development/validation/E2_history_lambdarank_screens.json": "e27db62235a24b2aa8f342de2e458deeaef010ea277123dece0e989fa88e1aaa",
+      "research/artifacts/20260928/model_development/validation/published_ensemble_screens.json": "3b723a00b60e8e316907e627f6db3a905f30f05a9d1f50045bedb1264c51c5d7"
+    },
+    "validation_mean_recomputed": 0.18098516821887162
+  },
+  "experiment_E": {
+    "cv_paired_vs_baseline_as_recorded": {
+      "P0_baseline_D3": {
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "mean": 0.0
+      },
+      "P1_requested_effect_prior": {
+        "ci95": [
+          -0.023172068129698988,
+          0.0045313011613174565
+        ],
+        "mean": -0.007931349860298387
+      },
+      "P2_requested_effect_transfer": {
+        "ci95": [
+          -0.024030336117880424,
+          0.0010689961227668798
+        ],
+        "mean": -0.010679664194782282
+      }
+    },
+    "cv_selected": "P0_baseline_D3",
+    "n_publications": 34,
+    "n_screens": 218,
+    "selected": "P0_baseline_D3",
+    "sha256": {
+      "research/artifacts/20260928/direction_development/validation/P0_baseline_D3_screens.json": "f525af81719338aa33c589667d48e3ecb8b2c472cd6286444d92659cef62c6e5"
+    },
+    "validation_mean_recomputed": 0.09945010274065483
+  },
+  "recomputed_from": "original per-screen JSON, not the runner summaries"
+}

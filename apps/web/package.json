@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node ../../scripts/research/evidence_gate.mjs --check-public && next build",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit"

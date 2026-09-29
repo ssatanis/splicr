@@ -1,0 +1,257 @@
+{
+  "bootstrap": {
+    "draws_sha256": "093f10f0912eac96eea584f0191814657fa02c41022002d795557421c137e028",
+    "estimand": "screen-weighted mean; entire publications resampled with replacement",
+    "repeats": 10000,
+    "seed": 20260928,
+    "unit": "publication"
+  },
+  "coverage_diagnostics": {
+    "legacy_seed0": {
+      "extra_predictions": 0,
+      "measured_at100": 33400,
+      "measured_zero_at100": 28674,
+      "missing_predictions": 0,
+      "negative_at100": 1016,
+      "non_hgnc_at100": 0,
+      "non_hgnc_but_measured_at100": 0,
+      "non_hgnc_fraction_normalized_top100": 0.0,
+      "normalized_unique_at100": 33400,
+      "positive_at100": 3710,
+      "raw_duplicate_count": 0,
+      "raw_prediction_count": 33400,
+      "screens": 334,
+      "unmeasured_at100": 0,
+      "wrong_direction_fraction_normalized_top100": 0.030419161676646708
+    },
+    "legacy_seed1": {
+      "extra_predictions": 0,
+      "measured_at100": 33400,
+      "measured_zero_at100": 28685,
+      "missing_predictions": 0,
+      "negative_at100": 1013,
+      "non_hgnc_at100": 0,
+      "non_hgnc_but_measured_at100": 0,
+      "non_hgnc_fraction_normalized_top100": 0.0,
+      "normalized_unique_at100": 33400,
+      "positive_at100": 3702,
+      "raw_duplicate_count": 0,
+      "raw_prediction_count": 33400,
+      "screens": 334,
+      "unmeasured_at100": 0,
+      "wrong_direction_fraction_normalized_top100": 0.03032934131736527
+    },
+    "legacy_seed2": {
+      "extra_predictions": 0,
+      "measured_at100": 33400,
+      "measured_zero_at100": 28676,
+      "missing_predictions": 0,
+      "negative_at100": 1015,
+      "non_hgnc_at100": 0,
+      "non_hgnc_but_measured_at100": 0,
+      "non_hgnc_fraction_normalized_top100": 0.0,
+      "normalized_unique_at100": 33400,
+      "positive_at100": 3709,
+      "raw_duplicate_count": 0,
+      "raw_prediction_count": 33400,
+      "screens": 334,
+      "unmeasured_at100": 0,
+      "wrong_direction_fraction_normalized_top100": 0.03038922155688623
+    },
+    "legacy_seed3": {
+      "extra_predictions": 0,
+      "measured_at100": 33400,
+      "measured_zero_at100": 28685,
+      "missing_predictions": 0,
+      "negative_at100": 1012,
+      "non_hgnc_at100": 0,
+      "non_hgnc_but_measured_at100": 0,
+      "non_hgnc_fraction_normalized_top100": 0.0,
+      "normalized_unique_at100": 33400,
+      "positive_at100": 3703,
+      "raw_duplicate_count": 0,
+      "raw_prediction_count": 33400,
+      "screens": 334,
+      "unmeasured_at100": 0,
+      "wrong_direction_fraction_normalized_top100": 0.03029940119760479
+    },
+    "legacy_seed4": {
+      "extra_predictions": 0,
+      "measured_at100": 33400,
+      "measured_zero_at100": 28681,
+      "missing_predictions": 0,
+      "negative_at100": 1014,
+      "non_hgnc_at100": 0,
+      "non_hgnc_but_measured_at100": 0,
+      "non_hgnc_fraction_normalized_top100": 0.0,
+      "normalized_unique_at100": 33400,
+      "positive_at100": 3705,
+      "raw_duplicate_count": 0,
+      "raw_prediction_count": 33400,
+      "screens": 334,
+      "unmeasured_at100": 0,
+      "wrong_direction_fraction_normalized_top100": 0.030359281437125747
+    },
+    "legacy_seed5": {
+      "extra_predictions": 0,
+      "measured_at100": 33400,
+      "measured_zero_at100": 28678,
+      "missing_predictions": 0,
+      "negative_at100": 1015,
+      "non_hgnc_at100": 0,
+      "non_hgnc_but_measured_at100": 0,
+      "non_hgnc_fraction_normalized_top100": 0.0,
+      "normalized_unique_at100": 33400,
+      "positive_at100": 3707,
+      "raw_duplicate_count": 0,
+      "raw_prediction_count": 33400,
+      "screens": 334,
+      "unmeasured_at100": 0,
+      "wrong_direction_fraction_normalized_top100": 0.03038922155688623
+    },
+    "legacy_seed6": {
+      "extra_predictions": 0,
+      "measured_at100": 33400,
+      "measured_zero_at100": 28676,
+      "missing_predictions": 0,
+      "negative_at100": 1015,
+      "non_hgnc_at100": 0,
+      "non_hgnc_but_measured_at100": 0,
+      "non_hgnc_fraction_normalized_top100": 0.0,
+      "normalized_unique_at100": 33400,
+      "positive_at100": 3709,
+      "raw_duplicate_count": 0,
+      "raw_prediction_count": 33400,
+      "screens": 334,
+      "unmeasured_at100": 0,
+      "wrong_direction_fraction_normalized_top100": 0.03038922155688623
+    },
+    "legacy_seed7": {
+      "extra_predictions": 0,
+      "measured_at100": 33400,
+      "measured_zero_at100": 28677,
+      "missing_predictions": 0,
+      "negative_at100": 1015,
+      "non_hgnc_at100": 0,
+      "non_hgnc_but_measured_at100": 0,
+      "non_hgnc_fraction_normalized_top100": 0.0,
+      "normalized_unique_at100": 33400,
+      "positive_at100": 3708,
+      "raw_duplicate_count": 0,
+      "raw_prediction_count": 33400,
+      "screens": 334,
+      "unmeasured_at100": 0,
+      "wrong_direction_fraction_normalized_top100": 0.03038922155688623
+    },
+    "published_ensemble": {
+      "extra_predictions": 0,
+      "measured_at100": 23957,
+      "measured_zero_at100": 20492,
+      "missing_predictions": 0,
+      "negative_at100": 426,
+      "non_hgnc_at100": 44,
+      "non_hgnc_but_measured_at100": 0,
+      "non_hgnc_fraction_normalized_top100": 0.0013274202793616314,
+      "normalized_unique_at100": 33147,
+      "positive_at100": 3039,
+      "raw_duplicate_count": 0,
+      "raw_prediction_count": 33400,
+      "screens": 334,
+      "unmeasured_at100": 9190,
+      "wrong_direction_fraction_normalized_top100": 0.012851841795637614
+    },
+    "router": {
+      "extra_predictions": 0,
+      "measured_at100": 23414,
+      "measured_zero_at100": 19930,
+      "missing_predictions": 0,
+      "negative_at100": 444,
+      "non_hgnc_at100": 43,
+      "non_hgnc_but_measured_at100": 0,
+      "non_hgnc_fraction_normalized_top100": 0.0012969386216256974,
+      "normalized_unique_at100": 33155,
+      "positive_at100": 3040,
+      "raw_duplicate_count": 0,
+      "raw_prediction_count": 33400,
+      "screens": 334,
+      "unmeasured_at100": 9741,
+      "wrong_direction_fraction_normalized_top100": 0.013391645302367666
+    }
+  },
+  "historical_mean_differences": {
+    "legacy_eight_seed_average": 0.0,
+    "published_ensemble": -2.7755575615628914e-17,
+    "router": 0.0
+  },
+  "legacy_seed_means": [
+    0.13616124340731678,
+    0.1358868618951248,
+    0.1359641799011427,
+    0.1360787352383027,
+    0.13605713522789611,
+    0.1360883773765732,
+    0.13604175220224174,
+    0.13614053442961893
+  ],
+  "limitations": [
+    "Public test already explored; no prospective generalization claim",
+    "No new model was selected",
+    "Legacy uses a supplied library and train+validation, unlike router",
+    "Legacy bootstrap averages eight fixed seeds within each screen; not seed uncertainty",
+    "Intervals are descriptive, without correction for historical experimentation",
+    "Replay verifies saved predictions, not upstream LLM inference or hidden training data"
+  ],
+  "models": {
+    "legacy_eight_seed_average": {
+      "ci95": [
+        0.08109519782206469,
+        0.21987260720466345
+      ],
+      "mean_andcg100": 0.13605235245977712
+    },
+    "published_ensemble": {
+      "ci95": [
+        0.12422098526839172,
+        0.2135155410844061
+      ],
+      "mean_andcg100": 0.16309105341547825
+    },
+    "router": {
+      "ci95": [
+        0.11957178538033873,
+        0.21269502154407907
+      ],
+      "mean_andcg100": 0.16036947764886397
+    }
+  },
+  "n_publications": 63,
+  "n_screens": 334,
+  "paired_differences": {
+    "legacy_eight_seed_average_minus_published_ensemble": {
+      "ci95": [
+        -0.08687646973343939,
+        0.0639656689793042
+      ],
+      "input_comparable": false,
+      "mean": -0.02703870095570111
+    },
+    "router_minus_legacy_eight_seed_average": {
+      "ci95": [
+        -0.06801628895604796,
+        0.08456556546456706
+      ],
+      "input_comparable": false,
+      "mean": 0.024317125189086835
+    },
+    "router_minus_published_ensemble": {
+      "ci95": [
+        -0.015136650774725346,
+        0.00639272366235794
+      ],
+      "input_comparable": true,
+      "mean": -0.002721575766614277
+    }
+  },
+  "replays_identical": true,
+  "seconds": 234.88121395814233
+}

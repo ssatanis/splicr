@@ -1,0 +1,9 @@
+training summary built 1349 23723
+official validation evaluations complete
+Traceback (most recent call last):
+  File "/Users/sahaj/Documents/Projects/SplicR/research/artifacts/20260928/error_analysis/analyze.py", line 160, in <module>
+    'measured_publications':len(pub_measured[g]),'hit_publications':len(pub_hits[g]),'hit_rate':hits[g]/n})
+                                                                                                ~~~~~~~^~
+ZeroDivisionError: float division by zero
+
+Interrupted before results: Counter mapping-vs-keys bug found during review; final script checks integer exposure and hit <= measured invariants.

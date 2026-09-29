@@ -1,0 +1,45 @@
+{
+  "artifacts": {
+    "research/artifacts/20260928/frontier_residual/validation/F4_residual_200_predictions.json": "16b588935e9976f5b4d6dc999d0a97952fa39fdf86ee74f6ae10af0c4ca9288d",
+    "research/artifacts/20260928/frontier_residual/validation/F4_residual_200_screens.json": "35579807bad5d8af304c91c13488bde49e30a26564dcb364c69a84789e719c85",
+    "research/artifacts/20260928/publication/experiment_FL_summary.json": "cbe14248b99b79538b98e1360c2fda60d071466240e83624166283a4d60c414d"
+  },
+  "calibration_status": "not_fitted",
+  "cohort": {
+    "assaybench_version": "0.2.0",
+    "dataset_sha256": "25e00c380358486137d1f25c490db98d007dfc5230f8ad502276dc6ccc741a5c",
+    "metric_sha256": "d1b638c9aa3ee1cbd984028595b7af009f00736d203fa9cc10405732d182fbae",
+    "n_publications": 34,
+    "n_screens": 218
+  },
+  "configuration": {
+    "base": "reciprocal-rank fusion (constant 60) over five expert files",
+    "kind": "residual_blend",
+    "lambda": 2.0,
+    "selection_multiplicity": 7
+  },
+  "evaluation_kind": "validation_selection",
+  "experiment_id": "20260928_experiment_FL",
+  "input_contract": "metadata_only",
+  "notes": "Historical residual blended into the frontier reciprocal-rank base. Validation 0.188284 against the published ensemble 0.186437: +0.001846 [-0.014302, +0.030611], and +0.008599 [-0.003738, +0.036687] against its own base. Both intervals contain zero, so no superiority is established. The base itself is significantly below the published ensemble at -0.006752 [-0.017570, -0.001032].",
+  "predictions": "research/artifacts/20260928/frontier_residual/validation/F4_residual_200_predictions.json",
+  "promotion_status": "research_only",
+  "provenance": {
+    "assaybench_version": "0.2.0",
+    "data_sha256": "25e00c380358486137d1f25c490db98d007dfc5230f8ad502276dc6ccc741a5c",
+    "git_revision": "25e0feec0b226158b732b3a662383a8f62529c0c",
+    "metric_sha256": "d1b638c9aa3ee1cbd984028595b7af009f00736d203fa9cc10405732d182fbae",
+    "model_code_sha256": "e009f05bf4948af8a91bda3f2e2c4e23f57ff17a36070c4ce5d6484d51564fdc",
+    "modern_model_memorization_risk": true,
+    "public_test_accessed": false,
+    "runner": "engine/analysis/frontier_residual.py",
+    "runner_sha256": "7a714ad2be29bfde15e3cdcfc5982b5c9d8455c21296339ee9c00b77002277e3",
+    "seed": 20260928
+  },
+  "schema_version": 1,
+  "screen_results": "research/artifacts/20260928/frontier_residual/validation/F4_residual_200_screens.json",
+  "split": "validation_2021",
+  "summary": "research/artifacts/20260928/publication/experiment_FL_summary.json",
+  "task": "pre_screen_prediction",
+  "validation_probability": null
+}

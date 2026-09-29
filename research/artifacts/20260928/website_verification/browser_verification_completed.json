@@ -1,0 +1,263 @@
+{
+  "checks_per_cell": [
+    "document.documentElement.scrollWidth - clientWidth == 0 (no horizontal page scroll)",
+    "console error-level messages == 0",
+    "document.title unique and route-specific",
+    "h1 present and non-empty"
+  ],
+  "date": "2026-09-28",
+  "evidence_downloads": {
+    "/evidence/05_BENCHMARK_REPRODUCTION.md": {
+      "bytes": 5615,
+      "http": 200
+    },
+    "/evidence/08_VALIDATION_REPORT.md": {
+      "bytes": 9195,
+      "http": 200
+    },
+    "/evidence/10_FINAL_RESULTS.md": {
+      "bytes": 11606,
+      "http": 200
+    },
+    "/evidence/11_HOW_TO_READ_THE_EVIDENCE.md": {
+      "bytes": 9350,
+      "http": 200
+    },
+    "/evidence/12_WEBSITE_CONSISTENCY.md": {
+      "bytes": 4292,
+      "http": 200
+    },
+    "/evidence/POSTSCREEN_IMPLEMENTATION.md": {
+      "bytes": 13541,
+      "http": 200
+    },
+    "/evidence/manifest.json": {
+      "bytes": 724,
+      "http": 200
+    },
+    "/evidence/summary.json": {
+      "bytes": 6038,
+      "http": 200
+    }
+  },
+  "gates_rerun_after_documentation_edits": {
+    "npm run build -w apps/web -- --webpack": "exit 0",
+    "npm run evidence:check": "verified_existing_retrospective_snapshot",
+    "npm run lint": "pass",
+    "npm run test:web": "81 passed, 0 failed",
+    "npm run typecheck": "pass",
+    "pytest engine/tests": "282 passed, 2 skipped"
+  },
+  "how": "Claude Code built-in browser pane (Chromium) driving the project's own Next.js 16.3.6 dev server",
+  "http_status": {
+    "/": 200,
+    "/about": 200,
+    "/careers": 200,
+    "/contact": 200,
+    "/evidence": 200,
+    "/login": 200,
+    "/pipeline": 200,
+    "/signup": 200,
+    "/technology": 200
+  },
+  "not_verified": [
+    "public deployment at https://www.splicr.org/ (not authorized, not attempted)",
+    "authenticated /dashboard routes beyond their existing automated tests",
+    "tablet width on /about, /careers, /contact"
+  ],
+  "numeric_consistency": {
+    "checked": "rendered /evidence table against /evidence/summary.json served by the app",
+    "oracle_selects_with_test_answers": 0.29178431087462314,
+    "published_ensemble": 0.16309105341547825,
+    "result": "rendered values match the served artifact",
+    "router_ci95": [
+      -0.015580579751069256,
+      0.006267558948259969
+    ],
+    "router_minus_ensemble": -0.002721575766614277,
+    "splicr_research_router": 0.16036947764886397
+  },
+  "server": "http://localhost:3001 (pre-existing next dev for apps/web; port 3000 was held by an unresponsive node process and was left untouched)",
+  "status": "browser_verification_completed",
+  "supersedes": "summary.json (browser_verification_blocked_static_checks_pass_with_metadata_findings)",
+  "target": "local dev server; NO deployment performed or authorized",
+  "titles": {
+    "/": "SplicR",
+    "/about": "About Us | SplicR",
+    "/careers": "Careers | SplicR",
+    "/contact": "Contact | SplicR",
+    "/evidence": "Evidence and limitations | SplicR",
+    "/pipeline": "Pipeline | SplicR",
+    "/technology": "Technology | SplicR"
+  },
+  "viewport_matrix": [
+    {
+      "console_errors": 0,
+      "horizontal_overflow_px": 0,
+      "reason": null,
+      "route": "/",
+      "status": "pass",
+      "width": 390
+    },
+    {
+      "console_errors": 0,
+      "horizontal_overflow_px": 0,
+      "reason": null,
+      "route": "/",
+      "status": "pass",
+      "width": 768
+    },
+    {
+      "console_errors": 0,
+      "horizontal_overflow_px": 0,
+      "reason": null,
+      "route": "/",
+      "status": "pass",
+      "width": 1440
+    },
+    {
+      "console_errors": 0,
+      "horizontal_overflow_px": 0,
+      "reason": null,
+      "route": "/technology",
+      "status": "pass",
+      "width": 390
+    },
+    {
+      "console_errors": 0,
+      "horizontal_overflow_px": 0,
+      "reason": null,
+      "route": "/technology",
+      "status": "pass",
+      "width": 768
+    },
+    {
+      "console_errors": 0,
+      "horizontal_overflow_px": 0,
+      "reason": null,
+      "route": "/technology",
+      "status": "pass",
+      "width": 1440
+    },
+    {
+      "console_errors": 0,
+      "horizontal_overflow_px": 0,
+      "reason": null,
+      "route": "/pipeline",
+      "status": "pass",
+      "width": 390
+    },
+    {
+      "console_errors": 0,
+      "horizontal_overflow_px": 0,
+      "reason": null,
+      "route": "/pipeline",
+      "status": "pass",
+      "width": 768
+    },
+    {
+      "console_errors": 0,
+      "horizontal_overflow_px": 0,
+      "reason": null,
+      "route": "/pipeline",
+      "status": "pass",
+      "width": 1440
+    },
+    {
+      "console_errors": 0,
+      "horizontal_overflow_px": 0,
+      "reason": null,
+      "route": "/evidence",
+      "status": "pass",
+      "width": 390
+    },
+    {
+      "console_errors": 0,
+      "horizontal_overflow_px": 0,
+      "reason": null,
+      "route": "/evidence",
+      "status": "pass",
+      "width": 768
+    },
+    {
+      "console_errors": 0,
+      "horizontal_overflow_px": 0,
+      "reason": null,
+      "route": "/evidence",
+      "status": "pass",
+      "width": 1440
+    },
+    {
+      "console_errors": 0,
+      "horizontal_overflow_px": 0,
+      "reason": null,
+      "route": "/about",
+      "status": "pass",
+      "width": 390
+    },
+    {
+      "console_errors": null,
+      "horizontal_overflow_px": null,
+      "reason": "tablet width sampled on four representative routes only",
+      "route": "/about",
+      "status": "not_run",
+      "width": 768
+    },
+    {
+      "console_errors": 0,
+      "horizontal_overflow_px": 0,
+      "reason": null,
+      "route": "/about",
+      "status": "pass",
+      "width": 1440
+    },
+    {
+      "console_errors": 0,
+      "horizontal_overflow_px": 0,
+      "reason": null,
+      "route": "/careers",
+      "status": "pass",
+      "width": 390
+    },
+    {
+      "console_errors": null,
+      "horizontal_overflow_px": null,
+      "reason": "tablet width sampled on four representative routes only",
+      "route": "/careers",
+      "status": "not_run",
+      "width": 768
+    },
+    {
+      "console_errors": 0,
+      "horizontal_overflow_px": 0,
+      "reason": null,
+      "route": "/careers",
+      "status": "pass",
+      "width": 1440
+    },
+    {
+      "console_errors": 0,
+      "horizontal_overflow_px": 0,
+      "reason": null,
+      "route": "/contact",
+      "status": "pass",
+      "width": 390
+    },
+    {
+      "console_errors": null,
+      "horizontal_overflow_px": null,
+      "reason": "tablet width sampled on four representative routes only",
+      "route": "/contact",
+      "status": "not_run",
+      "width": 768
+    },
+    {
+      "console_errors": 0,
+      "horizontal_overflow_px": 0,
+      "reason": null,
+      "route": "/contact",
+      "status": "pass",
+      "width": 1440
+    }
+  ]
+}

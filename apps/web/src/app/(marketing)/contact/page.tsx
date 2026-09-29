@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { marketingMetadata } from "@/lib/marketing-metadata";
 
 import { ContactForm } from "@/components/marketing/contact-form";
 import { MarketingNav } from "@/components/marketing/nav";
@@ -7,10 +7,10 @@ import { Orb } from "@/components/ui/orb";
 import { Reveal } from "@/components/ui/reveal";
 import { site } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata = marketingMetadata("/contact", {
   title: "Contact",
   description: "Request a blind test, ask about the Atlas, or talk to us about a pharma pilot.",
-};
+});
 
 const contactCards = [
   { label: "Blind test", q: "Have a finished screen we can score blind?", email: site.email },

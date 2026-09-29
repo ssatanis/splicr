@@ -192,12 +192,119 @@
     "research/artifacts/official_references.json": "9d64ca66c4627ce4307aee594d6607885f7ed7271d326f95ada9a3ca23db2e2e",
     "research/artifacts/router_replay_summary.json": "20fd78f34a0ba45dc8cbcea9d24a65b0d415fc6776dcd7afa47b1eb493cd228d",
     "research/artifacts/raw_count_reproduction.json": "3a770f4f996c124466c2579633cb364650d6cf1f8366c8e36a69adace794f226",
-    "research/artifacts/postscreen_unpaired_audit.json": "697d272cf7c48ca169b3d6d8c480fc0783e657484353c1eccc132c5034222cc2"
+    "research/artifacts/postscreen_unpaired_audit.json": "697d272cf7c48ca169b3d6d8c480fc0783e657484353c1eccc132c5034222cc2",
+    "research/artifacts/20260928/publication/experiment_D_descriptor.json": "1421beab7740ea245f8f7dd0cb40e28fba2a65c69a2d58bb5e01b4a38daa19eb",
+    "research/artifacts/20260928/publication/experiment_E_descriptor.json": "5ab0a8018d58e99b72476c4145137dbc98dc9cb36e2d90ada79b5671eecdcc13",
+    "research/artifacts/20260928/publication/experiment_R_descriptor.json": "72b3de11619b0451c454b076ad3a67ebaf2791e49655c6c25277a7d69d27a3a6"
   },
   "limitations": [
     "Public retrospective test; independent prospective validation outstanding.",
     "No demonstrated superiority over the published ensemble.",
     "No calibrated probability of independent validation.",
     "Count agreement and software tests do not certify biological accuracy."
-  ]
+  ],
+  "research_addendum": {
+    "measurement_date": "2026-09-28",
+    "split": "validation_2021 (218 screens, 34 publications)",
+    "note": "Development results on the 2021 validation split, not the 334-screen public test. Neither experiment established an improvement and neither model is promoted.",
+    "experiments": {
+      "20260928_experiment_D": {
+        "title": "Gene-level LambdaRank over 57 historical-context features",
+        "selected_model": "E2_history_lambdarank",
+        "split": "validation_2021",
+        "evaluation_kind": "validation_selection",
+        "input_contract": "metadata_only",
+        "promotion_status": "research_only",
+        "mean": 0.18098516821887162,
+        "ci95": [
+          0.1133776654908188,
+          0.25951374682060274
+        ],
+        "n_screens": 218,
+        "n_publications": 34,
+        "comparison": "Published frontier ensemble on the same 218 screens: 0.186437. Paired difference -0.005452, 95% publication-cluster interval [-0.016147, +0.010805] over 10,000 resamples.",
+        "finding": "No improvement established: the interval contains zero and the point estimate is below the ensemble. Selection multiplicity 14."
+      },
+      "20260928_experiment_E": {
+        "title": "Requested-effect polarity conditioning",
+        "selected_model": "P0_baseline_D3",
+        "split": "validation_2021",
+        "evaluation_kind": "validation_selection",
+        "input_contract": "metadata_only",
+        "promotion_status": "research_only",
+        "mean": 0.09945010274065483,
+        "ci95": [
+          0.03114703090902138,
+          0.217460825450562
+        ],
+        "n_screens": 218,
+        "n_publications": 34,
+        "comparison": "Cross-validation selected the unconditioned baseline. The polarity prior scored -0.007931 [-0.023172, +0.004531] against it; the polarity-plus-transfer variant -0.010680 [-0.024030, +0.001069].",
+        "finding": "The parser separates all 47 metadata-matched increase/decrease comparisons that previous features collapsed. That is a representation improvement, not an established ranking improvement."
+      }
+    }
+  },
+  "post_screen_replication": {
+    "measurement_date": "2026-09-28",
+    "benchmark": "SplicR cross-screen replication benchmark: 124 held-out screen pairs from different publications, first authors and libraries, same cell line, unperturbed proliferation",
+    "note": "Given a screen a lab has already run, rank its candidates by how likely each is to be called a hit in an independent screen. This is a different task from the pre-screen prediction table and the two are not comparable.",
+    "cohort": {
+      "benchmark_artifact_sha256": "d525ec0a8dd30ac95a61acf732ec34e7ed75c6070898b248e4c045c67701558a",
+      "n_screen_pairs": 124,
+      "n_units": 248
+    },
+    "primary_model": "lr_effect_freq",
+    "comparator": "effect_score1",
+    "metric": "average precision, non-common-essential gene space",
+    "primary_mean": 0.3538029148717251,
+    "comparator_mean": 0.24636521237071196,
+    "paired_difference": {
+      "ci95": [
+        0.10197492297346228,
+        0.11278569643377552
+      ],
+      "mean_difference": 0.10743770250101319,
+      "n_screen_pairs": 124,
+      "n_units": 248,
+      "resampling_unit": "pair_key",
+      "significant": true,
+      "wilcoxon_p": 4.330109895931127e-22
+    },
+    "precision_at_10": {
+      "comparator": 0.6963709677419354,
+      "paired_difference": {
+        "ci95": [
+          0.2004032258064516,
+          0.2383064516129032
+        ],
+        "mean_difference": 0.21895161290322582,
+        "n_screen_pairs": 124,
+        "n_units": 248,
+        "resampling_unit": "pair_key",
+        "significant": true,
+        "wilcoxon_p": 5.725557880076196e-22
+      },
+      "primary": 0.9153225806451614
+    },
+    "non_hub_paired_difference": {
+      "ci95": [
+        0.04736208500111694,
+        0.09793373313036204
+      ],
+      "mean_difference": 0.07212556753352574,
+      "n_screen_pairs": 11,
+      "n_units": 22,
+      "resampling_unit": "pair_key",
+      "significant": true,
+      "wilcoxon_p": 0.0009765625
+    },
+    "promotion_status": "research_only",
+    "limitations": [
+      "Cross-screen replication is a proxy for reproducibility, not proof that a candidate passes an independent biological validation assay.",
+      "The target screen's hit call depends on its own significance criteria; a real effect can fail to replicate because that threshold was stricter.",
+      "113 of the 124 held-out pairs are one library comparison (Behan 2019 against Meyers 2017); the 11 remaining pairs are reported separately.",
+      "Unperturbed proliferation screens only. Nothing is established for drug-modifier, host-pathogen or reporter screens.",
+      "This is a ranking, not a calibrated probability that any individual gene validates."
+    ]
+  }
 }

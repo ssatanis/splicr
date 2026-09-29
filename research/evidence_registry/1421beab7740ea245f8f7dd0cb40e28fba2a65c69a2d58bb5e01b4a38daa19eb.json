@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "experiment_id": "20260928_experiment_D",
+  "descriptor": "research/artifacts/20260928/publication/experiment_D_descriptor.json",
+  "descriptor_sha256": "1421beab7740ea245f8f7dd0cb40e28fba2a65c69a2d58bb5e01b4a38daa19eb",
+  "status": "registered_research_only",
+  "independent_scientific_verification": "not_established_by_this_software_check",
+  "public_evidence_changed": false
+}

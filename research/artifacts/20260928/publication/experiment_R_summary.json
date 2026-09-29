@@ -1,0 +1,14 @@
+{
+  "ci95": [
+    0.3383795497552308,
+    0.3696429886298342
+  ],
+  "mean": 0.3538029148717251,
+  "metric": "average precision, non-common-essential gene space",
+  "n_publications": 5,
+  "n_screens": 248,
+  "recomputed_from": "research/artifacts/20260928/replication_heldout/heldout_results.json",
+  "repeats": 10000,
+  "seed": 20260928,
+  "unit": "publication"
+}

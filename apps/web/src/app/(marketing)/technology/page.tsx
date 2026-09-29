@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { marketingMetadata } from "@/lib/marketing-metadata";
 
 import { MarketingNav } from "@/components/marketing/nav";
 import { CtaSection } from "@/components/marketing/sections/cta";
@@ -17,11 +17,11 @@ import {
 import { Cite } from "@/components/ui/cite";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = {
+export const metadata = marketingMetadata("/technology", {
   title: "Technology",
   description:
     "Explore SplicR's screen analysis, published evidence, planning estimates, outcome records and REST integration.",
-};
+});
 
 export default function TechnologyPage() {
   return (
@@ -205,7 +205,7 @@ export default function TechnologyPage() {
                     including our own score.
                   </>
                 }
-                body="The new research router scored below the published frontier ensemble and was not promoted. Predictions were evaluated with the official metric without target-library filtering or backfill. Cached model predictions and a public test set do not establish prospective performance. The oracle selects with test answers."
+                body="The new research router scored below the published frontier ensemble and was not promoted. Predictions were evaluated with the official metric without target-library filtering or backfill. Published expert prompts can include post-hoc metadata. Cached model predictions and a public test set do not establish a clean pre-experiment forecast or prospective performance. The oracle selects with test answers."
               />
             </Reveal>
             <p className="mt-6 text-sm text-white/80">

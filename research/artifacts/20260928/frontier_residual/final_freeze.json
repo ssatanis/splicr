@@ -1,0 +1,118 @@
+{
+  "baseline_file_sha256": "d6df699d8d0cbf77fe2dd0238cd8bd6f3efe21618994eec7deacc21f39deb2e7",
+  "cv_selected": "F4_residual_200",
+  "expert_hashes": {
+    "gemini-3-flash": "1eef9fbeda42df8817629cf47c27fe6451bffd7d3de92034e89ebf16e1d9d459",
+    "gemini-3-pro": "4ddc041c7b57558bc534f3479476be835c011e497ea2d66f1c601908bb23b7bb",
+    "gemini-3.1-pro": "ff3c67e97859cbfa55eecacee498cdec3cead27fe57c3b6bd2234cb9e76c506f",
+    "gpt-5.2": "56069c522733c95fcb10b96d7839636a4a12ceb46f1dab4d5c6c9749f2edfdb5",
+    "gpt-5.4": "af487d74d311a26a4b701430ee3da17667eef3fb97e6bd8e12cd935230fc6239"
+  },
+  "frozen_before_new_test_access": true,
+  "interpretation": "publication-grouped CV selects; the 2021 validation split confirms or refutes; no public-test number is produced by this runner",
+  "promotion_status": "research_only",
+  "provenance": {
+    "assaybench_version": "0.2.0",
+    "base": "reciprocal-rank fusion (constant 60) over the five expert files",
+    "context_ranking_sha256": "e009f05bf4948af8a91bda3f2e2c4e23f57ff17a36070c4ce5d6484d51564fdc",
+    "data_sha256": "25e00c380358486137d1f25c490db98d007dfc5230f8ad502276dc6ccc741a5c",
+    "git_revision": "25e0feec0b226158b732b3a662383a8f62529c0c",
+    "input": "pre-experimental metadata; train-union genes; no target library",
+    "input_contract": "description metadata + separately generated zero-shot expert rankings; no target library",
+    "loader_code_sha256": "6e3dc144928252f96af66e1b7966ace7556aa23935a10005f05a1a0b3aa84044",
+    "metric_sha256": "d1b638c9aa3ee1cbd984028595b7af009f00736d203fa9cc10405732d182fbae",
+    "model_code_sha256": "cdfb02576fb89cc67807d00672b438db6f07d5698efcc64c53ad13f0853a9683",
+    "modern_model_memorization_risk": true,
+    "protocol": "train <=2020; validation 2021; public test >=2022 already explored historically",
+    "protocol_code_sha256": "2287b13c5d0946a1e2e92e9ad470113abe5b325fe38692e6aa87469a09b91264",
+    "public_test_accessed": false,
+    "published_ensemble_has_no_training_predictions": true,
+    "runner_code_sha256": "5056075e24de9e480eecbd2738125ce1c5fbab72d6397a30355f9466738e6dc3",
+    "runner_sha256": "7a714ad2be29bfde15e3cdcfc5982b5c9d8455c21296339ee9c00b77002277e3",
+    "seed": 20260928
+  },
+  "public_test_accessed": false,
+  "published_ensemble_validation": {
+    "mean": 0.18643712067956802
+  },
+  "selected": "F4_residual_200",
+  "selection_multiplicity": 7,
+  "validation_comparisons": {
+    "F0_base_rrf60": {
+      "vs_base_rrf60": {
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "mean": 0.0,
+        "n_publications": 34,
+        "n_screens": 218,
+        "repeats": 10000,
+        "seed": 20260928,
+        "unit": "publication"
+      },
+      "vs_published_ensemble": {
+        "ci95": [
+          -0.01757012669986708,
+          -0.001032493119990539
+        ],
+        "mean": -0.006752380883092484,
+        "n_publications": 34,
+        "n_screens": 218,
+        "repeats": 10000,
+        "seed": 20260928,
+        "unit": "publication"
+      }
+    },
+    "F4_residual_200": {
+      "vs_base_rrf60": {
+        "ci95": [
+          -0.003737633158642769,
+          0.03668661914464367
+        ],
+        "mean": 0.00859881561749799,
+        "n_publications": 34,
+        "n_screens": 218,
+        "repeats": 10000,
+        "seed": 20260928,
+        "unit": "publication"
+      },
+      "vs_published_ensemble": {
+        "ci95": [
+          -0.01430190366836294,
+          0.030610800700236623
+        ],
+        "mean": 0.001846434734405505,
+        "n_publications": 34,
+        "n_screens": 218,
+        "repeats": 10000,
+        "seed": 20260928,
+        "unit": "publication"
+      }
+    }
+  },
+  "validation_results": {
+    "F0_base_rrf60": {
+      "corpus_fit_seconds": 8.753629541955888,
+      "expert_weights": null,
+      "lambda": 0.0,
+      "mean": 0.17968473979647556,
+      "measured_at100": 82.3211009174312,
+      "predict_seconds": 0.03805508301593363,
+      "prior_weight": null,
+      "ranker_fit_seconds": 28.576713666087016,
+      "weight_fit_seconds": 0.0
+    },
+    "F4_residual_200": {
+      "corpus_fit_seconds": 8.753629541955888,
+      "expert_weights": null,
+      "lambda": 2.0,
+      "mean": 0.1882835554139735,
+      "measured_at100": 78.05045871559633,
+      "predict_seconds": 2.0695821249391884,
+      "prior_weight": null,
+      "ranker_fit_seconds": 28.576713666087016,
+      "weight_fit_seconds": 0.0
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "parser_sha256": "b249e25742919a09bb66816d0dd209f9841fb694d54ec7bca69febb4353d6856",
+  "script_sha256": "c82a95cc0e4db0a17e729df439061917783476389dc0c3cfdf16b66279d1acd1",
+  "data_sha256": "25e00c380358486137d1f25c490db98d007dfc5230f8ad502276dc6ccc741a5c",
+  "training_screens": 1349,
+  "training_unique_phenotypes": 343,
+  "training_polarity_counts": {
+    "decrease": 972,
+    "unknown": 126,
+    "increase": 251
+  },
+  "validation_pair_comparisons": 47,
+  "validation_unique_screens": 82,
+  "validation_publications": 5,
+  "distinguished": 47,
+  "same_target": 47,
+  "interpretation": "implementation diagnostic only; grammar based on training and synthetic semantics, no model-performance claim; no test accessed"
+}
