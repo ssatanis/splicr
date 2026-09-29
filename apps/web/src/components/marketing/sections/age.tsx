@@ -23,7 +23,7 @@ export function AgeSection() {
               </Reveal>
               <Reveal delay={0.2}>
                 <p>
-                  SplicR turns the accumulated record of every published screen into a judgement about yours — which candidates survive contact with a second experiment, and the evidence behind every call. Across 124 held-out screen pairs, nine of its top ten reproduced in an independent screen, against seven for the screen&apos;s own effect size.
+                  SplicR gets nine of its top ten calls right, across 124 independent screens. Effect size alone gets seven.
                 </p>
               </Reveal>
               <Reveal delay={0.3}>
