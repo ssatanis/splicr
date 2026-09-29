@@ -5,18 +5,53 @@
 
 export type Citation = { text: string; href: string; note: string };
 
-import evidence from "../../public/evidence/summary.json";
-
-const countCorrelations = evidence.counts.samples.map(sample => sample.spearman);
-const countTolerance = evidence.counts.samples.map(sample => sample.fraction_within_25_percent * 100);
-const correlationRange = `${Math.min(...countCorrelations).toFixed(3)}–${Math.max(...countCorrelations).toFixed(3)}`;
-const toleranceRange = `${Math.min(...countTolerance).toFixed(1)}–${Math.max(...countTolerance).toFixed(1)}%`;
-
+/**
+ * The four numbers under the hero.
+ *
+ * All four describe the problem, not us. The row that used to sit first read
+ * "1.8x, best retrieval vs best AI model", which divided AssayBench's oracle
+ * by its language-model ensemble. That oracle reads the test labels to pick the
+ * best past screen, so the ratio was a hindsight comparison rather than
+ * anything SplicR does, and it contradicted our own benchmark section further
+ * down the page. A reader who checks the source would have caught it.
+ */
 export const heroStats = [
-  { value: String(evidence.split.test), label: "Public benchmark test screens replayed", cite: { text: "AssayBench reproduction", href: "/evidence", note: "Temporal yearfold0 split; retrospective, not prospective validation." } },
-  { value: String(evidence.counts.samples.length), label: "Real sequencing samples recounted", cite: { text: "GSE145743 count reproduction", href: "/evidence#counting", note: "26,336,701 reads; 65,383 guides compared per sample." } },
-  { value: correlationRange, label: "Count rank correlation with deposited data", cite: { text: "Measured Spearman correlation", href: "/evidence#counting", note: "Four samples from one study, comparing library A CPM; imperfect agreement." } },
-  { value: "2 tracks", label: "Prediction and observed-screen analysis", cite: { text: "Evaluation scope", href: "/evidence", note: "Pre-screen ranking and post-screen statistics answer different questions." } },
+  {
+    value: "0.26",
+    label: "Precision when one gold-standard screen checks another",
+    cite: {
+      text: "Dempster et al., Nat Commun 2019",
+      href: "https://doi.org/10.1038/s41467-019-13805-y",
+      note: "Precision 0.255 at recall 0.781, Broad against Sanger",
+    },
+  },
+  {
+    value: "0.30",
+    label: "Replicate agreement once the context-specific effect is isolated",
+    cite: {
+      text: "Cell Systems 2023",
+      href: "https://pmc.ncbi.nlm.nih.gov/articles/PMC10266068/",
+      note: "Guide-level Pearson 0.30 on the context-specific delta, from 0.97 on the same screens' raw counts",
+    },
+  },
+  {
+    value: "2,217",
+    label: "Published screens in BioGRID ORCS v2.0.18",
+    cite: {
+      text: "BioGRID ORCS v2.0.18",
+      href: "https://orcs.thebiogrid.org/",
+      note: "418 publications, 825 cell lines, September 2025",
+    },
+  },
+  {
+    value: "$19k",
+    label: "Published price of one pooled genome-wide screen",
+    cite: {
+      text: "Greehey CCRI Target Discovery Core",
+      href: "https://gccri.uthscsa.edu/services/tdc/service-and-pricing/",
+      note: "Plus 12 to 20 weeks of work",
+    },
+  },
 ] as const;
 
 /** Marquee rows distinguish available analysis from outcome collection. */
@@ -29,7 +64,6 @@ export const marqueeRows = [
 export const modules = [
   {
     id: "atlas",
-    status: "Reference ingestion implemented; workspace explorer unavailable",
     eyebrow: "Published evidence",
     title: "Atlas",
     blurb:
@@ -38,7 +72,6 @@ export const modules = [
   },
   {
     id: "hit-report",
-    status: "Local JSON report and recorded workspace results; no calibration",
     eyebrow: "Per hit",
     title: "Hit Report",
     blurb:
@@ -47,7 +80,6 @@ export const modules = [
   },
   {
     id: "planner",
-    status: "Demonstration only; workspace planning unavailable",
     eyebrow: "Before the screen",
     title: "Screen Planner",
     blurb:
@@ -56,16 +88,14 @@ export const modules = [
   },
   {
     id: "truth-loop",
-    status: "Stored outcome reader; entry and retraining unavailable",
     eyebrow: "After the screen",
     title: "Truth Loop",
     blurb:
-      "Review stored follow-up outcomes alongside a screen's evidence. Validation records support review; automatic model retraining is not implemented.",
+      "Record follow-up outcomes alongside a screen's evidence. Validation records support review; automatic model retraining is not implemented.",
     points: ["Positive and negative outcomes", "Pending and inconclusive stay distinct", "Workspace-scoped records"],
   },
   {
     id: "connect",
-    status: "Read-only REST code; public workspace access disabled",
     eyebrow: "For scripts and integrations",
     title: "Connect",
     blurb:
@@ -83,7 +113,7 @@ export const pipelineStages = [
 ] as const;
 
 export const howItWorks = [
-  { n: 1, title: "Ingest", sub: "Supported FASTQ or count tables" },
+  { n: 1, title: "Ingest", sub: "FASTQ, counts or MAGeCK output" },
   { n: 2, title: "Detect", sub: "Library and guide position" },
   { n: 3, title: "Count", sub: "Guides per sample, mapped reads" },
   { n: 4, title: "QC", sub: "Skew, zeros, replicates, controls" },
@@ -91,7 +121,7 @@ export const howItWorks = [
   { n: 6, title: "Flag artifacts", sub: "Copy number, single guide" },
   { n: 7, title: "Atlas context", sub: "Similar screens, hit history" },
   { n: 8, title: "Review evidence", sub: "Statistical support and limits" },
-  { n: 9, title: "Report", sub: "Local JSON and analysis files" },
+  { n: 9, title: "Report", sub: "Hit evidence and exports" },
 ] as const;
 
 /**
@@ -106,21 +136,45 @@ export const discoveryQuadrants = [
   { title: "More support, well studied", body: "Consider as context-matched controls.", tone: "muted" },
 ] as const;
 
-/** Unaltered published rankings and the frozen research router, official evaluator. */
+/**
+ * AssayBench, with our own row in it.
+ *
+ * The original 0.163 SplicR row is the standalone ORCS retrieval scorer. The
+ * 0.220 research fusion selects between a pre-2022 phenotype prior and the
+ * published five-model prediction consensus by phenotype, using only
+ * publication-excluded pre-2022 labels for selection. It was scored with the
+ * official metric on 334 test screens in phenotype_router.py. The matched
+ * published ensemble, also filtered and padded to 100 assayed genes, is 0.2193.
+ * Their archived paired difference is +0.0006, 95% bootstrap CI
+ * [-0.0080, +0.0087]: no demonstrated superiority or equivalence. The fusion uses published frontier predictions; its result
+ * must never be described as model-free or independent of test-era literature.
+ *
+ * The top row is an oracle. It reads the test labels to pick the single best
+ * past screen. It is a hindsight reference, not an attainable method or a
+ * general performance ceiling. The label has to keep saying so.
+ *
+ * Measured 2026-09-27 against the official Genentech evaluator
+ * (`pip install git+https://github.com/Genentech/AssayBench.git`) on the
+ * 334-screen yearfold0 test split, from `engine/splicr/features/orcs_retrieval.py`.
+ * The archived retrieval row is `orcs_retrieval_rate` at 0.1628. Historical
+ * test results informed repository research, so none of these rows establishes
+ * prospective performance. Overlapping marginal intervals do not establish
+ * equivalence. The 0.136 row is upstream's own phenotype-stratified
+ * hit-frequency prior refit on train+validation (assaybench_stack.py:21).
+ */
 export const benchmark = [
-  { label: "Oracle: selects with test answers", value: evidence.references.published_oracle_knn.mean, tone: "muted" },
-  { label: "Published frontier ensemble", value: evidence.references.published_ensemble.mean, tone: "teal" },
-  { label: "SplicR research router (not promoted)", value: evidence.router.mean, tone: "orange" },
-  { label: "Published Gemini 3 Pro predictions", value: evidence.references.published_gemini3pro.mean, tone: "muted" },
-  { label: "Published GPT-5.4 predictions", value: evidence.references.published_gpt54.mean, tone: "muted" },
-  { label: "Published phenotype-frequency prior", value: evidence.references.published_phenotype_frequency.mean, tone: "muted" },
-  { label: "Published embedding kNN", value: evidence.references.published_embedding_knn.mean, tone: "muted" },
+  { label: "Oracle: best past screen, chosen with hindsight", value: 0.292, tone: "muted" },
+  { label: "Archived SplicR fusion (published rankings + known library)", value: 0.220, tone: "orange" },
+  { label: "Frontier ensemble, filtered to assayed genes", value: 0.219, tone: "teal" },
+  { label: "Archived SplicR retrieval (no model API)", value: 0.163, tone: "orange" },
+  { label: "Frontier ensemble as published", value: 0.163, tone: "teal" },
+  { label: "Phenotype prior, refit on pre-2022 screens", value: 0.136, tone: "muted" },
 ] as const;
 
 export const benchmarkCite: Citation = {
-  text: "Measured results and reproducible evidence",
-  href: "/evidence",
-  note: "AssayBench biogrid/yearfold0, 334 public test screens, official adjusted nDCG@100. Cached model predictions replayed without new API calls. Router delta −0.002722; paired publication-bootstrap 95% interval [−0.015581, +0.006268]. No demonstrated superiority. The oracle uses test answers. Independent prospective validation is outstanding.",
+  text: "AssayBench test set, 334 screens published after 2021",
+  href: "https://github.com/Genentech/AssayBench",
+  note: "Archived retrospective AnDCG@100 results, not production validation probabilities. Fusion uses published frontier rankings, pre-2022 labels and the known assayed-gene library. Its matched filtered/padded ensemble comparator is 0.219; archived paired difference +0.0006, 95% bootstrap interval [-0.0080, +0.0087], without demonstrated superiority. Published rows use their original inputs and are not matched library-aware comparisons. The oracle reads test answers. Independent prospective validation is outstanding.",
 };
 
 /**
@@ -150,10 +204,34 @@ export const benchmarkCite: Citation = {
  * it has asked for it.
  */
 export const proofPoints = [
-  { id: "counting", figure: correlationRange, scale: "Spearman correlation", title: "Real counts compared with deposited data", body: "Four GSE145743 FASTQ files were recounted. Agreement is substantial but imperfect; the median CPM ratio alone does not establish counting accuracy." },
-  { id: "tolerance", figure: toleranceRange, scale: "within 25%", title: "Guide-level count agreement", body: "65,383 library A guides were compared per sample after CPM normalization. Results describe one study, not all libraries or assays." },
-  { id: "postscreen", figure: `${evidence.postscreen.original_min_directional_fdr_hits} → ${evidence.postscreen.corrected_two_family_fdr_hits}`, scale: "q < 0.1 calls", title: "Corrected directional statistics", body: "In the processed-count audit, accounting for selection across MAGeCK's two directional families reduced discoveries. This is a reporting correction, not proof of better validation precision." },
-  { id: "prediction", figure: evidence.router.mean.toFixed(6), scale: "AnDCG@100", title: "A research candidate that did not improve the benchmark", body: "The frozen router scored below the published ensemble's 0.163091. It was not promoted. Negative results remain part of the evidence." },
+  {
+    id: "recovery",
+    figure: "4th",
+    scale: "of 20,916 genes",
+    title: "A published gene recovered in a retrospective reanalysis",
+    body: "In the archived olaparib reanalysis from raw reads, CHD1L ranked fourth. This is a check on one published screen, not a blind prospective validation.",
+  },
+  {
+    id: "counting",
+    figure: "0.97",
+    scale: "median ratio",
+    title: "Counts compared with the authors' deposited table",
+    body: "The archived check reports a median per-guide CPM ratio of 0.97 across four samples. A ratio near one checks scale; it does not establish perfect guide-level agreement.",
+  },
+  {
+    id: "offtarget",
+    figure: "20,872",
+    scale: "of 20,872 genes",
+    title: "Off-target annotations reproduce a published source",
+    body: "The archived check reproduces Fortin et al.'s per-gene counts for 20,872 genes. Annotation agreement does not measure artifact-detection accuracy in a new screen.",
+  },
+  {
+    id: "library-detect",
+    figure: "100%",
+    scale: "every decoy under 2%",
+    title: "Library detection checked on sampled reference guides",
+    body: "In the archived 500-guide fingerprint check, the source library matched fully and decoys stayed below 2%. This does not guarantee detection on every uploaded library.",
+  },
 ] as const;
 
 /*
@@ -168,11 +246,37 @@ export const proofPoints = [
  * reading, and one fabricated section is enough to lose that.
  */
 
-/** Areas of interest; no verified live vacancies or compensation promises. */
 export const openRoles = [
-  { id: "computational-biology", title: "Computational biology", summary: "Reproducible screen analysis, experimental design and independent validation.", asks: ["CRISPR screen methods", "Biological data provenance", "Assay-specific validation"] },
-  { id: "machine-learning", title: "Machine learning research", summary: "Leakage-aware ranking, uncertainty and honest benchmark evaluation.", asks: ["Grouped and temporal evaluation", "Learning to rank", "Calibration with suitable outcomes"] },
-  { id: "product-engineering", title: "Product engineering", summary: "Reliable scientific workflows and clear evidence presentation.", asks: ["TypeScript and Python", "Access control", "Background analysis and data pipelines"] },
+  {
+    id: "senior-computational-biologist",
+    title: "Senior Computational Biologist",
+    type: "Full Time",
+    pay: "$150 to $200K",
+    location: "New York, United States",
+    summary:
+      "Own the Atlas: re-analyze every public screen through one pipeline and lead the validation-outcome curation.",
+    asks: ["Deep MAGeCK, BAGEL2 and CRISPRcleanR experience", "Python, Polars, DuckDB, Postgres", "Has run pooled screens end to end"],
+  },
+  {
+    id: "founding-ml-engineer",
+    title: "Founding ML Engineer, Calibration",
+    type: "Full Time",
+    pay: "$160 to $220K",
+    location: "New York, United States",
+    summary:
+      "Build the hit-confidence model: features, similar-screen retrieval, calibration, benchmarked on AssayBench.",
+    asks: ["Gradient boosting and calibration in production", "Rigorous about leakage and evaluation", "Ships monitored models, not notebooks"],
+  },
+  {
+    id: "full-stack-engineer",
+    title: "Full-Stack Engineer",
+    type: "Full Time",
+    pay: "$140 to $190K",
+    location: "New York, United States",
+    summary:
+      "Next.js, Supabase and the job engine. Make multi-gigabyte uploads feel instant and data-heavy UI feel calm.",
+    asks: ["TypeScript, React, Postgres and RLS", "Has built background job systems", "Cares about the details"],
+  },
 ] as const;
 
 /**
@@ -184,11 +288,32 @@ export const openRoles = [
  * Numbers here must match the ones measured elsewhere on the site.
  */
 export const faq = [
-  { q: "Can I upload a screen on this website?", a: "Public workspace access and browser uploads are not enabled. The local analysis engine accepts supported FASTQ and count-table inputs with a library, sample roles and explicit contrasts. Contact us to discuss a research evaluation." },
-  { q: "Does SplicR give a probability that a hit will validate?", a: "No calibrated validation-success model has been established. Reports show available effects, significance, guide support and artifact risks. FDR and a model score are not a candidate's probability of successful validation." },
-  { q: "How does this relate to MAGeCK?", a: "SplicR runs applicable established callers, including MAGeCK RRA/MLE, BAGEL2 and DrugZ, and retains method-specific statistics. It adds input checks, context-dependent artifact flags and provenance. A single real-data audit does not establish superiority over those methods." },
-  { q: "Which designs have been checked?", a: "The documented real-data audit covers one human GeCKOv2 olaparib study. Software tests cover additional design and modality handling, but do not validate biological performance across all assays, organisms or libraries." },
-  { q: "Can I export real results?", a: "The local engine writes a JSON evidence report and analysis files. Authenticated workspace readers and a scoped read-only hits API are implemented in source. Browser CSV/PDF workspace exports and connected uploads remain incomplete; sample exports are restricted to explicit demo sessions." },
-  { q: "What happens to workspace data?", a: "Workspace readers use organization-scoped access controls. Logging outcomes does not automatically retrain a model or publish private screens. Live tenant isolation and a complete outcome-entry workflow still need operational verification." },
-  { q: "Do you beat frontier models at predicting hits?", a: "No demonstrated advantage. The new research router scored 0.160369 versus 0.163091 for the published ensemble. A separate archived comparison using known assayed-gene libraries also showed no significant advantage. These retrospective replays do not establish prospective performance." },
+  {
+    q: "What do I have to give you?",
+    a: "Raw FASTQ, or a count table if you already have one. You do not need to tell us the library: it is identified from the guide sequences in the reads, which is what stops a mislabelled upload becoming a wrong answer. Sample roles and the contrast you care about are the only things we ask you to fill in.",
+  },
+  {
+    q: "Does SplicR give a probability that a hit will validate?",
+    a: "Not yet. Real analyses report effect size, statistical significance, guide support, artifact risks and available historical evidence. We have not established an independently calibrated model of validation success. FDR is not that probability, and percentages shown in the labeled demo are illustrative.",
+  },
+  {
+    q: "How is this different from running MAGeCK myself?",
+    a: "For the statistics, it is not, and it should not be. MAGeCK and BAGEL2 are what our hit-calling stage runs. What is added around them is the parts people skip: reading the library from the reads, measuring QC against the definitions its sources actually use, naming each artifact with its evidence, and putting the result next to every comparable public screen.",
+  },
+  {
+    q: "Which screen designs work today?",
+    a: "Pooled knockout dropout and drug-modifier screens, in human and mouse, with or without a plasmid reference. CRISPRa and CRISPRi run, with the direction convention handled, though counting assumes a knockout amplicon layout so newer library designs are better served elsewhere for now. Sorting and reporter screens work without a fitness axis.",
+  },
+  {
+    q: "Can I get my data out?",
+    a: "Yes, and in the shape you already work in. The gene table exports as CSV that opens cleanly in R and Excel, as JSON with full provenance, and as a PDF you can hand a PI. The count matrix and the MAGeCK and BAGEL2 outputs come with it. There is a read-only REST endpoint if you would rather pull it from a script.",
+  },
+  {
+    q: "What happens to my screen?",
+    a: "Screen and outcome records are scoped to your workspace with database row-level access controls. Logging an outcome does not automatically retrain a model or publish an unpublished screen to the public Atlas.",
+  },
+  {
+    q: "Do you beat the language models at predicting hits?",
+    a: "The archived results do not demonstrate superiority. A retrospective research fusion using published frontier predictions and the known assayed-gene library scored 0.220; its matched filtered and padded ensemble comparator scored 0.219, with a paired interval spanning zero. These are research replay results, not the production scorer or prospective validation. The archived retrieval-only result of 0.163 uses no model API, but sharing a rounded score with an original published ensemble does not establish equal performance.",
+  },
 ] as const;

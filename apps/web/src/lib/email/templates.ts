@@ -92,7 +92,7 @@ function footer() {
   const link = (href: string, label: string) =>
     `<a href="${href}" style="color:${FAINT};text-decoration:underline;">${label}</a>`;
   return `<tr><td align="center" style="padding:44px 8px 0;font-family:${FONT};font-size:12px;line-height:20px;color:${FAINT};">
-  ${link(`${site.url}/terms`, "Terms &amp; conditions")}
+  ${link(`${site.url}/terms`, "Terms &amp; Conditions")}
   &nbsp;&nbsp;<span style="color:${LINE};">|</span>&nbsp;&nbsp;
   ${link(`${site.url}/privacy`, "Privacy Policy")}
   <div style="margin-top:22px;">&copy;${esc(site.name)} 2026. All rights reserved.</div>
