@@ -34,7 +34,10 @@ export function ScrollRegion({
   useEffect(() => {
     const node = ref.current;
     if (!node || typeof ResizeObserver === "undefined") return;
-    const measure = () => setScrolls(node.scrollWidth > node.clientWidth + 1 || node.scrollHeight > node.clientHeight + 1);
+    // Any overflow at all counts. A container that scrolls by one pixel is
+    // still a scroll container to a keyboard, and to the accessibility rule that
+    // checks for it, so a tolerance here would reintroduce the failure it fixes.
+    const measure = () => setScrolls(node.scrollWidth > node.clientWidth || node.scrollHeight > node.clientHeight);
     const observer = new ResizeObserver(measure);
     observer.observe(node);
     // The table inside can grow without the container resizing (rows arrive).
