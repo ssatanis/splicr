@@ -9,7 +9,7 @@ export const site = {
     "CRISPR screen analysis and prediction research with traceable evidence, measured benchmarks and explicit uncertainty.",
   email: "team@splicr.org",
   url: "https://splicr.org",
-  location: "New York, United States",
+  location: "Cornell University, Ithaca, NY, United States",
   founded: "Weill Cornell Medicine",
 };
 

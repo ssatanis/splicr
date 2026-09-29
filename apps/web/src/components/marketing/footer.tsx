@@ -38,7 +38,19 @@ export function Footer() {
         </div>
 
         <div className="mt-12 pt-6 border-t border-white/10 text-sm text-white/80">
-          © {new Date().getFullYear()} SplicR | {site.location}.
+          <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+            <span>
+              © {new Date().getFullYear()} SplicR | {site.location}.
+            </span>
+            <span className="flex gap-5">
+              <Link href="/terms" className="hover:text-white">
+                Terms &amp; Conditions
+              </Link>
+              <Link href="/privacy" className="hover:text-white">
+                Privacy Policy
+              </Link>
+            </span>
+          </div>
         </div>
       </div>
     </footer>

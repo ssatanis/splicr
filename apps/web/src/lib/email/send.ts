@@ -1,23 +1,14 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
-
 import { Resend } from "resend";
 
 import { site } from "@/lib/site";
 
-import { LOGO_CID, confirmationEmail, notificationEmail, type DemoRequest } from "./templates";
+import { confirmationEmail, notificationEmail, type DemoRequest } from "./templates";
 
 /**
  * Delivery for the demo request flow.
  *
- * The logo travels as an inline attachment rather than a hotlinked image, so it
- * renders in clients that block remote content by default and does not depend on
- * the marketing site being reachable.
- *
- * Note on the sender avatar: the round picture a client shows next to a message
- * comes from that client's own directory or from a BIMI record, not from
- * anything inside the message. Shipping the mark inline puts it at the top of
- * the email, which is the part we control.
+ * The messages carry no images or attachments, so there is nothing to block or
+ * to fail to load.
  */
 
 const FROM_NAME = site.name;
@@ -29,22 +20,6 @@ export const from = () => {
 };
 
 export const teamInbox = () => process.env.DEMO_REQUEST_INBOX?.trim() || site.email;
-
-let cachedLogo: string | null = null;
-
-async function logoAttachment() {
-  if (cachedLogo === null) {
-    const file = path.join(process.cwd(), "src", "lib", "email", "assets", "splicr-logo.png");
-    cachedLogo = (await readFile(file)).toString("base64");
-  }
-  return {
-    filename: "splicr.png",
-    content: cachedLogo,
-    content_id: LOGO_CID,
-    content_type: "image/png",
-    disposition: "inline" as const,
-  };
-}
 
 export class EmailNotConfigured extends Error {
   constructor() {
@@ -74,7 +49,6 @@ export type SendOutcome = {
  */
 export async function sendDemoRequest(request: DemoRequest): Promise<SendOutcome> {
   const resend = client();
-  const attachments = [await logoAttachment()];
   const sender = from();
   const errors: string[] = [];
 
@@ -89,7 +63,6 @@ export async function sendDemoRequest(request: DemoRequest): Promise<SendOutcome
       subject: confirmation.subject,
       html: confirmation.html,
       text: confirmation.text,
-      attachments,
     }),
     resend.emails.send({
       from: sender,
@@ -98,7 +71,6 @@ export async function sendDemoRequest(request: DemoRequest): Promise<SendOutcome
       subject: notification.subject,
       html: notification.html,
       text: notification.text,
-      attachments,
     }),
   ]);
 

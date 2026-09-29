@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { site } from "@/lib/site";
 
-type PublicRoute = "/" | "/technology" | "/pipeline" | "/evidence" | "/about" | "/careers" | "/contact";
+type PublicRoute = "/" | "/technology" | "/pipeline" | "/evidence" | "/about" | "/careers" | "/contact" | "/privacy" | "/terms";
 
 /** Keep each public page's search and sharing metadata on the same canonical URL. */
 export function marketingMetadata(

@@ -3,23 +3,23 @@ import { site } from "@/lib/site";
 /**
  * Email markup for the demo request flow.
  *
- * Two rules shaped everything here. Email clients are not browsers: layout is
- * tables, every style is inline, and anything clever degrades. And a stranger's
- * first message from a company should read like a person wrote it, so the copy
- * stays plain and the design does the work.
+ * Email clients are not browsers: layout is tables, every style is inline, and
+ * anything clever degrades. There are deliberately no images and no
+ * attachments. The message is type on a card, so nothing can fail to load and
+ * nothing shows up as a stray attachment in the client.
  *
  * Gmail and Apple Mail render `border-radius`; Outlook on Windows does not, and
  * falls back to square corners on a correct layout rather than a broken one.
  */
 
-/** Sampled from the brand: the site's ink wordmark is exactly #174f62, and the
- *  orange is the brand orange from the design tokens. */
+/** The SplicR blue, sampled from the ink wordmark on the site. Used for the top
+ *  rule, the button and every link, so the message carries one colour. */
 const BLUE = "#174f62";
-const ORANGE = "#f87315";
-const HEADING = "#0d0d0d";
-const BODY = "#4a4f55";
-const MUTED = "#8b9199";
-const LINE = "#e8eaed";
+const HEADING = "#000000";
+const BODY = "#4b4d52";
+const SOFT = "#85878d";
+const FAINT = "#b3b6bc";
+const LINE = "#e9eaed";
 const CANVAS = "#f8f8fa";
 
 /** Single quotes, deliberately: this string is interpolated into `style="..."`
@@ -27,9 +27,6 @@ const CANVAS = "#f8f8fa";
  *  attribute early and silently drop every declaration after it. */
 const FONT =
   "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
-
-/** Referenced from the inline attachment so the mark shows without hotlinking. */
-export const LOGO_CID = "splicr-logo";
 
 export type DemoRequest = {
   name: string;
@@ -66,122 +63,96 @@ function shell(inner: string, preheader: string) {
 <body style="margin:0;padding:0;background:${CANVAS};">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(preheader)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${CANVAS};">
-<tr><td align="center" style="padding:48px 16px 40px;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:580px;width:100%;">
+<tr><td align="center" style="padding:56px 16px 48px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;">
 ${inner}
 </table>
 </td></tr></table>
 </body></html>`;
 }
 
-function logo() {
-  return `<img src="cid:${LOGO_CID}" width="132" height="45" alt="${esc(site.name)}"
-    style="display:block;width:132px;height:45px;border:0;outline:none;">`;
-}
-
-/** White card with the blue rule across the top, as in the reference. The card
- *  is one <td> so the rule and the rounded corners survive Gmail's rewriting. */
-function card(body: string, sign: string) {
+/** The white card: a flat blue rule clipped by the rounded corners, the message,
+ *  a hairline, then the sign-off. */
+function card(body: string) {
   return `<tr><td>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border:1px solid ${LINE};border-radius:12px;border-collapse:separate;overflow:hidden;">
-    <tr><td height="6" bgcolor="${BLUE}" style="height:6px;line-height:6px;font-size:0;background:${BLUE};">&nbsp;</td></tr>
-    <tr><td style="padding:44px 44px 48px;">
-      ${logo()}
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border:1px solid ${LINE};border-radius:8px;border-collapse:separate;overflow:hidden;box-shadow:0 1px 4px rgba(20,30,40,0.06);">
+    <tr><td height="5" bgcolor="${BLUE}" style="height:5px;line-height:5px;font-size:0;background:${BLUE};">&nbsp;</td></tr>
+    <tr><td style="padding:56px 54px 54px;">
       ${body}
     </td></tr>
-    <tr><td style="border-top:1px solid ${LINE};padding:32px 44px 40px;font-family:${FONT};font-size:15px;line-height:24px;color:${MUTED};">
-      ${sign}
+    <tr><td style="border-top:1px solid ${LINE};padding:36px 54px 44px;font-family:${FONT};font-size:15px;line-height:24px;color:${SOFT};">
+      Having trouble with your account? <a href="mailto:${site.email}" style="color:${BLUE};text-decoration:none;border-bottom:1px dashed ${BLUE};">Contact us</a>
+      <div style="margin-top:22px;">Best,<br>~ ${esc(site.name)} team</div>
     </td></tr>
   </table>
 </td></tr>`;
 }
 
-const contactLine = () =>
-  `Having trouble with your account? <a href="mailto:${site.email}" style="color:${BLUE};text-decoration:none;border-bottom:1px dashed ${BLUE};">Contact us</a>
-      <div style="margin-top:26px;">Best,<br>~ ${esc(site.name)} team</div>`;
-
 function footer() {
   const link = (href: string, label: string) =>
-    `<a href="${href}" style="color:${MUTED};text-decoration:underline;">${label}</a>`;
-  return `<tr><td align="center" style="padding:36px 8px 0;font-family:${FONT};font-size:12px;line-height:20px;color:${MUTED};">
-  ${link(`${site.url}/contact`, "Help")}
-  &nbsp;&nbsp;&middot;&nbsp;&nbsp;
-  ${link(`${site.url}/evidence`, "Evidence")}
-  &nbsp;&nbsp;&middot;&nbsp;&nbsp;
-  ${link(site.url, "splicr.org")}
-  <div style="margin-top:14px;">&copy; 2026 ${esc(site.name)}. All rights reserved.</div>
-  <div>${esc(site.founded)}, New York, NY, United States</div>
+    `<a href="${href}" style="color:${FAINT};text-decoration:underline;">${label}</a>`;
+  return `<tr><td align="center" style="padding:44px 8px 0;font-family:${FONT};font-size:12px;line-height:20px;color:${FAINT};">
+  ${link(`${site.url}/terms`, "Terms &amp; conditions")}
+  &nbsp;&nbsp;<span style="color:${LINE};">|</span>&nbsp;&nbsp;
+  ${link(`${site.url}/privacy`, "Privacy Policy")}
+  <div style="margin-top:22px;">&copy;${esc(site.name)} 2026. All rights reserved.</div>
+  <div style="margin-top:2px;">${esc(site.location)}</div>
 </td></tr>`;
 }
 
+const strong = (text: string) => `<strong style="color:${HEADING};font-weight:600;">${text}</strong>`;
+
 const h1 = (text: string) =>
-  `<h1 style="margin:44px 0 0;font-family:${FONT};font-size:34px;line-height:42px;font-weight:500;color:${HEADING};letter-spacing:-0.02em;">${text}</h1>`;
-const p = (text: string, top = 26) =>
-  `<p style="margin:${top}px 0 0;font-family:${FONT};font-size:17px;line-height:27px;color:${BODY};">${text}</p>`;
+  `<h1 style="margin:0;font-family:${FONT};font-size:28px;line-height:36px;font-weight:500;color:${HEADING};letter-spacing:-0.015em;">${text}</h1>`;
+
+const p = (text: string, top = 28) =>
+  `<p style="margin:${top}px 0 0;font-family:${FONT};font-size:15px;line-height:24px;color:${BODY};">${text}</p>`;
+
 const button = (href: string, label: string) =>
   `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:40px 0 0;">
-    <tr><td bgcolor="${ORANGE}" style="background:${ORANGE};border-radius:8px;">
-      <a href="${href}" style="display:inline-block;padding:15px 26px;font-family:${FONT};font-size:16px;line-height:20px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;">${label}</a>
+    <tr><td bgcolor="${BLUE}" style="background:${BLUE};border-radius:5px;">
+      <a href="${href}" style="display:inline-block;padding:11px 18px;font-family:${FONT};font-size:15px;line-height:20px;font-weight:500;color:#ffffff;text-decoration:none;border-radius:5px;">${label}</a>
     </td></tr>
   </table>`;
 
 /** The message the person who filled in the form receives. */
 export function confirmationEmail(request: DemoRequest) {
   const who = esc(firstName(request.name));
-  const rows: Array<[string, string]> = [
-    ["Name", request.name],
-    ["Lab or company", request.company],
-    ["Topic", request.topic],
-  ];
-  if (request.message?.trim()) rows.push(["Message", request.message.trim()]);
 
-  const summary = rows
-    .map(
-      ([label, value], index) => `<tr>
-    <td style="padding:${index === 0 ? "0" : "12px"} 0 0;font-family:${FONT};font-size:12px;letter-spacing:0.04em;text-transform:uppercase;color:${MUTED};width:132px;vertical-align:top;">${esc(label)}</td>
-    <td style="padding:${index === 0 ? "0" : "12px"} 0 0;font-family:${FONT};font-size:14px;line-height:22px;color:${HEADING};vertical-align:top;">${esc(value).replace(/\n/g, "<br>")}</td>
-  </tr>`,
-    )
-    .join("");
-
-  const recap = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:32px 0 0;background:${CANVAS};border-radius:10px;">
-    <tr><td style="padding:20px 22px;">
-      <div style="font-family:${FONT};font-size:12px;letter-spacing:0.05em;text-transform:uppercase;color:${MUTED};font-weight:600;padding-bottom:14px;">What you sent</div>
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${summary}</table>
-    </td></tr>
-  </table>`;
-
-  const inner = card(
-    `${h1(`Thanks, ${who}. We have your request.`)}
-      ${p(`Your request reached the <strong style="color:${HEADING};font-weight:600;">SplicR team</strong> and a real person is reading it. You can expect a reply within <strong style="color:${HEADING};font-weight:600;">two business days</strong>, usually sooner.`)}
+  const inner =
+    card(
+      `${h1(`Thanks, ${who}!`)}
+      ${p(`We have your request. A real person on the ${strong("SplicR team")} is reading it, and you can expect a reply within ${strong("two business days")}, usually sooner.`, 34)}
       ${p("To make the first call useful, reply to this message with the organism, library and phenotype of the screen you have in mind.")}
-      ${recap}
       ${button(`${site.url}/evidence`, "Read the evidence")}`,
-    contactLine(),
-  ) + footer();
+    ) + footer();
 
   return {
     subject: "Your SplicR demo request",
     html: shell(inner, `Thanks ${firstName(request.name)}, we have your request and will reply within two business days.`),
     text: [
-      `Thanks, ${firstName(request.name)}.`,
+      `Thanks, ${firstName(request.name)}!`,
       "",
-      "Your request reached the SplicR team and a real person is reading it. You can expect a reply within two business days, usually sooner.",
+      "We have your request. A real person on the SplicR team is reading it, and you can expect a reply within two business days, usually sooner.",
       "",
-      "If it helps, reply to this message with the organism, library and phenotype of the screen you have in mind.",
-      "",
-      "What you sent",
-      ...rows.map(([label, value]) => `${label}: ${value}`),
+      "To make the first call useful, reply to this message with the organism, library and phenotype of the screen you have in mind.",
       "",
       `Read the evidence: ${site.url}/evidence`,
       "",
-      `splicr.org | ${site.email}`,
-      "All rights reserved. Copyright (c) 2026 SplicR. New York, NY.",
+      `Having trouble with your account? Contact us: ${site.email}`,
+      "",
+      "Best,",
+      "~ SplicR team",
+      "",
+      `Terms & conditions: ${site.url}/terms`,
+      `Privacy Policy: ${site.url}/privacy`,
+      `(c) SplicR 2026. All rights reserved.`,
+      site.location,
     ].join("\n"),
   };
 }
 
-/** The internal copy, built for scanning rather than for looks. */
+/** The internal copy, in the same card so the two never look like different products. */
 export function notificationEmail(request: DemoRequest) {
   const rows: Array<[string, string]> = [
     ["Name", request.name],
@@ -194,20 +165,19 @@ export function notificationEmail(request: DemoRequest) {
   const table = rows
     .map(
       ([label, value]) => `<tr>
-    <td style="padding:10px 0;border-bottom:1px solid ${LINE};font-family:${FONT};font-size:12px;letter-spacing:0.04em;text-transform:uppercase;color:${MUTED};width:140px;vertical-align:top;">${esc(label)}</td>
-    <td style="padding:10px 0;border-bottom:1px solid ${LINE};font-family:${FONT};font-size:14px;line-height:22px;color:${HEADING};vertical-align:top;">${esc(value).replace(/\n/g, "<br>")}</td>
+    <td style="padding:12px 0;border-bottom:1px solid ${LINE};font-family:${FONT};font-size:12px;letter-spacing:0.04em;text-transform:uppercase;color:${SOFT};width:130px;vertical-align:top;">${esc(label)}</td>
+    <td style="padding:12px 0;border-bottom:1px solid ${LINE};font-family:${FONT};font-size:15px;line-height:24px;color:${HEADING};vertical-align:top;">${esc(value).replace(/\n/g, "<br>")}</td>
   </tr>`,
     )
     .join("");
 
-  const inner = card(
-    `${h1("New demo request")}
-      ${p(`<strong style="color:${HEADING};font-weight:600;">${esc(request.name)}</strong> from ${esc(request.company)} filled in the form on splicr.org.`, 22)}
+  const inner =
+    card(
+      `${h1("New demo request")}
+      ${p(`${strong(esc(request.name))} from ${esc(request.company)} filled in the form on splicr.org.`, 22)}
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0 0;">${table}</table>
       ${button(`mailto:${esc(request.email)}?subject=${encodeURIComponent("Re: your SplicR demo request")}`, `Reply to ${esc(firstName(request.name))}`)}`,
-    `Replying to this email also reaches ${esc(request.name)} directly.
-      <div style="margin-top:26px;">Best,<br>~ ${esc(site.name)} team</div>`,
-  ) + footer();
+    ) + footer();
 
   return {
     subject: `Demo request: ${request.name}, ${request.company}`,
