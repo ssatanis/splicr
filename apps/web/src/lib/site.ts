@@ -7,7 +7,7 @@ export const site = {
   tagline: "Inspect the evidence behind your CRISPR hits.",
   description:
     "CRISPR screen analysis and prediction research with traceable evidence, measured benchmarks and explicit uncertainty.",
-  email: "hello@splicr.org",
+  email: "team@splicr.org",
   url: "https://splicr.org",
   location: "New York, United States",
   founded: "Weill Cornell Medicine",
