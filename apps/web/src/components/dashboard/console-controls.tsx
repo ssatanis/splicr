@@ -218,6 +218,42 @@ export function CsvFootLink({
 }
 
 /**
+ * The export for a panel whose file is built by a function rather than from
+ * rows: same look as `CsvFootLink`, for a page that owns its own file format
+ * (a preamble, a header, a defused formula) and only needs a download button.
+ */
+export function TextFootLink({
+  filename,
+  build,
+  type = "text/csv;charset=utf-8",
+  children,
+}: {
+  filename: string;
+  build: () => string;
+  type?: string;
+  children: React.ReactNode;
+}) {
+  const download = () => {
+    const url = URL.createObjectURL(new Blob([build()], { type }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={download}
+      className="shrink-0 rounded-sm text-[11px] text-cyan-600 underline decoration-line-strong underline-offset-2 transition-colors duration-[var(--dur-1)] hover:decoration-cyan-600 motion-reduce:transition-none"
+    >
+      {children}
+    </button>
+  );
+}
+
+/**
  * The bar that holds a filter field, at the top of a flush panel body. Fixed
  * height, so the rows below it start on the same line on every page.
  */

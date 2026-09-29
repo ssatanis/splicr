@@ -51,15 +51,44 @@ test("published download checksums match every downloadable artifact", () => {
   }
 });
 
-test("website benchmark values are full-precision measured values", () => {
+test("website benchmark values are the measured values, with one SplicR row and an honest tie", () => {
   const { benchmark } = load("apps/web/src/lib/content.ts");
-  const router = benchmark.find(b => b.label.includes("research router"));
-  const ensemble = benchmark.find(b => b.label === "Published frontier ensemble");
-  const measured = readJson("research/artifacts/router_replay_summary.json");
-  assert.equal(router.value, measured.router.mean);
-  assert.equal(ensemble.value, measured.experts.external.mean);
-  assert.ok(router.value < ensemble.value);
-  assert.ok(measured.paired_vs_external.ci95[0] < 0 && measured.paired_vs_external.ci95[1] > 0);
+  const splicr = benchmark.filter(b => b.label.includes("SplicR"));
+  assert.equal(splicr.length, 1);
+  const matched = benchmark.find(b => b.label.includes("same gene library"));
+  const shipped = benchmark.find(b => b.label.includes("as published"));
+  const log = fs.readFileSync(path.join(root, "research/artifacts/archived_router_reproduction.log"), "utf8");
+  const grab = re => Number(log.match(re)[1]);
+  const router = grab(/TEST official AnDCG@100 (\S+)/);
+  const dense = grab(/TEST densified published ensemble (\S+)/);
+  const [lo, hi] = log.match(/interval (?:\S+ )?\[(\S+), (\S+)\]/).slice(1).map(Number);
+  assert.ok(Math.abs(splicr[0].value - router) < 5e-6);
+  assert.ok(Math.abs(matched.value - dense) < 5e-6);
+  const screens = readJson("research/artifacts/reference_published_ensemble_screens.json");
+  const published = screens.reduce((sum, s) => sum + s["adjusted_ndcg@100"], 0) / screens.length;
+  assert.ok(Math.abs(shipped.value - published) < 5e-6);
+  // The matched difference is a tie, so the page must not present it as a win.
+  assert.ok(lo < 0 && hi > 0);
+  assert.equal(splicr[0].value.toFixed(3), "0.220");
+  assert.equal(matched.value.toFixed(3), "0.219");
+});
+
+test("technology benchmark copy matches the measurements and does not overclaim", () => {
+  const page = fs.readFileSync(path.join(root, "apps/web/src/app/(marketing)/technology/page.tsx"), "utf8");
+  const body = page.match(/body="(SplicR, built on[^"]+)"/)[1];
+  const rep = evidence.post_screen_replication;
+  const perTen = v => (v * 10).toFixed(1);
+  assert.ok(body.includes(`${perTen(rep.precision_at_10.primary)} of its top ten`));
+  assert.ok(body.includes(`up from ${perTen(rep.precision_at_10.comparator)} on effect size alone`));
+  assert.ok(body.includes("ties the frontier ensemble on the same library, 0.220 to 0.219"));
+  // The replication result is a separate, research-only task and must be cited as one.
+  const { replicationCite } = load("apps/web/src/lib/content.ts");
+  assert.equal(rep.promotion_status, "research_only");
+  assert.match(replicationCite.text, /separate research-only task/);
+  assert.match(replicationCite.note, /not wet-lab validation/);
+  assert.equal(replicationCite.href, "/evidence#post-screen");
+  // No "beats all" style claim anywhere in the section copy.
+  assert.doesNotMatch(body, /beats? (all|every)|state.of.the.art|best|outperform/i);
 });
 
 test("homepage report renders actual nonsignificant result and QC limitation", () => {

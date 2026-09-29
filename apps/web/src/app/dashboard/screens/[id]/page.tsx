@@ -1,93 +1,315 @@
+/**
+ * One screen: the demonstration workspace for a demo session, and the Hit Report
+ * for a workspace member.
+ *
+ * The Hit Report shows what the run recorded and keeps three kinds of evidence
+ * apart. Statistics (effect, p-value, FDR) are as recorded. Artifact flags are the
+ * problems the engine looked for, with the reason, and a flag is a reason to
+ * check, not a verdict. Atlas history and bench status are context: how often
+ * other published screens called the gene, and whether it has been re-tested.
+ * Missing evidence is written as missing, never as zero and never as a default.
+ *
+ * Nothing here ranks genes by likelihood of validating. Validation probabilities
+ * are not available, and the page says so where a reader would look for one.
+ */
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
-import { Card, DenseTable, PageHeader } from "@/components/dashboard/ui";
+import { HitFilters } from "@/components/dashboard/hit-report/filters";
+import { HitTable } from "@/components/dashboard/hit-report/table";
+import {
+  Card,
+  FootLink,
+  FootNote,
+  KpiStrip,
+  KpiTile,
+  PageHeader,
+  Panel,
+  StatusChip,
+  statusTone,
+} from "@/components/dashboard/ui";
+import { geneEvidence, type GeneEvidence } from "@/lib/atlas/query";
+import { getAtlasGenes } from "@/lib/atlas/store";
 import { getCurrentContext } from "@/lib/data/org";
-import { DETAIL_PAGE_SIZE, getScreenDetail } from "@/lib/data/screen-detail";
+import { getGeneOutcomes } from "@/lib/data/outcomes";
+import { DETAIL_PAGE_SIZE, SIGNIFICANT_FDR, getScreenDetail } from "@/lib/data/screen-detail";
+import { hitHref, isFiltered, parseHitQuery } from "@/lib/report/hit-query";
+import { formatNumber } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-function number(value: number | null | undefined): string {
-  if (value === null || value === undefined || !Number.isFinite(Number(value))) return "Not recorded";
-  const numeric = Number(value);
-  return numeric !== 0 && Math.abs(numeric) < 0.001 ? numeric.toExponential(2) : numeric.toLocaleString("en-US", { maximumFractionDigits: 4 });
-}
+const HUMAN = 9606;
 
 export default async function ScreenPage(props: PageProps<"/dashboard/screens/[id]">) {
   const [{ id }, search, context] = await Promise.all([props.params, props.searchParams, getCurrentContext()]);
   if (context.isDemo) {
     // The explicit demo session is the only path allowed to import sample data.
     const [{ ScreenWorkspace }, { screens }] = await Promise.all([
-      import("@/components/dashboard/screen-workspace"), import("@/lib/mock/data"),
+      import("@/components/dashboard/screen-workspace"),
+      import("@/lib/mock/data"),
     ]);
     const screen = screens.find((item) => item.id === id);
     if (!screen) notFound();
     return <ScreenWorkspace screen={screen} tab={typeof search.tab === "string" ? search.tab : "overview"} />;
   }
-  const page = typeof search.page === "string" ? Number(search.page) : 1;
-  const result = await getScreenDetail(id, page);
+
+  const query = parseHitQuery(search);
+  const result = await getScreenDetail(id, query.page, query);
   if (result.status === "not_found") notFound();
   if (result.status === "unavailable") {
-    return <Card title="Screen results unavailable"><p>The workspace records could not be read. Reload to try again.</p></Card>;
-  }
-  const { screen, run, stages, comparisons, hits, total } = result.detail;
-  const comparisonNames = new Map(comparisons.map((comparison) => [comparison.id, comparison.name]));
-  return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pb-6">
-      <PageHeader dense title={screen.name} body="Recorded results from your workspace" actions={<Link href="/dashboard" className="text-sm underline">Workspace overview</Link>} />
-      <Card title="Experiment">
-        <dl className="grid gap-3 text-sm sm:grid-cols-3">
-          <div><dt className="text-muted">Cell line</dt><dd>{screen.cell_line ?? "Not recorded"}</dd></div>
-          <div><dt className="text-muted">Perturbation</dt><dd>{screen.modality}</dd></div>
-          <div><dt className="text-muted">Phenotype</dt><dd>{screen.phenotype ?? "Not recorded"}</dd></div>
-          <div><dt className="text-muted">Screen status</dt><dd>{screen.status}</dd></div>
-          <div><dt className="text-muted">QC verdict</dt><dd>{screen.qc}</dd></div>
-          <div><dt className="text-muted">Screen ID</dt><dd className="break-all font-mono text-xs">{screen.id}</dd></div>
-        </dl>
-        {screen.description && <p className="mt-3 whitespace-pre-wrap text-sm">{screen.description}</p>}
-        {screen.qc === "fail" && <p className="mt-3 text-sm text-orange-600">QC failed. Review the recorded stage evidence before interpreting the gene results.</p>}
+    return (
+      <Card title="Screen results unavailable">
+        <p className="text-sm">The workspace records could not be read. Reload to try again.</p>
       </Card>
-      {!run ? <Card title="Analysis not recorded"><p>This screen has no recorded run yet. Gene results and validation confidence are unavailable.</p></Card> : <>
-        <Card title="Analysis provenance">
-          <dl className="grid gap-3 text-sm sm:grid-cols-2">
-            <div><dt className="text-muted">Run ID</dt><dd className="break-all font-mono text-xs">{run.id}</dd></div>
-            <div><dt className="text-muted">Run status</dt><dd>{run.status}</dd></div>
-            <div><dt className="text-muted">Engine version</dt><dd>{run.engine_version ?? "Not recorded"}</dd></div>
-            <div><dt className="text-muted">Container digest</dt><dd className="break-all">{run.image_digest ?? "Not recorded"}</dd></div>
-          </dl>
-          {run.error && <p className="mt-3 whitespace-pre-wrap text-sm text-orange-600">{run.error}</p>}
-          {stages.length === 0 ? <p className="mt-3 text-sm text-muted">No stage evidence was recorded.</p> : <ol className="mt-4 space-y-2 text-sm">{stages.map((stage) => <li key={stage.stage}>
-            <span className="font-medium">{stage.stage}: {stage.status}</span>
-            {stage.tool && <span className="ml-2 text-muted">{stage.tool}</span>}
-            {stage.detail && <p className="whitespace-pre-wrap text-muted">{stage.detail}</p>}
-          </li>)}</ol>}
+    );
+  }
+
+  const { screen, run, stages, comparisons, hits, total, summary } = result.detail;
+  const base = `/dashboard/screens/${screen.id}`;
+
+  // A bookmarked page past the end goes to the last page that exists.
+  const lastPage = Math.max(1, Math.ceil(total / DETAIL_PAGE_SIZE));
+  if (query.page > lastPage) redirect(hitHref(base, query, { page: lastPage }));
+
+  const comparisonNames = new Map(comparisons.map((comparison) => [comparison.id, comparison.name]));
+  const humanOnly = screen.taxid !== null && screen.taxid !== HUMAN;
+
+  // Atlas evidence is read from the snapshot on disk, so it does not depend on
+  // the workspace database and cannot fail the page. If it cannot be read the
+  // column says "Not looked up" instead of implying the Atlas has no record.
+  let evidence: Map<string, GeneEvidence> | null = null;
+  if (!humanOnly && hits.length > 0) {
+    try {
+      const index = getAtlasGenes();
+      evidence = new Map(hits.map((hit) => [hit.gene_symbol.toUpperCase(), geneEvidence(index, hit.gene_symbol)]));
+    } catch (error) {
+      console.error(`[screens/page] atlas: ${error instanceof Error ? error.message : "read failed"}`);
+    }
+  }
+  const outcomes = hits.length > 0 ? await getGeneOutcomes(screen.id, [...new Set(hits.map((hit) => hit.gene_symbol))]) : new Map();
+
+  const role = context.role;
+  const canLog = role === "member" || role === "admin" || role === "owner";
+  const first = total === 0 ? 0 : (query.page - 1) * DETAIL_PAGE_SIZE + 1;
+  const last = (query.page - 1) * DETAIL_PAGE_SIZE + hits.length;
+  const filtered = isFiltered(query);
+  const link = "rounded px-1.5 py-0.5 text-cyan-600 hover:bg-cyan-50";
+
+  return (
+    <div className="flex flex-col gap-3 pb-6">
+      <PageHeader
+        dense
+        title={screen.name}
+        body="Recorded results from your workspace"
+        actions={
+          <>
+            <Link href="/dashboard/screens" className="inline-flex h-7 items-center gap-1 text-[12px] text-cyan-600 underline decoration-line-strong underline-offset-2">
+              <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> All screens
+            </Link>
+            {run && (
+              <span className="inline-flex items-center gap-1.5 text-[12px] text-muted">
+                Export
+                {(["csv", "json"] as const).map((format) => (
+                  <a
+                    key={format}
+                    href={`/api/report/${screen.id}?format=${format}`}
+                    className="rounded-sm uppercase text-cyan-600 underline decoration-line-strong underline-offset-2 hover:decoration-cyan-600"
+                  >
+                    {format}
+                    <span className="sr-only"> export of this screen&apos;s recorded results</span>
+                  </a>
+                ))}
+              </span>
+            )}
+          </>
+        }
+      />
+
+      <Panel title="Experiment" bodyClassName="py-3">
+        <dl className="grid gap-x-8 gap-y-2.5 text-[12.5px] sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            ["Cell line", screen.cell_line],
+            ["Perturbation", screen.modality],
+            ["Phenotype", screen.phenotype],
+          ].map(([term, value]) => (
+            <div key={term}>
+              <dt className="text-[11px] text-muted">{term}</dt>
+              <dd className="text-ink">{value ?? <span className="text-muted">Not recorded</span>}</dd>
+            </div>
+          ))}
+          <div>
+            <dt className="text-[11px] text-muted">Screen and QC</dt>
+            <dd className="flex flex-wrap items-center gap-1.5">
+              <StatusChip tone={statusTone(screen.status)}>{screen.status}</StatusChip>
+              <StatusChip tone={statusTone(screen.qc)}>QC {screen.qc}</StatusChip>
+            </dd>
+          </div>
+        </dl>
+        {screen.description && <p className="mt-3 max-w-3xl whitespace-pre-wrap text-[12.5px] leading-snug text-body">{screen.description}</p>}
+        {screen.qc === "fail" && (
+          <p role="alert" className="mt-3 rounded-md bg-orange-50 px-3 py-2 text-[12.5px] leading-snug text-orange-700">
+            QC failed. Review the recorded stage evidence below before interpreting any gene result.
+          </p>
+        )}
+      </Panel>
+
+      {!run ? (
+        <Card title="Analysis not recorded">
+          <p className="text-sm">
+            This screen has no recorded run yet. Gene results and validation confidence are unavailable, and their absence says
+            nothing about whether the experiment has hits.
+          </p>
         </Card>
-        <Card title="Gene-level evidence" subtitle={`${total.toLocaleString("en-US")} gene/comparison records in this run. Ordered by recorded FDR; this is not a validation-success ranking.`}>
-          <p className="mb-3 text-sm text-muted">FDR, effect size and artifact warnings describe different evidence. A flagged amplified region can still contain a genuine dependency. Validation probabilities and intervals are unavailable unless supported by an independently evaluated model.</p>
-          {hits.length === 0 ? <p className="text-sm">{total === 0 ? "No gene results were recorded for this run. This does not establish that the experiment had no hits." : "This page contains no records. Return to the first page."}</p> : <DenseTable minWidth={1000}>
-            <caption className="sr-only">Observed and statistical evidence for this run, including comparison, direction, guide support and artifact warnings</caption>
-            <thead><tr>{["Gene", "Comparison", "Direction", "LFC", "p-value", "FDR", "BAGEL BF", "Good / total guides", "Evidence"].map((heading) => <th key={heading} scope="col">{heading}</th>)}</tr></thead>
-            <tbody>{hits.map((hit) => <tr key={hit.id}>
-              <td className="font-medium">{hit.gene_symbol}</td>
-              <td>{comparisonNames.get(hit.comparison_id) ?? "Not recorded"}</td>
-              <td>{hit.direction}</td><td>{number(hit.lfc)}</td><td>{number(hit.p_value)}</td><td>{number(hit.fdr)}</td><td>{number(hit.bayes_factor)}</td>
-              <td>{number(hit.n_good_guides)} / {number(hit.n_guides)}</td>
-              <td className="max-w-[400px] whitespace-normal">
-                {(hit.hit_flags ?? []).length > 0 ? <ul>{hit.hit_flags.map((flag) => <li key={flag.flag}>{flag.severity}: {flag.message}</li>)}</ul> : "No artifact flags recorded"}
-                {hit.guide_lfcs && hit.guide_lfcs.length > 0 && <details className="mt-1"><summary>Recorded guide effects</summary><p>{hit.guide_lfcs.map(number).join(", ")}</p></details>}
-                {hit.chance_real !== null && <p className="mt-1">Recorded model output: {number(hit.chance_real)}; model {hit.model_version ?? "not recorded"}. Calibration is not established by this value.</p>}
-              </td>
-            </tr>)}</tbody>
-          </DenseTable>}
-          <nav aria-label="Gene result pages" className="mt-3 flex gap-4 text-sm">
-            {page > 1 && <Link className="underline" href={`/dashboard/screens/${screen.id}?page=${page - 1}`}>Previous</Link>}
-            {page > 1 && <Link className="underline" href={`/dashboard/screens/${screen.id}`}>First page</Link>}
-            <span>Page {page} · {DETAIL_PAGE_SIZE} records per page</span>
-            {page * DETAIL_PAGE_SIZE < total && <Link className="underline" href={`/dashboard/screens/${screen.id}?page=${page + 1}`}>Next</Link>}
-          </nav>
-          <p className="mt-3 text-xs text-muted">For programmatic access, use your workspace key on the <Link href="/dashboard/connect" className="underline">Connect hits API</Link>. Workspace PDF/CSV reports and outcome entry are not connected on this page.</p>
-        </Card>
-      </>}
+      ) : (
+        <>
+          <KpiStrip
+            title="This run"
+            count={`${formatNumber(summary.recorded)} gene and comparison records`}
+            className="shrink-0"
+            footer={<FootNote>Counted over the whole run, whatever filter the table has</FootNote>}
+          >
+            <KpiTile
+              label="Recorded"
+              value={formatNumber(summary.recorded)}
+              denominator="records"
+              definition="One per gene per comparison, exactly as the engine wrote them."
+            />
+            <KpiTile
+              label={`FDR at most ${SIGNIFICANT_FDR}`}
+              value={formatNumber(summary.significant)}
+              denominator={`of ${formatNumber(summary.recorded)}`}
+              definition="A record with no recorded FDR is not counted here, and is not called insignificant."
+              tone="cyan"
+              href={hitHref(base, query, { maxFdr: SIGNIFICANT_FDR })}
+            />
+            <KpiTile
+              label="Depleted / enriched"
+              value={`${formatNumber(summary.depleted)} / ${formatNumber(summary.enriched)}`}
+              denominator="records"
+              definition="The two arms of the comparison. Together they are every record."
+            />
+            <KpiTile
+              label="With artifact flags"
+              value={formatNumber(summary.flagged)}
+              denominator={`of ${formatNumber(summary.recorded)}`}
+              definition="A flag is a reason to check the hit, not a verdict on it."
+              tone="orange"
+              href={hitHref(base, query, { flagged: true })}
+            />
+          </KpiStrip>
+
+          <Panel
+            title="Gene-level evidence"
+            count={filtered ? `${formatNumber(total)} match` : `${formatNumber(total)} records`}
+            caveat="FDR, effect and artifact flags are different evidence. Validation probabilities are not available."
+            body="flush"
+            className="min-h-[320px]"
+            footer={
+              <>
+                <FootNote className="hidden md:block">
+                  Ordered by {query.sort === "gene" ? "gene" : query.sort === "lfc" ? "effect" : query.sort === "p_value" ? "p-value" : "recorded FDR"}
+                  . Engine {run.engine_version ?? "version not recorded"}.
+                </FootNote>
+                <span className="ml-auto flex shrink-0 items-center gap-3">
+                  <nav aria-label="Gene result pages" className="flex items-center gap-2 text-[11px] text-muted">
+                    <span className="num" aria-live="polite">
+                      {first === 0 ? "No rows" : `${formatNumber(first)}–${formatNumber(last)} of ${formatNumber(total)}`}
+                    </span>
+                    {query.page > 1 ? (
+                      <Link className={link} href={hitHref(base, query, { page: query.page - 1 })} replace scroll={false}>Previous</Link>
+                    ) : (
+                      <span className="px-1.5 text-muted/60" aria-disabled="true">Previous</span>
+                    )}
+                    <span className="num">Page {query.page} of {lastPage}</span>
+                    {query.page < lastPage ? (
+                      <Link className={link} href={hitHref(base, query, { page: query.page + 1 })} replace scroll={false}>Next</Link>
+                    ) : (
+                      <span className="px-1.5 text-muted/60" aria-disabled="true">Next</span>
+                    )}
+                  </nav>
+                  <FootLink href={`/api/report/${screen.id}?format=csv`} download>
+                    Export CSV
+                    <span className="sr-only"> of every recorded result in this run</span>
+                  </FootLink>
+                </span>
+              </>
+            }
+          >
+            <HitFilters
+              comparisons={comparisons.map((comparison) => ({ id: comparison.id, name: comparison.name }))}
+              matching={total}
+              recorded={summary.recorded}
+            />
+            {hits.length === 0 ? (
+              <p className="px-4 py-10 text-center text-[12.5px] text-muted">
+                {summary.recorded === 0
+                  ? "No gene results were recorded for this run. This does not establish that the experiment had no hits."
+                  : filtered
+                    ? "No record matches these filters."
+                    : "This page contains no records."}{" "}
+                {filtered && (
+                  <Link href={base} replace className="text-cyan-600 underline decoration-line-strong underline-offset-2">
+                    Clear the filters
+                  </Link>
+                )}
+              </p>
+            ) : (
+              <HitTable
+                hits={hits}
+                comparisonNames={comparisonNames}
+                query={query}
+                basePath={base}
+                screenId={screen.id}
+                evidence={evidence}
+                humanOnly={humanOnly}
+                outcomes={outcomes}
+                canLog={canLog}
+              />
+            )}
+          </Panel>
+
+          <Panel title="Analysis provenance" count={`run ${run.id.slice(0, 8)}`} bodyClassName="py-3">
+            <dl className="grid gap-x-8 gap-y-2.5 text-[12.5px] sm:grid-cols-2 lg:grid-cols-4">
+              <div>
+                <dt className="text-[11px] text-muted">Run status</dt>
+                <dd><StatusChip tone={statusTone(run.status)}>{run.status}</StatusChip></dd>
+              </div>
+              <div>
+                <dt className="text-[11px] text-muted">Engine version</dt>
+                <dd className="text-ink">{run.engine_version ?? <span className="text-muted">Not recorded</span>}</dd>
+              </div>
+              <div className="min-w-0">
+                <dt className="text-[11px] text-muted">Container digest</dt>
+                <dd className="break-all text-ink">{run.image_digest ?? <span className="text-muted">Not recorded</span>}</dd>
+              </div>
+              <div className="min-w-0">
+                <dt className="text-[11px] text-muted">Run ID</dt>
+                <dd className="break-all font-mono text-[11px] text-ink">{run.id}</dd>
+              </div>
+            </dl>
+            {run.error && <p className="mt-3 whitespace-pre-wrap text-[12.5px] text-orange-700">{run.error}</p>}
+            {stages.length === 0 ? (
+              <p className="mt-3 text-[12.5px] text-muted">No stage evidence was recorded.</p>
+            ) : (
+              <ol className="mt-4 divide-y divide-line border-t border-line">
+                {stages.map((stage) => (
+                  <li key={stage.stage} className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 py-1.5 text-[12.5px]">
+                    <span className="w-28 shrink-0 font-medium text-ink">{stage.stage}</span>
+                    <StatusChip tone={statusTone(stage.status)}>{stage.status}</StatusChip>
+                    {stage.tool && <span className="text-muted">{stage.tool}</span>}
+                    {stage.detail && <span className="basis-full whitespace-pre-wrap text-[12px] text-muted">{stage.detail}</span>}
+                  </li>
+                ))}
+              </ol>
+            )}
+            <p className="mt-3 text-[11.5px] text-muted">
+              For programmatic access, use a workspace key on the{" "}
+              <Link href="/dashboard/connect" className="text-cyan-600 underline">Connect hits API</Link>. A PDF is not built for workspace runs.
+            </p>
+          </Panel>
+        </>
+      )}
     </div>
   );
 }

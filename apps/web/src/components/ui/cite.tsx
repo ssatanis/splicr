@@ -14,13 +14,14 @@ export function Cite({
   className?: string;
   prefix?: string;
 }) {
+  // A path on this site opens in place; only outside references get a new tab.
+  const external = !cite.href.startsWith("/");
   return (
     <span className={cn("text-inherit", className)}>
       {prefix ? `${prefix} ` : ""}
       <a
         href={cite.href}
-        target="_blank"
-        rel="noreferrer"
+        {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
         title={cite.note}
         className="text-inherit underline decoration-current/35 underline-offset-2 hover:decoration-current transition-[text-decoration-color]"
       >

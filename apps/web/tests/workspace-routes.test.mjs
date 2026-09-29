@@ -42,7 +42,7 @@ function listHarness(context = workspace, response = { data: [], count: 0, error
   return { ...exports, reads };
 }
 
-for (const [method, table] of [["getWorkspaceScreens", "screens"], ["getWorkspaceOutcomes", "validation_outcomes"]]) {
+for (const [method, table] of [["getWorkspaceScreens", "screens"]]) {
   test(`${method} uses session organization and bounded pagination`, async () => {
     const row = { id: "real-record" };
     const app = listHarness(workspace, { data: [row], count: 110, error: null });
@@ -73,9 +73,12 @@ for (const [method, table] of [["getWorkspaceScreens", "screens"], ["getWorkspac
   });
 }
 
+// Atlas, Planner and Truth Loop are not here on purpose. The Atlas and the
+// Planner read no workspace row and are the same for everyone, and the Truth
+// Loop has its own page tests (truth-loop-page.test.mjs). What is left are the
+// two routes that show sample records to a demo session.
 const samples = new Set([
-  "@/components/dashboard/screens-table", "./truth-loop", "@/components/dashboard/atlas-explorer",
-  "@/components/dashboard/upload-wizard", "@/components/dashboard/planner",
+  "@/components/dashboard/screens-table", "@/components/dashboard/upload-wizard",
 ]);
 
 function routeHarness(route, context = workspace, result = { status: "ready", rows: [], total: 0, page: 1 }) {
@@ -89,7 +92,6 @@ function routeHarness(route, context = workspace, result = { status: "ready", ro
     if (name === "@/lib/data/org") return { getCurrentContext: async () => context };
     if (name === "@/lib/data/workspace-lists") return {
       getWorkspaceScreens: async () => { dataReads++; return result; },
-      getWorkspaceOutcomes: async () => { dataReads++; return result; },
     };
     if (name === "@/components/dashboard/ui") return {
       Card: ({ children, title }) => React.createElement("section", null, title, children),
@@ -102,8 +104,7 @@ function routeHarness(route, context = workspace, result = { status: "ready", ro
     };
     if (samples.has(name)) {
       sampleReads++;
-      return { ScreensTable: sampleComponent, TruthLoop: sampleComponent, AtlasExplorer: sampleComponent,
-        UploadWizard: sampleComponent, Planner: sampleComponent };
+      return { ScreensTable: sampleComponent, UploadWizard: sampleComponent };
     }
     throw new Error(`Unexpected dependency ${name}`);
   });
@@ -113,7 +114,7 @@ function routeHarness(route, context = workspace, result = { status: "ready", ro
   };
 }
 
-for (const route of ["screens", "validation", "atlas", "upload", "planner"]) {
+for (const route of ["screens", "upload"]) {
   test(`${route}: signed-in workspace never imports or renders demonstration data`, async () => {
     const app = routeHarness(route);
     const html = await app.render();
@@ -140,19 +141,8 @@ test("screen list renders only returned real records and links to real detail", 
   assert.doesNotMatch(html, /EXPLICIT_DEMO_CONTENT/);
 });
 
-test("outcomes preserve inconclusive state and zero measured effect", async () => {
-  const app = routeHarness("validation", workspace, { status: "ready", page: 1, total: 1, rows: [
-    { id: "outcome", screen_id: "real-screen", gene_symbol: "TP53", result: "inconclusive", assay: null, effect_size: 0, logged_at: "2026-09-27" },
-  ] });
-  const html = await app.render();
-  assert.match(html, /inconclusive/);
-  assert.match(html, /<td>0<\/td>/);
-  assert.match(html, /Not recorded/);
-  assert.doesNotMatch(html, /EXPLICIT_DEMO_CONTENT|91%/);
-});
-
 test("database failure and missing workspace never display sample or empty evidence claims", async () => {
-  for (const route of ["screens", "validation"]) {
+  for (const route of ["screens"]) {
     for (const status of ["unavailable", "workspace_required"]) {
       const app = routeHarness(route, workspace, { status });
       const html = await app.render();

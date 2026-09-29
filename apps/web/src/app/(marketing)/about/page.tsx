@@ -96,22 +96,6 @@ export default function AboutPage() {
           <div className="relative lg:hidden h-52 my-8">
             <DarkHero className="absolute inset-0" />
           </div>
-
-          <div className="mt-10 lg:mt-10 flex flex-wrap justify-center gap-y-5 divide-x divide-white/20">
-            {/* "1.8x, retrieval vs best AI" used to sit in the middle here. It
-                was AssayBench's label-reading oracle divided by its model
-                ensemble, so it was not a result of ours, and the technology
-                page says plainly that the models are ahead of us. */}
-            {[
-              ["2,217", "ORCS v2.0.18 reference screens"],
-              ["334", "Public test screens replayed"],
-            ].map(([v, l]) => (
-              <div key={l} className="px-6 first:pl-0">
-                <div className="text-2xl md:text-3xl font-medium tabular-nums">{v}</div>
-                <div className="text-white/90 text-xs md:text-sm mt-1">{l}</div>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 

@@ -28,6 +28,8 @@ import Link from "next/link";
 import type { ScreenStatus, StageStatus, Verdict } from "@/lib/mock/data";
 import { cn } from "@/lib/utils";
 
+import { ScrollRegion } from "./scroll-region";
+
 export function Card({ className, children, title, action, subtitle }: {
   className?: string;
   children: React.ReactNode;
@@ -715,8 +717,13 @@ export function KpiTile({ label, value, denominator, definition, tone = "ink", h
 // as many rows on screen as the panel can hold.
 // ---------------------------------------------------------------------------
 
-export function DenseTable({ children, compact = false, maxRows, minWidth, className, scrollClassName }: {
+export function DenseTable({ children, compact = false, maxRows, minWidth, className, scrollClassName, label = "Table, scrolls" }: {
   children: React.ReactNode;
+  /**
+   * The name a keyboard user hears when the table is wider than its panel and
+   * becomes a focus stop, so they can scroll it with the arrow keys.
+   */
+  label?: string;
   /** 26px rows instead of 32px, for the table that has to show 40 at 1440. */
   compact?: boolean;
   /**
@@ -742,7 +749,8 @@ export function DenseTable({ children, compact = false, maxRows, minWidth, class
     // The scroll container, and therefore the sticky header's context. min-h-0
     // is what stops a flex child from refusing to shrink below its content and
     // pushing the panel past the fold.
-    <div
+    <ScrollRegion
+      label={label}
       className={cn("thin-scroll min-h-0 flex-1 overflow-auto", scrollClassName)}
       style={
         maxRows
@@ -761,7 +769,7 @@ export function DenseTable({ children, compact = false, maxRows, minWidth, class
       >
         {children}
       </table>
-    </div>
+    </ScrollRegion>
   );
 }
 

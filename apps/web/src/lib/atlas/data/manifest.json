@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "release": "2.0.18",
+  "sourceGeneratedUtc": "2026-09-27T14:36:51Z",
+  "source": "BioGRID ORCS, https://orcs.thebiogrid.org",
+  "licence": "MIT, Copyright 2021 Mike Tyers; see NOTICE",
+  "organism": "H. sapiens (9606) only",
+  "screens": 1952,
+  "backgroundScreens": 1413,
+  "hitListOnlyScreens": 141,
+  "geneRowsInSource": 26242989,
+  "hitRowsInSource": 1776166,
+  "genes": 29423,
+  "genesDroppedUnresolved": 58117,
+  "aliases": 56718,
+  "hitRows": 1776166,
+  "sha256": {
+    "screens.json": "2a08978dc782872d9c7a8132f944e14bca61154a758d3543d32e79844b967461",
+    "genes.json": "415d93a36cbbe5166eb1513b2a4478e9fcc6bf5d281c3af3adc5c5a917a2dcb4"
+  }
+}

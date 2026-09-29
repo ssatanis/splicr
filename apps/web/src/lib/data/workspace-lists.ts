@@ -17,22 +17,11 @@ export interface ScreenListRow {
   created_at: string;
 }
 
-export interface OutcomeListRow {
-  id: string;
-  screen_id: string;
-  gene_symbol: string;
-  result: string;
-  assay: string | null;
-  effect_size: number | null;
-  model_version: string | null;
-  logged_at: string;
-}
-
 export type WorkspaceListResult<T> =
   | { status: "ready"; rows: T[]; total: number; page: number }
   | { status: "workspace_required" | "unavailable" | "invalid_page" };
 
-async function readList<T>(table: "screens" | "validation_outcomes", columns: string, date: string, page: number): Promise<WorkspaceListResult<T>> {
+async function readList<T>(table: "screens", columns: string, date: string, page: number): Promise<WorkspaceListResult<T>> {
   if (!Number.isSafeInteger(page) || page < 1 || page > 10000) return { status: "invalid_page" };
   const context = await getCurrentContext();
   if (context.isDemo || !context.user || !context.org) return { status: "workspace_required" };
@@ -53,8 +42,4 @@ async function readList<T>(table: "screens" | "validation_outcomes", columns: st
 
 export function getWorkspaceScreens(page = 1): Promise<WorkspaceListResult<ScreenListRow>> {
   return readList("screens", "id, name, cell_line, phenotype, modality, status, qc, created_at", "created_at", page);
-}
-
-export function getWorkspaceOutcomes(page = 1): Promise<WorkspaceListResult<OutcomeListRow>> {
-  return readList("validation_outcomes", "id, screen_id, gene_symbol, result, assay, effect_size, model_version, logged_at", "logged_at", page);
 }

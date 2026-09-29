@@ -598,6 +598,15 @@
      share a glyph width cannot be compared down the column, which is the one
      thing a screening scientist does with them.
   ---------------------------------------------------------------- */
+  /* The console draws its own clear button inside every search field, so the
+     browser's native one would be a second X beside it. */
+  input[type="search"]::-webkit-search-cancel-button,
+  input[type="search"]::-webkit-search-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+    display: none;
+  }
+
   .num {
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum" 1;

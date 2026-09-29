@@ -69,7 +69,7 @@ export const modules = [
     blurb:
       "Explore published CRISPR screen results and their source metadata. Atlas records retain the original studies' analysis methods and hit definitions.",
     points: ["BioGRID ORCS reference data", "Original methods and thresholds", "Source-linked screen history"],
-    status: "Reference ingestion implemented; workspace explorer unavailable",
+    status: "Explorer implemented over BioGRID ORCS human screens; public console access disabled",
   },
   {
     id: "hit-report",
@@ -78,7 +78,7 @@ export const modules = [
     blurb:
       "Inspect effect sizes, statistical results, guide support and available Atlas evidence. A calibrated probability of independent validation is not available yet.",
     points: ["Effect size and significance", "Artifact risks with evidence", "Missing evidence shown explicitly"],
-    status: "Local JSON report and recorded workspace results; no calibration",
+    status: "Recorded-results report with CSV and JSON export; no calibration",
   },
   {
     id: "planner",
@@ -87,7 +87,7 @@ export const modules = [
     blurb:
       "Explore how library size and coverage change guide, cell and read requirements, with approximate cost and timing assumptions.",
     points: ["Design arithmetic", "No statistical power estimate", "Costs and timing are estimates"],
-    status: "Demonstration only; workspace planning unavailable",
+    status: "Design arithmetic implemented, no account needed; no power estimate",
   },
   {
     id: "truth-loop",
@@ -96,7 +96,7 @@ export const modules = [
     blurb:
       "Record follow-up outcomes alongside a screen's evidence. Validation records support review; automatic model retraining is not implemented.",
     points: ["Positive and negative outcomes", "Pending and inconclusive stay distinct", "Workspace-scoped records"],
-    status: "Stored outcome reader; entry and retraining unavailable",
+    status: "Outcome entry and review implemented; retraining not implemented",
   },
   {
     id: "connect",
@@ -144,42 +144,80 @@ export const discoveryQuadrants = [
 /**
  * AssayBench, with our own row in it.
  *
- * The original 0.163 SplicR row is the standalone ORCS retrieval scorer. The
- * 0.220 research fusion selects between a pre-2022 phenotype prior and the
- * published five-model prediction consensus by phenotype, using only
- * publication-excluded pre-2022 labels for selection. It was scored with the
- * official metric on 334 test screens in phenotype_router.py. The matched
- * published ensemble, also filtered and padded to 100 assayed genes, is 0.2193.
- * Their archived paired difference is +0.0006, 95% bootstrap CI
- * [-0.0080, +0.0087]: no demonstrated superiority or equivalence. The fusion uses published frontier predictions; its result
- * must never be described as model-free or independent of test-era literature.
+ * One SplicR row, the best measured one: the phenotype router at 0.21995. It
+ * selects between a pre-2022 phenotype prior and a consensus of five published
+ * model prediction lists, by phenotype, using only publication-excluded pre-2022
+ * labels for selection. It was scored with the official metric on 334 test
+ * screens by `engine/analysis/assaybench_fusion/phenotype_router.py`, and
+ * re-run 2026-09-29 to the same digits. The standalone ORCS retrieval scorer
+ * (0.1628) and the failed research-router replay (0.1604) are not shown here;
+ * the Evidence page keeps them.
+ *
+ * The matched comparator is the published ensemble, filtered to the same
+ * assayed genes and padded to 100 with the same prior: 0.21932. Their paired
+ * difference is +0.0006, 95% bootstrap CI [-0.0080, +0.0087]. That is a tie,
+ * not a win, and the copy must keep saying so. The 0.163 row is the same
+ * ensemble as shipped, without the library input, so it is not a matched
+ * comparison and the copy must not present 0.220 vs 0.163 as an improvement
+ * (research/05_BENCHMARK_REPRODUCTION.md says the same). SplicR uses published
+ * frontier predictions and must never be described as model-free.
+ *
+ * The published ensemble is reciprocal-rank fusion of Gemini 3 Pro, Gemini 3
+ * Flash and GPT-5.4 (AssayBench paper, arXiv:2605.10876). Its shipped score,
+ * 0.1631, is what our harness re-measures, so the naming is consistent with
+ * the data.
  *
  * The top row is an oracle. It reads the test labels to pick the single best
  * past screen. It is a hindsight reference, not an attainable method or a
  * general performance ceiling. The label has to keep saying so.
  *
- * Measured 2026-09-27 against the official Genentech evaluator
+ * Measured against the official Genentech evaluator
  * (`pip install git+https://github.com/Genentech/AssayBench.git`) on the
- * 334-screen yearfold0 test split, from `engine/splicr/features/orcs_retrieval.py`.
- * The archived retrieval row is `orcs_retrieval_rate` at 0.1628. Historical
- * test results informed repository research, so none of these rows establishes
- * prospective performance. Overlapping marginal intervals do not establish
- * equivalence. The 0.136 row is upstream's own phenotype-stratified
- * hit-frequency prior refit on train+validation (assaybench_stack.py:21).
+ * 334-screen yearfold0 test split. Historical test results informed repository
+ * research, so none of these rows establishes prospective performance. The
+ * 0.136 row is upstream's own phenotype-stratified hit-frequency prior refit
+ * on train+validation (assaybench_stack.py:21).
+ *
+ * Values are the measured numbers, unrounded; the page shows three decimals.
  */
 export const benchmark = [
-  { label: "Oracle: best past screen, chosen with hindsight", value: 0.292, tone: "muted" },
-  { label: "Archived SplicR fusion (published rankings + known library)", value: 0.220, tone: "orange" },
-  { label: "Frontier ensemble, filtered to assayed genes", value: 0.219, tone: "teal" },
-  { label: "Archived SplicR retrieval (no model API)", value: 0.163, tone: "orange" },
-  { label: "Frontier ensemble as published", value: 0.163, tone: "teal" },
-  { label: "Phenotype prior, refit on pre-2022 screens", value: 0.136, tone: "muted" },
+  { label: "Oracle: best past screen, chosen with hindsight", value: 0.2917843, tone: "muted" },
+  { label: "SplicR", value: 0.21995152, tone: "orange" },
+  { label: "Gemini 3 + GPT-5.4 ensemble, same gene library", value: 0.21932415, tone: "teal" },
+  { label: "Gemini 3 + GPT-5.4 ensemble, as published", value: 0.16309105, tone: "teal" },
+  { label: "Phenotype prior, pre-2022 screens", value: 0.13605235, tone: "muted" },
 ] as const;
 
 export const benchmarkCite: Citation = {
   text: "AssayBench test set, 334 screens published after 2021",
   href: "https://github.com/Genentech/AssayBench",
-  note: "Archived retrospective AnDCG@100 results, not production validation probabilities. Fusion uses published frontier rankings, pre-2022 labels and the known assayed-gene library. Its matched filtered/padded ensemble comparator is 0.219; archived paired difference +0.0006, 95% bootstrap interval [-0.0080, +0.0087], without demonstrated superiority. Published rows use their original inputs and are not matched library-aware comparisons. The oracle reads test answers. Independent prospective validation is outstanding.",
+  note: "Archived retrospective AnDCG@100 results, not production validation probabilities. SplicR routes each screen between a pre-2022 phenotype prior and a consensus of published frontier rankings, and receives the known assayed-gene library. The matched comparator is the published Gemini 3 Pro, Gemini 3 Flash and GPT-5.4 ensemble, filtered to the same library and padded to 100 genes: 0.219. Archived paired difference +0.0006, 95% bootstrap interval [-0.0080, +0.0087]; superiority is not demonstrated. The as-published ensemble row uses its original inputs and is not a matched comparison. The oracle reads test answers. Independent prospective validation is outstanding.",
+};
+
+/**
+ * The second result under the benchmark: post-screen replication.
+ *
+ * This is the one place SplicR separates from a baseline, and it is a different
+ * task from the AssayBench chart, so it is cited apart and says so. Given a
+ * screen a lab has already run, `lr_effect_freq` ranks its candidates by the
+ * screen's own effect size plus the gene's hit rate across other published
+ * screens, and is scored on whether each is called a hit in an independent
+ * screen (another publication and library, same cell line). Held out, scored
+ * once, 124 pairs: precision@10 0.915 against 0.696 for effect size alone, so
+ * 9.2 of 10 against 7.0. Recomputed from the per-unit rows 2026-09-29.
+ *
+ * What it is not: wet-lab validation, a calibrated probability, or shipped.
+ * The ranking lives in `engine/splicr/replication/`, not in the product;
+ * `promotion_status` is `research_only`, the evidence contract approves it for
+ * display only, and 113 of the 124 pairs are one library comparison. It beats
+ * the screen's own effect size, not "all" methods, and no frontier model was
+ * scored on this task. Do not write "beats all", "state of the art" or any
+ * comparison with the AssayBench chart.
+ */
+export const replicationCite: Citation = {
+  text: "124 held-out screen pairs, a separate research-only task",
+  href: "/evidence#post-screen",
+  note: "SplicR's ranking (effect size plus hit rate across other published screens) against the screen's own effect size, scored on whether each candidate is called a hit in an independent screen from another publication and library. Precision@10 0.915 against 0.696, paired difference +0.107 average precision, 95% interval [+0.102, +0.113], resampled by screen pair. A proxy for reproducibility, not wet-lab validation or a calibrated probability. Unperturbed proliferation screens only; 113 of 124 pairs are one library comparison. Not part of the product.",
 };
 
 /**

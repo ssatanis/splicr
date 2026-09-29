@@ -6,6 +6,7 @@
  * Three sources, in the order a user expects them:
  *   commands  navigation and actions, matched locally so they appear instantly
  *   screens   this workspace's own screens, from Postgres under the caller's RLS
+ *   atlas     published screens by author, cell line, phenotype or PubMed id
  *   genes     the Atlas gene table, public reference data
  *
  * Static commands render on the first keystroke while the server query is still
@@ -139,7 +140,7 @@ function scoreItem(query: string, item: Item): number | null {
 function toItem(hit: SearchHit): Item {
   return {
     id: `${hit.kind}:${hit.id}`,
-    group: hit.kind === "screen" ? "Screens" : "Genes",
+    group: hit.kind === "screen" ? "Screens" : hit.kind === "atlas" ? "Atlas screens" : "Genes",
     title: hit.title,
     subtitle: hit.subtitle,
     href: hit.href,
@@ -191,7 +192,7 @@ function PaletteBody({ onOpenChange }: { onOpenChange: (open: boolean) => void }
           if (mine !== sequence.current) return;
           setResult({
             term,
-            items: [...response.screens, ...response.genes].map(toItem),
+            items: [...response.screens, ...response.genes, ...response.atlas].map(toItem),
             degraded: response.degraded,
           });
         })

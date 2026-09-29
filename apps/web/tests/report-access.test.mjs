@@ -48,9 +48,12 @@ function handler(context) {
   };
 }
 
+// A signed-in workspace member is not refused any more: they get the recorded run
+// of their own screens as CSV or JSON. That path has its own tests in
+// report-workspace.test.mjs. What stays here is that a request with no session is
+// refused before anything sample or workspace is loaded.
 for (const [context, status, code] of [
   [{ isDemo: false, user: null }, 401, "authentication_required"],
-  [{ isDemo: false, user: { id: "real-user" } }, 501, "workspace_report_unavailable"],
 ]) {
   test(`non-demo ${status} response never imports or renders sample reports`, async () => {
     const app = handler(context);

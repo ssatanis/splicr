@@ -1,36 +1,121 @@
-import Link from "next/link";
-import { Suspense } from "react";
+/**
+ * Truth Loop: what the bench found, next to what the model said.
+ *
+ * A workspace reads its own recorded outcomes for the address in the address
+ * bar and logs new ones through server actions that re-check the caller's role.
+ * The demonstration is the same view over invented rows held in the browser
+ * tab, and it is the only path that imports sample data.
+ */
+import { redirect } from "next/navigation";
 
-import { Card, DenseTable, PageHeader } from "@/components/dashboard/ui";
-import { RecordPages, WorkspaceReadNotice } from "@/components/dashboard/workspace-records";
+import { Card, PageHeader } from "@/components/dashboard/ui";
+import { TruthLoopView } from "@/components/dashboard/truth-loop/view";
+import { WorkspaceReadNotice } from "@/components/dashboard/workspace-records";
 import { getCurrentContext } from "@/lib/data/org";
-import { getWorkspaceOutcomes } from "@/lib/data/workspace-lists";
+import { deleteOutcome, logOutcome, updateOutcome } from "@/lib/data/outcome-actions";
+import { getOutcomeView } from "@/lib/data/outcomes";
+import {
+  OUTCOME_PAGE_SIZE,
+  outcomeHref,
+  parseOutcomeFilters,
+  type OutcomeRow,
+} from "@/lib/outcomes/model";
+import { GENE_SYMBOL } from "@/lib/outcomes/schema";
 
 export const metadata = { title: "Truth Loop" };
 export const dynamic = "force-dynamic";
 
+const BASE = "/dashboard/validation";
+const ID = /^[A-Za-z0-9_-]{1,64}$/;
+
+function single(value: string | string[] | undefined): string {
+  return ((Array.isArray(value) ? value[0] : value) ?? "").trim();
+}
+
+/** `?log=TP53&logScreen=<id>` opens the form already filled in, from a link on a hit. */
+function readPrefill(search: Record<string, string | string[] | undefined>) {
+  const gene = single(search.log);
+  const screenId = single(search.logScreen);
+  if (!GENE_SYMBOL.test(gene)) return null;
+  return { gene, screenId: ID.test(screenId) ? screenId : "" };
+}
+
 export default async function ValidationPage(props: PageProps<"/dashboard/validation">) {
   const [context, search] = await Promise.all([getCurrentContext(), props.searchParams]);
+  const filters = parseOutcomeFilters(search);
+  const prefill = readPrefill(search);
+
   if (context.isDemo) {
-    const { TruthLoop } = await import("./truth-loop");
-    return <Suspense fallback={<div aria-hidden="true" />}><TruthLoop /></Suspense>;
+    const { outcomes, screens } = await import("@/lib/mock/data");
+    const names = new Map(screens.map((screen) => [screen.id, screen.name]));
+    const rows: OutcomeRow[] = outcomes.map((outcome) => ({
+      id: outcome.id,
+      screenId: outcome.screenId,
+      screenName: names.get(outcome.screenId) ?? null,
+      gene: outcome.gene,
+      result: outcome.result,
+      assay: outcome.assay,
+      effectSize: null,
+      nGuides: null,
+      predicted: outcome.predicted,
+      modelVersion: null,
+      notes: null,
+      evidenceUrl: null,
+      loggedAt: outcome.loggedAt,
+      loggedBy: outcome.by,
+      hitLinked: true,
+    }));
+    return (
+      <TruthLoopView
+        mode="demo"
+        rows={rows}
+        screens={screens.filter((s) => s.status === "complete").map((s) => ({ id: s.id, name: s.name }))}
+        filters={filters}
+        canWrite
+        canDelete
+        prefill={prefill}
+        exportHref=""
+      />
+    );
   }
-  const page = typeof search.page === "string" ? Number(search.page) : 1;
-  const result = await getWorkspaceOutcomes(page);
-  return <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pb-6">
-    <PageHeader dense title="Truth Loop" body="Validation outcomes recorded in your workspace" />
-    {result.status !== "ready" ? <WorkspaceReadNotice status={result.status} /> : <Card title={`${result.total.toLocaleString("en-US")} recorded outcomes`}>
-      <p className="mb-3 text-sm text-muted">Pending, failed and inconclusive assays remain separate. These records do not by themselves establish model calibration. Outcome entry and adaptive experiment planning are not connected here yet.</p>
-      {result.rows.length === 0 ? <p className="text-sm">{result.total === 0 ? "No validation outcomes have been recorded in your workspace." : "No outcomes on this page. Open the first page."}</p> : <DenseTable minWidth={700}>
-        <caption className="sr-only">Recorded independent assay outcomes, with no inferred failures or model probabilities</caption>
-        <thead><tr>{["Gene", "Result", "Assay", "Effect size", "Recorded at", "Screen"].map((heading) => <th key={heading} scope="col">{heading}</th>)}</tr></thead>
-        <tbody>{result.rows.map((outcome) => <tr key={outcome.id}>
-          <td className="font-medium">{outcome.gene_symbol}</td><td>{outcome.result}</td><td>{outcome.assay ?? "Not recorded"}</td>
-          <td>{outcome.effect_size === null || !Number.isFinite(Number(outcome.effect_size)) ? "Not recorded" : Number(outcome.effect_size).toLocaleString("en-US", { maximumSignificantDigits: 5 })}</td>
-          <td>{outcome.logged_at}</td><td><Link className="underline" href={`/dashboard/screens/${outcome.screen_id}`}>View screen</Link></td>
-        </tr>)}</tbody>
-      </DenseTable>}
-      <RecordPages path="/dashboard/validation" page={page} total={result.total} />
-    </Card>}
-  </div>;
+
+  const view = await getOutcomeView(filters);
+  if (view.status !== "ready") {
+    return (
+      <div className="flex flex-col gap-4">
+        <PageHeader dense title="Truth Loop" body="Validation outcomes recorded in your workspace" />
+        <WorkspaceReadNotice status={view.status} />
+      </div>
+    );
+  }
+
+  // A page past the end (a bookmarked page 9 after rows were deleted) goes to
+  // the last page that exists rather than showing an empty table.
+  const lastPage = Math.max(1, Math.ceil(view.total / OUTCOME_PAGE_SIZE));
+  if (filters.page > lastPage) redirect(outcomeHref(BASE, filters, { page: lastPage }));
+
+  return (
+    <>
+      {!view.canWrite && (
+        <Card title="Read-only role">
+          <p className="text-sm text-body">
+            Your role in this workspace can read outcomes but not log them. Ask an owner or admin for the member role.
+          </p>
+        </Card>
+      )}
+      <TruthLoopView
+        mode="workspace"
+        rows={view.rows}
+        total={view.total}
+        counts={view.counts}
+        screens={view.screens}
+        filters={filters}
+        canWrite={view.canWrite}
+        canDelete={view.canDelete}
+        actions={{ log: logOutcome, update: updateOutcome, remove: deleteOutcome }}
+        prefill={prefill}
+        exportHref={outcomeHref(`${BASE}/export`, filters, { page: null })}
+      />
+    </>
+  );
 }

@@ -1,19 +1,18 @@
-import { Card, PageHeader } from "@/components/dashboard/ui";
-import { getCurrentContext } from "@/lib/data/org";
+/**
+ * Screen Planner: design arithmetic for a pooled CRISPR screen.
+ *
+ * It needs no workspace and reads no record, so it is the same for a demo
+ * visitor and a signed-in member. The design lives in the address: the server
+ * reads it here, clamps anything out of range, and hands the client a valid
+ * starting point, so a shared link opens exactly as it was sent and a hand-edited
+ * one cannot break the page.
+ */
+import { Planner } from "@/components/dashboard/planner";
+import { paramsToRaw, sanitizeInputs } from "@/lib/planner/model";
 
 export const metadata = { title: "Screen Planner" };
-export const dynamic = "force-dynamic";
 
-export default async function PlannerPage() {
-  const context = await getCurrentContext();
-  if (context.isDemo) {
-    const { Planner } = await import("@/components/dashboard/planner");
-    return <Planner />;
-  }
-  return <div className="flex flex-col gap-4">
-    <PageHeader dense title="Screen Planner" body="Experimental design" />
-    <Card title="Workspace planning is not connected">
-      <p className="text-sm">A supported plan needs your library, assay design, coverage targets and variability estimates. This workspace does not yet compute statistical power, select a focused library or quote experimental costs.</p>
-    </Card>
-  </div>;
+export default async function PlannerPage(props: PageProps<"/dashboard/planner">) {
+  const { inputs } = sanitizeInputs(paramsToRaw(await props.searchParams));
+  return <Planner initial={inputs} />;
 }

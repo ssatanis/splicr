@@ -13,12 +13,6 @@ export const metadata = marketingMetadata("/pipeline", {
     "From reads to an evidence report: ingest, detect, count, QC, hit calling, artifact flags, Atlas context and review.",
 });
 
-const numbers = [
-  { value: "9", label: "Stages, start to finish" },
-  { value: "4", label: "Caller options, selected by design" },
-  { value: "6", label: "Artifact categories, when data permit" },
-];
-
 export default function PipelinePage() {
   return (
     <main className="sheet">
@@ -48,17 +42,6 @@ export default function PipelinePage() {
 
           <div className="relative lg:hidden h-52 my-8">
             <SideCoil className="absolute inset-0" />
-          </div>
-
-          <div className="mt-10 lg:mt-16 lg:max-w-[46%] flex flex-wrap gap-y-5 divide-x divide-white/20">
-            {numbers.map((n) => (
-              <div key={n.label} className="px-6 first:pl-0">
-                <div className="text-2xl md:text-3xl font-medium tabular-nums text-orange-400">
-                  {n.value}
-                </div>
-                <div className="text-white/90 text-xs md:text-sm mt-1">{n.label}</div>
-              </div>
-            ))}
           </div>
         </div>
       </section>

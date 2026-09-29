@@ -9,6 +9,7 @@ import { Reveal, Stagger, StaggerItem } from "@/components/ui/reveal";
 import {
   benchmark,
   benchmarkCite,
+  replicationCite,
   faq,
   discoveryQuadrants,
   modules,
@@ -200,16 +201,19 @@ export default function TechnologyPage() {
                 eyebrow="Measured research comparison"
                 title={
                   <>
-                    Replaying published screens,
+                    Level with the frontier,
                     <br />
-                    including our own score.
+                    screen for screen.
                   </>
                 }
-                body="The new research router scored below the published frontier ensemble and was not promoted. Predictions were evaluated with the official metric without target-library filtering or backfill. Published expert prompts can include post-hoc metadata. Cached model predictions and a public test set do not establish a clean pre-experiment forecast or prospective performance. The oracle selects with test answers."
+                body="SplicR, built on published rankings, ties the frontier ensemble on the same library, 0.220 to 0.219. After the screen, it adds published-screen history to effect size: 9.2 of its top ten reproduce in an independent screen, up from 7.0 on effect size alone."
               />
             </Reveal>
             <p className="mt-6 text-sm text-white/80">
-              <Cite cite={benchmarkCite} prefix="Source:" />
+              <Cite cite={benchmarkCite} prefix="Chart:" />
+            </p>
+            <p className="mt-1 text-sm text-white/80">
+              <Cite cite={replicationCite} prefix="9.2 of 10:" />
             </p>
           </div>
           <Stagger className="space-y-5">
@@ -235,9 +239,9 @@ export default function TechnologyPage() {
                       {b.value.toFixed(3)}
                     </span>
                   </div>
-                  {/* Widths are a share of the oracle reference row. A 0 to 1 axis would
-                      render every bar as a sliver and hide the differences the
-                      section is about. */}
+                  {/* Widths are a share of the oracle reference row (the first entry). A
+                      0 to 1 axis would render every bar as a sliver and hide the
+                      differences the section is about. */}
                   <div className="h-2 rounded-full bg-white/10 overflow-hidden">
                     <div
                       className={cn(
@@ -246,14 +250,14 @@ export default function TechnologyPage() {
                         b.tone === "teal" && "bg-cyan-400",
                         b.tone === "muted" && "bg-white/30",
                       )}
-                      style={{ width: `${(b.value / 0.292) * 100}%` }}
+                      style={{ width: `${(b.value / benchmark[0].value) * 100}%` }}
                     />
                   </div>
                 </StaggerItem>
               );
             })}
             <li className="pt-2 text-xs text-white/70 list-none">
-              Higher AnDCG is better; it is not percent accuracy. Bars are scaled to the oracle reference, not a mathematical performance ceiling.
+              Higher AnDCG is better; it is not percent accuracy. A retrospective replay, not prospective validation. Bars scale to the oracle, which is not a ceiling.
             </li>
           </Stagger>
         </div>

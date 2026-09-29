@@ -94,7 +94,42 @@ DATASETS: dict[str, Dataset] = {
         "screens", (), ("source", "screen_id"),
         "Public screen metadata: cell line, phenotype, library, author, year.",
     ),
+    # DepMap gene-level matrices, one partition per release and measure. Sorted
+    # on gene then model, because the question the app asks is "this hit gene,
+    # across every cell line", which then touches one row group per file.
+    "depmap_matrix": Dataset(
+        "depmap_matrix", ("release", "measure"), ("gene_symbol", "model_id"),
+        "DepMap gene x model matrices in long form: Chronos effect, dependency "
+        "probability, expression, WGS copy number and mutation calls.",
+    ),
+    # Harmonized cell models: DepMap ModelID joined to its Cellosaurus RRID.
+    "depmap_models": Dataset(
+        "depmap_models", ("release",), ("model_id",),
+        "DepMap models with Cellosaurus RRID, lineage, disease and screen coverage.",
+    ),
+    # Raw Avana guide read counts, kept wide (guide rows x sequence columns) so a
+    # reanalysis selects the handful of sequencing runs in one screen by column
+    # projection instead of scanning 170 million long-form rows.
+    "depmap_raw_readcounts": Dataset(
+        "depmap_raw_readcounts", ("release",), ("sgrna",),
+        "Raw Avana sgRNA read counts, one column per sequencing run.",
+    ),
 }
+
+# The small DepMap tables that let the raw counts be reprocessed and every row be
+# traced to a sequencing run. Each keeps its source columns, snake_cased, so one
+# dataset per file rather than a union with a lowest-common-denominator schema.
+DEPMAP_TABLES: dict[str, tuple[str, str]] = {
+    "depmap_sequence_map": ("ScreenSequenceMap.csv", "Sequencing run -> screen, pDNA batch, library, QC pass."),
+    "depmap_screen_map": ("CRISPRScreenMap.csv", "Screen -> model, library and whether Chronos used it."),
+    "depmap_guide_map": ("AvanaGuideMap.csv", "Avana sgRNA -> genome alignment, gene and drop reason."),
+    "depmap_screen_qc": ("AchillesScreenQCReport.csv", "Per-screen QC: NNMD, ROC-AUC, replicate agreement."),
+    "depmap_sequence_qc": ("AchillesSequenceQCReport.csv", "Per-sequencing-run QC metrics."),
+    "depmap_model_conditions": ("ModelCondition.csv", "Culture condition per model: media, format, drug."),
+    "depmap_omics_profiles": ("OmicsProfiles.csv", "Omics profile -> model, data type, platform, date."),
+}
+for _name, (_file, _desc) in DEPMAP_TABLES.items():
+    DATASETS[_name] = Dataset(_name, ("release",), (), _desc)
 
 
 # ---------------------------------------------------------------------------

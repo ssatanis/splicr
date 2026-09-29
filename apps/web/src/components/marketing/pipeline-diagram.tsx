@@ -80,7 +80,7 @@ const STAGES: Stage[] = [
     n: "09",
     title: "Report",
     produces: "Hit evidence and exports",
-    detail: "The local engine writes an evidence JSON report and method output files. Workspace results can be read where records exist; browser report exports and outcome entry are not connected.",
+    detail: "The local engine writes an evidence JSON report and method output files. Workspace members can read recorded results, export them as CSV or JSON, and log bench outcomes; there is no PDF for workspace runs and no browser upload.",
     tools: "Local evidence JSON and method output files",
   },
 ];

@@ -46,14 +46,12 @@ export function Hero() {
                      text-[clamp(2.6rem,8vw,6.5rem)] text-balance"
         >
           <motion.span custom={0} variants={line} className="block">
-            Traceable evidence
+            The answer key
           </motion.span>
           <motion.span custom={1} variants={line} className="block">
             for <span className="text-orange-500">CRISPR</span> screens
           </motion.span>
         </motion.h1>
-
-        <p className="mt-6 max-w-xl text-body leading-relaxed">Analysis and prediction research with inspectable results. Public workspace access is not enabled; explore the evidence or discuss a research evaluation.</p>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
