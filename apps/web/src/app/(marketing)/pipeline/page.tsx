@@ -50,13 +50,19 @@ export default function PipelinePage() {
             <SideCoil className="absolute inset-0" />
           </div>
 
-          <div className="mt-10 lg:mt-16 lg:max-w-[46%] flex flex-wrap gap-y-5 divide-x divide-white/20">
-            {numbers.map((n) => (
-              <div key={n.label} className="px-6 first:pl-0">
+          {/* A grid, not flex-wrap: divide-x draws the rule in DOM order, so a
+              wrapped item keeps a left border and its padding and no longer
+              lines up with the column above it. */}
+          <div className="mt-10 lg:mt-16 lg:max-w-[46%] grid grid-cols-1 sm:grid-cols-3 gap-y-5 sm:gap-y-0">
+            {numbers.map((n, i) => (
+              <div
+                key={n.label}
+                className={i > 0 ? "sm:pl-6 sm:border-l sm:border-white/20" : ""}
+              >
                 <div className="text-2xl md:text-3xl font-medium tabular-nums text-orange-400">
                   {n.value}
                 </div>
-                <div className="text-white/90 text-xs md:text-sm mt-1">{n.label}</div>
+                <div className="text-white/90 text-xs md:text-sm mt-1 text-balance">{n.label}</div>
               </div>
             ))}
           </div>
