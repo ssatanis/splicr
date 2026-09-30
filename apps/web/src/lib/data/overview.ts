@@ -50,7 +50,39 @@ export interface OverviewHit {
   chance_real: number | null;
   fdr: number | null;
   lfc: number | null;
+  /**
+   * The per-hit evidence the console draws its tier and its guide chart from.
+   *
+   * These were not read before, and the overview filled them with nulls and an
+   * empty flag array. An empty array is the positive claim "artifact screening
+   * ran and raised nothing", which was false: the one real screen carries 10,938
+   * flag rows. Every field here is nullable because the engine genuinely does not
+   * write all of them yet, and a field it did not write must read "not recorded"
+   * rather than zero.
+   */
+  n_guides: number | null;
+  n_good_guides: number | null;
+  /** Per-guide log2 fold change, the concordance view's whole input. */
+  guide_lfcs: number[] | null;
+  bayes_factor: number | null;
+  novelty: number | null;
+  /**
+   * The gene's hit rate across the published Atlas, and whether that makes it a
+   * frequent hitter. Both come from atlas.gene_stats, which holds 84,262 genes
+   * and is refreshed by the splicr-refresh-gene-stats cron.
+   *
+   * The per-hit atlas_hit_count columns are never written --- they are absent
+   * from the COPY list at engine/splicr/db.py:347 --- so reading them gave null
+   * on all 20,916 rows and the tier could never reach four recorded legs. The
+   * public.hit_report view already joins the live table, which is both cheaper
+   * and fresher than the denormalised snapshot would have been.
+   */
+  atlas_hit_rate: number | null;
+  is_frequent_hitter: boolean | null;
+  /** Null when the flag read failed; empty only when the screen truly has none. */
+  flags: string[] | null;
 }
+
 
 /**
  * Headline hits plus whether the scoring model has actually run.
@@ -267,9 +299,34 @@ interface HitRow {
   chance_real: number | null;
   fdr: number | null;
   lfc: number | null;
+  n_guides: number | null;
+  n_good_guides: number | null;
+  guide_lfcs: number[] | null;
+  bayes_factor: number | null;
+  novelty: number | null;
+  atlas_gene_hit_rate: number | null;
+  is_frequent_hitter: boolean | null;
+  flags: string[] | null;
 }
 
-const HIT_COLUMNS = "id, screen_id, gene_symbol, direction, verdict, chance_real, fdr, lfc";
+/**
+ * The embed follows the shape already in production at `screen-report.ts`, which
+ * keeps the read to one round trip. The query plan is unchanged: this is still a
+ * `comparison_id` equality with an indexed order and a limit, which the file's own
+ * measurements put at 1.5ms against 3.9-5.3s for an `in (...)` form, because the
+ * RLS predicate is re-evaluated per row under an 8s statement timeout.
+ */
+const HIT_COLUMNS =
+  "id, screen_id, gene_symbol, direction, verdict, chance_real, fdr, lfc, " +
+  "n_guides, n_good_guides, guide_lfcs, bayes_factor, novelty, " +
+  "flags, atlas_gene_hit_rate, is_frequent_hitter";
+
+/** Postgres real[] arrives as an array; anything else is treated as not recorded. */
+function toNumberArray(value: unknown): number[] | null {
+  if (!Array.isArray(value)) return null;
+  const out = value.map((v) => toNumber(v)).filter((v): v is number => v !== null);
+  return out.length === 0 ? null : out;
+}
 
 function toHit(row: HitRow): OverviewHit {
   return {
@@ -281,6 +338,14 @@ function toHit(row: HitRow): OverviewHit {
     chance_real: toNumber(row.chance_real),
     fdr: toNumber(row.fdr),
     lfc: toNumber(row.lfc),
+    n_guides: toNumber(row.n_guides),
+    n_good_guides: toNumber(row.n_good_guides),
+    guide_lfcs: toNumberArray(row.guide_lfcs),
+    bayes_factor: toNumber(row.bayes_factor),
+    novelty: toNumber(row.novelty),
+    atlas_hit_rate: toNumber(row.atlas_gene_hit_rate),
+    is_frequent_hitter: typeof row.is_frequent_hitter === "boolean" ? row.is_frequent_hitter : null,
+    flags: Array.isArray(row.flags) ? row.flags.filter((f) => typeof f === "string") : null,
   };
 }
 
@@ -317,7 +382,7 @@ async function hitsFromComparison(
   limit: number,
 ): Promise<OverviewHit[]> {
   let query = supabase
-    .from("hits")
+    .from("hit_report")
     .select(HIT_COLUMNS)
     .eq("comparison_id", comparisonId)
     .not(column, "is", null);

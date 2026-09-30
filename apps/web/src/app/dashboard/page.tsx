@@ -41,20 +41,20 @@
  */
 import { Plus } from "lucide-react";
 import Link from "next/link";
-import { Suspense } from "react";
 
-import { CandidatesPanel } from "@/components/dashboard/overview/candidates-panel";
-import { OverviewGrid } from "@/components/dashboard/overview/grid";
-import { OutcomesPanel } from "@/components/dashboard/overview/outcomes-panel";
-import { RunsPanel } from "@/components/dashboard/overview/runs-panel";
+import {
+  Decisions,
+  NextActions,
+  ScreenList,
+  ZoneHeading,
+} from "@/components/dashboard/overview/zones";
 import type {
   CandidateRow,
   OutcomeRow,
   RunRow,
 } from "@/components/dashboard/overview/types";
 import { MODALITY_SHORT } from "@/components/dashboard/settings/meta";
-import { KpiStrip, KpiTile, PageHeader, PanelStack } from "@/components/dashboard/ui";
-import { listLibraries } from "@/lib/data/libraries";
+import { PageHeader } from "@/components/dashboard/ui";
 import { getCurrentContext, getWorkspaceStats } from "@/lib/data/org";
 import {
   listHeadlineHits,
@@ -67,12 +67,8 @@ import {
 import type { WorkspaceStats } from "@/lib/data/types";
 import {
   benchQueue,
-  FDR_THRESHOLD,
-  LIKELY_REAL_THRESHOLD,
   outcomes,
   screens,
-  stagesForScreen,
-  testsForScreen,
   type Screen,
   type Verdict,
 } from "@/lib/mock/data";
@@ -90,7 +86,7 @@ export default async function OverviewPage() {
     return <div className="space-y-4"><PageHeader dense title="Workspace unavailable" body="No active workspace could be resolved for this session." /><p className="text-sm text-muted">Sign in with an account that belongs to a workspace. If you already have one, reload to try again.</p></div>;
   }
 
-  const [stats, recent, headline, loggedOutcomes, catalog] = await Promise.all([
+  const [stats, recent, headline, loggedOutcomes] = await Promise.all([
     getWorkspaceStats(org.id),
     listRecentScreens(org.id),
     // Deeper than the old six: the candidate panel is the page's full-height
@@ -98,7 +94,6 @@ export default async function OverviewPage() {
     // stopped at six would leave the panel half empty on every large screen.
     listHeadlineHits(org.id, 24),
     listRecentOutcomes(org.id, 10),
-    listLibraries(),
   ]);
 
   return (
@@ -108,7 +103,6 @@ export default async function OverviewPage() {
       recent={recent}
       headline={headline}
       outcomes={loggedOutcomes}
-      libraries={catalog.libraries.length}
     />
   );
 }
@@ -163,13 +157,10 @@ function Frame({
         }
       />
       {strip}
-      {/* One Suspense boundary for the whole grid. The panels read their sort and
-          filter state out of the query string, which needs a boundary or the
-          route falls back to client rendering; wrapping each panel separately
-          would put a fallback element into the grid with no span of its own. */}
-      <Suspense fallback={<div className="lg:min-h-0 lg:flex-1" aria-hidden="true" />}>
-        <OverviewGrid>{children}</OverviewGrid>
-      </Suspense>
+      {/* A vertical stack, not the twelve-column panel grid this page used to
+          be. The three zones are read in order and none of them competes with
+          the others for the same row, which is the whole point of the change. */}
+      <div className="flex flex-col gap-8 pb-4">{children}</div>
     </>
   );
 }
@@ -178,40 +169,30 @@ function plural(n: number, one: string, many: string) {
   return `${formatNumber(n)} ${n === 1 ? one : many}`;
 }
 
-/**
- * How the two grid cells behave at each width.
- *
- * One column until lg rather than the system's default of two from md: a 354px
- * column at 768 gives the candidate table half the width it needs and hands the
- * outcomes panel 2,348px of empty white to stretch into beside it. Two columns
- * start where there is room for two.
- *
- * The cap below lg is what keeps the rest of the page reachable on a phone. The
- * panel is as tall as its rows there, and seventy-six of them put the runs and
- * the outcomes 2,500px down a page nobody scrolls that far. Capped, the table
- * scrolls inside the panel and the panels below it stay one thumb away.
- */
-const CANDIDATES_CELL = "panel-in min-h-0 max-h-[70vh] md:col-span-12 lg:col-span-6 lg:max-h-none";
-const STACK_CELL = "md:col-span-12 lg:col-span-6";
-
-/** Where the likely-real cut sits, spelled out once for every label that cites it. */
-const REAL_CUT = `model score ${LIKELY_REAL_THRESHOLD.toFixed(2)} or above`;
 
 // ---------------------------------------------------------------------------
 // The real thing
 // ---------------------------------------------------------------------------
 
-const VERDICTS: readonly string[] = [
-  "Real and new",
-  "Real but generic",
-  "Real and known",
-  "Artifact",
-  "Uncertain",
-];
+/**
+ * The engine's verdict, translated to the label the console shows.
+ *
+ * `public.hit_verdict` is a snake_case Postgres enum. This used to test the
+ * display strings ("Real and new") against it, so every real hit failed the
+ * check and rendered "Not yet classified" — all 20,916 of them on the one real
+ * screen, whose stored verdicts are `uncertain` and `artifact`. Keying on the
+ * enum is what makes the column mean anything on a signed-in workspace.
+ */
+const VERDICT_LABELS: Record<string, Verdict> = {
+  real_new: "Real and new",
+  real_generic: "Real but generic",
+  real_known: "Real and known",
+  artifact: "Artifact",
+  uncertain: "Uncertain",
+};
 
-/** The engine's verdict column is free text in Postgres, so it is checked here. */
 function asVerdict(value: string): Verdict | null {
-  return VERDICTS.includes(value) ? (value as Verdict) : null;
+  return VERDICT_LABELS[value] ?? null;
 }
 
 /** A run that stopped, warned or is still moving is a run to look at today. */
@@ -236,14 +217,12 @@ function WorkspaceOverview({
   recent,
   headline,
   outcomes: loggedOutcomes,
-  libraries,
 }: {
   orgName: string;
   stats: WorkspaceStats;
   recent: OverviewScreen[];
   headline: HeadlineHits;
   outcomes: OverviewOutcome[];
-  libraries: number;
 }) {
   const screenName = new Map(recent.map((screen) => [screen.id, screen.name]));
 
@@ -254,31 +233,29 @@ function WorkspaceOverview({
     chance: hit.chance_real,
     lfc: hit.lfc,
     fdr: hit.fdr,
-    novelty: null,
-    bayes: null,
-    // Guide agreement, artifact flags, Atlas context and the screen's re-test
-    // assay are per-hit detail the overview read does not fetch. They stay null
-    // so the panel says so rather than drawing a figure nobody supplied.
-    guides: null,
-    guidesAgree: null,
-    flags: [],
+    novelty: hit.novelty,
+    bayes: hit.bayes_factor,
+    // These now come from the read. They were hardcoded null, and `flags` was
+    // hardcoded to [] — which asserted "artifact screening found nothing" about
+    // rows whose flags had never been fetched. The one real screen carries 10,938
+    // flag rows, so that claim was not merely unsupported, it was wrong.
+    guides: hit.n_guides,
+    guidesAgree: hit.n_good_guides,
+    guideLfcs: hit.guide_lfcs,
+    direction: hit.direction,
+    flags: hit.flags,
     why: null,
+    // The per-hit counts are absent from the engine's COPY list, so they stay
+    // null and the live rate from atlas.gene_stats carries this leg instead.
     atlasHits: null,
     atlasScreens: null,
+    atlasRate: hit.atlas_hit_rate,
+    isFrequentHitter: hit.is_frequent_hitter,
     screenId: hit.screen_id,
     screenName: screenName.get(hit.screen_id) ?? null,
     benchAssay: null,
   }));
 
-  // Headline hits can belong to screens outside the recent-screen window.
-  // Missing QC is pending, never an implied pass.
-  const candidateQc = candidates.map((candidate) => ({
-    id: candidate.screenId,
-    qc: recent.find((screen) => screen.id === candidate.screenId)?.qc ?? "pending",
-  }));
-  const qcSource = candidateQc.find((screen) => screen.qc === "fail")
-    ?? candidateQc.find((screen) => screen.qc === "warn")
-    ?? candidateQc.find((screen) => screen.qc === "pending");
 
   const runs: RunRow[] = recent.map((screen) => ({
     id: screen.id,
@@ -312,6 +289,10 @@ function WorkspaceOverview({
   }));
 
   const flagged = runs.filter((run) => run.attention !== null).length;
+  // A candidate sent to the bench whose result has not come back. This is the
+  // only one of the three counts that measures the loop closing, and it is the
+  // number that fills the outcome table the ranking is fitted on.
+  const unlogged = outcomeRows.filter((outcome) => outcome.result === "pending").length;
 
   return (
     <Frame
@@ -323,73 +304,77 @@ function WorkspaceOverview({
           : `${plural(stats.screens, "screen", "screens")}, ${plural(stats.hits, "hit", "hits")} called and ${plural(stats.outcomes, "bench outcome", "bench outcomes")} logged.`
       }
       strip={
-        <KpiStrip
-          title="Where this workspace stands"
-          count={plural(stats.screens, "screen", "screens")}
-          className="panel-in shrink-0"
-        >
-          <KpiTile
-            label="Candidates ranked"
-            value={formatNumber(candidates.length)}
-            denominator={`of ${formatNumber(stats.hits)} called`}
-            definition={
-              headline.scored
-                ? "Ranked by recorded model score; calibration is not established."
-                : "No recorded model score, so ranked by FDR."
-            }
-            tone="orange"
-            href="/dashboard/screens"
-          />
-          <KpiTile
-            label="Runs needing a look"
-            value={formatNumber(flagged)}
-            denominator={`of ${formatNumber(runs.length)} recent`}
-            definition="QC warned or failed, or the run itself stopped."
-            href="/dashboard/screens"
-          />
-          <KpiTile
-            label="Bench outcomes logged"
-            value={formatNumber(stats.outcomes)}
-            denominator="all time"
-            definition="Re-tests recorded against a called hit."
-            href="/dashboard/validation"
-          />
-          <KpiTile
-            label="Libraries available"
-            value={formatNumber(libraries)}
-            denominator={`${formatNumber(stats.runs)} runs started`}
-            definition="Reference libraries the detect stage can call."
-          />
-        </KpiStrip>
+        <Decisions
+          items={[
+            {
+              value: candidates.length,
+              one: "candidate waiting on a decision",
+              many: "candidates waiting on a decision",
+              clear: "No candidate is waiting on you",
+              href: "/dashboard/pick",
+              lead: true,
+            },
+            {
+              value: flagged,
+              one: "screen needs a QC review",
+              many: "screens need a QC review",
+              clear: "Every screen passed QC",
+              href: "/dashboard/screens",
+            },
+            {
+              value: unlogged,
+              one: "bench result not yet logged",
+              many: "bench results not yet logged",
+              clear: "Every bench result is logged",
+              href: "/dashboard/validation",
+            },
+          ]}
+        />
       }
     >
-      <CandidatesPanel
-        className={CANDIDATES_CELL}
-        rows={candidates}
-        ranked={headline.scored ? "chance" : "fdr"}
-        total={candidates.length}
-        unit={candidates.length === 1 ? "candidate" : "candidates"}
-        sample={false}
-        qc={qcSource && qcSource.qc !== "pass" ? {
-          verdict: qcSource.qc,
-          note: qcSource.qc === "fail"
-            ? "Some candidates come from a screen that failed QC; downstream figures are suspect."
-            : qcSource.qc === "warn"
-              ? "Some candidates come from a screen with QC warnings; review before validation."
-              : "QC has not been verified for every candidate's screen; review before validation.",
-          href: `/dashboard/screens/${qcSource.id}?tab=qc`,
-        } : null}
-        provenance={
-          headline.scored
-            ? `Ranked by recorded model score. This is not a validation probability.`
-            : `Ranked by FDR; no model score is recorded.`
-        }
-        emptyBody="Either no run has called a hit yet, or the read did not complete. Nothing is being reported as zero."
-      />
-      <PanelStack span={6} className={STACK_CELL}>
-        <RunsPanel className="panel-in min-h-0" runs={runs} realCut={REAL_CUT} />
-        <OutcomesPanel className="panel-in" outcomes={outcomeRows} />
-      </PanelStack>
+      <section>
+        <ZoneHeading
+          action={
+            <Link href="/dashboard/screens" className="text-[12px] text-teal-800/70 hover:text-ink">
+              All screens &rarr;
+            </Link>
+          }
+        >
+          Your screens
+        </ZoneHeading>
+        <ScreenList screens={runs} hrefFor={(s) => `/dashboard/screens/${s.id}`} />
+      </section>
+
+      <section>
+        <ZoneHeading>What next</ZoneHeading>
+        <NextActions
+          actions={[
+            {
+              title: "Pick this round",
+              body: "Rank candidates by what reproduces, then export the order sheet.",
+              href: "/dashboard/pick",
+              badge: candidates.length > 0 ? `${candidates.length} waiting` : null,
+              primary: true,
+            },
+            {
+              title: "Upload a screen",
+              body: "Start the pipeline on a new count table.",
+              href: "/dashboard/upload",
+            },
+            {
+              title: "Log a bench result",
+              body: "Validated, failed or inconclusive. Two seconds.",
+              href: "/dashboard/validation",
+              badge: unlogged > 0 ? `${unlogged} open` : null,
+            },
+            {
+              title: "Look up a gene",
+              body: "Its history across every published screen in the Atlas.",
+              href: "/dashboard/atlas",
+            },
+          ]}
+        />
+      </section>
     </Frame>
   );
 }
@@ -400,13 +385,6 @@ function WorkspaceOverview({
 
 /** The window every windowed count on the sample overview is taken over. */
 const WINDOW_DAYS = 7;
-
-/**
- * Pinned at module load, next to the fixtures themselves, which are also dated
- * relative to load time. Reading the clock during render would make the counts
- * drift away from the rows they are counting.
- */
-const WINDOW_START = Date.now() - WINDOW_DAYS * 864e5;
 
 /** Phenotype, model, library, owner and date, for a run's expanded row. */
 function runDetail(screen: Screen): string {
@@ -428,34 +406,10 @@ function SampleOverview({ signedIn }: { signedIn: boolean }) {
   const source = screens[0];
   const queue = benchQueue(source.id);
 
-  const outcomesThisWeek = outcomes.filter((o) => Date.parse(o.loggedAt) >= WINDOW_START).length;
-  const settled = outcomes.filter((o) => o.result !== "pending");
-  const held = settled.filter((o) => o.result === "validated").length;
 
   // Read off the run record rather than typed in here, so the provenance line and
   // the screen's own Report tab can never name two different tool versions.
-  const stages = stagesForScreen(source);
-  const scoreTool = stages.find((stage) => stage.key === "score")?.tool ?? null;
 
-  const candidates: CandidateRow[] = queue.map((hit) => ({
-    id: `${source.id}:${hit.gene}`,
-    gene: hit.gene,
-    verdict: hit.verdict,
-    chance: hit.chance,
-    lfc: hit.lfc,
-    fdr: hit.fdr,
-    novelty: hit.novelty,
-    bayes: hit.bayesFactor,
-    guides: hit.guides,
-    guidesAgree: hit.guidesAgree,
-    flags: hit.flags,
-    why: hit.why,
-    atlasHits: hit.atlasHits,
-    atlasScreens: hit.atlasScreens,
-    screenId: source.id,
-    screenName: source.name,
-    benchAssay: source.benchAssay,
-  }));
 
   const runs: RunRow[] = screens.map((screen) => ({
     id: screen.id,
@@ -479,7 +433,7 @@ function SampleOverview({ signedIn }: { signedIn: boolean }) {
   }));
 
   const flagged = runs.filter((run) => run.attention !== null).length;
-  const tests = testsForScreen(source);
+  const unlogged = outcomeRows.filter((outcome) => outcome.result === "pending").length;
 
   return (
     <Frame
@@ -491,65 +445,77 @@ function SampleOverview({ signedIn }: { signedIn: boolean }) {
           : `Nothing here is a measurement. Windowed counts cover the last ${WINDOW_DAYS} days.`
       }
       strip={
-        <KpiStrip
-          title="Where this workspace stands"
-          count={plural(screens.length, "screen", "screens")}
-          className="panel-in shrink-0"
-        >
-          <KpiTile
-            label="Candidates waiting"
-            value={formatNumber(queue.length)}
-            denominator={`of ${formatNumber(source.hits)} called`}
-            definition={`At ${REAL_CUT}, unanswered by the bench.`}
-            tone="orange"
-            href={`/dashboard/screens/${source.id}?tab=hits`}
-          />
-          <KpiTile
-            label="Runs needing a look"
-            value={formatNumber(flagged)}
-            denominator={`of ${formatNumber(screens.length)} screens`}
-            definition="QC warned or failed, or the run itself stopped."
-            href="/dashboard/screens"
-          />
-          <KpiTile
-            label="Bench outcomes logged"
-            value={formatNumber(outcomes.length)}
-            denominator={`${formatNumber(outcomesThisWeek)} this week`}
-            definition={`${held} of ${settled.length} resolved calls held up.`}
-            href="/dashboard/validation"
-          />
-          <KpiTile
-            label="Candidate cut"
-            value={`FDR ${FDR_THRESHOLD.toFixed(2)}`}
-            denominator={source.library}
-            definition={`Benjamini-Hochberg over ${formatNumber(tests)} gene-level tests.`}
-          />
-        </KpiStrip>
+        <Decisions
+          items={[
+            {
+              value: queue.length,
+              one: "candidate waiting on a decision",
+              many: "candidates waiting on a decision",
+              clear: "No candidate is waiting on you",
+              href: "/dashboard/pick",
+              lead: true,
+            },
+            {
+              value: flagged,
+              one: "screen needs a QC review",
+              many: "screens need a QC review",
+              clear: "Every screen passed QC",
+              href: "/dashboard/screens",
+            },
+            {
+              value: unlogged,
+              one: "bench result not yet logged",
+              many: "bench results not yet logged",
+              clear: "Every bench result is logged",
+              href: "/dashboard/validation",
+            },
+          ]}
+        />
       }
     >
-      <CandidatesPanel
-        className={CANDIDATES_CELL}
-        rows={candidates}
-        ranked="chance"
-        total={queue.length}
-        unit={queue.length === 1 ? "candidate" : "candidates"}
-        sample
-        qc={source.qc === "pass" ? null : {
-          verdict: source.qc,
-          note: source.qc === "fail"
-            ? "This screen failed QC; downstream figures are suspect."
-            : source.qc === "warn"
-              ? "This screen has QC warnings; review before validation."
-              : "This screen's QC is pending; review before validation.",
-          href: `/dashboard/screens/${source.id}?tab=qc`,
-        }}
-        provenance={`${scoreTool ?? "Scoring stage"} · FDR ${FDR_THRESHOLD.toFixed(2)} · ${source.library}, ${formatNumber(tests)} genes`}
-        emptyBody="Every candidate on this screen has been answered at the bench."
-      />
-      <PanelStack span={6} className={STACK_CELL}>
-        <RunsPanel className="panel-in min-h-0" runs={runs} realCut={REAL_CUT} />
-        <OutcomesPanel className="panel-in" outcomes={outcomeRows} />
-      </PanelStack>
+      <section>
+        <ZoneHeading
+          action={
+            <Link href="/dashboard/screens" className="text-[12px] text-teal-800/70 hover:text-ink">
+              All screens &rarr;
+            </Link>
+          }
+        >
+          Your screens
+        </ZoneHeading>
+        <ScreenList screens={runs} hrefFor={(s) => `/dashboard/screens/${s.id}`} />
+      </section>
+
+      <section>
+        <ZoneHeading>What next</ZoneHeading>
+        <NextActions
+          actions={[
+            {
+              title: "Pick this round",
+              body: "Rank candidates by what reproduces, then export the order sheet.",
+              href: "/dashboard/pick",
+              badge: queue.length > 0 ? `${queue.length} waiting` : null,
+              primary: true,
+            },
+            {
+              title: "Upload a screen",
+              body: "Start the pipeline on a new count table.",
+              href: "/dashboard/upload",
+            },
+            {
+              title: "Log a bench result",
+              body: "Validated, failed or inconclusive. Two seconds.",
+              href: "/dashboard/validation",
+              badge: unlogged > 0 ? `${unlogged} open` : null,
+            },
+            {
+              title: "Look up a gene",
+              body: "Its history across every published screen in the Atlas.",
+              href: "/dashboard/atlas",
+            },
+          ]}
+        />
+      </section>
     </Frame>
   );
 }

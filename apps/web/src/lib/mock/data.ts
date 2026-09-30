@@ -109,6 +109,15 @@ export interface Hit {
   bayesFactor: number;
   guides: number;
   guidesAgree: number;
+  /**
+   * Each guide's own log2 fold change, which is what the concordance view draws.
+   *
+   * Derived from `guidesAgree` so the picture and the count cannot contradict
+   * each other: the agreeing guides scatter around the gene-level effect, and
+   * the rest sit near zero or cross it. That is the shape the real column has —
+   * PARG reads [+4.34, +3.41, +1.55] and COG4 [+5.32, +5.92, -0.79].
+   */
+  guideLfcs: number[];
   chance: number;
   novelty: number;
   verdict: Verdict;
@@ -241,6 +250,7 @@ interface Draft {
   pValue: number;
   guides: number;
   guidesAgree: number;
+  guideLfcs: number[];
   bayesFactor: number;
   atlasScreens: number;
   atlasHits: number;
@@ -295,6 +305,15 @@ function draftHits(o: BuildOptions): Draft[] {
     const guidesAgree = real ? (r() < 0.62 ? 4 : 3) : r() < 0.55 ? 1 : r() < 0.9 ? 2 : 3;
     const concordance = guidesAgree / guides;
 
+    // The agreeing guides scatter around the gene-level effect; the rest sit near
+    // zero or cross it, which is exactly what makes a one-guide hit look wrong at
+    // a glance where the gene-level number alone looks fine.
+    const guideLfcs = Array.from({ length: guides }, (_, i) =>
+      i < guidesAgree
+        ? Number((lfc * (0.72 + r() * 0.56)).toFixed(2))
+        : Number((lfc * (r() * 0.3 - 0.18)).toFixed(2)),
+    );
+
     // The gene-level p-value follows the effect and the concordance, inside the
     // budget the threshold allows.
     const exponent = minExponent + (0.7 * magnitude + 3.4 * concordance + r() * 1.6) * (real ? 1 : 0.55);
@@ -336,6 +355,7 @@ function draftHits(o: BuildOptions): Draft[] {
       pValue,
       guides,
       guidesAgree,
+      guideLfcs,
       bayesFactor,
       atlasScreens,
       atlasHits,
@@ -453,6 +473,7 @@ export function buildHits(options: BuildOptions): Hit[] {
       bayesFactor: d.bayesFactor,
       guides: d.guides,
       guidesAgree: d.guidesAgree,
+      guideLfcs: d.guideLfcs,
       chance,
       novelty: d.novelty,
       verdict,

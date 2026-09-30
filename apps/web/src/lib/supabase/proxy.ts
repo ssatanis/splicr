@@ -13,6 +13,25 @@ export const DEMO_COOKIE = "splicr_demo";
 const DISABLED_PREFIXES = ["/login", "/signup", "/dashboard", "/invite"];
 
 /**
+ * Whether the console answers on this deployment.
+ *
+ * This used to test `NODE_ENV !== "development"`, which meant production was
+ * closed permanently and there was no way to open it: the first lab to be
+ * invited would have been redirected to the marketing page, and the only remedy
+ * would have been a code change and a deploy. Meanwhile NEXT_PUBLIC_ENABLE_CONSOLE
+ * was already set in apps/web/.env.local and nothing anywhere read it, so the
+ * switch somebody had reached for did nothing at all.
+ *
+ * It is an explicit flag now. Absent, the console stays closed, so nothing about
+ * the current public deployment changes by merging this. Set it in Vercel when a
+ * lab is ready, and it opens without a code change.
+ *
+ * Local `next dev` keeps working because the flag lives in .env.local, which is
+ * where it already was.
+ */
+const CONSOLE_OPEN = process.env.NEXT_PUBLIC_ENABLE_CONSOLE === "1";
+
+/**
  * Keeps the Supabase session fresh on every request and gates the
  * dashboard. Visitors without a session can still explore the dashboard
  * in demo mode (cookie set by /api/demo) so the product can be reviewed
@@ -22,10 +41,8 @@ export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const pathname = request.nextUrl.pathname;
-  // Public deploys keep the console closed. Local `next dev` needs the
-  // dashboard so the product can be reviewed without a production flip.
   if (
-    process.env.NODE_ENV !== "development" &&
+    !CONSOLE_OPEN &&
     DISABLED_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
   ) {
     return NextResponse.redirect(new URL("/", request.url));

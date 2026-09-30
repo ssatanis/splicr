@@ -35,10 +35,38 @@ export interface CandidateRow {
   bayes: number | null;
   guides: number | null;
   guidesAgree: number | null;
-  flags: string[];
+  /**
+   * Per-guide log2 fold change, which is what the concordance chart draws.
+   *
+   * `n_guides` says how many guides targeted the gene and `guidesAgree` how many
+   * the caller kept, but only these values show a reader WHY: three guides
+   * agreeing is a hit, one guide carrying the signal while two sit flat is an
+   * artifact, and the two cases are indistinguishable from a count.
+   */
+  guideLfcs: number[] | null;
+  /** Which way the caller recorded the effect. Read but previously discarded. */
+  direction: "depleted" | "enriched" | null;
+  /**
+   * Null means the flags were never fetched; empty means artifact screening ran
+   * and raised nothing. Those are different claims and the UI must not merge
+   * them, which is why this is nullable rather than defaulting to [].
+   */
+  flags: string[] | null;
   why: string | null;
   atlasHits: number | null;
   atlasScreens: number | null;
+  /**
+   * The gene's hit rate across the published Atlas, and the precomputed verdict
+   * on whether that makes it a frequent hitter.
+   *
+   * These replace the two counts as the tier's Atlas leg. The counts come from
+   * `hits.atlas_hit_count`, which the engine never writes, so they were null on
+   * every real hit and the tier could not reach four recorded legs. The rate
+   * comes from `atlas.gene_stats` through the `public.hit_report` view, which is
+   * live rather than a snapshot and covers 84,262 genes.
+   */
+  atlasRate: number | null;
+  isFrequentHitter: boolean | null;
   screenId: string;
   screenName: string | null;
   /** The re-test this gene's screen would order, which is the testable part. */

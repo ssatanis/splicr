@@ -120,7 +120,10 @@ const VIEWS: ViewSpec[] = [
     label: "No artifact flags",
     group: "How defensible",
     described: "candidates carrying no artifact flag",
-    keep: (row) => row.flags.length === 0,
+    // A row whose flags were never fetched is not a clean row. Null fails the
+    // filter, so "No artifact flags" means the artifact stage ran and raised
+    // nothing, never that nobody looked.
+    keep: (row) => row.flags !== null && row.flags.length === 0,
   },
   {
     value: "agree",
@@ -454,7 +457,9 @@ export function CandidatesPanel({
                   <td>
                     <span className="flex items-center gap-1.5">
                       {row.verdict ? <Call verdict={row.verdict} /> : <NotRecorded />}
-                      {row.flags.length > 0 && <FlagMark flags={row.flags} />}
+                      {row.flags !== null && row.flags.length > 0 && (
+                        <FlagMark flags={row.flags} />
+                      )}
                     </span>
                   </td>
                   <td className="num-col" title="Uncalibrated model score">
@@ -645,7 +650,12 @@ function Evidence({
 
       <div className="mt-4">
         <div className="text-[11px] uppercase tracking-[0.06em] text-muted">Artifact flags</div>
-        {row.flags.length === 0 ? (
+        {row.flags === null ? (
+          <p className="mt-1 text-[13px] text-body">
+            Not recorded. The artifact stage has not reported on this hit, which is
+            not the same as reporting nothing.
+          </p>
+        ) : row.flags.length === 0 ? (
           <p className="mt-1 text-[13px] text-body">None raised by the artifact stage.</p>
         ) : (
           <>
