@@ -1,0 +1,233 @@
+{
+  "n_guides": 58237,
+  "n_essential_guides": 2531,
+  "n_essential_genes": 968,
+  "primary": {
+    "rho": 0.0162,
+    "p": 0.41480531012118843,
+    "n": 2531,
+    "passes": false,
+    "thresholds": {
+      "direction": "positive",
+      "p": 0.01,
+      "min_abs_rho": 0.05
+    }
+  },
+  "secondary": {
+    "median_difference": -0.03,
+    "p": 0.8830998520803527,
+    "n_disagreeing_genes": 170
+  },
+  "examples": [
+    {
+      "gene": "EIF1AD",
+      "dud": {
+        "lfc": 0.15,
+        "score": 0.38
+      },
+      "others": [
+        {
+          "lfc": -3.08,
+          "score": 0.38
+        },
+        {
+          "lfc": -1.6,
+          "score": 0.62
+        }
+      ]
+    },
+    {
+      "gene": "MIS18BP1",
+      "dud": {
+        "lfc": 0.51,
+        "score": 0.38
+      },
+      "others": [
+        {
+          "lfc": -1.35,
+          "score": 0.62
+        },
+        {
+          "lfc": -0.76,
+          "score": 0.62
+        }
+      ]
+    },
+    {
+      "gene": "NOL10",
+      "dud": {
+        "lfc": -0.32,
+        "score": 0.62
+      },
+      "others": [
+        {
+          "lfc": -1.46,
+          "score": 0.62
+        },
+        {
+          "lfc": -1.33,
+          "score": 0.62
+        }
+      ]
+    },
+    {
+      "gene": "EIF4E",
+      "dud": {
+        "lfc": 0.88,
+        "score": 0.38
+      },
+      "others": [
+        {
+          "lfc": -0.84,
+          "score": 0.62
+        },
+        {
+          "lfc": -0.22,
+          "score": 0.38
+        }
+      ]
+    },
+    {
+      "gene": "HAUS3",
+      "dud": {
+        "lfc": 0.76,
+        "score": 0.62
+      },
+      "others": [
+        {
+          "lfc": -1.49,
+          "score": 0.38
+        },
+        {
+          "lfc": -0.81,
+          "score": 0.38
+        }
+      ]
+    },
+    {
+      "gene": "CCDC86",
+      "dud": {
+        "lfc": 1.2,
+        "score": 0.38
+      },
+      "others": [
+        {
+          "lfc": -1.08,
+          "score": 0.62
+        },
+        {
+          "lfc": -0.39,
+          "score": 0.68
+        }
+      ]
+    },
+    {
+      "gene": "LCE2C",
+      "dud": {
+        "lfc": 0.45,
+        "score": 0.38
+      },
+      "others": [
+        {
+          "lfc": -1.65,
+          "score": 0.62
+        },
+        {
+          "lfc": -1.24,
+          "score": 0.38
+        }
+      ]
+    },
+    {
+      "gene": "NUBP1",
+      "dud": {
+        "lfc": 0.3,
+        "score": 0.62
+      },
+      "others": [
+        {
+          "lfc": -1.03,
+          "score": 0.33
+        },
+        {
+          "lfc": -0.88,
+          "score": 0.62
+        }
+      ]
+    }
+  ],
+  "score_distribution": [
+    {
+      "lo": 0.33,
+      "hi": 0.365,
+      "n": 11
+    },
+    {
+      "lo": 0.365,
+      "hi": 0.4,
+      "n": 1230
+    },
+    {
+      "lo": 0.4,
+      "hi": 0.435,
+      "n": 0
+    },
+    {
+      "lo": 0.435,
+      "hi": 0.47,
+      "n": 122
+    },
+    {
+      "lo": 0.47,
+      "hi": 0.505,
+      "n": 0
+    },
+    {
+      "lo": 0.505,
+      "hi": 0.54,
+      "n": 0
+    },
+    {
+      "lo": 0.54,
+      "hi": 0.575,
+      "n": 6
+    },
+    {
+      "lo": 0.575,
+      "hi": 0.61,
+      "n": 0
+    },
+    {
+      "lo": 0.61,
+      "hi": 0.645,
+      "n": 1032
+    },
+    {
+      "lo": 0.645,
+      "hi": 0.68,
+      "n": 130
+    }
+  ],
+  "lfc_by_score_bucket": [
+    {
+      "score": 0.36,
+      "mean_lfc": -0.8098,
+      "n": 1239
+    },
+    {
+      "score": 0.42,
+      "mean_lfc": -1.062,
+      "n": 124
+    },
+    {
+      "score": 0.59,
+      "mean_lfc": -0.8352,
+      "n": 1038
+    },
+    {
+      "score": 0.65,
+      "mean_lfc": -0.7944,
+      "n": 130
+    }
+  ]
+}

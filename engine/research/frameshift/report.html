@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Repair prediction — result</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#fdf8ef; --ink:#174f62; --deep:#0b2f3b;
+    --body:#455c68; --mute:#8a949c; --accent:#c2560a; --rule:#e2dcd0; --cyan:#38c8df;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:"Outfit",system-ui,sans-serif;background:var(--cream);color:var(--body);
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{max-width:1080px;margin:0 auto;padding:72px 56px 96px}
+  .serif{font-family:"Instrument Serif",Georgia,serif;font-weight:400}
+  .eyebrow{font-size:10.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--mute)}
+
+  /* ---------- verdict ---------- */
+  .verdict{display:grid;grid-template-columns:auto 1fr;gap:40px;align-items:center;
+    padding:40px 44px;background:#fff;border:1px solid var(--rule);border-radius:20px}
+  .stamp{
+    width:132px;height:132px;border-radius:50%;display:grid;place-items:center;
+    border:2px solid var(--accent);color:var(--accent);text-align:center;line-height:1.1;
+  }
+  .stamp .big{font-family:"Instrument Serif",Georgia,serif;font-size:40px;display:block}
+  .stamp .sm{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;margin-top:2px;display:block}
+  h1{font-family:"Instrument Serif",Georgia,serif;font-size:42px;line-height:1.05;color:var(--ink);letter-spacing:-.01em}
+  .sub{font-size:15px;line-height:1.55;margin-top:12px;max-width:44ch}
+
+  /* ---------- numbers ---------- */
+  .row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--rule);
+    border:1px solid var(--rule);border-radius:16px;overflow:hidden;margin-top:18px}
+  .cell{background:#fff;padding:22px 24px}
+  .cell .n{font-family:"Instrument Serif",Georgia,serif;font-size:30px;line-height:1;color:var(--ink)}
+  .cell .n.fail{color:var(--accent)}
+  .cell .l{font-size:11px;line-height:1.4;color:var(--mute);margin-top:7px}
+
+  /* ---------- chart ---------- */
+  section{margin-top:56px}
+  h2{font-family:"Instrument Serif",Georgia,serif;font-size:27px;color:var(--ink);line-height:1.15}
+  .lede{font-size:14px;line-height:1.55;margin-top:9px;max-width:60ch}
+  .chart{margin-top:26px;background:#fff;border:1px solid var(--rule);border-radius:18px;padding:32px 36px 26px}
+  .legend{display:flex;gap:22px;font-size:11.5px;color:var(--mute);margin-top:16px;align-items:center}
+  .swatch{display:inline-block;width:22px;height:3px;border-radius:2px;vertical-align:middle;margin-right:7px}
+
+  /* ---------- examples ---------- */
+  .genes{margin-top:22px;display:grid;gap:1px;background:var(--rule);
+    border:1px solid var(--rule);border-radius:16px;overflow:hidden}
+  .gene{background:#fff;padding:16px 22px;display:grid;grid-template-columns:96px 1fr;gap:20px;align-items:center}
+  .gname{font-size:14px;font-weight:500;color:var(--ink)}
+  .guides{display:flex;gap:26px;flex-wrap:wrap}
+  .guide{display:flex;align-items:baseline;gap:8px;font-size:12.5px}
+  .guide .lfc{font-variant-numeric:tabular-nums;font-weight:500}
+  .guide .sc{font-variant-numeric:tabular-nums;color:var(--mute);font-size:11px}
+  .dud .lfc{color:var(--accent)}
+  .ok .lfc{color:var(--ink)}
+  .tag{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+
+  /* ---------- meaning ---------- */
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px}
+  .card{background:#fff;border:1px solid var(--rule);border-radius:16px;padding:26px 28px}
+  .card.warn{border-color:rgba(194,86,10,.3);background:rgba(194,86,10,.04)}
+  .card h3{font-size:13px;font-weight:600;color:var(--ink);letter-spacing:.01em}
+  .card.warn h3{color:var(--accent)}
+  .card p{font-size:13px;line-height:1.6;margin-top:9px}
+  footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--rule);font-size:11.5px;line-height:1.6;color:var(--mute)}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="eyebrow">Pre-registered test &nbsp;·&nbsp; 2026-09-30</div>
+
+  <div class="verdict" style="margin-top:18px">
+    <div class="stamp">
+      <div>
+        <span class="big">No</span>
+        <span class="sm">signal</span>
+      </div>
+    </div>
+    <div>
+      <h1>Predicted repair outcome does<br>not explain which guides work.</h1>
+      <p class="sub">
+        Tested on 2,531 guides targeting common-essential genes, where a working
+        knockout <em>must</em> deplete. The prediction and the outcome are unrelated.
+      </p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="cell"><div class="n fail">0.016</div><div class="l">correlation found<br>needed 0.050</div></div>
+    <div class="cell"><div class="n fail">0.42</div><div class="l">p-value<br>needed &lt; 0.01</div></div>
+    <div class="cell"><div class="n">2,531</div><div class="l">guides on essential genes<br>enough to detect 0.056</div></div>
+    <div class="cell"><div class="n">170</div><div class="l">genes with a dud guide<br>secondary test, also null</div></div>
+  </div>
+
+  <section>
+    <h2>If the idea worked, this line would fall.</h2>
+    <p class="lede">
+      Mean depletion of essential-gene guides, grouped by predicted frameshift score.
+      Higher prediction should mean deeper depletion. It is flat.
+    </p>
+
+    <div class="chart">
+      <svg viewBox="0 0 900 300" width="100%" height="300" role="img"
+           aria-label="Mean depletion is flat across predicted frameshift score">
+        <defs>
+          <linearGradient id="expected" x1="0" x2="1">
+            <stop offset="0" stop-color="#38c8df" stop-opacity=".35"/>
+            <stop offset="1" stop-color="#38c8df" stop-opacity=".9"/>
+          </linearGradient>
+        </defs>
+
+        <!-- axes -->
+        <line x1="90" y1="30" x2="90" y2="240" stroke="#e2dcd0" stroke-width="1"/>
+        <line x1="90" y1="240" x2="860" y2="240" stroke="#e2dcd0" stroke-width="1"/>
+
+        <!-- y ticks: lfc 0 at top, -1.5 at bottom -->
+        <text x="78" y="36" text-anchor="end" font-size="11" fill="#8a949c">0.0</text>
+        <text x="78" y="106" text-anchor="end" font-size="11" fill="#8a949c">−0.5</text>
+        <text x="78" y="176" text-anchor="end" font-size="11" fill="#8a949c">−1.0</text>
+        <text x="78" y="244" text-anchor="end" font-size="11" fill="#8a949c">−1.5</text>
+        <text x="30" y="140" text-anchor="middle" font-size="11" fill="#8a949c"
+              transform="rotate(-90 30 140)">mean depletion (log₂)</text>
+
+        <!-- what a real signal would look like -->
+        <path d="M150,110 L780,215" stroke="url(#expected)" stroke-width="3"
+              stroke-dasharray="7 6" fill="none"/>
+        <text x="786" y="219" font-size="11.5" fill="#38c8df">if the idea worked</text>
+
+        <!-- observed: flat -->
+        <path d="M150,143 L318,178 L612,147 L780,141" stroke="#c2560a" stroke-width="3"
+              fill="none" stroke-linejoin="round"/>
+
+        <!-- observed points, radius by n -->
+        <circle cx="150" cy="143" r="13" fill="#c2560a"/>
+        <circle cx="318" cy="178" r="6"  fill="#c2560a"/>
+        <circle cx="612" cy="147" r="12" fill="#c2560a"/>
+        <circle cx="780" cy="141" r="6"  fill="#c2560a"/>
+
+        <text x="150" y="266" text-anchor="middle" font-size="11.5" fill="#455c68">0.36</text>
+        <text x="318" y="266" text-anchor="middle" font-size="11.5" fill="#455c68">0.42</text>
+        <text x="612" y="266" text-anchor="middle" font-size="11.5" fill="#455c68">0.59</text>
+        <text x="780" y="266" text-anchor="middle" font-size="11.5" fill="#455c68">0.65</text>
+        <text x="475" y="292" text-anchor="middle" font-size="11.5" fill="#8a949c">predicted frameshift score</text>
+
+        <text x="150" y="122" text-anchor="middle" font-size="10.5" fill="#8a949c">n=1239</text>
+        <text x="612" y="126" text-anchor="middle" font-size="10.5" fill="#8a949c">n=1038</text>
+      </svg>
+
+      <div class="legend">
+        <span><span class="swatch" style="background:#c2560a"></span>observed</span>
+        <span><span class="swatch" style="background:#38c8df"></span>what a real effect would look like</span>
+        <span style="margin-left:auto">circle size = guides in bucket</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>The prediction cannot tell a dud from a working guide.</h2>
+    <p class="lede">
+      Essential genes where one guide failed to deplete. The failed guide is orange.
+      Its predicted score sits inside the range of its working siblings every time.
+    </p>
+
+    <div class="genes">
+      <div class="gene">
+        <span class="gname">EIF1AD</span>
+        <span class="guides">
+          <span class="guide dud"><span class="lfc">+0.15</span><span class="sc">score 0.38</span><span class="tag">dud</span></span>
+          <span class="guide ok"><span class="lfc">−3.08</span><span class="sc">score 0.38</span></span>
+          <span class="guide ok"><span class="lfc">−1.60</span><span class="sc">score 0.62</span></span>
+        </span>
+      </div>
+      <div class="gene">
+        <span class="gname">NOL10</span>
+        <span class="guides">
+          <span class="guide dud"><span class="lfc">−0.32</span><span class="sc">score 0.62</span><span class="tag">dud</span></span>
+          <span class="guide ok"><span class="lfc">−1.46</span><span class="sc">score 0.62</span></span>
+          <span class="guide ok"><span class="lfc">−1.33</span><span class="sc">score 0.62</span></span>
+        </span>
+      </div>
+      <div class="gene">
+        <span class="gname">EIF4E</span>
+        <span class="guides">
+          <span class="guide dud"><span class="lfc">+0.88</span><span class="sc">score 0.38</span><span class="tag">dud</span></span>
+          <span class="guide ok"><span class="lfc">−0.84</span><span class="sc">score 0.62</span></span>
+          <span class="guide ok"><span class="lfc">−0.22</span><span class="sc">score 0.38</span></span>
+        </span>
+      </div>
+      <div class="gene">
+        <span class="gname">MIS18BP1</span>
+        <span class="guides">
+          <span class="guide dud"><span class="lfc">+0.51</span><span class="sc">score 0.38</span><span class="tag">dud</span></span>
+          <span class="guide ok"><span class="lfc">−1.35</span><span class="sc">score 0.62</span></span>
+          <span class="guide ok"><span class="lfc">−0.76</span><span class="sc">score 0.62</span></span>
+        </span>
+      </div>
+    </div>
+    <p class="lede" style="margin-top:14px">
+      EIF1AD's dud and its strongest working guide score <em>identically</em>. NOL10's
+      three guides all score 0.62 and one of them does nothing.
+    </p>
+  </section>
+
+  <section>
+    <h2>What this does and does not settle.</h2>
+    <div class="cards">
+      <div class="card warn">
+        <h3>Settled: the cheap route is closed</h3>
+        <p>
+          A frameshift proxy derived from the 20bp protospacer carries no usable
+          signal here. Building a hit-caller on it would be building on noise.
+        </p>
+      </div>
+      <div class="card">
+        <h3>Not settled: a real repair model</h3>
+        <p>
+          inDelphi and FORECasT read ~60bp of genomic context around the cut.
+          GeCKOv2 stores no cut position, so that sequence does not exist in this
+          database and was never tested.
+        </p>
+      </div>
+      <div class="card">
+        <h3>Unruled-out: position</h3>
+        <p>
+          Guides in early exons deplete more regardless of repair. Without cut
+          positions this could not be controlled, so even a positive result would
+          have needed a second look.
+        </p>
+      </div>
+      <div class="card">
+        <h3>Already solved elsewhere</h3>
+        <p>
+          JACKS and MAGeCK-NEST already downweight weak guides by watching what
+          they actually do. An empirical measurement beats a prediction of the
+          same thing.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    One screen: GSE145743, HeLa, GeCKOv2 Set A. Depletion is log₂(DMSO / T0) per guide,
+    guides below 30 T0 reads dropped. Essentiality from atlas.gene_stats
+    (1,034 common-essential genes). Thresholds fixed in PREREGISTRATION.md before the
+    analysis ran: direction positive, p &lt; 0.01, |rho| ≥ 0.05. Observed: rho 0.0162,
+    p 0.415. Secondary Wilcoxon over 170 disagreeing genes: median difference −0.03,
+    p 0.883. A null on one screen with one library is a null on one screen with one library.
+  </footer>
+
+</div>
+</body>
+</html>
