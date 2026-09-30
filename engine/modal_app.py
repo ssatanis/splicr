@@ -99,10 +99,17 @@ MAX_PROCESS_PER_SWEEP = 6
 MIN_SCORE_TO_PLAN = 0.40
 
 
-# Planning is bound by NCBI E-utilities (3 requests/s per client without an API
-# key, 10 with NCBI_API_KEY in the secret), not by CPU. Six planners at once
-# stay inside that; fifty at once spent their time in 429 back-off.
-@app.function(**COMMON, cpu=1.0, memory=2048, timeout=1800, max_containers=6)
+# Planning is bound by two independent budgets, not by CPU. NCBI E-utilities
+# allow 10 req/s per API key across every container, so PLANNERS is passed to
+# the workers as SPLICR_NCBI_WORKERS and each one paces itself at 1/PLANNERS of
+# that; the aggregate stays legal however many run. ENA (filereport, and the
+# read probe that streams a FASTQ prefix) has its own per-host budget and is
+# what actually parallelises, which is why more containers still help.
+PLANNERS = 12
+
+
+@app.function(**COMMON, cpu=1.0, memory=2048, timeout=1800, max_containers=PLANNERS,
+              env={"SPLICR_NCBI_WORKERS": str(PLANNERS)})
 def plan_study(accession: str) -> dict:
     from splicr.ingest import runner
     return runner.plan(accession)

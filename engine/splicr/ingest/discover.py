@@ -63,9 +63,14 @@ _lock = threading.Lock()
 
 def _min_interval(url: str) -> float:
     if "ncbi.nlm.nih.gov" in url:
-        # 3 req/s without a key, 10 with one. A hair slower than the limit, since
-        # NCBI counts on its clock, not ours, and a burst gets a 429.
-        return 0.11 if os.environ.get("NCBI_API_KEY") else 0.36
+        # NCBI's limit is per API key (or per IP without one), not per process:
+        # 3 req/s bare, 10 with a key. Every planner container shares that one
+        # budget, so the per-process interval is multiplied by however many may
+        # run at once (SPLICR_NCBI_WORKERS, set to max_containers in modal_app).
+        # Without this, N containers each pacing themselves at 10 req/s send
+        # 10N req/s, and NCBI answers with 429s that cost more than they save.
+        base = 0.11 if os.environ.get("NCBI_API_KEY") else 0.36
+        return base * max(1, int(os.environ.get("SPLICR_NCBI_WORKERS", "1")))
     return 0.12
 
 

@@ -11,6 +11,7 @@ import csv
 import functools
 import gzip
 import io
+import json
 import re
 import zipfile
 from dataclasses import dataclass, field
@@ -72,6 +73,11 @@ class Library:
     guides: list[Guide]
     source_file: Path | None = None
     taxid: int = 9606
+
+    #: True when this library was extracted from a study's own supplementary
+    #: files rather than shipped with SplicR. Never silently equivalent to a
+    #: curated library: anything reporting a library reports this too.
+    learned: bool = False
 
     _by_sequence: dict[str, Guide] = field(default_factory=dict, repr=False)
 
@@ -368,9 +374,37 @@ def _parse_xlsx(path: Path, seq_col: str, gene_col: str, id_col: str | None,
     return Library(slug, name, guides, source_file=path, taxid=taxid)
 
 
+#: Libraries SplicR learned from a study's own supplementary files rather than
+#: shipping with. Written by `splicr.ingest.library_extract.register_learned`
+#: in one canonical 3-column format, so they need no per-library spec. Kept in
+#: their own directory so a learned library can never be mistaken for a
+#: curated one: `Library.learned` says which a caller is holding.
+LEARNED_DIR = LIBRARIES_DIR / "learned"
+
+
+def _parse_learned(path: Path, slug: str) -> Library:
+    """guide_id, sequence, gene - blank gene means a non-targeting control."""
+    rows = csv.DictReader(io.StringIO(read_text_any(path)), delimiter="\t")
+    guides = []
+    for n, row in enumerate(rows):
+        seq = (row.get("sequence") or "").strip().upper()
+        if not seq or set(seq) - VALID_BASES:
+            continue
+        gene = (row.get("gene") or "").strip()
+        guides.append(Guide(guide_id=(row.get("guide_id") or f"{slug}:{n}").strip(),
+                            sequence=seq, gene=gene or None, is_control=not gene))
+    meta_path = path.with_suffix(".json")
+    meta = json.loads(meta_path.read_text()) if meta_path.exists() else {}
+    return Library(slug, meta.get("name", slug), guides, source_file=path,
+                   taxid=int(meta.get("taxid", 9606)), learned=True)
+
+
 @functools.lru_cache(maxsize=None)
 def load_library(slug: str) -> Library:
     """Load one library by slug. Cached: parsing Brunello takes a moment."""
+    learned = LEARNED_DIR / f"{slug}.tsv"
+    if learned.exists():
+        return _parse_learned(learned, slug)
     if slug == "tkov3":
         path = LIBRARIES_DIR / "tkov3.xlsx"
         if not path.exists():
@@ -394,7 +428,9 @@ def available_libraries() -> list[str]:
             found.append(spec.slug)
     if (LIBRARIES_DIR / "tkov3.xlsx").exists():
         found.append("tkov3")
-    return sorted(found)
+    if LEARNED_DIR.exists():
+        found.extend(p.stem for p in LEARNED_DIR.glob("*.tsv"))
+    return sorted(set(found))
 
 
 def load_all_libraries() -> dict[str, Library]:

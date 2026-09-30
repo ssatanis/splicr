@@ -86,3 +86,28 @@ functions. Use it or the Modal schedules, not both.
 GSE145743 (HeLa, GeCKO v2 A+B, olaparib vs DMSO, T0 dropout; Juhász et al.
 2020) and checks what the engine published. The same accession, planned
 automatically, must reproduce that design.
+
+## Biophysical validation of guides (added 2026-09-30)
+
+`engine/splicr/validate/` places every guide on hg38, predicts how the Cas9
+break is repaired (Lindel, MIT, pinned), and maps in-frame outcomes onto the
+protein (MANE CDS + UniProt curated residues). It is wired for annotation, not
+as a correction to the statistics, because the correction was tested and did not
+work: weighting guide counts by predicted frameshift — or by Rule Set 3
+on-target activity, or by GC content — makes essential-gene detection slightly
+*worse* on 100 individual Avana screens. The measurements, the mechanism, and
+what is still worth keeping are in
+[research/18](../research/18_BIOPHYSICAL_VALIDATION.md). Read that before
+building anything on per-guide weighting.
+
+## Scope of "every public screen"
+
+Measured 2026-09-30. The broad GEO query matches 80,081 series all time and ENA
+lists 95,375 amplicon runs whose study title mentions CRISPR. In the two-month
+window the engine has actually classified, 406 studies yielded 71 screen-or-maybe
+and 355 of 1,950 watched series carried SRA raw reads, so on those ratios the
+processable historical corpus is on the order of a few thousand studies, not
+80,000. At the observed cost of one study (12 runs, 3 GB of FASTQ, ~25 min on
+8 CPUs) that is terabytes of transfer and thousands of CPU-hours: a budgeted
+backfill, not a switch to flip. The engine processes forward automatically from
+the watermark; a historical backfill is a separate, costed decision.

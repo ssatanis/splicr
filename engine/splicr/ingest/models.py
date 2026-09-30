@@ -162,6 +162,11 @@ class StudyPlan(_Json):
     # cross-check against.
     notes: list[str] = field(default_factory=list)
     supplementary_count_tables: list[str] = field(default_factory=list)   # https URLs from GEO
+    # Slug of a library SplicR did not hold and learned from this study's own
+    # supplementary files (splicr.ingest.library_extract). Set only after the
+    # extracted library was verified against the study's reads, so its presence
+    # means counting can proceed; the manifest beside it records the provenance.
+    learned_library: str | None = None
 
 
 @dataclass

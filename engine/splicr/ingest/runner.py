@@ -104,10 +104,62 @@ def _probe_reads(conn, accession: str, p: StudyPlan) -> None:
         if p.status == "needs_review" and before and not p.issues and p.contrasts:
             p.status = "ready"
         state.event(conn, accession, "probe", "ok", f"{run.run}: {det.describe()}")
+    elif _learn_library(conn, accession, p, run, det):
+        return
     else:
         p.issues.append(f"the first reads of {run.run} match no library SplicR holds ({det.describe()})")
         p.status = "needs_review"
         state.event(conn, accession, "probe", "warn", f"{run.run}: no library matched; {det.describe()}")
+
+
+def _learn_library(conn, accession: str, p: StudyPlan, run, det) -> bool:
+    """
+    No library matched, so go and read the one the paper published.
+
+    This is the difference between analysing the 13 libraries SplicR ships
+    with and analysing the custom libraries most current screens use. The
+    extracted library is accepted only if it explains this study's own reads
+    better than anything already held, measured by the same fingerprint that
+    just failed, so a wrong table cannot get through: see
+    `splicr.ingest.library_extract`.
+
+    Returns True when a library was learned and the plan is usable.
+    """
+    from . import library_extract as lx
+
+    incumbent = det.best.match_rate if det.best else 0.0
+    try:
+        cand = state.load_candidate(conn, accession)
+        pmcid = lx.pmid_to_pmcid(cand.pubmed_ids)
+        title = cand.title
+    except Exception:  # noqa: BLE001 - a missing candidate row must not block the probe
+        pmcid, title = "", ""
+    state.event(conn, accession, "probe", "started",
+                f"no known library; searching supplementary files for a custom one")
+    try:
+        out = lx.learn_library_for(accession, run, pmcid=pmcid, title=title,
+                                   incumbent_rate=incumbent)
+    except Exception as exc:  # noqa: BLE001 - advisory, like the probe itself
+        state.event(conn, accession, "probe", "warn", f"library extraction failed: {exc}")
+        return False
+    if not out.ok:
+        state.event(conn, accession, "probe", "warn",
+                    f"no custom library found: {out.note}")
+        return False
+
+    p.learned_library = lx.slug_for(accession)
+    p.notes.append(
+        f"library learned from {Path(out.accepted.url).name}"
+        + (f" [{out.accepted.member}]" if out.accepted.member else "")
+        + f": {len(out.accepted.guides):,} guides explaining {out.match_rate:.1%} of "
+          f"{run.run}'s reads")
+    before = len(p.issues)
+    p.issues = [i for i in p.issues if not i.startswith(MISLABEL_ISSUE)]
+    if p.status == "needs_review" and before and not p.issues and p.contrasts:
+        p.status = "ready"
+    state.event(conn, accession, "probe", "ok",
+                f"learned library {p.learned_library}: {out.note}")
+    return True
 
 
 def plan(accession: str) -> dict:
