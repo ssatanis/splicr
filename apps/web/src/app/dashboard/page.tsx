@@ -42,6 +42,7 @@
 import { Plus } from "lucide-react";
 import Link from "next/link";
 
+import { FirstRun } from "@/components/dashboard/overview/first-run";
 import {
   Decisions,
   NextActions,
@@ -95,6 +96,18 @@ export default async function OverviewPage() {
     listHeadlineHits(org.id, 24),
     listRecentOutcomes(org.id, 10),
   ]);
+
+  // An empty workspace is a first day, not a broken page. Three zeros and an empty
+  // list reads as "this product does not work", which is the opposite of what the
+  // first screen a pilot lab ever sees should say.
+  //
+  // Gated on the screen list being empty AND the stats agreeing, so a read that
+  // failed --- which also returns nothing --- falls through to the normal overview
+  // and its "nothing here is being reported as a measurement" wording rather than
+  // greeting an established lab as a new one.
+  if (stats.screens === 0 && recent.length === 0) {
+    return <FirstRun orgName={org.name} contactHref="/contact" />;
+  }
 
   return (
     <WorkspaceOverview
