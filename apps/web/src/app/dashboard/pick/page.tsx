@@ -11,22 +11,18 @@
  * intact, so nothing is lost between the overview being simplified and the slate
  * being built.
  */
-import { Suspense } from "react";
+import Link from "next/link";
 
-import { CandidatesPanel } from "@/components/dashboard/overview/candidates-panel";
+import { Slate } from "@/components/dashboard/evidence/slate";
 import type { CandidateRow } from "@/components/dashboard/overview/types";
 import { PageHeader } from "@/components/dashboard/ui";
 import { getCurrentContext } from "@/lib/data/org";
 import { listHeadlineHits, listRecentScreens } from "@/lib/data/overview";
 import {
   benchQueue,
-  FDR_THRESHOLD,
   screens,
-  stagesForScreen,
-  testsForScreen,
   type Verdict,
 } from "@/lib/mock/data";
-import { formatNumber } from "@/lib/utils";
 
 export const metadata = { title: "Pick this round" };
 
@@ -98,35 +94,11 @@ export default async function PickPage() {
         title="Pick this round"
         body="Candidates ranked for the next round of bench work. Nothing here is a validation probability."
       />
-      <Suspense fallback={<div aria-hidden="true" />}>
-        <CandidatesPanel
-          rows={rows}
-          ranked={headline.scored ? "chance" : "fdr"}
-          total={rows.length}
-          unit={rows.length === 1 ? "candidate" : "candidates"}
-          sample={false}
-          qc={
-            qcSource && qcSource.qc !== "pass"
-              ? {
-                  verdict: qcSource.qc,
-                  note:
-                    qcSource.qc === "fail"
-                      ? "Some candidates come from a screen that failed QC; downstream figures are suspect."
-                      : qcSource.qc === "warn"
-                        ? "Some candidates come from a screen with QC warnings; review before validation."
-                        : "QC has not been verified for every candidate's screen; review before validation.",
-                  href: `/dashboard/screens/${qcSource.id}?tab=qc`,
-                }
-              : null
-          }
-          provenance={
-            headline.scored
-              ? "Ranked by recorded model score. This is not a validation probability."
-              : "Ranked by FDR; no model score is recorded."
-          }
-          emptyBody="Either no run has called a hit yet, or the read did not complete. Nothing is being reported as zero."
-        />
-      </Suspense>
+      {qcSource && qcSource.qc !== "pass" ? (
+        <QcWarning verdict={qcSource.qc} href={`/dashboard/screens/${qcSource.id}?tab=qc`} />
+      ) : null}
+      <Slate rows={rows} />
+      <Provenance scored={headline.scored} />
     </>
   );
 }
@@ -134,8 +106,6 @@ export default async function PickPage() {
 function SamplePick() {
   const source = screens[0];
   const queue = benchQueue(source.id);
-  const tests = testsForScreen(source);
-  const scoreTool = stagesForScreen(source).find((stage) => stage.key === "score")?.tool ?? null;
 
   const rows: CandidateRow[] = queue.map((hit) => ({
     id: `${source.id}:${hit.gene}`,
@@ -148,7 +118,7 @@ function SamplePick() {
     bayes: hit.bayesFactor,
     guides: hit.guides,
     guidesAgree: hit.guidesAgree,
-    guideLfcs: null,
+    guideLfcs: hit.guideLfcs,
     direction: hit.lfc === null ? null : hit.lfc < 0 ? "depleted" : "enriched",
     flags: hit.flags,
     why: hit.why,
@@ -173,31 +143,49 @@ function SamplePick() {
           </span>
         }
       />
-      <Suspense fallback={<div aria-hidden="true" />}>
-        <CandidatesPanel
-          rows={rows}
-          ranked="chance"
-          total={queue.length}
-          unit={queue.length === 1 ? "candidate" : "candidates"}
-          sample
-          qc={
-            source.qc === "pass"
-              ? null
-              : {
-                  verdict: source.qc,
-                  note:
-                    source.qc === "fail"
-                      ? "This screen failed QC; downstream figures are suspect."
-                      : source.qc === "warn"
-                        ? "This screen has QC warnings; review before validation."
-                        : "This screen's QC is pending; review before validation.",
-                  href: `/dashboard/screens/${source.id}?tab=qc`,
-                }
-          }
-          provenance={`${scoreTool ?? "Scoring stage"} · FDR ${FDR_THRESHOLD.toFixed(2)} · ${source.library}, ${formatNumber(tests)} genes`}
-          emptyBody="Every candidate on this screen has been answered at the bench."
-        />
-      </Suspense>
+      {source.qc !== "pass" ? (
+        <QcWarning verdict={source.qc} href={`/dashboard/screens/${source.id}?tab=qc`} />
+      ) : null}
+      <Slate rows={rows} />
+      <Provenance scored />
     </>
+  );
+}
+
+/**
+ * A screen whose QC did not pass gates its candidates behind a warning the
+ * reader has to read past. Decision 11: a figure downstream of a failed QC
+ * verdict is suspect, and the console says so before the reader spends a month
+ * of bench time on it.
+ */
+function QcWarning({ verdict, href }: { verdict: string; href: string }) {
+  const note =
+    verdict === "fail"
+      ? "A screen behind these candidates failed QC. Every figure downstream of it is suspect."
+      : verdict === "warn"
+        ? "A screen behind these candidates raised QC warnings. Review before committing bench time."
+        : "QC has not been verified for every screen behind these candidates.";
+  return (
+    <div className="rounded-xl border border-orange-500/30 bg-orange-50/70 px-5 py-3.5">
+      <p className="text-[12.5px] leading-snug text-orange-800">
+        {note}{" "}
+        <Link href={href} className="underline underline-offset-2">
+          Open the QC report
+        </Link>
+      </p>
+    </div>
+  );
+}
+
+/** What the ordering actually is on this path, stated rather than implied. */
+function Provenance({ scored }: { scored: boolean }) {
+  return (
+    <p className="text-[11.5px] leading-relaxed text-muted">
+      {scored
+        ? "Ordered by evidence tier, then by recorded model score. The score is not calibrated and is used only for position."
+        : "Ordered by evidence tier, then by q-value. No model score is recorded for these hits, so none is used."}{" "}
+      Replication is a proxy for reproducibility, not proof that a candidate passes
+      a validation assay.
+    </p>
   );
 }
