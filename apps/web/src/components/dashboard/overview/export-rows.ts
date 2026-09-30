@@ -103,7 +103,9 @@ export function candidatesCsv(rows: CandidateRow[], ctx: ExportContext): string 
       field(row.fdr),
       field(row.guides),
       field(row.guidesAgree),
-      field(row.flags.join("; ")),
+      // Null exports as an empty cell, the same as every other unrecorded field,
+      // rather than as an empty flag list that would read as "none raised".
+      field(row.flags === null ? null : row.flags.join("; ")),
       field(row.benchAssay),
       field(ctx.picked.includes(ctx.keyOf(row)) ? "yes" : "no"),
       field(ctx.sample ? "yes" : "no"),

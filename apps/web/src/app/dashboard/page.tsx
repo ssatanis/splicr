@@ -201,17 +201,25 @@ const REAL_CUT = `model score ${LIKELY_REAL_THRESHOLD.toFixed(2)} or above`;
 // The real thing
 // ---------------------------------------------------------------------------
 
-const VERDICTS: readonly string[] = [
-  "Real and new",
-  "Real but generic",
-  "Real and known",
-  "Artifact",
-  "Uncertain",
-];
+/**
+ * The engine's verdict, translated to the label the console shows.
+ *
+ * `public.hit_verdict` is a snake_case Postgres enum. This used to test the
+ * display strings ("Real and new") against it, so every real hit failed the
+ * check and rendered "Not yet classified" — all 20,916 of them on the one real
+ * screen, whose stored verdicts are `uncertain` and `artifact`. Keying on the
+ * enum is what makes the column mean anything on a signed-in workspace.
+ */
+const VERDICT_LABELS: Record<string, Verdict> = {
+  real_new: "Real and new",
+  real_generic: "Real but generic",
+  real_known: "Real and known",
+  artifact: "Artifact",
+  uncertain: "Uncertain",
+};
 
-/** The engine's verdict column is free text in Postgres, so it is checked here. */
 function asVerdict(value: string): Verdict | null {
-  return VERDICTS.includes(value) ? (value as Verdict) : null;
+  return VERDICT_LABELS[value] ?? null;
 }
 
 /** A run that stopped, warned or is still moving is a run to look at today. */
@@ -254,17 +262,20 @@ function WorkspaceOverview({
     chance: hit.chance_real,
     lfc: hit.lfc,
     fdr: hit.fdr,
-    novelty: null,
-    bayes: null,
-    // Guide agreement, artifact flags, Atlas context and the screen's re-test
-    // assay are per-hit detail the overview read does not fetch. They stay null
-    // so the panel says so rather than drawing a figure nobody supplied.
-    guides: null,
-    guidesAgree: null,
-    flags: [],
+    novelty: hit.novelty,
+    bayes: hit.bayes_factor,
+    // These now come from the read. They were hardcoded null, and `flags` was
+    // hardcoded to [] — which asserted "artifact screening found nothing" about
+    // rows whose flags had never been fetched. The one real screen carries 10,938
+    // flag rows, so that claim was not merely unsupported, it was wrong.
+    guides: hit.n_guides,
+    guidesAgree: hit.n_good_guides,
+    guideLfcs: hit.guide_lfcs,
+    direction: hit.direction,
+    flags: hit.flags === null ? null : hit.flags.map((f) => f.flag),
     why: null,
-    atlasHits: null,
-    atlasScreens: null,
+    atlasHits: hit.atlas_hit_count,
+    atlasScreens: hit.atlas_screen_count,
     screenId: hit.screen_id,
     screenName: screenName.get(hit.screen_id) ?? null,
     benchAssay: null,
@@ -448,6 +459,11 @@ function SampleOverview({ signedIn }: { signedIn: boolean }) {
     bayes: hit.bayesFactor,
     guides: hit.guides,
     guidesAgree: hit.guidesAgree,
+    // The fixture has no per-guide array. It renders "not recorded" rather than
+    // a drawn chart, which is the same contract the signed-in path follows when
+    // the engine skipped a stage.
+    guideLfcs: null,
+    direction: hit.lfc === null ? null : hit.lfc < 0 ? "depleted" : "enriched",
     flags: hit.flags,
     why: hit.why,
     atlasHits: hit.atlasHits,

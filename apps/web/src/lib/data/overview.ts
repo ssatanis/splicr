@@ -50,6 +50,32 @@ export interface OverviewHit {
   chance_real: number | null;
   fdr: number | null;
   lfc: number | null;
+  /**
+   * The per-hit evidence the console draws its tier and its guide chart from.
+   *
+   * These were not read before, and the overview filled them with nulls and an
+   * empty flag array. An empty array is the positive claim "artifact screening
+   * ran and raised nothing", which was false: the one real screen carries 10,938
+   * flag rows. Every field here is nullable because the engine genuinely does not
+   * write all of them yet, and a field it did not write must read "not recorded"
+   * rather than zero.
+   */
+  n_guides: number | null;
+  n_good_guides: number | null;
+  /** Per-guide log2 fold change, the concordance view's whole input. */
+  guide_lfcs: number[] | null;
+  bayes_factor: number | null;
+  novelty: number | null;
+  atlas_hit_count: number | null;
+  atlas_screen_count: number | null;
+  /** Null when the flag read failed; empty only when the screen truly has none. */
+  flags: HitFlag[] | null;
+}
+
+/** One artifact flag as the engine records it: the enum value and its severity. */
+export interface HitFlag {
+  flag: string;
+  severity: "info" | "warn" | "critical";
 }
 
 /**
@@ -267,9 +293,43 @@ interface HitRow {
   chance_real: number | null;
   fdr: number | null;
   lfc: number | null;
+  n_guides: number | null;
+  n_good_guides: number | null;
+  guide_lfcs: number[] | null;
+  bayes_factor: number | null;
+  novelty: number | null;
+  atlas_hit_count: number | null;
+  atlas_screen_count: number | null;
+  hit_flags: { flag: string; severity: string }[] | null;
 }
 
-const HIT_COLUMNS = "id, screen_id, gene_symbol, direction, verdict, chance_real, fdr, lfc";
+/**
+ * The embed follows the shape already in production at `screen-report.ts`, which
+ * keeps the read to one round trip. The query plan is unchanged: this is still a
+ * `comparison_id` equality with an indexed order and a limit, which the file's own
+ * measurements put at 1.5ms against 3.9-5.3s for an `in (...)` form, because the
+ * RLS predicate is re-evaluated per row under an 8s statement timeout.
+ */
+const HIT_COLUMNS =
+  "id, screen_id, gene_symbol, direction, verdict, chance_real, fdr, lfc, " +
+  "n_guides, n_good_guides, guide_lfcs, bayes_factor, novelty, " +
+  "atlas_hit_count, atlas_screen_count, hit_flags(flag, severity)";
+
+const FLAG_SEVERITIES = new Set(["info", "warn", "critical"]);
+
+function toFlags(rows: HitRow["hit_flags"]): HitFlag[] | null {
+  if (!Array.isArray(rows)) return null;
+  return rows
+    .filter((row) => row && typeof row.flag === "string" && FLAG_SEVERITIES.has(row.severity))
+    .map((row) => ({ flag: row.flag, severity: row.severity as HitFlag["severity"] }));
+}
+
+/** Postgres real[] arrives as an array; anything else is treated as not recorded. */
+function toNumberArray(value: unknown): number[] | null {
+  if (!Array.isArray(value)) return null;
+  const out = value.map((v) => toNumber(v)).filter((v): v is number => v !== null);
+  return out.length === 0 ? null : out;
+}
 
 function toHit(row: HitRow): OverviewHit {
   return {
@@ -281,6 +341,14 @@ function toHit(row: HitRow): OverviewHit {
     chance_real: toNumber(row.chance_real),
     fdr: toNumber(row.fdr),
     lfc: toNumber(row.lfc),
+    n_guides: toNumber(row.n_guides),
+    n_good_guides: toNumber(row.n_good_guides),
+    guide_lfcs: toNumberArray(row.guide_lfcs),
+    bayes_factor: toNumber(row.bayes_factor),
+    novelty: toNumber(row.novelty),
+    atlas_hit_count: toNumber(row.atlas_hit_count),
+    atlas_screen_count: toNumber(row.atlas_screen_count),
+    flags: toFlags(row.hit_flags),
   };
 }
 

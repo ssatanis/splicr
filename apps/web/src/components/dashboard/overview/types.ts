@@ -35,7 +35,23 @@ export interface CandidateRow {
   bayes: number | null;
   guides: number | null;
   guidesAgree: number | null;
-  flags: string[];
+  /**
+   * Per-guide log2 fold change, which is what the concordance chart draws.
+   *
+   * `n_guides` says how many guides targeted the gene and `guidesAgree` how many
+   * the caller kept, but only these values show a reader WHY: three guides
+   * agreeing is a hit, one guide carrying the signal while two sit flat is an
+   * artifact, and the two cases are indistinguishable from a count.
+   */
+  guideLfcs: number[] | null;
+  /** Which way the caller recorded the effect. Read but previously discarded. */
+  direction: "depleted" | "enriched" | null;
+  /**
+   * Null means the flags were never fetched; empty means artifact screening ran
+   * and raised nothing. Those are different claims and the UI must not merge
+   * them, which is why this is nullable rather than defaulting to [].
+   */
+  flags: string[] | null;
   why: string | null;
   atlasHits: number | null;
   atlasScreens: number | null;
