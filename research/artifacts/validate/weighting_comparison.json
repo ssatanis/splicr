@@ -1,0 +1,32 @@
+{
+  "release": "26Q1",
+  "batch": "Avana-4",
+  "n_screens": 100,
+  "baseline": {
+    "nnmd_median": -6.2763,
+    "auroc_median": 0.97878
+  },
+  "priors": {
+    "rs3": {
+      "delta_nnmd_median": 0.2387,
+      "delta_auroc_median": -0.002,
+      "screens_improved_nnmd": 18,
+      "screens_improved_auroc": 6,
+      "n_screens": 100
+    },
+    "frameshift": {
+      "delta_nnmd_median": 0.1916,
+      "delta_auroc_median": -0.00465,
+      "screens_improved_nnmd": 16,
+      "screens_improved_auroc": 2,
+      "n_screens": 100
+    },
+    "gc": {
+      "delta_nnmd_median": 0.3784,
+      "delta_auroc_median": -0.00413,
+      "screens_improved_nnmd": 2,
+      "screens_improved_auroc": 3,
+      "n_screens": 100
+    }
+  }
+}

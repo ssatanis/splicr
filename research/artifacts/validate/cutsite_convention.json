@@ -1,0 +1,125 @@
+{
+  "libraries": [
+    {
+      "library": "brunello",
+      "convention": {
+        "cut_offset": -1,
+        "strand": "transcript",
+        "stated": "Position of Base After Cut (1-based)"
+      },
+      "checked": 3000,
+      "skipped_unmapped": 0,
+      "placed": 3000,
+      "placed_rate": 1.0,
+      "unique_alignment_guides": 3000,
+      "unique_placed": 3000,
+      "unique_placed_rate": 1.0,
+      "status": {
+        "ok": 3000
+      },
+      "cut_delta": {
+        "0": 3000
+      },
+      "cut_checked": 3000,
+      "cut_exact": 3000,
+      "context30_checked": 3000,
+      "context30_match": 3000,
+      "strand_hint_agrees_with_genome": 0.495,
+      "examples": [],
+      "seconds": 0.4,
+      "passes": true
+    },
+    {
+      "library": "avana",
+      "convention": {
+        "cut_offset": 0,
+        "strand": "genomic",
+        "stated": "GenomeAlignment chrom_pos_strand"
+      },
+      "checked": 3000,
+      "skipped_unmapped": 0,
+      "placed": 2608,
+      "placed_rate": 0.86933,
+      "unique_alignment_guides": 1195,
+      "unique_placed": 1195,
+      "unique_placed_rate": 1.0,
+      "status": {
+        "ok": 2608,
+        "no_pam": 392
+      },
+      "cut_delta": {
+        "0": 1195
+      },
+      "cut_checked": 1195,
+      "cut_exact": 1195,
+      "context30_checked": 0,
+      "context30_match": 0,
+      "strand_hint_agrees_with_genome": 1.0,
+      "examples": [
+        {
+          "guide": "CAGGCTGGAGTGCAATGGCG",
+          "at": "chr5:154591456",
+          "status": "no_pam",
+          "detail": "guide found but the three bases after it are not NGG"
+        },
+        {
+          "guide": "ACCAGTTCGAATGCCTACCA",
+          "at": "chr1:101256438",
+          "status": "no_pam",
+          "detail": "guide found but the three bases after it are not NGG"
+        },
+        {
+          "guide": "CAGGCTGGAGTGCAATGGCG",
+          "at": "chr16:3951306",
+          "status": "no_pam",
+          "detail": "guide found but the three bases after it are not NGG"
+        },
+        {
+          "guide": "CAGGCTGGAGTGCAATGGCG",
+          "at": "chr1:175359204",
+          "status": "no_pam",
+          "detail": "guide found but the three bases after it are not NGG"
+        },
+        {
+          "guide": "CAGGCTGGAGTGCAATGGCG",
+          "at": "chr3:168661393",
+          "status": "no_pam",
+          "detail": "guide found but the three bases after it are not NGG"
+        },
+        {
+          "guide": "CAGGCTGGAGTGCAATGGCG",
+          "at": "chr14:77614929",
+          "status": "no_pam",
+          "detail": "guide found but the three bases after it are not NGG"
+        },
+        {
+          "guide": "CAGGCTGGAGTGCAATGGCG",
+          "at": "chr22:21825170",
+          "status": "no_pam",
+          "detail": "guide found but the three bases after it are not NGG"
+        },
+        {
+          "guide": "AGGCACTTCTTACATGGTGG",
+          "at": "chr6:79387058",
+          "status": "no_pam",
+          "detail": "guide found but the three bases after it are not NGG"
+        },
+        {
+          "guide": "CAGGCTGGAGTGCAATGGCG",
+          "at": "chr14:54837065",
+          "status": "no_pam",
+          "detail": "guide found but the three bases after it are not NGG"
+        },
+        {
+          "guide": "CAGGCTGGAGTGCAATGGCG",
+          "at": "chr1:44432329",
+          "status": "no_pam",
+          "detail": "guide found but the three bases after it are not NGG"
+        }
+      ],
+      "seconds": 0.3,
+      "passes": true
+    }
+  ],
+  "min_placed": 0.95
+}

@@ -1,0 +1,105 @@
+{
+  "n_guides": 67073,
+  "n_genes": 17598,
+  "tests": {
+    "1_mechanism": {
+      "statistic": -0.0074,
+      "p_value": 0.054659774974170676,
+      "n": 67073,
+      "threshold": "positive, p<0.01, rho>=0.05",
+      "passes": false
+    },
+    "2_beats_gc": {
+      "statistic": -0.0074,
+      "gc_rho": 0.084,
+      "gc_p": 2.485682199599979e-105,
+      "threshold": "rho > 0.0839",
+      "passes": false
+    },
+    "3_not_gc_artifact": {
+      "partial_rho": -0.0159,
+      "p_value": 3.6337389273290077e-05,
+      "retained": 2.149,
+      "threshold": "retains >= 60% of raw rho",
+      "passes": true
+    },
+    "4_contrast": {
+      "low_n": 1999,
+      "low_mean": 0.8486,
+      "constitutive_n": 27551,
+      "constitutive_mean": 0.8654,
+      "p_value": 0.003385758184290504,
+      "effect_sd": 0.105,
+      "threshold": "low group lower by >= 0.2 sd, p<0.01",
+      "passes": false
+    },
+    "5_filter": {
+      "batch": "Avana-4",
+      "n_screens": 100,
+      "genes_compared": 1362,
+      "guides_removed": 33,
+      "guides_total": 5112,
+      "baseline_nnmd_median": -6.324,
+      "baseline_auroc_median": 0.9799,
+      "d_nnmd_median": 0.0127,
+      "d_auroc_median": -0.00011,
+      "screens_nnmd_improved": 0.35,
+      "screens_auroc_improved": 0.21,
+      "threshold": "median NNMD improves (negative) and improves on >50% of screens",
+      "passes": false
+    }
+  },
+  "reference": {
+    "exonic_fraction_rho": -0.0104,
+    "exonic_fraction_p": 0.007165850414631963,
+    "note": "gc_rho is the free baseline test 2 must beat"
+  },
+  "deciles": [
+    {
+      "band": "<0.25",
+      "n": 560,
+      "efficacy": 0.829,
+      "gc": 0.5421
+    },
+    {
+      "band": "0.25-0.5",
+      "n": 2857,
+      "efficacy": 0.8578,
+      "gc": 0.525
+    },
+    {
+      "band": "0.5-0.75",
+      "n": 10782,
+      "efficacy": 0.8661,
+      "gc": 0.5258
+    },
+    {
+      "band": "0.75-0.9",
+      "n": 16322,
+      "efficacy": 0.8712,
+      "gc": 0.5272
+    },
+    {
+      "band": "0.9-1.0",
+      "n": 9001,
+      "efficacy": 0.8736,
+      "gc": 0.5339
+    },
+    {
+      "band": "=1.0",
+      "n": 27551,
+      "efficacy": 0.8654,
+      "gc": 0.5507
+    }
+  ],
+  "thresholds": {
+    "min_rho": 0.05,
+    "max_p": 0.01,
+    "gc_baseline": 0.0839,
+    "min_partial_retained": 0.6,
+    "min_effect_sd": 0.2,
+    "min_screens_improved": 0.5,
+    "evaded_below": 0.5
+  },
+  "seconds": 13.3
+}

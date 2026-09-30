@@ -1,0 +1,61 @@
+{
+  "n_guides": 67098,
+  "n_genes": 17639,
+  "tests": {
+    "mechanism_essential": {
+      "name": "mechanism_essential",
+      "statistic": -0.07200148878746726,
+      "n": 2225,
+      "detail": {
+        "p_value": 0.0006768051085730637,
+        "ci95": [
+          -0.1146,
+          -0.0285
+        ],
+        "genes": 601,
+        "expected_sign": "negative"
+      }
+    },
+    "specificity_nonessential": {
+      "name": "specificity_nonessential",
+      "statistic": 0.10484773981095064,
+      "n": 2930,
+      "detail": {
+        "p_value": 1.280730802024312e-08,
+        "ci95": [
+          0.0644,
+          0.1389
+        ],
+        "genes": 772,
+        "expected_sign": "~zero"
+      }
+    }
+  },
+  "gene_level": {
+    "plain": {
+      "auroc": 0.998,
+      "nnmd": -10.1421,
+      "n_essential": 629,
+      "n_nonessential": 778
+    },
+    "weighted": {
+      "auroc": 0.9979,
+      "nnmd": -10.1797,
+      "n_essential": 629,
+      "n_nonessential": 778
+    },
+    "delta_auroc": -0.0001,
+    "delta_nnmd": -0.0376
+  },
+  "inputs": {
+    "release": "26Q1",
+    "library": "Avana",
+    "pdna": "pDNA_batch_Avana-4",
+    "n_screens": 60,
+    "batch": "Avana-4",
+    "ploidy": 2.0,
+    "essential_genes": 684,
+    "nonessential_genes": 926,
+    "seconds": 60.7
+  }
+}
