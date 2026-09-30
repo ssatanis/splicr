@@ -1,0 +1,3 @@
+gene_symbol,release,entrez_id,n_lines,mean_effect,median_effect,min_effect,n_dependent,frac_dependent,gene_key,ensembl_gene_id,gene_symbol_approved,quarantine_reason
+PAXX,26Q1,286257,1208,-0.014349464327096939,-0.013889612630009651,-0.5449855327606201,2,0.0016556291375309229,PAXX (286257),,,gene 'PAXX (286257)': unresolved (no current Ensembl gene (HGNC record HGNC:27849: ENSG00000148362))
+SMIM2,26Q1,79024,1208,0.07076352089643478,0.07206595689058304,-0.5915027260780334,1,0.0008278145687654614,SMIM2 (79024),,,gene 'SMIM2 (79024)': unresolved (no current Ensembl gene (HGNC record HGNC:28776: ENSG00000139656))

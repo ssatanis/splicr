@@ -34,6 +34,43 @@ own data agreements; do not transfer its licence to a direct Sanger download.
 See the [Sanger policy](https://depmap.sanger.ac.uk/documentation/data-usage-policy/)
 and [Open Targets licence](https://platform-docs.opentargets.org/licence).
 
+## Source registry (2026-09-29)
+
+The authoritative list is `engine/splicr/sources.py`; print it with
+`python -m splicr sources` (or `--json`). The same rows are loaded into
+`atlas.data_sources` and served as `public.data_sources`. Each source carries a
+literal `status`: `lake` (harmonized Parquet, on R2), `local`, `remote`
+(queried in place), `cataloged` (metadata only), `manual` (browser-gated),
+`controlled` (dbGaP) or `unreachable`.
+
+| Added | Status | Lake datasets | Connector |
+|---|---|---|---|
+| DepMap Public 26Q1 (full portal release) | lake | `depmap_matrix`, `depmap_models`, `depmap_raw_readcounts`, 7 map/QC tables | `scripts/data/build-depmap-lake.py` |
+| JUMP Cell Painting cpg0016 | lake | `jump_perturbations`, `jump_{crispr,orf}_gene_morphology` | `ingest-sources.py jump` |
+| Replogle 2022 Perturb-seq (K562 gwps, RPE1) | lake | `perturbseq_*_signatures`, `perturbseq_*_readout_genes` | `ingest-sources.py perturbseq` |
+| Tahoe-100M | metadata in lake; cells remote | `tahoe_drugs`, `tahoe_cell_lines`, `tahoe_samples` | `ingest-sources.py tahoe` |
+| scBaseCount 2026-01-12 | cataloged | `scbasecount_samples` | `ingest-sources.py scbasecount` |
+| LINCS L1000 GSE70138 | cataloged | `lincs_signatures` | `ingest-sources.py lincs` |
+| NCBI GEO CRISPR screens | cataloged (watch list) | `geo_crispr_series` | `ingest-sources.py geo` |
+| ENCODE functional characterization | cataloged | `encode_functional_screens` | `ingest-sources.py encode` |
+| Knowledge graph (STRING, Reactome, Open Targets, DepMap, Tahoe) | lake | `kg_nodes`, `kg_edges` | `engine/splicr/graph.py` |
+
+Not ingested, and why: TCGA and GTEx raw reads need dbGaP approval; iCSDB and
+GenomeCRISPR offer no bulk export (browser only); CRISP-view did not answer on
+2026-09-29; the Tahoe cell matrices (~300 GB), JUMP TIFFs (~116 TB) and
+scPerturb h5ad files (43 GB) exceed this workstation's disk and are read in
+place or replaced by the authors' own compact derivatives.
+
+**Licences.** JUMP, Tahoe-100M and scBaseCount are CC0; DepMap, Replogle,
+scPerturb, STRING, Reactome and Cellosaurus are CC BY 4.0 (attribute on any
+redistributed copy); LINCS and GEO follow NCBI/LINCS release policy. None of the
+added sources carries the no-redistribution terms that keep Project Score and
+Addgene files off R2.
+
+**DepMap 26Q1 value warning.** The portal's `CRISPRGeneEffect.csv` and the
+Figshare 26Q1 `gene_effect.csv` cover the same 1,208 models but are different
+processing stages (KRAS r = 0.974 between them). The lake uses the portal file.
+
 ## Verified counts
 
 Historical checks against the then-downloaded files, not guarantees for a new

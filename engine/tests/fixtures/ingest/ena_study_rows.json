@@ -1,0 +1,26 @@
+[
+ {
+  "study_accession": "PRJEB101799",
+  "secondary_study_accession": "ERP183203",
+  "study_title": "E. coli CFT073 genome-wide CRISPRi screening under different conditions",
+  "study_description": "genome-wide CRISPRi screening performed in different laboratory rich media (LB and MHB) and in pooled human urine",
+  "first_public": "2026-09-27",
+  "last_updated": "2026-09-27",
+  "tax_id": "",
+  "scientific_name": "",
+  "geo_accession": "",
+  "center_name": "Biozentrum;University of Basel;Biozentrum"
+ },
+ {
+  "study_accession": "PRJNA608032",
+  "secondary_study_accession": "SRP250346",
+  "study_title": "Genome-wide CRISPR knockout screen using GeCKO v2 to identify synthetic lethal interactions with the PARP inhibitor Olaparib",
+  "study_description": "In this study, a population of knockout cells was generated using the GeCKO v2 sgRNA library. The population of knockout cells was treated with the PARP inhibitor olaparib for 14 days. Over this time, knockout cells that were sensitive to olaparib treatment would die and a population of knockout cells that was resistant to olaparib treatment remained. Cells from olaparib and DMSO conditions and the sgRNA cassette in the knockout cells was amplified and sequenced to identify synthetic lethal or suppressor interactions with olaparib treatment. Overall design: CRISPR screen using Human GeCKOv2 Library A or B comparing Olaparib and DMSO (control) treated Hela cells in 2 biological replicates.",
+  "first_public": "2020-08-02",
+  "last_updated": "2026-09-28",
+  "tax_id": "",
+  "scientific_name": "",
+  "geo_accession": "GSE145743",
+  "center_name": "Bioinformatics, Molecular Biology, LMU Biomedical Center"
+ }
+]

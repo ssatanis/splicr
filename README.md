@@ -25,9 +25,11 @@ statistics, QC and artifact evidence. The intended Hit Report has three parts:
 The Atlas imports public BioGRID ORCS screen summaries and retains their original
 authors' hit calls. It is not a uniform raw-read reanalysis of every public screen.
 The post-screen pipeline currently skips calibrated scoring because no validation
-confidence model is fitted. The browser upload and completed-outcome entry are not connected end to end.
-Authenticated workspace pages read actual records; demonstrations require an
-explicit demo context. The local CLI and scoped hits API have implemented paths. See `research/01_REPOSITORY_AUDIT.md`.
+confidence model is fitted. Browser upload is not connected. The console's Atlas
+explorer, Screen Planner, Hit Report export, Truth Loop outcome entry and Connect
+keys are implemented (see `docs/11-console-modules.md`), and the console stays
+closed to the public. Authenticated workspace pages read actual records;
+demonstrations require an explicit demo context. The local CLI and scoped hits API have implemented paths. See `research/01_REPOSITORY_AUDIT.md`.
 
 ## The pipeline
 
@@ -88,6 +90,8 @@ CHD1L audit, including its nonsignificant result and QC limitation. Contact open
 an email draft; it does not falsely confirm delivery.
 
 ```bash
+npm run atlas:snapshot    # rebuild the console's Atlas data from the ingested ORCS store
+npm run atlas:check       # fail if the committed Atlas snapshot is stale
 npm run evidence:generate  # update public downloads from research artifacts
 npm run evidence:check    # fail on stale downloads or measurements
 npm run test:web
@@ -137,6 +141,25 @@ samtools. `engine/tests/integration_test.py` runs a screen built from real
 Brunello guides end to end to check toolchain wiring. Its planted effects do not validate
 biological prediction. Optional research dependencies have separate pins in
 `engine/requirements.txt`; see [engine setup caveats](docs/05-engine.md).
+
+## Autonomous ingest of public screens
+
+SplicR watches NCBI GEO, SRA and ENA for newly deposited pooled CRISPR screens,
+infers each study's design from its metadata, downloads the raw reads from ENA
+(MD5-verified), runs FastQC, and reanalyzes them with the pipeline above on
+Modal. Every gene, cell line and compound is mapped to Ensembl, Cellosaurus
+RRID and ChEMBL before anything is written, and database triggers refuse rows
+that are not. Where the authors deposited their own counts, SplicR's recount is
+compared with them and the agreement is published with the screen. Studies whose
+design cannot be inferred confidently go to review instead of being guessed.
+
+```bash
+modal deploy engine/modal_app.py      # daily discovery, sweep every 2 hours
+modal run engine/modal_app.py::main --action process --accession GSE145743
+```
+
+Details, guarantees and the acceptance test: [docs/06-autonomous-ingest.md](docs/06-autonomous-ingest.md).
+Data platform overview: [docs/01-architecture.md](docs/01-architecture.md#data-platform-reviewed-2026-09-29).
 
 ## Reference data
 

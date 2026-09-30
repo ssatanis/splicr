@@ -1,0 +1,391 @@
+accession,source_set,label,label_confidence,justification
+GSE100183,orcs_linked,not_screen,high,shRNA knockdown RNA-seq
+GSE103834,orcs_linked,not_screen,high,shRNA knockdown RNA-seq
+GSE103846,orcs_linked,not_screen,high,siRNA knockdown RNA-seq
+GSE105161,orcs_linked,not_screen,low,paper has a screen but samples read as drug-vs-DMSO expression profiling in three lines
+GSE105771,orcs_linked,not_screen,high,expression profiling of STAT1-/- fibroblasts
+GSE107045,orcs_linked,not_screen,high,shRNA knockdown RNA-seq
+GSE107566,orcs_linked,not_screen,high,RNA-seq of U937 differentiation (screen paper follow-up)
+GSE107965,orcs_linked,not_screen,high,rapamycin RNA-seq
+GSE109177,orcs_linked,screen,high,CRISPR-Cas9 screens for DPR toxicity modifiers; K562 control vs PR20 arms
+GSE109326,orcs_linked,not_screen,high,overexpression RNA-seq
+GSE109491,orcs_linked,not_screen,high,RNA-seq of individual sgRNA knockouts
+GSE109492,orcs_linked,not_screen,high,ChIP-seq
+GSE109493,orcs_linked,not_screen,high,SuperSeries
+GSE111166,orcs_linked,screen,high,genome-wide influenza host factor screen; selection rounds
+GSE111309,orcs_linked,screen,high,DNA-seq of genome-wide LOF library in haploid hESC over time
+GSE111787,orcs_linked,not_screen,high,expression arrays of RMC lines
+GSE112733,orcs_linked,screen,high,DNA-seq of TMZ CRISPR screen D0/D7/D14
+GSE112734,orcs_linked,screen,high,CRISPR screen U87 TMZ day0/7/14 replicates
+GSE112735,orcs_linked,not_screen,medium,EGFRvIII vs control expression subseries
+GSE112736,orcs_linked,not_screen,high,SuperSeries
+GSE115357,orcs_linked,not_screen,high,RNA-seq/ChIP-seq mixed follow-up
+GSE115389,orcs_linked,not_screen,high,RNA-seq of EPAS1-/- clones
+GSE116528,orcs_linked,not_screen,high,cell line expression
+GSE116529,orcs_linked,not_screen,high,YM155 drug RNA-seq in CRC lines
+GSE116730,orcs_linked,screen,high,"Shiga toxin resistance knockout screen, StxR vs control"
+GSE119450,orcs_linked,single_cell,high,CROP-seq in primary T cells
+GSE121710,orcs_linked,screen,high,CRISPR screen for IFN inhibitors of YFV; sorted vs uninfected
+GSE122040,orcs_linked,screen,high,"genome-wide IMiD resistance screens, DMSO vs drug by day"
+GSE122404,orcs_linked,not_screen,high,BET inhibitor expression profiling
+GSE122486,orcs_linked,not_screen,high,RNA-seq of SOCS3 knockout vs LacZ
+GSE123637,orcs_linked,not_screen,high,xenograft expression profiling
+GSE123638,orcs_linked,not_screen,high,shRNA state expression profiling
+GSE123639,orcs_linked,not_screen,high,SuperSeries
+GSE125403,orcs_linked,not_screen,high,RNA-seq of CLPB sgRNA knockouts
+GSE125650,orcs_linked,screen,high,SubAB toxin resistance knockout screen
+GSE125666,orcs_linked,not_screen,high,4C/chromatin interaction assay
+GSE125841,orcs_linked,not_screen,high,CUT&RUN / RNA follow-up
+GSE125842,orcs_linked,not_screen,high,SuperSeries
+GSE126696,orcs_linked,screen,high,"genome-wide ferroptosis screen, ML210 vs DMSO"
+GSE128563,orcs_linked,not_screen,high,RNA/ATAC of individual knockouts
+GSE129282,orcs_linked,screen,high,GeCKOv2 sort screen with plasmid pool
+GSE129380,orcs_linked,not_screen,high,ChIP-seq
+GSE129381,orcs_linked,not_screen,high,RNA-seq of EED KO vs WT
+GSE129382,orcs_linked,not_screen,high,SuperSeries
+GSE129521,orcs_linked,not_screen,high,ChIP-seq of BET resistant lines
+GSE130246,orcs_linked,not_screen,high,RNA-seq TLE3 KO +/- enzalutamide
+GSE130412,orcs_linked,screen,high,Yusa library venetoclax screen with plasmid and day 0
+GSE130413,orcs_linked,screen,high,Brunello venetoclax screen with plasmid and day 0
+GSE130414,orcs_linked,not_screen,high,SuperSeries
+GSE130906,orcs_linked,screen,medium,three arms day0/DMSO/mubritinib match a drug-modifier screen described in paper
+GSE131026,orcs_linked,not_screen,high,ATAC-seq
+GSE131030,orcs_linked,not_screen,medium,"clonal barcode-seq lineage, not CRISPR guides"
+GSE131091,orcs_linked,screen,high,"CRISPR screen subseries, DMSO vs JQ1 passages"
+GSE131097,orcs_linked,not_screen,high,ChIP-seq
+GSE131099,orcs_linked,not_screen,high,RNA-seq
+GSE131102,orcs_linked,not_screen,high,SuperSeries
+GSE131135,orcs_linked,not_screen,high,"scRNA-seq of drug response, no CRISPR perturbation readout"
+GSE131596,orcs_linked,not_screen,high,RNA-seq of ABCG2 activation
+GSE132178,orcs_linked,not_screen,high,RNA-seq IRF2KO
+GSE132835,orcs_linked,not_screen,high,B-cell CD40L RNA-seq
+GSE134173,orcs_linked,not_screen,high,RNA-seq of PTPN2/DCAF15 knockouts
+GSE136032,orcs_linked,not_screen,high,drug RNA-seq
+GSE136175,orcs_linked,screen,medium,Nalm-6 knockout backgrounds day0/day14 genetic-interaction screens
+GSE136596,orcs_linked,not_screen,high,RNA-seq of sorted KO cells
+GSE136597,orcs_linked,not_screen,high,RNA-seq of cell states
+GSE136609,orcs_linked,not_screen,high,RNA-seq of sorted KO cells
+GSE138343,orcs_linked,screen,high,Yusa library sorafenib/crenolanib vs DMSO screen
+GSE138894,orcs_linked,screen,high,Nalm-6 chemogenomic screen vs day 2 control
+GSE139313,orcs_linked,screen,high,"NK-cell pressure screen, survivors vs control"
+GSE139385,orcs_linked,screen,high,"rituximab screen with plasmid, baseline, mock"
+GSE139682,orcs_linked,not_screen,high,tumor vs normal RNA-seq
+GSE140651,orcs_linked,not_screen,high,RNA-seq of individual knockouts
+GSE140652,orcs_linked,not_screen,high,xenograft RNA-seq
+GSE140653,orcs_linked,not_screen,high,SuperSeries
+GSE141171,orcs_linked,not_screen,high,bulk RNA-seq of polyclonal knockouts after screen
+GSE142669,orcs_linked,screen,high,erlotinib screen D0/D14/E7/E14
+GSE144162,orcs_linked,screen,high,NMD reporter sort screen sorted vs unsorted
+GSE144163,orcs_linked,not_screen,high,ribosome profiling
+GSE144164,orcs_linked,not_screen,high,RNA-seq
+GSE144165,orcs_linked,not_screen,high,SuperSeries
+GSE144236,orcs_linked,not_screen,high,scRNA-seq atlas
+GSE144237,orcs_linked,not_screen,high,WES
+GSE144238,orcs_linked,screen,high,in vivo CRISPR screen T0/T1 replicates
+GSE144239,orcs_linked,not_screen,high,spatial transcriptomics
+GSE144240,orcs_linked,not_screen,high,SuperSeries
+GSE144527,orcs_linked,not_screen,high,hypoxia RNA-seq time course
+GSE145182,orcs_linked,not_screen,high,ATAC-seq
+GSE145183,orcs_linked,not_screen,high,CUT&RUN
+GSE145184,orcs_linked,screen,high,organoid CRISPR screens TGFB
+GSE145185,orcs_linked,not_screen,high,SuperSeries
+GSE145308,orcs_linked,not_screen,high,RNA-seq
+GSE145379,orcs_linked,not_screen,high,ChIP of Integrator/PP2A
+GSE149455,orcs_linked,not_screen,high,RNA-seq zrsr2 ko
+GSE149760,orcs_linked,not_screen,high,mixed genomics follow-up (ATAC/RNA/BrU)
+GSE150232,orcs_linked,screen,high,resveratrol/HU chemogenomic screens with day 0 controls
+GSE150523,orcs_linked,not_screen,high,RNA-seq bafilomycin
+GSE150524,orcs_linked,not_screen,high,RNA-seq paraquat
+GSE152284,orcs_linked,screen,high,CRISPR screen live vs dead cells KSHV
+GSE154545,orcs_linked,not_screen,high,RNA-seq of knockouts +/- prexasertib
+GSE154761,orcs_linked,not_screen,high,ChIP-seq
+GSE154782,orcs_linked,not_screen,high,ATAC-seq
+GSE154783,orcs_linked,not_screen,high,RNA-seq
+GSE154784,orcs_linked,not_screen,high,SuperSeries
+GSE155758,orcs_linked,screen,high,radioresistance knockout library screen IR- vs IR+
+GSE155972,orcs_linked,not_screen,high,mixed RNA/ChIP/scRNA follow-up
+GSE157096,orcs_linked,not_screen,high,RNA-seq of SAM activated clones
+GSE157294,orcs_linked,screen,high,EKO chemogenomic screen UM171 vs DMSO
+GSE157295,orcs_linked,screen,high,EKO chemogenomic screen UM171 vs DMSO
+GSE157296,orcs_linked,not_screen,high,RNA-seq UM171
+GSE157298,orcs_linked,not_screen,high,SuperSeries
+GSE158298,orcs_linked,screen,high,SARS-CoV-2 screen with plasmid and pre-infection
+GSE158303,orcs_linked,not_screen,medium,"per-sgRNA RFP competition assays, not pooled library reads"
+GSE158540,orcs_linked,not_screen,high,ChIP-seq
+GSE158541,orcs_linked,not_screen,high,SuperSeries
+GSE159519,orcs_linked,single_cell,high,ECCITE-seq
+GSE159522,orcs_linked,not_screen,high,RNA-seq
+GSE160843,orcs_linked,screen,high,telomerase inhibition essentiality screen d20
+GSE160865,orcs_linked,not_screen,high,RNA-seq of knockout clones
+GSE160867,orcs_linked,screen,medium,genome-wide screen in TAPR1-disrupted vs WT cells day 21
+GSE160869,orcs_linked,not_screen,high,SuperSeries
+GSE161168,orcs_linked,screen,medium,"chemogenomic screen samples (Screen d0/d8, drug arms)"
+GSE162038,orcs_linked,screen,high,Brunello coronavirus host factor screens
+GSE162039,orcs_linked,screen,high,focused interactome CRISPR screens
+GSE163802,orcs_linked,not_screen,high,3'UTR-seq
+GSE163803,orcs_linked,not_screen,high,4sU-seq
+GSE163804,orcs_linked,not_screen,high,ChIP-seq
+GSE163805,orcs_linked,not_screen,high,SuperSeries
+GSE164639,orcs_linked,screen,high,TAK-243 screen T0 and IC arms
+GSE164778,orcs_linked,screen,high,autophagy sort screen control vs activated
+GSE165631,orcs_linked,not_screen,high,RNA-seq
+GSE165661,orcs_linked,not_screen,high,RNA-seq diet
+GSE165734,orcs_linked,not_screen,high,tRNA expression
+GSE165736,orcs_linked,not_screen,high,SuperSeries
+GSE167534,orcs_linked,screen,high,Brunello and tRNA CRISPR screens under valine
+GSE167535,orcs_linked,not_screen,high,ribosome profiling
+GSE167944,orcs_linked,screen,high,image-enabled sort screens with plasmid
+GSE174169,orcs_linked,not_screen,high,RNA-seq knockouts
+GSE174255,orcs_linked,screen,high,CRISPRa/CRISPRi sort screens in primary T cells
+GSE174284,orcs_linked,not_screen,high,RNA-seq of FOXQ1 perturbation
+GSE174292,orcs_linked,not_screen,high,SuperSeries
+GSE175666,orcs_linked,screen,high,bidirectional coronavirus screens
+GSE177537,orcs_linked,screen,high,coronavirus knockout screen HEK293-ACE2
+GSE177541,orcs_linked,screen,high,coronavirus knockout screen Vero E6
+GSE177543,orcs_linked,screen,high,coronavirus knockout screen dataset 2
+GSE177545,orcs_linked,not_screen,high,SuperSeries
+GSE178289,orcs_linked,screen,high,Nalm-6 chemical genetic screen
+GSE182307,orcs_linked,not_screen,high,bulk RNA-seq of astrocytes
+GSE182308,orcs_linked,single_cell,high,CROP-seq scRNA
+GSE182309,orcs_linked,not_screen,high,SuperSeries
+GSE182752,orcs_linked,not_screen,high,ATAC-seq
+GSE182753,orcs_linked,not_screen,high,RNA-seq
+GSE182754,orcs_linked,not_screen,high,RNA-seq
+GSE182755,orcs_linked,not_screen,high,RNA-seq
+GSE183011,orcs_linked,not_screen,high,SuperSeries
+GSE184459,orcs_linked,not_screen,high,RNA-seq
+GSE184461,orcs_linked,not_screen,high,SuperSeries
+GSE186396,orcs_linked,not_screen,high,RNA-seq of RNF31 KO
+GSE189499,orcs_linked,not_screen,high,RNA-seq FBXW7
+GSE189818,orcs_linked,not_screen,high,RNA-seq siRNA/KO
+GSE190604,orcs_linked,single_cell,medium,guide and mRNA libraries per well: single-cell CRISPRa readout
+GSE190846,orcs_linked,screen,high,cytokine sort screens high/low
+GSE193834,orcs_linked,screen,high,bidirectional CRISPR KO/a screens
+GSE196122,orcs_linked,screen,high,survivor vs control screen
+GSE197962,orcs_linked,screen,high,variant screens vs uninfected
+GSE200083,orcs_linked,not_screen,high,scRNA-seq
+GSE200084,orcs_linked,not_screen,high,scRNA-seq
+GSE200085,orcs_linked,screen,high,in vivo Brunello screen (1 sample)
+GSE200104,orcs_linked,not_screen,high,SuperSeries
+GSE201137,orcs_linked,screen,medium,"combinatorial CRISPR screens, control vs sgSPOP backgrounds with drugs"
+GSE203362,orcs_linked,screen,high,kinome CRISPR screen ctrl vs enzalutamide (mixed with RNA-seq)
+GSE204862,orcs_linked,screen,medium,T cell CRISPR screen input vs stimulations
+GSE204897,orcs_linked,not_screen,high,ATAC-seq
+GSE204899,orcs_linked,not_screen,high,Capture-C
+GSE204900,orcs_linked,not_screen,high,CUT&RUN
+GSE205009,orcs_linked,screen,high,influenza B screen rounds vs input
+GSE206101,orcs_linked,screen,high,frameshifting reporter sort screen
+GSE206223,orcs_linked,not_screen,high,drug RNA-seq
+GSE206500,orcs_linked,screen,medium,CRISPR activation library oxaliplatin screen
+GSE206501,orcs_linked,not_screen,high,patient DEGs
+GSE206502,orcs_linked,not_screen,high,siRNA RNA-seq
+GSE206503,orcs_linked,not_screen,high,MeRIP-seq
+GSE206504,orcs_linked,not_screen,high,RIP-seq
+GSE208661,orcs_linked,screen,medium,reporter sort bins vs unsorted in WT and BAG6 KO
+GSE210762,orcs_linked,single_cell,high,scRNA-seq with gRNA library capture
+GSE218491,orcs_linked,not_screen,high,SuperSeries
+GSE219163,orcs_linked,not_screen,high,ATAC-seq
+GSE219164,orcs_linked,not_screen,high,HiChIP
+GSE219166,orcs_linked,not_screen,high,RNA-seq
+GSE219168,orcs_linked,not_screen,high,SuperSeries
+GSE220614,orcs_linked,not_screen,high,RNA-seq of TFAP4 sgRNAs
+GSE221194,orcs_linked,not_screen,high,drug RNA-seq
+GSE222104,orcs_linked,screen,medium,initial vs final samples of genome-wide screen
+GSE223326,orcs_linked,screen,high,HIV-CRISPR screen
+GSE226447,orcs_linked,screen,high,alpha-amanitin LOF screen
+GSE228155,orcs_linked,screen,high,PLK1 inhibitor chemogenomic screen
+GSE229583,orcs_linked,not_screen,high,ChIP-seq
+GSE229584,orcs_linked,screen,high,organoid sort screen sorted vs bulk
+GSE229585,orcs_linked,not_screen,high,scRNA-seq of KO organoids
+GSE229586,orcs_linked,not_screen,high,SuperSeries
+GSE235793,orcs_linked,not_screen,high,SuperSeries
+GSE280256,orcs_linked,not_screen,high,ATAC-seq
+GSE280257,orcs_linked,not_screen,high,RNA-seq
+GSE280506,orcs_linked,single_cell,high,CROP-seq in organoids
+GSE280682,orcs_linked,not_screen,high,RNA-seq of HDAC3 perturbations
+GSE69666,orcs_linked,screen,high,WNV cell death screen rounds
+GSE69876,orcs_linked,not_screen,high,shRNA RNA-seq
+GSE69877,orcs_linked,not_screen,high,ChIP-seq
+GSE69878,orcs_linked,not_screen,high,SuperSeries
+GSE70038,orcs_linked,screen,high,GBM fitness screens day 0 vs day 21
+GSE72840,orcs_linked,not_screen,high,circRNA-seq siRNA
+GSE72842,orcs_linked,not_screen,high,RNA-seq siRNA
+GSE72843,orcs_linked,screen,high,LNCaP screen plasmid/day0/DHT
+GSE72844,orcs_linked,not_screen,high,SuperSeries
+GSE75189,orcs_linked,screen,high,TKO fitness screens in five lines
+GSE89371,orcs_linked,screen,high,CRISPRa influenza screen with plasmid
+GSE93681,orcs_linked,not_screen,high,RNA-seq of single sgRNA knockouts
+GSE94682,orcs_linked,not_screen,high,ChIP of AR complex
+GSE95374,orcs_linked,screen,medium,corrected on re-reading (train-split error review): mixed series that includes Genome-wide-screen G418 / Batch-screen samples
+GSE97404,orcs_linked,not_screen,high,RNA-seq of reporter cell line
+GSE195844,discovery_2025-03,not_screen,high,bulk and scRNA-seq of T cells across tissues
+GSE227029,discovery_2025-03,not_screen,high,HuR knockdown RNA-seq
+GSE228503,discovery_2025-03,screen,medium,"gRNA library screen, gRNA sequencing of CD59-changed vs unchanged cells"
+GSE230395,discovery_2025-03,not_screen,high,ChIP-seq
+GSE230396,discovery_2025-03,not_screen,high,SuperSeries
+GSE231317,discovery_2025-03,not_screen,high,SuperSeries
+GSE239702,discovery_2025-03,not_screen,high,siRNA/shRNA RNA-seq and ChIP
+GSE242033,discovery_2025-03,not_screen,high,RNA-seq of setd3 knockout differentiation
+GSE242077,discovery_2025-03,screen,medium,"pooled CRISPRi enhancer tiling screen, t0 vs t14 in DLBCL lines"
+GSE244247,discovery_2025-03,not_screen,high,RNA-seq after HDR gene editing
+GSE244248,discovery_2025-03,not_screen,high,RNA-seq after HDR gene editing
+GSE244257,discovery_2025-03,not_screen,high,SuperSeries
+GSE245251,discovery_2025-03,not_screen,high,RNA-seq of Smarcc2 knockout neurons
+GSE245254,discovery_2025-03,not_screen,high,ATAC-seq
+GSE246127,discovery_2025-03,not_screen,high,Hi-C of tumors
+GSE246545,discovery_2025-03,not_screen,high,CUT&Tag in Paxip1 knockout
+GSE255095,discovery_2025-03,not_screen,low,"per-tumor samples of individual sgRNAs from validation, not library reads"
+GSE255120,discovery_2025-03,not_screen,high,transcriptional adaptation RNA-seq
+GSE255121,discovery_2025-03,not_screen,high,SuperSeries
+GSE260907,discovery_2025-03,not_screen,high,scRNA-seq of a single CRISPRi target vs control
+GSE261333,discovery_2025-03,not_screen,medium,"isogenic KRAS allele lines, expression profiling"
+GSE261415,discovery_2025-03,not_screen,high,RNA-seq of MBNL double knockout
+GSE262089,discovery_2025-03,not_screen,high,SuperSeries
+GSE262868,discovery_2025-03,not_screen,high,tumor RNA-seq WT vs KD
+GSE262981,discovery_2025-03,not_screen,high,RNA-seq of in vivo single-gene sgRNA knockouts
+GSE262985,discovery_2025-03,not_screen,high,RNA-seq of in vivo single-gene sgRNA knockouts
+GSE262986,discovery_2025-03,not_screen,high,RNA-seq of in vivo single-gene sgRNA knockouts
+GSE263524,discovery_2025-03,not_screen,high,tumor RNA-seq
+GSE269187,discovery_2025-03,not_screen,high,BMDM RNA-seq in vitro
+GSE269188,discovery_2025-03,not_screen,low,"KO screen with per-sample transcriptome readout (arrayed / expression-based, not guide counts)"
+GSE269191,discovery_2025-03,not_screen,high,in vivo CD45 cell transcriptomes
+GSE269192,discovery_2025-03,not_screen,high,SuperSeries
+GSE269829,discovery_2025-03,not_screen,high,ChIP of ASH1L knockout
+GSE269830,discovery_2025-03,not_screen,high,RNA-seq of ASH1L knockout
+GSE271958,discovery_2025-03,not_screen,high,scRNA-seq developmental atlas
+GSE272389,discovery_2025-03,not_screen,high,RNA-seq METTL5 knockout
+GSE272466,discovery_2025-03,screen,high,CRISPR screen high vs low fluorescence bins
+GSE272467,discovery_2025-03,not_screen,high,GLORI m6A profiling
+GSE272469,discovery_2025-03,not_screen,high,SuperSeries
+GSE275039,discovery_2025-03,not_screen,high,ChIP-seq
+GSE275040,discovery_2025-03,not_screen,high,HiChIP
+GSE275043,discovery_2025-03,screen,high,genome-wide sort screen Galectin-9 low vs unsorted
+GSE276203,discovery_2025-03,screen,high,"CRISPR activation screen, GFP high/low bins vs unsorted and early time point"
+GSE276360,discovery_2025-03,not_screen,high,scRNA-seq of patient cells
+GSE276408,discovery_2025-03,not_screen,high,PAIso-seq of oocytes
+GSE277043,discovery_2025-03,not_screen,high,RNA-seq knock-in line
+GSE277044,discovery_2025-03,not_screen,high,drug RNA-seq
+GSE277045,discovery_2025-03,not_screen,high,drug RNA-seq
+GSE277810,discovery_2025-03,not_screen,high,APA mutant RNA-seq
+GSE278619,discovery_2025-03,not_screen,high,organoid RNA-seq
+GSE279770,discovery_2025-03,not_screen,high,mouse model RNA-seq
+GSE280295,discovery_2025-03,not_screen,high,RNA-seq of CREBBP knockouts
+GSE280415,discovery_2025-03,not_screen,high,RNA-seq of single sgRNA knockouts
+GSE280716,discovery_2025-03,not_screen,high,patient neuron RNA-seq
+GSE281860,discovery_2025-03,screen,high,"GPCR library screen with plasmid, d0 and K10 sort bins"
+GSE282000,discovery_2025-03,not_screen,high,knock-in RNA-seq
+GSE283496,discovery_2025-03,not_screen,high,engineered organoid transcriptomes
+GSE283497,discovery_2025-03,not_screen,high,Xenium spatial
+GSE284299,discovery_2025-03,not_screen,high,p53 binding profiling
+GSE284614,discovery_2025-03,not_screen,high,CAR T RNA-seq
+GSE284615,discovery_2025-03,not_screen,high,CAR T RNA-seq
+GSE284616,discovery_2025-03,not_screen,high,CAR T RNA-seq
+GSE284618,discovery_2025-03,not_screen,high,CAR T RNA-seq of knockouts
+GSE284619,discovery_2025-03,not_screen,high,CAR T RNA-seq of knockouts
+GSE285327,discovery_2025-03,not_screen,high,chromatin-associated RNA-seq
+GSE285328,discovery_2025-03,not_screen,high,RNA-seq
+GSE285332,discovery_2025-03,not_screen,high,CUT&Tag
+GSE286097,discovery_2025-03,not_screen,high,transcriptional adaptation RNA-seq
+GSE286483,discovery_2025-03,not_screen,high,shRNA RNA-seq
+GSE286484,discovery_2025-03,not_screen,high,CUT&Tag
+GSE286992,discovery_2025-03,not_screen,medium,"Cas12a mouse editing-efficiency amplicons from tumors, not a library screen"
+GSE287375,discovery_2025-03,not_screen,high,ChIP-seq
+GSE287376,discovery_2025-03,not_screen,high,Micro-C
+GSE287379,discovery_2025-03,not_screen,high,RNA-seq
+GSE287380,discovery_2025-03,not_screen,high,iCLIP
+GSE287803,discovery_2025-03,not_screen,high,HSPC gene editing profiling
+GSE287805,discovery_2025-03,not_screen,high,HSPC gene editing profiling
+GSE288087,discovery_2025-03,not_screen,high,allele-specific editing and off-target detection
+GSE288230,discovery_2025-03,screen,high,genome-scale and secondary erythropoiesis screens with plasmid and day 0
+GSE288251,discovery_2025-03,not_screen,high,RNA-seq infection
+GSE288364,discovery_2025-03,not_screen,high,RNA-seq of edited clones
+GSE288796,discovery_2025-03,not_screen,high,RNA-seq of lung lines
+GSE289324,discovery_2025-03,not_screen,high,CRISPR diagnostics of pathogen transcripts
+GSE289476,discovery_2025-03,not_screen,high,RNA-seq of KO HSPC grafts
+GSE289715,discovery_2025-03,not_screen,high,mouse model RNA-seq
+GSE290113,discovery_2025-03,not_screen,high,WES of Y-KO line
+GSE290114,discovery_2025-03,not_screen,high,RNA-seq of Y-KO
+GSE290115,discovery_2025-03,not_screen,high,RNA-seq of Y-KO
+GSE290266,discovery_2025-03,not_screen,high,liver RNA-seq
+GSE290354,discovery_2025-03,not_screen,high,zebrafish knockout RNA-seq
+GSE290536,discovery_2025-03,not_screen,high,fusion overexpression RNA-seq
+GSE290596,discovery_2025-03,single_cell,high,CRISPRa screen read out by scRNA-seq with gRNA capture
+GSE290832,discovery_2025-03,single_cell,low,pooled endogenous tagging read out by in situ / scRNA; not a guide-count screen
+GSE290867,discovery_2025-03,not_screen,high,worm translation profiling
+GSE290893,discovery_2025-03,not_screen,high,degron RNA-seq
+GSE290894,discovery_2025-03,not_screen,high,degron RNA-seq
+GSE290895,discovery_2025-03,not_screen,high,degron/KO RNA-seq
+GSE291151,discovery_2025-03,not_screen,high,tumor RNA-seq
+GSE291219,discovery_2025-03,screen,high,sort screens sorted vs bulk for EGFR/Her2 reporters
+GSE291441,discovery_2025-03,not_screen,high,RNA-seq of sgRNA knockouts
+GSE291960,discovery_2025-03,not_screen,high,prime editing amplicon efficiency
+GSE291994,discovery_2025-03,not_screen,high,in vivo Cas9 knockdown validation
+GSE184919,targeted_title_2024,not_screen,high,bulk RNA-seq of conditional BRD4 deletion
+GSE184920,targeted_title_2024,not_screen,high,bulk RNA-seq of conditional BRD4 deletion
+GSE184921,targeted_title_2024,not_screen,high,"scRNA-seq of a single conditional knockout, no guide readout"
+GSE184922,targeted_title_2024,not_screen,high,SuperSeries
+GSE217131,targeted_title_2024,screen,high,pooled in vivo/in vitro screens Day16/Day25 Dox +/-
+GSE218249,targeted_title_2024,not_screen,high,RNA-seq follow-up of an arrayed screen hit
+GSE220556,targeted_title_2024,not_screen,medium,RNA-seq of single sgRNA PDAC lines from an in vivo screen paper
+GSE226994,targeted_title_2024,screen,high,genome-wide screen U2OS d0 vs d21 in parental and KO
+GSE228767,targeted_title_2024,screen,high,CRISPR screening subseries baseline/control/CD38-low sort
+GSE228770,targeted_title_2024,screen,high,CRISPR screening subseries baseline/control/NK
+GSE230707,targeted_title_2024,screen,low,mixed organoid series that includes CRISPR screen replicate samples
+GSE232614,targeted_title_2024,screen,high,genome-wide screen DMSO vs MAK683
+GSE235183,targeted_title_2024,screen,high,Yusa library trametinib screen with plasmid and day 0
+GSE242480,targeted_title_2024,screen,high,genome-wide reporter sort screens sorted vs unsorted
+GSE243456,targeted_title_2024,not_screen,high,ChIP-seq
+GSE243457,targeted_title_2024,not_screen,high,SuperSeries
+GSE243882,targeted_title_2024,screen,medium,pooled miRNA CRISPR screen time 0 vs 3 weeks 2D/3D
+GSE244362,targeted_title_2024,not_screen,high,RNA-seq of NF2 KO differentiation
+GSE248632,targeted_title_2024,not_screen,high,drug RNA-seq
+GSE248633,targeted_title_2024,not_screen,high,drug RNA-seq
+GSE252396,targeted_title_2024,screen,high,coronavirus host factor screens infected vs uninfected
+GSE253231,targeted_title_2024,screen,medium,senescence screen first/second rounds
+GSE253329,targeted_title_2024,not_screen,high,CUT&RUN
+GSE253815,targeted_title_2024,not_screen,high,RNA-seq of CITED2 overexpression
+GSE254334,targeted_title_2024,screen,medium,amplicon sgRNA sequencing from in vivo screen tumors
+GSE255853,targeted_title_2024,screen,medium,"corrected on re-reading (train-split error review): title tagged [CRISPR-Cas9 knockout screen], drug vs control arms"
+GSE260829,targeted_title_2024,screen,high,Cas12a CRISPRi combinatorial screens T0 vs T10/T14
+GSE261390,targeted_title_2024,not_screen,high,RNA-seq of enhancer deletion lines
+GSE261391,targeted_title_2024,not_screen,high,nanopore adaptive sampling of a line
+GSE261392,targeted_title_2024,not_screen,high,ChIP-seq
+GSE262149,targeted_title_2024,screen,medium,genome-wide KO and KD screens nab-paclitaxel vs DMSO
+GSE262333,targeted_title_2024,not_screen,high,Yarrowia library screen: unsupported organism
+GSE263174,targeted_title_2024,not_screen,high,Hi-C
+GSE174766,targeted_title_2023,screen,high,Yusa library CG-806 screen with day 0 and DMSO
+GSE184322,targeted_title_2023,screen,low,mixed series; includes Day0 screen samples alongside RPF/ChIP/RNA-seq
+GSE192827,targeted_title_2023,screen,high,genome-wide sort screen BTN3A high vs low
+GSE192828,targeted_title_2023,screen,high,gamma-delta T cell kill screen vs pre-kill
+GSE202996,targeted_title_2023,not_screen,medium,RNA-seq of TCL1A knockout differentiation
+GSE205221,targeted_title_2023,screen,medium,PARP inhibitor screen at three olaparib doses
+GSE214822,targeted_title_2023,not_screen,high,ChIP-seq
+GSE214890,targeted_title_2023,screen,high,Nutlin sensitizing LOF screen DMSO vs Nutlin
+GSE215175,targeted_title_2023,screen,high,combinatorial CRISPR screens in RPE1
+GSE215803,targeted_title_2023,screen,medium,parallel genome-wide screens under T cell pressure vs control
+GSE216087,targeted_title_2023,screen,high,venetoclax/ruxolitinib resistance screen vs DMSO
+GSE216353,targeted_title_2023,screen,high,pooled sort screens CD80 high/low vs presort
+GSE217789,targeted_title_2023,screen,high,whole-genome reporter sort screen RBM3 high/low
+GSE217997,targeted_title_2023,screen,high,library A/B rounds of selection
+GSE218566,targeted_title_2023,single_cell,high,PerturbSci-Kinetics single-cell pooled screen
+GSE218985,targeted_title_2023,screen,medium,TF CRISPRa/CRISPRi screens in primary T cells
+GSE218988,targeted_title_2023,not_screen,high,SuperSeries
+GSE224293,targeted_title_2023,not_screen,medium,fibroblast treatment RNA-seq despite screen title
+GSE225235,targeted_title_2023,screen,high,CD58 sort screen with sgRNA virus and day 10
+GSE226931,targeted_title_2023,not_screen,high,CUT&RUN
+GSE227595,targeted_title_2023,screen,high,myo-differentiation reporter sort screen
+GSE229545,targeted_title_2023,not_screen,high,Toxoplasma in vivo screen: unsupported organism
+GSE229547,targeted_title_2023,not_screen,high,Toxoplasma in vivo screen: unsupported organism
+GSE229548,targeted_title_2023,not_screen,high,Toxoplasma in vivo screen: unsupported organism
+GSE232340,targeted_title_2023,not_screen,high,rat T cell screen: unsupported organism
+GSE232592,targeted_title_2023,screen,high,whole-genome etoposide screens WT/p53KO with T0 (plus RNA-seq)
+GSE233401,targeted_title_2023,screen,high,focused CRISPR screen T0/T1
+GSE233638,targeted_title_2023,not_screen,medium,chromatin profiling of ESC lines
+GSE235688,targeted_title_2023,screen,high,libA/libB T0 vs T7 chemoresistance screen
+GSE236331,targeted_title_2023,not_screen,high,RNA-seq of single knockout +/- IR
+GSE237953,targeted_title_2023,screen,medium,reporter sort bins FKBP5 low vs high
+GSE237969,targeted_title_2023,screen,high,CXCL9 sort screen T0/Tend/high/low
+GSE240894,targeted_title_2023,screen,high,HIV-CRISPR vRNA vs gDNA screens
+GSE240896,targeted_title_2023,not_screen,medium,knockout follow-up samples
+GSE240899,targeted_title_2023,not_screen,high,SuperSeries
+GSE241933,targeted_title_2023,screen,high,bulk CRISPRi/a/ko tiling and TFome sort screens

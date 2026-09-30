@@ -239,8 +239,17 @@ def write_dataset(name: str, rows: Any, *, local_only: bool = True) -> Path:
         if dataset.partition_by
         else ""
     )
+    # Unpartitioned datasets still get a directory: COPY to a bare path writes a
+    # single file with no .parquet suffix, which `source()`'s glob never finds.
+    # That is how data/lake/copy_number ended up a 0-byte file.
+    target = out
+    if not dataset.partition_by:
+        if out.is_file():
+            out.unlink()
+        out.mkdir(parents=True, exist_ok=True)
+        target = out / "data_0.parquet"
     conn.execute(
-        f"copy ({select}) to '{out}' "
+        f"copy ({select}) to '{target}' "
         f"(format parquet, compression zstd, row_group_size 100000{partition})"
     )
     if not isinstance(rows, str):

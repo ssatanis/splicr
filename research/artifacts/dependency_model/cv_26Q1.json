@@ -1,0 +1,178 @@
+{
+  "release": "26Q1",
+  "n_lines": 1140,
+  "n_genes": 18531,
+  "n_selective_genes_scored": 2000,
+  "features": {
+    "expression_pcs_from_top_var_genes": 150,
+    "cn_pcs": 50,
+    "hotspot_mutations": 52
+  },
+  "ridge_alpha": 3000.0,
+  "splits": {
+    "random_5fold_by_line": {
+      "mean": {
+        "global_r": 0.9105,
+        "mae": 0.1209,
+        "selective_median_r": -0.0568,
+        "selective_frac_r_gt_0.3": 0.0,
+        "selective_frac_r_gt_0.5": 0.0
+      },
+      "knn": {
+        "global_r": 0.9108,
+        "mae": 0.123,
+        "selective_median_r": 0.2169,
+        "selective_frac_r_gt_0.3": 0.267,
+        "selective_frac_r_gt_0.5": 0.0455
+      },
+      "ridge": {
+        "global_r": 0.9147,
+        "mae": 0.119,
+        "selective_median_r": 0.2495,
+        "selective_frac_r_gt_0.3": 0.358,
+        "selective_frac_r_gt_0.5": 0.0455
+      },
+      "ridge_full": {
+        "global_r": 0.9164,
+        "mae": 0.1187,
+        "selective_median_r": 0.2791,
+        "selective_frac_r_gt_0.3": 0.442,
+        "selective_frac_r_gt_0.5": 0.0595
+      }
+    },
+    "lineage_heldout_5fold": {
+      "mean": {
+        "global_r": 0.9099,
+        "mae": 0.1212,
+        "selective_median_r": -0.1126,
+        "selective_frac_r_gt_0.3": 0.0,
+        "selective_frac_r_gt_0.5": 0.0
+      },
+      "knn": {
+        "global_r": 0.907,
+        "mae": 0.1251,
+        "selective_median_r": 0.1391,
+        "selective_frac_r_gt_0.3": 0.1245,
+        "selective_frac_r_gt_0.5": 0.0185
+      },
+      "ridge": {
+        "global_r": 0.9127,
+        "mae": 0.1201,
+        "selective_median_r": 0.1781,
+        "selective_frac_r_gt_0.3": 0.1475,
+        "selective_frac_r_gt_0.5": 0.0115
+      },
+      "ridge_full": {
+        "global_r": 0.9138,
+        "mae": 0.1202,
+        "selective_median_r": 0.2233,
+        "selective_frac_r_gt_0.3": 0.288,
+        "selective_frac_r_gt_0.5": 0.027
+      }
+    }
+  },
+  "ridge_full_alpha": 30000.0,
+  "best_predicted_selective_genes_random_split": [
+    [
+      "SOX10 (6663)",
+      0.818
+    ],
+    [
+      "PAX8 (7849)",
+      0.784
+    ],
+    [
+      "EBF1 (1879)",
+      0.759
+    ],
+    [
+      "MYB (4602)",
+      0.755
+    ],
+    [
+      "TP63 (8626)",
+      0.742
+    ],
+    [
+      "FERMT2 (10979)",
+      0.728
+    ],
+    [
+      "IRF4 (3662)",
+      0.718
+    ],
+    [
+      "CTNNB1 (1499)",
+      0.713
+    ],
+    [
+      "POU2AF1 (5450)",
+      0.712
+    ],
+    [
+      "TCF7L2 (6934)",
+      0.699
+    ],
+    [
+      "HNF1B (6928)",
+      0.69
+    ],
+    [
+      "ITGAV (3685)",
+      0.688
+    ],
+    [
+      "CDS2 (8760)",
+      0.679
+    ],
+    [
+      "KLF5 (688)",
+      0.665
+    ],
+    [
+      "STX4 (6810)",
+      0.646
+    ],
+    [
+      "ATP1B3 (483)",
+      0.646
+    ],
+    [
+      "BRAF (673)",
+      0.643
+    ],
+    [
+      "CCND1 (595)",
+      0.642
+    ],
+    [
+      "ZEB2 (9839)",
+      0.64
+    ],
+    [
+      "SH3GL1 (6455)",
+      0.637
+    ],
+    [
+      "EFR3A (23167)",
+      0.635
+    ],
+    [
+      "CBFB (865)",
+      0.635
+    ],
+    [
+      "CCND3 (896)",
+      0.63
+    ],
+    [
+      "SDHB (6390)",
+      0.626
+    ],
+    [
+      "FOXA1 (3169)",
+      0.625
+    ]
+  ],
+  "runtime_s": 168.1
+}

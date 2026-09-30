@@ -264,6 +264,45 @@ def cmd_run(args: argparse.Namespace) -> int:
     return 0 if result.ok else 1
 
 
+def cmd_sources(args: argparse.Namespace) -> int:
+    """Every external dataset, its licence and exactly what SplicR holds of it."""
+    from . import sources
+
+    if args.json:
+        print(sources.as_json())
+        return 0
+    for s in sources.SOURCES:
+        print(f"{s.status:11s} {s.id:16s} {s.name}")
+        print(f"{'':28s} {s.holdings}")
+    print("\n" + ", ".join(f"{k}: {v}" for k, v in sorted(sources.summary().items())))
+    return 0
+
+
+def cmd_similar(args: argparse.Namespace) -> int:
+    """Knockouts whose signature looks like this gene's, in one modality."""
+    from . import vectors
+
+    hits = vectors.similar(args.gene, args.modality, args.k)
+    if not hits:
+        print(f"{args.gene} has no {args.modality} profile")
+        return 1
+    for gene, sim in hits:
+        print(f"{gene:12s} {sim:+.3f}")
+    return 0
+
+
+def cmd_graph(args: argparse.Namespace) -> int:
+    """Genes that lines amplified for GENE depend on and other lines do not."""
+    from . import graph
+
+    con = graph.connect()
+    con.execute("set enable_progress_bar = false")
+    df = graph.selective_dependencies(con, amplified_gene=args.amplified, lineage=args.lineage,
+                                      limit=args.limit)
+    print(df.to_string(index=False))
+    return 0
+
+
 # ---------------------------------------------------------------------------
 
 def main(argv: list[str] | None = None) -> int:
@@ -274,6 +313,23 @@ def main(argv: list[str] | None = None) -> int:
         func=cmd_doctor)
     sub.add_parser("libraries", help="list parseable libraries").set_defaults(
         func=cmd_libraries)
+
+    so = sub.add_parser("sources", help="external data sources and SplicR's holdings")
+    so.add_argument("--json", action="store_true")
+    so.set_defaults(func=cmd_sources)
+
+    si = sub.add_parser("similar", help="nearest knockouts by perturbation signature")
+    si.add_argument("gene")
+    si.add_argument("--modality", default="jump_crispr",
+                    choices=["perturbseq_k562", "jump_crispr", "jump_orf", "depmap_effect"])
+    si.add_argument("-k", type=int, default=10)
+    si.set_defaults(func=cmd_similar)
+
+    gr = sub.add_parser("graph", help="selective dependencies of amplified lines (knowledge graph)")
+    gr.add_argument("--amplified", required=True, help="gene whose amplification defines the group")
+    gr.add_argument("--lineage", help="restrict to one DepMap lineage, e.g. Breast")
+    gr.add_argument("--limit", type=int, default=20)
+    gr.set_defaults(func=cmd_graph)
 
     d = sub.add_parser("detect", help="identify the library in a FASTQ")
     d.add_argument("fastq")

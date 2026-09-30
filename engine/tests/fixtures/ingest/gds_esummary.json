@@ -1,0 +1,532 @@
+[
+ {
+  "uid": "200145743",
+  "accession": "GSE145743",
+  "gds": "",
+  "title": "Genome-wide CRISPR knockout screen using GeCKO v2 to identify synthetic lethal interactions with the PARP inhibitor Olaparib",
+  "summary": "In this study, a population of knockout cells was generated using the GeCKO v2 sgRNA library. The population of knockout cells was treated with the PARP inhibitor olaparib for 14 days. Over this time, knockout cells that were sensitive to olaparib treatment would die and a population of knockout cells that was resistant to olaparib treatment remained. Cells from olaparib and DMSO conditions and the sgRNA cassette in the knockout cells was amplified and sequenced to identify synthetic lethal or suppressor interactions with olaparib treatment.",
+  "gpl": "18460;28978",
+  "gse": "145743",
+  "taxon": "synthetic construct; Homo sapiens",
+  "entrytype": "GSE",
+  "gdstype": "Other",
+  "ptechtype": "",
+  "valtype": "",
+  "ssinfo": "",
+  "subsetinfo": "",
+  "pdat": "2020/08/01",
+  "suppfile": "TXT",
+  "samples": [
+   {
+    "accession": "GSM4332024",
+    "title": "GeCKO-A_DMSO-1, Day 14"
+   },
+   {
+    "accession": "GSM4332027",
+    "title": "GeCKO-B_Olaparib-2, Day 14"
+   },
+   {
+    "accession": "GSM4332021",
+    "title": "GeCKO-A_DMSO-2, Day 14"
+   },
+   {
+    "accession": "GSM4332022",
+    "title": "GeCKO-A_Olaparib-1, Day 14"
+   },
+   {
+    "accession": "GSM4712439",
+    "title": "GeCKO-A plasmid library"
+   },
+   {
+    "accession": "GSM4332025",
+    "title": "GeCKO-B input control, Day 0"
+   },
+   {
+    "accession": "GSM4332020",
+    "title": "GeCKO-A input control, Day 0"
+   },
+   {
+    "accession": "GSM4332028",
+    "title": "GeCKO-B_DMSO-1, Day 14"
+   },
+   {
+    "accession": "GSM4332029",
+    "title": "GeCKO-B_DMSO-2, Day 14"
+   },
+   {
+    "accession": "GSM4332023",
+    "title": "GeCKO-A_Olaparib-2, Day 14"
+   },
+   {
+    "accession": "GSM4712440",
+    "title": "GeCKO-B plasmid library"
+   },
+   {
+    "accession": "GSM4332026",
+    "title": "GeCKO-B_Olaparib-1, Day 14"
+   }
+  ],
+  "relations": [],
+  "extrelations": [
+   {
+    "relationtype": "SRA",
+    "targetobject": "SRP250346",
+    "targetftplink": "ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByStudy/sra/SRP/SRP250/SRP250346/"
+   }
+  ],
+  "n_samples": 12,
+  "seriestitle": "",
+  "platformtitle": "",
+  "platformtaxa": "",
+  "samplestaxa": "",
+  "pubmedids": [],
+  "projects": [],
+  "ftplink": "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE145nnn/GSE145743/",
+  "geo2r": "no",
+  "bioproject": "PRJNA608032"
+ },
+ {
+  "uid": "200243456",
+  "accession": "GSE243456",
+  "gds": "",
+  "title": "Identifying human pre-mRNA cleavage and polyadenylation factors by genome-wide CRISPR screens in a dual fluorescence readthrough reporter (2)",
+  "summary": "The majority of messenger RNA precursor (pre-mRNA) undergoes 3' end cleavage and polyadenylation (CPA), termed as to 3\u2019 end processing. This processing is specified by a polyadenylation site (PAS) and adjacent RNA sequences and regulated by a large variety of core and auxiliary CPA factors. To date, most of the CPA factors have been discovered through biochemical and proteomic studies. However, genome-wide genetic identification of CPA factors has been hampered by the lack of a reliable high-throughput method. Here, we developed a dual fluorescence readthrough reporter system with a PAS inserted between two fluorescent reporters, GFP and mCherry. This system enables the measurement of 3\u2019 end processing in living cells via flow cytometry analysis. Using this system in combination with a human CRISPR library, we conducted a genome-wide screen for CPA factors. The screens identified most of the well-known CPA factors, including most components of the core CPA machineries (i.e. CPSF, CSTF, CFI, and CFII complexes), the CPA scaffold protein SYMPK, PPP1R10 in PNUTS-PP1 complex, as well as CBLL1 (a subunit of m6A RNA methyltransferase complex). Importantly, the screens also uncovered CCNK/CDK12 as a functional core CPA machinery. Furthermore, the screens identified RPRD1B, an RNA polymerase II (RNAP II) binding protein, as a CPA factor. Further characterization showed that RPRD1B binds RNA and regulates the release of RNAP II at the 3\u2019 end of genes. Thus, this dual fluorescence reporter coupled with CRISPR screen provides a reliable tool for identifying bona fide CAP factors, offering a platform for investigating 3\u2019 end processing in various contexts.",
+  "gpl": "16791",
+  "gse": "243456",
+  "taxon": "Homo sapiens",
+  "entrytype": "GSE",
+  "gdstype": "Genome binding/occupancy profiling by high throughput sequencing",
+  "ptechtype": "",
+  "valtype": "",
+  "ssinfo": "",
+  "subsetinfo": "",
+  "pdat": "2024/04/11",
+  "suppfile": "BED, PDF",
+  "samples": [
+   {
+    "accession": "GSM7787429",
+    "title": "ChIP-seq of GFP-RPRD1B, replicate 2"
+   },
+   {
+    "accession": "GSM7787426",
+    "title": "ChIP-seq of GFP, replicate 1"
+   },
+   {
+    "accession": "GSM7787430",
+    "title": "GFP input  ChIP, replicate1"
+   },
+   {
+    "accession": "GSM7787427",
+    "title": "ChIP-seq of GFP, replicate 2"
+   },
+   {
+    "accession": "GSM7787421",
+    "title": "ChIP-seq of Scramble knockout, replicate 2"
+   },
+   {
+    "accession": "GSM7787424",
+    "title": "Scramble input  ChIP, replicate 1"
+   },
+   {
+    "accession": "GSM7787428",
+    "title": "ChIP-seq of GFP-RPRD1B, replicate 1"
+   },
+   {
+    "accession": "GSM7787425",
+    "title": "Scramble input  ChIP, replicate 2"
+   },
+   {
+    "accession": "GSM7787422",
+    "title": "ChIP-seq of RPRD1B knockout, replicate 1"
+   },
+   {
+    "accession": "GSM7787420",
+    "title": "ChIP-seq of Scramble knockout, replicate 1"
+   },
+   {
+    "accession": "GSM7787423",
+    "title": "ChIP-seq of RPRD1B knockout, replicate 2"
+   },
+   {
+    "accession": "GSM7787431",
+    "title": "GFP input  ChIP, replicate2"
+   }
+  ],
+  "relations": [],
+  "extrelations": [],
+  "n_samples": 12,
+  "seriestitle": "",
+  "platformtitle": "",
+  "platformtaxa": "",
+  "samplestaxa": "",
+  "pubmedids": [
+   "38587191"
+  ],
+  "projects": [],
+  "ftplink": "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE243nnn/GSE243456/",
+  "geo2r": "no",
+  "bioproject": "PRJNA1018532"
+ },
+ {
+  "uid": "200130414",
+  "accession": "GSE130414",
+  "gds": "",
+  "title": "The TP53 Apoptotic Network is a Primary Mediator of Resistance to BCL2 inhibition in AML Cells",
+  "summary": "This SuperSeries is composed of the SubSeries listed below.",
+  "gpl": "16791",
+  "gse": "130414",
+  "taxon": "Homo sapiens",
+  "entrytype": "GSE",
+  "gdstype": "Other",
+  "ptechtype": "",
+  "valtype": "",
+  "ssinfo": "",
+  "subsetinfo": "",
+  "pdat": "2019/04/30",
+  "suppfile": "",
+  "samples": [
+   {
+    "accession": "GSM3738268",
+    "title": "DMSO day 7 [YUSADMSOD7]"
+   },
+   {
+    "accession": "GSM3738271",
+    "title": "DMSO day 14 replicate [YUSADMSOD14dupl]"
+   },
+   {
+    "accession": "GSM3738277",
+    "title": "DMSO day 14 replicate [S2DMSOB3]"
+   },
+   {
+    "accession": "GSM3738274",
+    "title": "Brunello Plasmid Library  [Brunlibrep]"
+   },
+   {
+    "accession": "GSM3738266",
+    "title": "Y.Kosuke Plasmid Library  [YUSAplasmid]"
+   },
+   {
+    "accession": "GSM3738269",
+    "title": "DMSO day 7 replicate [YUSADMSOD7dupl]"
+   },
+   {
+    "accession": "GSM3738275",
+    "title": "DMSO day 0 [S2DMSOD3A6]"
+   },
+   {
+    "accession": "GSM3738272",
+    "title": "Venetoclax day 7 [YUSAABTD7]"
+   },
+   {
+    "accession": "GSM3738278",
+    "title": "Venetoclax day 14 [S2ABTA5]"
+   },
+   {
+    "accession": "GSM3738267",
+    "title": "DMSO day 0 [YUSADMSOD0]"
+   },
+   {
+    "accession": "GSM3738270",
+    "title": "DMSO day 14 [YUSADMSOD14]"
+   },
+   {
+    "accession": "GSM3738276",
+    "title": "DMSO day 14 [S2DMSOA9]"
+   },
+   {
+    "accession": "GSM3738273",
+    "title": "Venetoclax day 14 [YUSAABTD14]"
+   }
+  ],
+  "relations": [],
+  "extrelations": [],
+  "n_samples": 13,
+  "seriestitle": "",
+  "platformtitle": "",
+  "platformtaxa": "",
+  "samplestaxa": "",
+  "pubmedids": [
+   "31048320"
+  ],
+  "projects": [],
+  "ftplink": "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE130nnn/GSE130414/",
+  "geo2r": "no",
+  "bioproject": "PRJNA540210"
+ },
+ {
+  "uid": "200119450",
+  "accession": "GSE119450",
+  "gds": "",
+  "title": "CROP-Seq in Primary Human T Cells",
+  "summary": "We adapted sgRNA lentiviral infection and Cas9 electroporation (SLICE) to allow for CROP-Seq (Datlinger et al, Nat Med 2017) in primary cells. We used a library of 48 sgRNA, derived from GW screens, to explore transcriptional changes downstream of CRISPR-KO.",
+  "gpl": "20301",
+  "gse": "119450",
+  "taxon": "Homo sapiens",
+  "entrytype": "GSE",
+  "gdstype": "Expression profiling by high throughput sequencing",
+  "ptechtype": "",
+  "valtype": "",
+  "ssinfo": "",
+  "subsetinfo": "",
+  "pdat": "2018/09/06",
+  "suppfile": "CSV, TAR",
+  "samples": [
+   {
+    "accession": "GSM3375490",
+    "title": "D2_Stim_ReAmp"
+   },
+   {
+    "accession": "GSM3375487",
+    "title": "D1_NoStim_ReAmp"
+   },
+   {
+    "accession": "GSM3375484",
+    "title": "D1_Stim_10x"
+   },
+   {
+    "accession": "GSM3375485",
+    "title": "D2_NoStim_10x"
+   },
+   {
+    "accession": "GSM3375488",
+    "title": "D1_Stim_ReAmp"
+   },
+   {
+    "accession": "GSM3375483",
+    "title": "D1_NoStim_10x"
+   },
+   {
+    "accession": "GSM3375486",
+    "title": "D2_Stim_10x"
+   },
+   {
+    "accession": "GSM3375489",
+    "title": "D2_NoStim_ReAmp"
+   }
+  ],
+  "relations": [],
+  "extrelations": [
+   {
+    "relationtype": "SRA",
+    "targetobject": "SRP159632",
+    "targetftplink": "ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByStudy/sra/SRP/SRP159/SRP159632/"
+   }
+  ],
+  "n_samples": 8,
+  "seriestitle": "",
+  "platformtitle": "",
+  "platformtaxa": "",
+  "samplestaxa": "",
+  "pubmedids": [
+   "30449619"
+  ],
+  "projects": [],
+  "ftplink": "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE119nnn/GSE119450/",
+  "geo2r": "no",
+  "bioproject": "PRJNA489369"
+ },
+ {
+  "uid": "200130413",
+  "accession": "GSE130413",
+  "gds": "",
+  "title": "Genome wide CRISPR screen for Venetoclax resisatnce in MOLM13 cells using Brunello library",
+  "summary": "MOLM13 cells were infected with CRISPR/Cas9 library, selected for puromycn resistance for integration events and exposed to Venetoclax or vehicle, DMSO, at 1microMolar concentrations.  Cells were collected at time 0 (post puromycin selection), day 7 and 14 , DNA was extracted and sgRNA barcodes were amplified. PCR library was deep sequenced using highthroughput Illumina platform Hiseq using 6 samples per lane.",
+  "gpl": "16791",
+  "gse": "130413",
+  "taxon": "Homo sapiens",
+  "entrytype": "GSE",
+  "gdstype": "Other",
+  "ptechtype": "",
+  "valtype": "",
+  "ssinfo": "",
+  "subsetinfo": "",
+  "pdat": "2019/04/30",
+  "suppfile": "FASTA, TSV",
+  "samples": [
+   {
+    "accession": "GSM3738276",
+    "title": "DMSO day 14 [S2DMSOA9]"
+   },
+   {
+    "accession": "GSM3738274",
+    "title": "Brunello Plasmid Library  [Brunlibrep]"
+   },
+   {
+    "accession": "GSM3738277",
+    "title": "DMSO day 14 replicate [S2DMSOB3]"
+   },
+   {
+    "accession": "GSM3738278",
+    "title": "Venetoclax day 14 [S2ABTA5]"
+   },
+   {
+    "accession": "GSM3738275",
+    "title": "DMSO day 0 [S2DMSOD3A6]"
+   }
+  ],
+  "relations": [],
+  "extrelations": [
+   {
+    "relationtype": "SRA",
+    "targetobject": "SRP194099",
+    "targetftplink": "ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByStudy/sra/SRP/SRP194/SRP194099/"
+   }
+  ],
+  "n_samples": 5,
+  "seriestitle": "",
+  "platformtitle": "",
+  "platformtaxa": "",
+  "samplestaxa": "",
+  "pubmedids": [
+   "31048320"
+  ],
+  "projects": [],
+  "ftplink": "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE130nnn/GSE130413/",
+  "geo2r": "no",
+  "bioproject": "PRJNA540212"
+ },
+ {
+  "uid": "200125403",
+  "accession": "GSE125403",
+  "gds": "",
+  "title": "Targeting mitochondrial structure sensitizes AML to Venetoclax",
+  "summary": "The BCL-2 family plays important roles in acute myeloid leukemia (AML) and Venetoclax, a selective BCL-2 inhibitor, has received FDA approval for treatment of AML. However, drug resistance ensues after prolonged treatment, highlighting the need for a greater understanding of the underlying mechanisms.  Using a genome-wide CRISPR/Cas9 screen in human AML, we identified genes whose inactivation sensitizes AML blasts to Venetoclax. Genes involved in mitochondrial organization and function were significantly depleted throughout our screen, including the mitochondrial chaperonin CLPB. We demonstrated that CLPB is upregulated in human AML, it is further induced upon acquisition of Venetoclax resistance and its ablation sensitizes AML cells to Venetoclax. Mechanistically, CLPB maintains the mitochondrial cristae structure via its interaction with the cristae-shaping protein OPA1, whereas its loss promotes apoptosis by inducing cristae remodeling and mitochondrial stress responses. Overall, our data suggest that targeting mitochondrial architecture may provide a promising approach to circumvent Venetoclax resistance.",
+  "gpl": "20301",
+  "gse": "125403",
+  "taxon": "Homo sapiens",
+  "entrytype": "GSE",
+  "gdstype": "Expression profiling by high throughput sequencing",
+  "ptechtype": "",
+  "valtype": "",
+  "ssinfo": "",
+  "subsetinfo": "",
+  "pdat": "2019/05/03",
+  "suppfile": "XLSX",
+  "samples": [
+   {
+    "accession": "GSM3573407",
+    "title": "MOLM-13_sgCLPB#1_D6_RNA-seq_rep1"
+   },
+   {
+    "accession": "GSM3573404",
+    "title": "MOLM-13_sgRosa_D8_RNA-seq_rep1"
+   },
+   {
+    "accession": "GSM3573410",
+    "title": "MOLM-13_sgCLPB#1_D8_RNA-seq_rep1"
+   },
+   {
+    "accession": "GSM3573416",
+    "title": "MOLM-13_sgCLPB#2_D8_RNA-seq_rep1"
+   },
+   {
+    "accession": "GSM3723712",
+    "title": "MV4-11_VR_RNA-seq_rep1"
+   },
+   {
+    "accession": "GSM3573413",
+    "title": "MOLM-13_sgCLPB#2_D6_RNA-seq_rep1"
+   },
+   {
+    "accession": "GSM3573415",
+    "title": "MOLM-13_sgCLPB#2_D6_RNA-seq_rep3"
+   },
+   {
+    "accession": "GSM3573412",
+    "title": "MOLM-13_sgCLPB#1_D8_RNA-seq_rep3"
+   },
+   {
+    "accession": "GSM3573409",
+    "title": "MOLM-13_sgCLPB#1_D6_RNA-seq_rep3"
+   },
+   {
+    "accession": "GSM3573398",
+    "title": "MOLM-13_Par_RNA-seq_rep2"
+   },
+   {
+    "accession": "GSM3723711",
+    "title": "MV4-11_Par_RNA-seq_rep2"
+   },
+   {
+    "accession": "GSM3573401",
+    "title": "MOLM-13_sgRosa_D6_RNA-seq_rep1"
+   },
+   {
+    "accession": "GSM3573418",
+    "title": "MOLM-13_sgCLPB#2_D8_RNA-seq_rep3"
+   },
+   {
+    "accession": "GSM3573417",
+    "title": "MOLM-13_sgCLPB#2_D8_RNA-seq_rep2"
+   },
+   {
+    "accession": "GSM3723710",
+    "title": "MV4-11_Par_RNA-seq_rep1"
+   },
+   {
+    "accession": "GSM3573397",
+    "title": "MOLM-13_Par_RNA-seq_rep1"
+   },
+   {
+    "accession": "GSM3573414",
+    "title": "MOLM-13_sgCLPB#2_D6_RNA-seq_rep2"
+   },
+   {
+    "accession": "GSM3723713",
+    "title": "MV4-11_VR_RNA-seq_rep2"
+   },
+   {
+    "accession": "GSM3573400",
+    "title": "MOLM-13_VR_RNA-seq_rep2"
+   },
+   {
+    "accession": "GSM3573406",
+    "title": "MOLM-13_sgRosa_D8_RNA-seq_rep3"
+   },
+   {
+    "accession": "GSM3573403",
+    "title": "MOLM-13_sgRosa_D6_RNA-seq_rep3"
+   },
+   {
+    "accession": "GSM3573399",
+    "title": "MOLM-13_VR_RNA-seq_rep1"
+   },
+   {
+    "accession": "GSM3573402",
+    "title": "MOLM-13_sgRosa_D6_RNA-seq_rep2"
+   },
+   {
+    "accession": "GSM3573405",
+    "title": "MOLM-13_sgRosa_D8_RNA-seq_rep2"
+   },
+   {
+    "accession": "GSM3573408",
+    "title": "MOLM-13_sgCLPB#1_D6_RNA-seq_rep2"
+   },
+   {
+    "accession": "GSM3573411",
+    "title": "MOLM-13_sgCLPB#1_D8_RNA-seq_rep2"
+   }
+  ],
+  "relations": [],
+  "extrelations": [
+   {
+    "relationtype": "SRA",
+    "targetobject": "SRP181053",
+    "targetftplink": "ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByStudy/sra/SRP/SRP181/SRP181053/"
+   }
+  ],
+  "n_samples": 26,
+  "seriestitle": "",
+  "platformtitle": "",
+  "platformtaxa": "",
+  "samplestaxa": "",
+  "pubmedids": [
+   "31048321"
+  ],
+  "projects": [],
+  "ftplink": "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE125nnn/GSE125403/",
+  "geo2r": "yes",
+  "bioproject": "PRJNA516226"
+ }
+]

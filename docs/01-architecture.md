@@ -74,3 +74,44 @@ Preview database branching, Linux worker images, backup/PITR configuration and
 capacity guarantees require separate operational verification. They are not
 established by this repository audit. Preserve local-only workflows and versioned
 reference manifests while that integration is completed.
+
+## Data platform (reviewed 2026-09-29)
+
+Every layer below is labelled with what exists. "Running" means it runs today
+against real data; "Built" means code exists and is tested but has no deployed
+scheduler or service; "Target" means designed, not provisioned, and names what
+provisioning needs.
+
+| Layer | Target (exascale) | What runs today | Status |
+|---|---|---|---|
+| Raw object store | S3 / GCS | Cloudflare R2 bucket `splicr` (~10.6 GB); public sources read in place from S3 (JUMP), GCS (Arc) and Hugging Face (Tahoe) | Running |
+| Columnar matrices | BigQuery / Snowflake | Parquet lake (`data/lake`, mirrored to R2 `lake/`) queried with DuckDB; row-group pruning makes a one-gene read of a 133 MB matrix ~2.5 s from R2 | Running |
+| Graph | Neo4j | `kg_nodes` / `kg_edges` in the lake (69k nodes, 2.95M edges, 7 edge types), multi-hop queries in DuckDB (<1 s); `graph.export_neo4j()` writes neo4j-admin import files | Running (Neo4j: target, needs an instance) |
+| Vectors | Milvus / Pinecone | Exact cosine search over Perturb-seq, JUMP and DepMap gene embeddings (8k–18k vectors each) in NumPy/DuckDB; `vectors.export_vectors()` for a vector DB | Running (vector DB: target) |
+| App database | Supabase Postgres | Tenant data under RLS plus small reference rollups (`atlas.gene_dependency`, `gene_stats`, `cell_models`, `data_sources`) | Running |
+| Entity resolution | Hard-mapped ontologies | `engine/splicr/harmonize.py`: Ensembl gene ids for human and mouse (validated against the Ensembl 116 GTF; HGNC/MGI and Entrez kept as cross-references), Cellosaurus RRID (cell lines), ChEMBL parent (compounds); ambiguous inputs are never guessed; `harmonize.enforce()` quarantines unmappable rows and database triggers reject unharmonized reanalyzed screens | Running |
+| Ingestion | Airflow + serverless | Autonomous GEO/SRA/ENA screen ingest on Modal (`engine/modal_app.py`, docs/06): discover, plan, ENA FASTQ + MD5 + FastQC, count, MAGeCK/BAGEL2, harmonize, publish; Airflow DAG in `orchestration/airflow`; reference connectors in `scripts/data/ingest-sources.py` | Running (end-to-end on GSE145743) |
+| Burst compute | Modal (MAGeCK, BAGEL2, DrugZ) | Modal app `splicr-ingest`: 8 CPU / 16 GB / 512 GB disk per study, pinned MAGeCK 0.5.9.5, FastQC 0.12.1, BAGEL2 build 115 | Running |
+| GPU training | K8s + A100/H100 | CPU ridge dependency model (research/17); no GPU hardware or cluster | Target |
+| NL query | LLM -> Cypher | `splicr graph` / `graph.selective_dependencies` give the executable, statistically tested query an LLM would call; no LLM endpoint wired | Built |
+
+### Why DuckDB and Parquet before BigQuery and Neo4j
+
+At SplicR's current holdings (a few GB of harmonized matrices, ~3M graph edges,
+~40k embedding vectors) a columnar file read with predicate pushdown answers the
+app's questions in about a second without a warehouse bill or a second database
+to secure. The layout is chosen so the move is a load, not a rewrite: the lake
+is hive-partitioned Parquet (BigQuery external tables read it directly), the
+graph exports in neo4j-admin format, and vectors export as (id, vector) Parquet.
+The move becomes worth it when a single query must scan tens of GB (Tahoe-100M
+cell matrices, scBaseCount per-cell metadata), which today are read in place.
+
+### Autonomous ingest: what is automatic and what is not
+
+1. **Detect** (built): E-utilities query for GEO series describing pooled CRISPR
+   screens; 1,950 series, 355 with SRA raw reads, 87 already in the Atlas by PMID.
+2. **Retrieve, count, call** (built, manual trigger): `python -m splicr run` on
+   FASTQ or counts.
+3. **Schedule** (target): a scheduler (Airflow, or a Modal cron) running step 1
+   daily and step 2 per new accession. Needs a compute account and a worker that
+   claims `public.jobs` (the queue schema exists; the worker does not).

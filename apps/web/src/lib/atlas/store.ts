@@ -15,26 +15,35 @@
 import "server-only";
 
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 
 import { buildGeneIndex } from "./query";
 import type { AtlasManifest, AtlasScreen, GeneIndex, GeneTable } from "./types";
 
-/**
- * `next dev` and `next start` run from the app directory. The repository's own
- * scripts and tests run from the repository root, so both are tried, and the
- * one that has a manifest wins.
- */
-const DATA_DIR =
-  [
-    path.join(process.cwd(), "src", "lib", "atlas", "data"),
-    path.join(process.cwd(), "apps", "web", "src", "lib", "atlas", "data"),
-  ].find((dir) => existsSync(path.join(dir, "manifest.json"))) ??
-  path.join(process.cwd(), "src", "lib", "atlas", "data");
+type DataFile = "manifest.json" | "screens.json" | "genes.json" | "NOTICE";
 
-function readVerified(name: string, manifest: AtlasManifest): Buffer {
-  const bytes = readFileSync(path.join(DATA_DIR, name));
+/**
+ * Reads one file of the snapshot.
+ *
+ * `next dev` and `next start` run from the app directory; the repository's own
+ * scripts and tests run from the repository root, so both locations are tried.
+ * Each is written out as a path scoped to the snapshot's own folder with only the
+ * file name varying. That shape is what lets the bundler see which files a route
+ * needs; a path assembled from a list or a computed directory makes it trace the
+ * whole project into every route that imports this module.
+ */
+function readData(name: DataFile): Buffer {
+  try {
+    return readFileSync(path.join(process.cwd(), "src", "lib", "atlas", "data", name));
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
+  return readFileSync(path.join(process.cwd(), "apps", "web", "src", "lib", "atlas", "data", name));
+}
+
+function readVerified(name: "screens.json" | "genes.json", manifest: AtlasManifest): Buffer {
+  const bytes = readData(name);
   const expected = manifest.sha256[name];
   const actual = createHash("sha256").update(bytes).digest("hex");
   if (expected !== actual) {
@@ -52,7 +61,7 @@ let byId: Map<number, AtlasScreen> | null = null;
 let genes: GeneIndex | null = null;
 
 export function getAtlasManifest(): AtlasManifest {
-  manifest ??= JSON.parse(readFileSync(path.join(DATA_DIR, "manifest.json"), "utf8")) as AtlasManifest;
+  manifest ??= JSON.parse(readData("manifest.json").toString("utf8")) as AtlasManifest;
   return manifest;
 }
 
@@ -77,5 +86,5 @@ export function getAtlasGenes(): GeneIndex {
 }
 
 export function getAtlasNotice(): string {
-  return readFileSync(path.join(DATA_DIR, "NOTICE"), "utf8");
+  return readData("NOTICE").toString("utf8");
 }

@@ -1,0 +1,1935 @@
+{
+ "generated": "2026-09-30",
+ "method": "Each study was planned by splicr.ingest.design.plan_study from live ENA filereport + GEO SOFT metadata. The correct design was written by hand from the GEO sample titles, characteristics and series overall design. A role is \"confident\" when its confidence >= 0.8 (the ready bar); lower-confidence roles block readiness and are counted as abstentions. Development studies were used while writing and fixing the rules, so their numbers are optimistic; the 10 held-out studies were planned once with the code frozen and are the honest estimate.",
+ "development": {
+  "studies": 24,
+  "ready": 9,
+  "needs_review": 15,
+  "unsupported": 0,
+  "wrong_but_ready": 0,
+  "runs": 273,
+  "roles_confident_correct": 251,
+  "roles_confident_wrong": 12,
+  "roles_abstained": 10,
+  "confident_role_accuracy": 0.954,
+  "coverage_confident": 0.963
+ },
+ "heldout": {
+  "studies": 10,
+  "ready": 1,
+  "needs_review": 9,
+  "unsupported": 0,
+  "wrong_but_ready": 0,
+  "runs": 293,
+  "roles_confident_correct": 158,
+  "roles_confident_wrong": 24,
+  "roles_abstained": 111,
+  "confident_role_accuracy": 0.868,
+  "coverage_confident": 0.621
+ },
+ "wrong_but_ready_found_and_fixed_during_development": [
+  {
+   "accession": "GSE216353",
+   "error": "ready with one Cellosaurus RRID (THP-1) although half the runs are iPSC-derived macrophages (iMAC): the unresolvable second cell line was silently dropped",
+   "fix": "any study stating more than one distinct cell line is needs_review, checked before resolution"
+  },
+  {
+   "accession": "GSE233401",
+   "error": "ready with each background's T1 compared against the library-only T0 instead of its own matched T0 (T0/T1 glued into the sample token split the contexts)",
+   "fix": "strip a glued time point from context tokens; falling back to a context-free reference while context-specific references exist is now a blocking issue"
+  }
+ ],
+ "known_failure_modes": [
+  "Unresolved agents block: TAK243 (25 nM), Nutlin3R 10 uM, AMA, CC-122, DHT, TMZ are not matched to ChEMBL (dose text and abbreviations are not normalised), so those arms abstain.",
+  "\"control for <drug>\" sample names (GSE150232) read as naming the drug; the control arms abstain rather than being placed.",
+  "Lane regex also matches sample-sheet names like \"Ln2S6_L002\" when each sample is a single run (GSE216087): a false blocking issue.",
+  "The \"primary cells\" check matches words such as \"in vivo\" / \"mice\" in the study summary, so screens in cell lines whose paper mentions in vivo validation are blocked (GSE112734).",
+  "Combination-treatment arms (venetoclax + ruxolitinib) land in a separate stratum without their own vehicle and get no contrast.",
+  "Runs of one GSM split across several SRRs, and lane-split samples, always block: the plan cannot express per-sample FASTQ merging.",
+  "Multi-cell-line and multi-modality studies always block (by design): one plan carries one cell line RRID and one modality.",
+  "A sorted comparison population named as a bin (CD58-mid, GSE225235) is read as a treatment bin, not as the control the authors intended; an intermediate pre-sort time point (day 6) is read as a control rather than an early reference.",
+  "Replicate-by-day designs (GSE217789: days 17/18/19 are replicates) are split into per-day 1-vs-1 contrasts."
+ ],
+ "studies": [
+  {
+   "accession": "GSE145743",
+   "split": "development",
+   "correct_design": "Plasmid A/B, Day-0 input A/B = reference, DMSO d14 x2 per half = control, olaparib d14 x2 per half = treatment; dropout DMSO vs input and olaparib vs DMSO within each half-library (matches data/testdata/GSE145743/metadata/sample_sheet.tsv).",
+   "status": "ready",
+   "confidence": 0.9,
+   "modality": "knockout",
+   "phenotype": "drug response: olaparib",
+   "cell_line": [
+    "Hela",
+    "CVCL_0030"
+   ],
+   "compound": [
+    "olaparib",
+    "CHEMBL521686"
+   ],
+   "runs": 12,
+   "roles_confident_correct": 12,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 0,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "A_d14_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 2,
+     "n_control": 1
+    },
+    {
+     "name": "A_olaparib_d14_vs_control",
+     "kind": "drug_modifier",
+     "n_treatment": 2,
+     "n_control": 2
+    },
+    {
+     "name": "B_d14_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 2,
+     "n_control": 1
+    },
+    {
+     "name": "B_olaparib_d14_vs_control",
+     "kind": "drug_modifier",
+     "n_treatment": 2,
+     "n_control": 2
+    }
+   ],
+   "issues": [],
+   "ready_contrast_judgement": "correct: A/B dropout DMSO vs input and olaparib vs DMSO, per half-library",
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE130413",
+   "split": "development",
+   "correct_design": "Brunello plasmid, DMSO day 0 reference, DMSO d14 x2 control, venetoclax d14 treatment.",
+   "status": "ready",
+   "confidence": 0.9,
+   "modality": "knockout",
+   "phenotype": "drug response: venetoclax",
+   "cell_line": [
+    "MOLM13",
+    "CVCL_2119"
+   ],
+   "compound": [
+    "venetoclax",
+    "CHEMBL3137309"
+   ],
+   "runs": 5,
+   "roles_confident_correct": 5,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 0,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "d14_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 2,
+     "n_control": 1
+    },
+    {
+     "name": "venetoclax_d14_vs_control",
+     "kind": "drug_modifier",
+     "n_treatment": 1,
+     "n_control": 2
+    }
+   ],
+   "issues": [],
+   "ready_contrast_judgement": "correct: DMSO d14 vs day 0; venetoclax d14 vs DMSO d14",
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE130412",
+   "split": "development",
+   "correct_design": "Yusa plasmid, day-0 reference, DMSO d7/d14 controls, venetoclax d7/d14 treatments.",
+   "status": "ready",
+   "confidence": 0.9,
+   "modality": "knockout",
+   "phenotype": "drug response: venetoclax",
+   "cell_line": [
+    "MOLM13",
+    "CVCL_2119"
+   ],
+   "compound": [
+    "venetoclax",
+    "CHEMBL3137309"
+   ],
+   "runs": 8,
+   "roles_confident_correct": 8,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 0,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "d7_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 2,
+     "n_control": 1
+    },
+    {
+     "name": "d14_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 2,
+     "n_control": 1
+    },
+    {
+     "name": "venetoclax_d7_vs_control",
+     "kind": "drug_modifier",
+     "n_treatment": 1,
+     "n_control": 2
+    },
+    {
+     "name": "venetoclax_d14_vs_control",
+     "kind": "drug_modifier",
+     "n_treatment": 1,
+     "n_control": 2
+    }
+   ],
+   "issues": [],
+   "ready_contrast_judgement": "correct: DMSO d7/d14 vs day 0; venetoclax d7/d14 vs DMSO at same day",
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE235183",
+   "split": "development",
+   "correct_design": "\"Plamid\" (sic) is the plasmid; Day0 reference; DMSO d14 control; trametinib d14 treatment.",
+   "status": "needs_review",
+   "confidence": 0.0,
+   "modality": "knockout",
+   "phenotype": "drug response: trametinib",
+   "cell_line": [
+    "Trametinib Resistant MOLM13",
+    null
+   ],
+   "compound": [
+    "trametinib",
+    "CHEMBL2103875"
+   ],
+   "runs": 6,
+   "roles_confident_correct": 5,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 1,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "d14_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 2,
+     "n_control": 1
+    },
+    {
+     "name": "trametinib_d14_vs_control",
+     "kind": "drug_modifier",
+     "n_treatment": 2,
+     "n_control": 2
+    }
+   ],
+   "issues": [
+    "stratum plamid: no endpoint arm recognised",
+    "cell line 'Trametinib Resistant MOLM13' is not in Cellosaurus",
+    "1 run(s) have no confident role, e.g. SRR24952245 'Plamid': role not stated in the sample name or GEO characteristics"
+   ],
+   "ready_contrast_judgement": null,
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE174766",
+   "split": "development",
+   "correct_design": "Day0 reference; DMSO d7 x2 control; CG-806 d7 x3 treatment.",
+   "status": "ready",
+   "confidence": 0.9,
+   "modality": "knockout",
+   "phenotype": "drug response: cg806",
+   "cell_line": [
+    "OCI-LY3",
+    "CVCL_8800"
+   ],
+   "compound": [
+    "cg806",
+    "CHEMBL4594420"
+   ],
+   "runs": 6,
+   "roles_confident_correct": 6,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 0,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "ly3_oci_d7_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 2,
+     "n_control": 1
+    },
+    {
+     "name": "ly3_oci_cg806_d7_vs_control",
+     "kind": "drug_modifier",
+     "n_treatment": 3,
+     "n_control": 2
+    }
+   ],
+   "issues": [],
+   "ready_contrast_judgement": "correct: DMSO d7 vs Day0; CG-806 d7 vs DMSO d7",
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE139385",
+   "split": "development",
+   "correct_design": "Plasmid, baseline reference, mock control, rituximab-selected RTX-SEC / RTX-REC treatment arms.",
+   "status": "needs_review",
+   "confidence": 0.0,
+   "modality": "knockout",
+   "phenotype": "proliferation",
+   "cell_line": [
+    "OCI-Ly-7",
+    "CVCL_1881"
+   ],
+   "compound": [
+    null,
+    null
+   ],
+   "runs": 5,
+   "roles_confident_correct": 3,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 2,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "vs_T0",
+     "kind": "dropout",
+     "n_treatment": 1,
+     "n_control": 1
+    }
+   ],
+   "issues": [
+    "stratum rec_rtx: no endpoint arm recognised",
+    "stratum rtx_sec: no endpoint arm recognised",
+    "2 run(s) have no confident role, e.g. SRR10346214 'RTX-SEC': role not stated in the sample name or GEO characteristics; SRR10346215 'RTX-REC': role not stated in the sample name or GEO characteristics"
+   ],
+   "ready_contrast_judgement": null,
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE158298",
+   "split": "development",
+   "correct_design": "GeCKOv2 plasmid; pre-infection reference; SARS-CoV-2 MOI 0.01 / 0.3 survivors = treatment (positive selection).",
+   "status": "ready",
+   "confidence": 0.85,
+   "modality": "knockout",
+   "phenotype": "selection: SARS-CoV-2 infection at MOI 0.01, SARS-CoV-2 infection at MOI 0.3",
+   "cell_line": [
+    "A549-ACE2",
+    "CVCL_C0Q5"
+   ],
+   "compound": [
+    null,
+    null
+   ],
+   "runs": 4,
+   "roles_confident_correct": 4,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 0,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "sars-cov-2_infection_at_moi_0.01_d6_vs_T0",
+     "kind": "positive_selection",
+     "n_treatment": 1,
+     "n_control": 1
+    },
+    {
+     "name": "sars-cov-2_infection_at_moi_0.3_d6_vs_T0",
+     "kind": "positive_selection",
+     "n_treatment": 1,
+     "n_control": 1
+    }
+   ],
+   "issues": [],
+   "ready_contrast_judgement": "correct: each MOI survivor arm vs pre-infection (positive selection); plasmid kept as QC reference",
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE144162",
+   "split": "development",
+   "correct_design": "Two NMD reporters; sorted vs unsorted per reporter.",
+   "status": "ready",
+   "confidence": 0.85,
+   "modality": "knockout",
+   "phenotype": "FACS sort",
+   "cell_line": [
+    "HCT116 colon cancer cell line",
+    "CVCL_0291"
+   ],
+   "compound": [
+    null,
+    null
+   ],
+   "runs": 8,
+   "roles_confident_correct": 8,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 0,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "nmd_ptc231_sorted_vs_unsorted",
+     "kind": "sorting",
+     "n_treatment": 2,
+     "n_control": 2
+    },
+    {
+     "name": "nmd_ptc35_sorted_vs_unsorted",
+     "kind": "sorting",
+     "n_treatment": 2,
+     "n_control": 2
+    }
+   ],
+   "issues": [],
+   "ready_contrast_judgement": "correct: sorted vs unsorted per reporter",
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE216353",
+   "split": "development",
+   "correct_design": "iMAC and THP-1 macrophages: CD80 high/low bins vs presort, per cell type.",
+   "status": "needs_review",
+   "confidence": 0.51,
+   "modality": "knockout",
+   "phenotype": "FACS: CD80",
+   "cell_line": [
+    "iMAC; THP-1",
+    null
+   ],
+   "compound": [
+    null,
+    null
+   ],
+   "runs": 6,
+   "roles_confident_correct": 6,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 0,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "mac_high_vs_low",
+     "kind": "sorting",
+     "n_treatment": 1,
+     "n_control": 1
+    },
+    {
+     "name": "mac_high_vs_unsorted",
+     "kind": "sorting",
+     "n_treatment": 1,
+     "n_control": 1
+    },
+    {
+     "name": "mac_low_vs_unsorted",
+     "kind": "sorting",
+     "n_treatment": 1,
+     "n_control": 1
+    },
+    {
+     "name": "thp1_high_vs_low",
+     "kind": "sorting",
+     "n_treatment": 1,
+     "n_control": 1
+    },
+    {
+     "name": "thp1_high_vs_unsorted",
+     "kind": "sorting",
+     "n_treatment": 1,
+     "n_control": 1
+    },
+    {
+     "name": "thp1_low_vs_unsorted",
+     "kind": "sorting",
+     "n_treatment": 1,
+     "n_control": 1
+    }
+   ],
+   "issues": [
+    "several cell lines in one study (iMAC; THP-1); the plan needs one per cell line"
+   ],
+   "ready_contrast_judgement": null,
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE217789",
+   "split": "development",
+   "correct_design": "RBM3 reporter high/low sort bins in two clones; day17/18/19 are replicates 1/2/3.",
+   "status": "needs_review",
+   "confidence": 0.51,
+   "modality": "knockout",
+   "phenotype": "FACS: GFP-RBM3",
+   "cell_line": [
+    "BOB Cas9 clone 2; BOB Cas9 clone 1",
+    null
+   ],
+   "compound": [
+    null,
+    null
+   ],
+   "runs": 12,
+   "roles_confident_correct": 12,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 0,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "d17_high_vs_low",
+     "kind": "sorting",
+     "n_treatment": 2,
+     "n_control": 2
+    },
+    {
+     "name": "d18_high_vs_low",
+     "kind": "sorting",
+     "n_treatment": 2,
+     "n_control": 2
+    },
+    {
+     "name": "d19_high_vs_low",
+     "kind": "sorting",
+     "n_treatment": 2,
+     "n_control": 2
+    }
+   ],
+   "issues": [
+    "several cell lines in one study (BOB Cas9 clone 2; BOB Cas9 clone 1); the plan needs one per cell line"
+   ],
+   "ready_contrast_judgement": null,
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE70038",
+   "split": "development",
+   "correct_design": "Four GSC/NSC lines; day 0 reference vs day 21/23 endpoint per line.",
+   "status": "needs_review",
+   "confidence": 0.51,
+   "modality": "knockout",
+   "phenotype": "proliferation",
+   "cell_line": [
+    "GBM stem-like; Neural stem",
+    null
+   ],
+   "compound": [
+    null,
+    null
+   ],
+   "runs": 16,
+   "roles_confident_correct": 16,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 0,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "0131_gsc_d23_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 2,
+     "n_control": 2
+    },
+    {
+     "name": "0827_gsc_d23_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 2,
+     "n_control": 2
+    },
+    {
+     "name": "cb660_nsc_d23_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 2,
+     "n_control": 2
+    },
+    {
+     "name": "nsc_u5_d21_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 2,
+     "n_control": 2
+    }
+   ],
+   "issues": [
+    "4 distinct sample contexts (0131_gsc, 0827_gsc, cb660_nsc, nsc_u5...); too many to pair arms confidently",
+    "several cell lines in one study (GBM stem-like; Neural stem); the plan needs one per cell line"
+   ],
+   "ready_contrast_judgement": null,
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE235688",
+   "split": "development",
+   "correct_design": "libA/libB T0 reference; T7 untreated control arm (IDA arms not in this series).",
+   "status": "needs_review",
+   "confidence": 0.54,
+   "modality": "knockout",
+   "phenotype": "proliferation",
+   "cell_line": [
+    "AML",
+    null
+   ],
+   "compound": [
+    null,
+    null
+   ],
+   "runs": 4,
+   "roles_confident_correct": 4,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 0,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "A_thp_t7_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 1,
+     "n_control": 1
+    },
+    {
+     "name": "B_thp_t7_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 1,
+     "n_control": 1
+    }
+   ],
+   "issues": [
+    "cell line 'AML' is not in Cellosaurus"
+   ],
+   "ready_contrast_judgement": null,
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE226994",
+   "split": "development",
+   "correct_design": "U2OS and KO clone; d0 reference vs d21 per line.",
+   "status": "needs_review",
+   "confidence": 0.51,
+   "modality": "knockout",
+   "phenotype": "proliferation",
+   "cell_line": [
+    "hTERT-CRISPR clone; U2OS",
+    null
+   ],
+   "compound": [
+    null,
+    null
+   ],
+   "runs": 8,
+   "roles_confident_correct": 8,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 0,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "d21_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 2,
+     "n_control": 2
+    },
+    {
+     "name": "u2os_d21_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 2,
+     "n_control": 2
+    }
+   ],
+   "issues": [
+    "several cell lines in one study (hTERT-CRISPR clone; U2OS); the plan needs one per cell line"
+   ],
+   "ready_contrast_judgement": null,
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE112734",
+   "split": "development",
+   "correct_design": "U87 NC/OE: day0 reference; untreated d7/d14 control; TMZ d7/d14 treatment.",
+   "status": "needs_review",
+   "confidence": 0.51,
+   "modality": "knockout",
+   "phenotype": "proliferation",
+   "cell_line": [
+    "U87",
+    null
+   ],
+   "compound": [
+    null,
+    null
+   ],
+   "runs": 30,
+   "roles_confident_correct": 18,
+   "roles_confident_wrong": 12,
+   "roles_abstained": 0,
+   "wrong_runs": [
+    {
+     "run": "SRR6945592",
+     "title": "U87NC_day7 rep1",
+     "inferred": "treatment",
+     "correct": "control"
+    },
+    {
+     "run": "SRR6945593",
+     "title": "U87NC_day7 rep2",
+     "inferred": "treatment",
+     "correct": "control"
+    },
+    {
+     "run": "SRR6945594",
+     "title": "U87NC_day7 rep3",
+     "inferred": "treatment",
+     "correct": "control"
+    },
+    {
+     "run": "SRR6945595",
+     "title": "U87NC_day14 rep1",
+     "inferred": "treatment",
+     "correct": "control"
+    },
+    {
+     "run": "SRR6945596",
+     "title": "U87NC_day14 rep2",
+     "inferred": "treatment",
+     "correct": "control"
+    },
+    {
+     "run": "SRR6945597",
+     "title": "U87NC_day14 rep3",
+     "inferred": "treatment",
+     "correct": "control"
+    },
+    {
+     "run": "SRR6945607",
+     "title": "U87OE_day7 rep1",
+     "inferred": "treatment",
+     "correct": "control"
+    },
+    {
+     "run": "SRR6945608",
+     "title": "U87OE_day7 rep2",
+     "inferred": "treatment",
+     "correct": "control"
+    },
+    {
+     "run": "SRR6945609",
+     "title": "U87OE_day7 rep3",
+     "inferred": "treatment",
+     "correct": "control"
+    },
+    {
+     "run": "SRR6945610",
+     "title": "U87OE_day14 rep1",
+     "inferred": "treatment",
+     "correct": "control"
+    },
+    {
+     "run": "SRR6945611",
+     "title": "U87OE_day14 rep2",
+     "inferred": "treatment",
+     "correct": "control"
+    },
+    {
+     "run": "SRR6945612",
+     "title": "U87OE_day14 rep3",
+     "inferred": "treatment",
+     "correct": "control"
+    }
+   ],
+   "contrasts": [
+    {
+     "name": "u87nc_d7_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 3,
+     "n_control": 3
+    },
+    {
+     "name": "u87nc_d14_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 3,
+     "n_control": 3
+    },
+    {
+     "name": "u87oe_d7_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 3,
+     "n_control": 3
+    },
+    {
+     "name": "u87oe_d14_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 3,
+     "n_control": 3
+    }
+   ],
+   "issues": [
+    "every run is filed as ['RNA-SEQ']; guide amplicons are sometimes mislabelled so, but check the reads before trusting this plan",
+    "4 distinct sample contexts (tmz_u87nc, tmz_u87oe, u87nc, u87oe...); too many to pair arms confidently",
+    "stratum tmz_u87nc: no reference of its own, and the study's references belong to other sample groups; the pairing is ambiguous",
+    "stratum tmz_u87oe: no reference of its own, and the study's references belong to other sample groups; the pairing is ambiguous",
+    "no RRID: primary cells"
+   ],
+   "ready_contrast_judgement": null,
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE122040",
+   "split": "development",
+   "correct_design": "BC-3: DMSO control per harvest day; pomalidomide / lenalidomide / CC-122 treatment.",
+   "status": "needs_review",
+   "confidence": 0.0,
+   "modality": "knockout",
+   "phenotype": "drug response: lenalidomide, pomalidomide",
+   "cell_line": [
+    "BC-3",
+    null
+   ],
+   "compound": [
+    "lenalidomide; pomalidomide",
+    null
+   ],
+   "runs": 16,
+   "roles_confident_correct": 12,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 4,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "bc_pomalidomide_d9_vs_control",
+     "kind": "drug_modifier",
+     "n_treatment": 2,
+     "n_control": 1
+    },
+    {
+     "name": "bc_lenalidomide_d13_vs_control",
+     "kind": "drug_modifier",
+     "n_treatment": 2,
+     "n_control": 1
+    },
+    {
+     "name": "bc_lenalidomide_d21_vs_control",
+     "kind": "drug_modifier",
+     "n_treatment": 2,
+     "n_control": 2
+    },
+    {
+     "name": "bc_pomalidomide_d21_vs_control",
+     "kind": "drug_modifier",
+     "n_treatment": 2,
+     "n_control": 2
+    }
+   ],
+   "issues": [
+    "stratum 122_bc_cc: no endpoint arm recognised",
+    "no RRID: primary cells",
+    "4 run(s) have no confident role, e.g. SRR8142670 'BC-3_1uM_CC-122_treated_Day9_harvest_replicate_1': role not stated in the sample name or GEO characteristics; SRR8142671 'BC-3_1uM_CC-122_treated_Day9_harvest_replicate_2': role not stated in the sample name or GEO characteristics; SRR8142681 'BC-3_1uM_CC-122_treated_Day21_harvest_replicate_1': role not stated in the sample name or GEO characteristics"
+   ],
+   "ready_contrast_judgement": null,
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE242480",
+   "split": "development",
+   "correct_design": "Two PAS reporters (CCND2, CPEB2): sorted vs unsorted, 4 replicates each.",
+   "status": "ready",
+   "confidence": 0.85,
+   "modality": "knockout",
+   "phenotype": "FACS sort",
+   "cell_line": [
+    "HEK293",
+    "CVCL_0045"
+   ],
+   "compound": [
+    null,
+    null
+   ],
+   "runs": 16,
+   "roles_confident_correct": 16,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 0,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "ccnd2_pas_sorted_vs_unsorted",
+     "kind": "sorting",
+     "n_treatment": 4,
+     "n_control": 4
+    },
+    {
+     "name": "cpeb2_pas_sorted_vs_unsorted",
+     "kind": "sorting",
+     "n_treatment": 4,
+     "n_control": 4
+    }
+   ],
+   "issues": [],
+   "ready_contrast_judgement": "correct: sorted vs unsorted per reporter (4 vs 4)",
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE89371",
+   "split": "development",
+   "correct_design": "CRISPRa influenza: plasmid, pre-selection reference, post-selection screens A/B/C; lane_1/lane_2 are technical.",
+   "status": "needs_review",
+   "confidence": 0.51,
+   "modality": "crispra",
+   "phenotype": "selection: selection",
+   "cell_line": [
+    "A549",
+    "CVCL_0023"
+   ],
+   "compound": [
+    null,
+    null
+   ],
+   "runs": 9,
+   "roles_confident_correct": 9,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 0,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "transduced_transduced_vs_T0",
+     "kind": "positive_selection",
+     "n_treatment": 5,
+     "n_control": 2
+    }
+   ],
+   "issues": [
+    "8 samples are named by sequencing lane (e.g. 'Sequencing of the plasmid sgRNA library_lane 1'); lanes of one library are technical, not biological, replicates and must be merged first"
+   ],
+   "ready_contrast_judgement": null,
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE121710",
+   "split": "development",
+   "correct_design": "YFV-infected GFP+ sorted vs uninfected library cells.",
+   "status": "needs_review",
+   "confidence": 0.51,
+   "modality": null,
+   "phenotype": "positive selection",
+   "cell_line": [
+    "Huh7.5",
+    "CVCL_7927"
+   ],
+   "compound": [
+    null,
+    null
+   ],
+   "runs": 2,
+   "roles_confident_correct": 2,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 0,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "d17_high_vs_control",
+     "kind": "positive_selection",
+     "n_treatment": 1,
+     "n_control": 1
+    }
+   ],
+   "issues": [
+    "the modality (knockout / CRISPRi / CRISPRa / base editing) is not stated"
+   ],
+   "ready_contrast_judgement": null,
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE260829",
+   "split": "development",
+   "correct_design": "Cas12a-KRAB libraries: plasmid, T0 reference, T10/T14 endpoints; several runs per GSM.",
+   "status": "needs_review",
+   "confidence": 0.51,
+   "modality": "crispri",
+   "phenotype": "proliferation",
+   "cell_line": [
+    "K562",
+    "CVCL_0004"
+   ],
+   "compound": [
+    null,
+    null
+   ],
+   "runs": 25,
+   "roles_confident_correct": 25,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 0,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "denascas12akrab_library1_t10_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 2,
+     "n_control": 2
+    },
+    {
+     "name": "library1_multiascas12akrab_t10_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 2,
+     "n_control": 1
+    },
+    {
+     "name": "library2_multiascas12akrab_t14_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 8,
+     "n_control": 8
+    }
+   ],
+   "issues": [
+    "5 sample(s) were sequenced over several runs (e.g. GSM8125104: SRR28218284, SRR28218285); their FASTQs must be merged per sample before counting, which this plan does not express"
+   ],
+   "ready_contrast_judgement": null,
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE237969",
+   "split": "development",
+   "correct_design": "Mouse AT-3 CXCL9 reporter: T0, Tend (unsorted endpoint), GFP high/low bins.",
+   "status": "ready",
+   "confidence": 0.85,
+   "modality": "knockout",
+   "phenotype": "FACS sort",
+   "cell_line": [
+    "AT-3",
+    "CVCL_VN46"
+   ],
+   "compound": [
+    null,
+    null
+   ],
+   "runs": 4,
+   "roles_confident_correct": 4,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 0,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "h14_high_vs_low",
+     "kind": "sorting",
+     "n_treatment": 1,
+     "n_control": 1
+    },
+    {
+     "name": "tend_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 1,
+     "n_control": 1
+    }
+   ],
+   "issues": [],
+   "ready_contrast_judgement": "correct: GFP high vs low; Tend vs T0 dropout. (high/low vs Tend not generated: incomplete, not wrong)",
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE72843",
+   "split": "development",
+   "correct_design": "LNCaP: plasmid, day 0 reference, DHT-treated endpoint.",
+   "status": "needs_review",
+   "confidence": 0.0,
+   "modality": null,
+   "phenotype": null,
+   "cell_line": [
+    "LNCaP",
+    "CVCL_0395"
+   ],
+   "compound": [
+    null,
+    null
+   ],
+   "runs": 3,
+   "roles_confident_correct": 2,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 1,
+   "wrong_runs": [],
+   "contrasts": [],
+   "issues": [
+    "stratum dht_ln: no reference of its own, and the study's references belong to other sample groups; the pairing is ambiguous",
+    "stratum dht_ln: no endpoint arm recognised",
+    "the modality (knockout / CRISPRi / CRISPRa / base editing) is not stated",
+    "no valid contrast could be built from the inferred roles",
+    "1 run(s) have no confident role, e.g. SRR2318478 'LN-CRISPR-DHT': role not stated in the sample name or GEO characteristics"
+   ],
+   "ready_contrast_judgement": null,
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE233401",
+   "split": "development",
+   "correct_design": "Focused TSG library in sgNeg and sgUHRF1 A549: T1 vs matched T0 per background; library T0 extra.",
+   "status": "ready",
+   "confidence": 0.85,
+   "modality": "knockout",
+   "phenotype": "proliferation",
+   "cell_line": [
+    "A549",
+    "CVCL_0023"
+   ],
+   "compound": [
+    null,
+    null
+   ],
+   "runs": 9,
+   "roles_confident_correct": 9,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 0,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "a549sgnegtsg_t1_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 2,
+     "n_control": 2
+    },
+    {
+     "name": "a549sguhrf1tsg_t1_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 2,
+     "n_control": 2
+    }
+   ],
+   "issues": [],
+   "ready_contrast_judgement": "correct: T1 vs matched T0 in sgNeg and in sgUHRF1 background; the between-background comparison is not generated (incomplete, not wrong)",
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE174255",
+   "split": "development",
+   "correct_design": "Primary T cells, CRISPRa (Calabrese A/B) and CRISPRi (Dolcetto A/B), IFNG and IL2 sorts per donor.",
+   "status": "needs_review",
+   "confidence": 0.51,
+   "modality": null,
+   "phenotype": "FACS: IFNG, IL2",
+   "cell_line": [
+    "Primary CD4- T",
+    null
+   ],
+   "compound": [
+    null,
+    null
+   ],
+   "runs": 52,
+   "roles_confident_correct": 52,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 0,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "A_donor1_high_vs_low",
+     "kind": "sorting",
+     "n_treatment": 2,
+     "n_control": 2
+    },
+    {
+     "name": "A_donor1_il2_high_vs_low",
+     "kind": "sorting",
+     "n_treatment": 2,
+     "n_control": 2
+    },
+    {
+     "name": "A_donor1_il2_high_vs_unsorted",
+     "kind": "sorting",
+     "n_treatment": 2,
+     "n_control": 2
+    },
+    {
+     "name": "A_donor1_il2_low_vs_unsorted",
+     "kind": "sorting",
+     "n_treatment": 2,
+     "n_control": 2
+    },
+    {
+     "name": "A_donor2_high_vs_low",
+     "kind": "sorting",
+     "n_treatment": 2,
+     "n_control": 2
+    },
+    {
+     "name": "A_donor2_il2_high_vs_low",
+     "kind": "sorting",
+     "n_treatment": 2,
+     "n_control": 2
+    },
+    {
+     "name": "A_donor2_il2_high_vs_unsorted",
+     "kind": "sorting",
+     "n_treatment": 2,
+     "n_control": 2
+    },
+    {
+     "name": "A_donor2_il2_low_vs_unsorted",
+     "kind": "sorting",
+     "n_treatment": 2,
+     "n_control": 2
+    },
+    {
+     "name": "B_donor1_high_vs_low",
+     "kind": "sorting",
+     "n_treatment": 2,
+     "n_control": 2
+    },
+    {
+     "name": "B_donor1_il2_high_vs_low",
+     "kind": "sorting",
+     "n_treatment": 2,
+     "n_control": 2
+    },
+    {
+     "name": "B_donor1_il2_high_vs_unsorted",
+     "kind": "sorting",
+     "n_treatment": 2,
+     "n_control": 2
+    },
+    {
+     "name": "B_donor1_il2_low_vs_unsorted",
+     "kind": "sorting",
+     "n_treatment": 2,
+     "n_control": 2
+    },
+    {
+     "name": "B_donor2_high_vs_low",
+     "kind": "sorting",
+     "n_treatment": 2,
+     "n_control": 2
+    },
+    {
+     "name": "B_donor2_il2_high_vs_low",
+     "kind": "sorting",
+     "n_treatment": 2,
+     "n_control": 2
+    },
+    {
+     "name": "B_donor2_il2_high_vs_unsorted",
+     "kind": "sorting",
+     "n_treatment": 2,
+     "n_control": 2
+    },
+    {
+     "name": "B_donor2_il2_low_vs_unsorted",
+     "kind": "sorting",
+     "n_treatment": 2,
+     "n_control": 2
+    }
+   ],
+   "issues": [
+    "8 distinct sample contexts (crispra_donor1, crispra_donor2, crispri_donor1, crispri_donor2, donor1...); too many to pair arms confidently",
+    "stratum A_crispra_donor1: no reference of its own, and the study's references belong to other sample groups; the pairing is ambiguous",
+    "stratum A_crispra_donor2: no reference of its own, and the study's references belong to other sample groups; the pairing is ambiguous",
+    "stratum A_crispri_donor1: no reference of its own, and the study's references belong to other sample groups; the pairing is ambiguous",
+    "stratum A_crispri_donor2: no reference of its own, and the study's references belong to other sample groups; the pairing is ambiguous",
+    "stratum A_donor1: no reference of its own, and the study's references belong to other sample groups; the pairing is ambiguous",
+    "stratum A_donor1_il2: no reference of its own, and the study's references belong to other sample groups; the pairing is ambiguous",
+    "stratum A_donor2: no reference of its own, and the study's references belong to other sample groups; the pairing is ambiguous",
+    "stratum A_donor2_il2: no reference of its own, and the study's references belong to other sample groups; the pairing is ambiguous",
+    "stratum B_crispra_donor1: no reference of its own, and the study's references belong to other sample groups; the pairing is ambiguous",
+    "stratum B_crispra_donor2: no reference of its own, and the study's references belong to other sample groups; the pairing is ambiguous",
+    "stratum B_crispri_donor1: no reference of its own, and the study's references belong to other sample groups; the pairing is ambiguous",
+    "stratum B_crispri_donor2: no reference of its own, and the study's references belong to other sample groups; the pairing is ambiguous",
+    "stratum B_donor1: no reference of its own, and the study's references belong to other sample groups; the pairing is ambiguous",
+    "stratum B_donor1_il2: no reference of its own, and the study's references belong to other sample groups; the pairing is ambiguous",
+    "stratum B_donor2: no reference of its own, and the study's references belong to other sample groups; the pairing is ambiguous",
+    "stratum B_donor2_il2: no reference of its own, and the study's references belong to other sample groups; the pairing is ambiguous",
+    "the study describes both CRISPRi and CRISPRa screens; runs must be split by modality before analysis",
+    "no RRID: primary cells"
+   ],
+   "ready_contrast_judgement": null,
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE139313",
+   "split": "development",
+   "correct_design": "Two NK-pressure screens (Low, High E:T): survivors vs control within each.",
+   "status": "needs_review",
+   "confidence": 0.36,
+   "modality": "knockout",
+   "phenotype": "selection: Treated",
+   "cell_line": [
+    "K562",
+    null
+   ],
+   "compound": [
+    null,
+    null
+   ],
+   "runs": 7,
+   "roles_confident_correct": 5,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 2,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "high_treated_vs_control",
+     "kind": "positive_selection",
+     "n_treatment": 2,
+     "n_control": 1
+    },
+    {
+     "name": "low_treated_vs_control",
+     "kind": "positive_selection",
+     "n_treatment": 2,
+     "n_control": 2
+    }
+   ],
+   "issues": [
+    "no RRID: primary cells",
+    "2 run(s) have no confident role, e.g. SRR10338911 'High-dup1': treatment 'Treated' is declared but is not a ChEMBL compound or a known selection; SRR10338912 'High-dup2': treatment 'Treated' is declared but is not a ChEMBL compound or a known selection"
+   ],
+   "ready_contrast_judgement": null,
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE162038",
+   "split": "heldout",
+   "correct_design": "Brunello Huh7.5: plasmid, day 0, mock, and HCoV/SARS-CoV(-2) infected survivors at 33C/37C; 4 lanes per sample.",
+   "status": "needs_review",
+   "confidence": 0.3,
+   "modality": "knockout",
+   "phenotype": "selection: HCoV-229E, HCoV-NL63, HCoV-OC43, SARS-CoV-2",
+   "cell_line": [
+    "Huh-7.5",
+    "CVCL_7927"
+   ],
+   "compound": [
+    null,
+    null
+   ],
+   "runs": 80,
+   "roles_confident_correct": 40,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 40,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "brunello_huh75_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 12,
+     "n_control": 4
+    },
+    {
+     "name": "brunello_huh75_hcov-229e_vs_control",
+     "kind": "positive_selection",
+     "n_treatment": 12,
+     "n_control": 12
+    }
+   ],
+   "issues": [
+    "80 samples are named by sequencing lane (e.g. 'Brunello_Huh75_229E_A_S11_L001'); lanes of one library are technical, not biological, replicates and must be merged first",
+    "4 distinct sample contexts (33c_brunello_cov2_huh75, 33c_brunello_huh75, 37c_brunello_cov2_huh75, brunello_huh75...); too many to pair arms confidently",
+    "stratum 33c_brunello_cov2_huh75: no reference of its own, and the study's references belong to other sample groups; the pairing is ambiguous",
+    "sars-cov-2 at unstated time: no vehicle arm at the same time point",
+    "stratum 33c_brunello_huh75: no reference of its own, and the study's references belong to other sample groups; the pairing is ambiguous",
+    "hcov-nl63 at unstated time: no vehicle arm at the same time point",
+    "hcov-oc43 at unstated time: no vehicle arm at the same time point",
+    "sars-cov-2 at unstated time: no vehicle arm at the same time point",
+    "stratum 37c_brunello_cov2_huh75: no reference of its own, and the study's references belong to other sample groups; the pairing is ambiguous",
+    "sars-cov-2 at unstated time: no vehicle arm at the same time point",
+    "40 run(s) have no confident role, e.g. SRR13118614 'Brunello_Huh75_229E_A_S11_L001': treatment 'HCoV-229E' is declared but is not a ChEMBL compound or a known selection; SRR13118615 'Brunello_Huh75_229E_A_S11_L002': treatment 'HCoV-229E' is declared but is not a ChEMBL compound or a known selection; SRR13118616 'Brunello_Huh75_229E_A_S11_L003': treatment 'HCoV-229E' is declared but is not a ChEMBL compound or a known selection"
+   ],
+   "ready_contrast_judgement": null,
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE177537",
+   "split": "heldout",
+   "correct_design": "HEK293-hACE2: day 0 reference; SARS-CoV-2 / OC43 single/double infected survivors.",
+   "status": "needs_review",
+   "confidence": 0.51,
+   "modality": "knockout",
+   "phenotype": "selection: OC43, SARS-CoV2",
+   "cell_line": [
+    "HEK293-hACE2",
+    null
+   ],
+   "compound": [
+    null,
+    null
+   ],
+   "runs": 31,
+   "roles_confident_correct": 31,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 0,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "double_ext_moi_sars-cov2_vs_T0",
+     "kind": "positive_selection",
+     "n_treatment": 6,
+     "n_control": 4
+    },
+    {
+     "name": "double_moi_sars-cov2_vs_T0",
+     "kind": "positive_selection",
+     "n_treatment": 6,
+     "n_control": 4
+    },
+    {
+     "name": "double_moi_oc43_vs_T0",
+     "kind": "positive_selection",
+     "n_treatment": 6,
+     "n_control": 4
+    },
+    {
+     "name": "single_sars-cov2_vs_T0",
+     "kind": "positive_selection",
+     "n_treatment": 4,
+     "n_control": 4
+    },
+    {
+     "name": "single_oc43_vs_T0",
+     "kind": "positive_selection",
+     "n_treatment": 5,
+     "n_control": 4
+    }
+   ],
+   "issues": [
+    "cell line 'HEK293-hACE2' is not in Cellosaurus"
+   ],
+   "ready_contrast_judgement": null,
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE164639",
+   "split": "heldout",
+   "correct_design": "OCI-AML2: T0; IC0 untreated control; IC90/IC99 TAK-243 treatment.",
+   "status": "needs_review",
+   "confidence": 0.36,
+   "modality": "knockout",
+   "phenotype": "selection: TAK243 (25 nM), TAK243 (30 nM)",
+   "cell_line": [
+    "OCI-AML2",
+    "CVCL_1619"
+   ],
+   "compound": [
+    null,
+    null
+   ],
+   "runs": 18,
+   "roles_confident_correct": 9,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 9,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "ic0_d32_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 3,
+     "n_control": 3
+    },
+    {
+     "name": "ic0_d36_vs_T0",
+     "kind": "dropout",
+     "n_treatment": 3,
+     "n_control": 3
+    },
+    {
+     "name": "ic90_tak243_25_nm_d32_vs_T0",
+     "kind": "positive_selection",
+     "n_treatment": 3,
+     "n_control": 3
+    },
+    {
+     "name": "ic99_tak243_30_nm_d32_vs_T0",
+     "kind": "positive_selection",
+     "n_treatment": 3,
+     "n_control": 3
+    },
+    {
+     "name": "ic99_tak243_30_nm_d36_vs_T0",
+     "kind": "positive_selection",
+     "n_treatment": 3,
+     "n_control": 3
+    }
+   ],
+   "issues": [
+    "9 run(s) have no confident role, e.g. SRR13415215 'IC90_T32_A': treatment 'TAK243 (25 nM)' is declared but is not a ChEMBL compound or a known selection; SRR13415216 'IC90_T32_B': treatment 'TAK243 (25 nM)' is declared but is not a ChEMBL compound or a known selection; SRR13415217 'IC90_T32_C': treatment 'TAK243 (25 nM)' is declared but is not a ChEMBL compound or a known selection"
+   ],
+   "ready_contrast_judgement": null,
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE228155",
+   "split": "heldout",
+   "correct_design": "Nalm-6 iCas9: dox-induced start = reference; DMSO/untreated controls; PLK1 inhibitors treatment.",
+   "status": "needs_review",
+   "confidence": 0.54,
+   "modality": "knockout",
+   "phenotype": "drug response: bi2536, bi6727, gsk461364a",
+   "cell_line": [
+    "Nalm-6",
+    "CVCL_0092"
+   ],
+   "compound": [
+    "bi2536; bi6727; gsk461364a",
+    null
+   ],
+   "runs": 21,
+   "roles_confident_correct": 21,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 0,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "gsk461364a_d8_vs_control",
+     "kind": "drug_modifier",
+     "n_treatment": 5,
+     "n_control": 2
+    },
+    {
+     "name": "bi6727_d8_vs_control",
+     "kind": "drug_modifier",
+     "n_treatment": 5,
+     "n_control": 2
+    },
+    {
+     "name": "bi2536_d8_vs_control",
+     "kind": "drug_modifier",
+     "n_treatment": 5,
+     "n_control": 2
+    }
+   ],
+   "issues": [
+    "3 sample(s) were sequenced over several runs (e.g. GSM7115650: SRR23957823, SRR23957824, SRR23957825, SRR23957826, SRR23957827); their FASTQs must be merged per sample before counting, which this plan does not express",
+    "stratum sample: no reference of its own, and the study's references belong to other sample groups; the pairing is ambiguous"
+   ],
+   "ready_contrast_judgement": null,
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE150232",
+   "split": "heldout",
+   "correct_design": "Nalm-6 and Jurkat: day 0 references, DMSO/untreated controls per day, resveratrol/pterostilbene/HU treatment.",
+   "status": "needs_review",
+   "confidence": 0.3,
+   "modality": "knockout",
+   "phenotype": "selection: hydroxyurea, pterostilbene, resveratrol",
+   "cell_line": [
+    "Treated with resveratrol 16 \u00c2\u00b5M day 8 Nalm-6 screen; Day 0 control for hydroxyurea Nalm-6 screen; Untreated day 2 control for hydroxyurea Nalm-6 screen (spinner flask); Untreated day 4 control for hydroxyurea Nalm-6 screen (spinner flask); Untreated day 6 control for hydroxyurea Nalm-6 screen (spinner flask); Untreated day 8 control for hydroxyurea Nalm-6 screen (spinner flask); Untreated day 8 control for hydroxyurea Nalm-6 screen; 0.1% DMSO day 8 control for hydroxyurea Nalm-6 screen; Treated with hydroxyurea 100 \u00c2\u00b5M day 8 Nalm-6 screen; Day 0 control for resveratrol Jurkat screen; 0.1% DMSO day 6 control for resveratrol Jurkat screen; 0.1% DMSO day 12 control for resveratrol Jurkat screen; Treated with resveratrol  25 \u00c2\u00b5M day 12 Jurkat screen; Day 0 control for resveratrol Nalm-6 screen; 0.1% DMSO day 2 control for resveratrol Nalm-6 screen; 0.1% DMSO day 4 control for resveratrol Nalm-6 screen; 0.1% DMSO day 6 control for resveratrol Nalm-6 screen; 0.1% DMSO day 8 control for resveratrol Nalm-6 screen; Untreated day 8 control for resveratrol Nalm-6 screen; Day 0 control for pterostilbene Nalm-6 screen; Untreated day 2 control for pterostilbene Nalm-6 screen; Untreated day 4 control for pterostilbene Nalm-6 screen; Untreated day 6 control for pterostilbene Nalm-6 screen; Untreated day 8 control for pterostilbene Nalm-6 screen (grown in T75 flask); Untreated day 8 control for pterostilbene Nalm-6 screen (grown in spinner flask); 0.1% DMSO day 8 control for pterostilbene Nalm-6 screen; Treated with pterostilbene 16 \u00c2\u00b5M day 8 Nalm-6 screen",
+    null
+   ],
+   "compound": [
+    "hydroxyurea; pterostilbene; resveratrol",
+    null
+   ],
+   "runs": 67,
+   "roles_confident_correct": 14,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 53,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "jurkat_resveratrol_d6_vs_T0",
+     "kind": "positive_selection",
+     "n_treatment": 4,
+     "n_control": 4
+    },
+    {
+     "name": "jurkat_resveratrol_d12_vs_T0",
+     "kind": "positive_selection",
+     "n_treatment": 8,
+     "n_control": 4
+    },
+    {
+     "name": "nalm_resveratrol_d2_vs_T0",
+     "kind": "positive_selection",
+     "n_treatment": 1,
+     "n_control": 6
+    },
+    {
+     "name": "nalm_resveratrol_d4_vs_T0",
+     "kind": "positive_selection",
+     "n_treatment": 1,
+     "n_control": 6
+    },
+    {
+     "name": "nalm_resveratrol_d6_vs_T0",
+     "kind": "positive_selection",
+     "n_treatment": 1,
+     "n_control": 6
+    },
+    {
+     "name": "nalm_resveratrol_d8_vs_T0",
+     "kind": "positive_selection",
+     "n_treatment": 7,
+     "n_control": 6
+    },
+    {
+     "name": "nalm_pterostilbene_d2_vs_T0",
+     "kind": "positive_selection",
+     "n_treatment": 1,
+     "n_control": 6
+    },
+    {
+     "name": "nalm_pterostilbene_d4_vs_T0",
+     "kind": "positive_selection",
+     "n_treatment": 1,
+     "n_control": 6
+    },
+    {
+     "name": "nalm_pterostilbene_d6_vs_T0",
+     "kind": "positive_selection",
+     "n_treatment": 1,
+     "n_control": 6
+    },
+    {
+     "name": "nalm_pterostilbene_d8_vs_T0",
+     "kind": "positive_selection",
+     "n_treatment": 4,
+     "n_control": 6
+    },
+    {
+     "name": "nalm_hydroxyurea_d2_vs_T0",
+     "kind": "positive_selection",
+     "n_treatment": 4,
+     "n_control": 6
+    },
+    {
+     "name": "nalm_hydroxyurea_d4_vs_T0",
+     "kind": "positive_selection",
+     "n_treatment": 4,
+     "n_control": 6
+    },
+    {
+     "name": "nalm_hydroxyurea_d6_vs_T0",
+     "kind": "positive_selection",
+     "n_treatment": 4,
+     "n_control": 6
+    },
+    {
+     "name": "nalm_hydroxyurea_d8_vs_T0",
+     "kind": "positive_selection",
+     "n_treatment": 12,
+     "n_control": 6
+    }
+   ],
+   "issues": [
+    "13 sample(s) were sequenced over several runs (e.g. GSM4543810: SRR11749323, SRR11749324, SRR11749325, SRR11749326, SRR11749327); their FASTQs must be merged per sample before counting, which this plan does not express",
+    "stratum 100_nalm: no reference of its own, and the study's references belong to other sample groups; the pairing is ambiguous",
+    "hydroxyurea at d8: no vehicle arm at the same time point",
+    "several cell lines in one study (Treated with resveratrol 16 \u00c2\u00b5M day 8 Nalm-6 screen; Day 0 control for hydroxyurea Nalm-6 screen; Untreated day 2 control for hydroxyurea Nalm-6 screen (spinner flask); Untreated day 4 control for hydroxyurea Nalm-6 screen (spinner flask); Untreated day 6 control for hydroxyurea Nalm-6 screen (spinner flask); Untreated day 8 control for hydroxyurea Nalm-6 screen (spinner flask); Untreated day 8 control for hydroxyurea Nalm-6 screen; 0.1% DMSO day 8 control for hydroxyurea Nalm-6 screen; Treated with hydroxyurea 100 \u00c2\u00b5M day 8 Nalm-6 screen; Day 0 control for resveratrol Jurkat screen; 0.1% DMSO day 6 control for resveratrol Jurkat screen; 0.1% DMSO day 12 control for resveratrol Jurkat screen; Treated with resveratrol  25 \u00c2\u00b5M day 12 Jurkat screen; Day 0 control for resveratrol Nalm-6 screen; 0.1% DMSO day 2 control for resveratrol Nalm-6 screen; 0.1% DMSO day 4 control for resveratrol Nalm-6 screen; 0.1% DMSO day 6 control for resveratrol Nalm-6 screen; 0.1% DMSO day 8 control for resveratrol Nalm-6 screen; Untreated day 8 control for resveratrol Nalm-6 screen; Day 0 control for pterostilbene Nalm-6 screen; Untreated day 2 control for pterostilbene Nalm-6 screen; Untreated day 4 control for pterostilbene Nalm-6 screen; Untreated day 6 control for pterostilbene Nalm-6 screen; Untreated day 8 control for pterostilbene Nalm-6 screen (grown in T75 flask); Untreated day 8 control for pterostilbene Nalm-6 screen (grown in spinner flask); 0.1% DMSO day 8 control for pterostilbene Nalm-6 screen; Treated with pterostilbene 16 \u00c2\u00b5M day 8 Nalm-6 screen); the plan needs one per cell line",
+    "53 run(s) have no confident role, e.g. SRR11749317 'Day_0_control_for_resveratrol_Nalm-6_screen': name says day 0 / T0 / input / pre-selection; SRR11749318 '0.1_DMSO_day_2_control_for_resveratrol_Nalm-6_screen': names both resveratrol and a vehicle/control word; SRR11749319 '0.1_DMSO_day_4_control_for_resveratrol_Nalm-6_screen': names both resveratrol and a vehicle/control word"
+   ],
+   "ready_contrast_judgement": null,
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE226447",
+   "split": "heldout",
+   "correct_design": "HAP1: alpha-amanitin vs control.",
+   "status": "needs_review",
+   "confidence": 0.36,
+   "modality": "knockout",
+   "phenotype": "selection: AMA",
+   "cell_line": [
+    "HAP1",
+    "CVCL_Y019"
+   ],
+   "compound": [
+    null,
+    null
+   ],
+   "runs": 4,
+   "roles_confident_correct": 2,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 2,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "ama_vs_control",
+     "kind": "positive_selection",
+     "n_treatment": 2,
+     "n_control": 2
+    }
+   ],
+   "issues": [
+    "2 run(s) have no confident role, e.g. SRR23681791 'AMA_replicate_2': treatment 'AMA' is declared but is not a ChEMBL compound or a known selection; SRR23681792 'AMA_replicate_1': treatment 'AMA' is declared but is not a ChEMBL compound or a known selection"
+   ],
+   "ready_contrast_judgement": null,
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE232614",
+   "split": "heldout",
+   "correct_design": "WSU-DLCL2: MAK683 vs DMSO (1 vs 1).",
+   "status": "ready",
+   "confidence": 0.9,
+   "modality": "knockout",
+   "phenotype": "drug response: mak683",
+   "cell_line": [
+    "WSU-DLCL2",
+    "CVCL_1902"
+   ],
+   "compound": [
+    "mak683",
+    "CHEMBL4650489"
+   ],
+   "runs": 2,
+   "roles_confident_correct": 2,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 0,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "dlcl2_wsu_mak683_vs_control",
+     "kind": "drug_modifier",
+     "n_treatment": 1,
+     "n_control": 1
+    }
+   ],
+   "issues": [],
+   "ready_contrast_judgement": "correct: MAK683 vs DMSO, 1 vs 1 (no replicates: statistically weak, as deposited)",
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE216087",
+   "split": "heldout",
+   "correct_design": "OCI-AML2: DMSO vs venetoclax and venetoclax+ruxolitinib at d14 and d21.",
+   "status": "needs_review",
+   "confidence": 0.54,
+   "modality": "knockout",
+   "phenotype": "drug response: venetoclax",
+   "cell_line": [
+    "OCI-AML2",
+    "CVCL_1619"
+   ],
+   "compound": [
+    "venetoclax",
+    "CHEMBL3137309"
+   ],
+   "runs": 12,
+   "roles_confident_correct": 12,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 0,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "aml2_oci_venetoclax_d21_vs_control",
+     "kind": "drug_modifier",
+     "n_treatment": 2,
+     "n_control": 2
+    },
+    {
+     "name": "aml2_oci_venetoclax_d14_vs_control",
+     "kind": "drug_modifier",
+     "n_treatment": 2,
+     "n_control": 2
+    }
+   ],
+   "issues": [
+    "12 samples are named by sequencing lane (e.g. 'OCI-AML2 Day21 Venetoclax-Ruxolitinib Rep2 [D21_VENRUX2_Ln2S6_L002]'); lanes of one library are technical, not biological, replicates and must be merged first",
+    "venetoclax at d21: no vehicle arm at the same time point",
+    "venetoclax at d14: no vehicle arm at the same time point"
+   ],
+   "ready_contrast_judgement": null,
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE214890",
+   "split": "heldout",
+   "correct_design": "94T778: Nutlin-3 vs DMSO at 72 h.",
+   "status": "needs_review",
+   "confidence": 0.36,
+   "modality": "knockout",
+   "phenotype": "selection: Nutlin3R 10 \u00c2\u00b5M",
+   "cell_line": [
+    "94T778 liposarcoma",
+    "CVCL_U613"
+   ],
+   "compound": [
+    null,
+    null
+   ],
+   "runs": 6,
+   "roles_confident_correct": 3,
+   "roles_confident_wrong": 0,
+   "roles_abstained": 3,
+   "wrong_runs": [],
+   "contrasts": [
+    {
+     "name": "94t778_nutlin3r_10_m_h72_vs_control",
+     "kind": "positive_selection",
+     "n_treatment": 3,
+     "n_control": 3
+    }
+   ],
+   "issues": [
+    "3 run(s) have no confident role, e.g. SRR21820087 '94T778_72_hr_10_uM_Nutlin3R_replicate_3': treatment 'Nutlin3R 10 \u00c2\u00b5M' is declared but is not a ChEMBL compound or a known selection; SRR21820088 '94T778_72_hr_10_uM_Nutlin3R_replicate_2': treatment 'Nutlin3R 10 \u00c2\u00b5M' is declared but is not a ChEMBL compound or a known selection; SRR21820089 '94T778_72_hr_10_uM_Nutlin3R_replicate_1': treatment 'Nutlin3R 10 \u00c2\u00b5M' is declared but is not a ChEMBL compound or a known selection"
+   ],
+   "ready_contrast_judgement": null,
+   "wrong_but_ready": false
+  },
+  {
+   "accession": "GSE225235",
+   "split": "heldout",
+   "correct_design": "A375: sgRNA virus pool; day 6 pre-sort = early reference (dropout); day 10 pre-sort; CD58-low sorted vs CD58-mid sorted control population (the authors call mid the control).",
+   "status": "needs_review",
+   "confidence": 0.15,
+   "modality": "knockout",
+   "phenotype": null,
+   "cell_line": [
+    "A375",
+    null
+   ],
+   "compound": [
+    null,
+    null
+   ],
+   "runs": 52,
+   "roles_confident_correct": 24,
+   "roles_confident_wrong": 24,
+   "roles_abstained": 4,
+   "wrong_runs": [
+    {
+     "run": "SRR23447017",
+     "title": "A375, CD58-mid, rep 2",
+     "inferred": "treatment",
+     "correct": "control"
+    },
+    {
+     "run": "SRR23447018",
+     "title": "A375, CD58-mid, rep 2",
+     "inferred": "treatment",
+     "correct": "control"
+    },
+    {
+     "run": "SRR23447019",
+     "title": "A375, CD58-mid, rep 2",
+     "inferred": "treatment",
+     "correct": "control"
+    },
+    {
+     "run": "SRR23447020",
+     "title": "A375, CD58-mid, rep 2",
+     "inferred": "treatment",
+     "correct": "control"
+    },
+    {
+     "run": "SRR23447021",
+     "title": "A375, CD58-mid, rep 2",
+     "inferred": "treatment",
+     "correct": "control"
+    },
+    {
+     "run": "SRR23447022",
+     "title": "A375, CD58-mid, rep 2",
+     "inferred": "treatment",
+     "correct": "control"
+    },
+    {
+     "run": "SRR23447023",
+     "title": "A375, CD58-mid, rep 2",
+     "inferred": "treatment",
+     "correct": "control"
+    },
+    {
+     "run": "SRR23447024",
+     "title": "A375, CD58-mid, rep 2",
+     "inferred": "treatment",
+     "correct": "control"
+    },
+    {
+     "run": "SRR23447025",
+     "title": "A375, CD58-mid, rep 1",
+     "inferred": "treatment",
+     "correct": "control"
+    },
+    {
+     "run": "SRR23447026",
+     "title": "A375, CD58-mid, rep 1",
+     "inferred": "treatment",
+     "correct": "control"
+    },
+    {
+     "run": "SRR23447027",
+     "title": "A375, CD58-mid, rep 1",
+     "inferred": "treatment",
+     "correct": "control"
+    },
+    {
+     "run": "SRR23447028",
+     "title": "A375, CD58-mid, rep 1",
+     "inferred": "treatment",
+     "correct": "control"
+    },
+    {
+     "run": "SRR23447029",
+     "title": "A375, CD58-mid, rep 1",
+     "inferred": "treatment",
+     "correct": "control"
+    },
+    {
+     "run": "SRR23447030",
+     "title": "A375, CD58-mid, rep 1",
+     "inferred": "treatment",
+     "correct": "control"
+    },
+    {
+     "run": "SRR23447031",
+     "title": "A375, CD58-mid, rep 1",
+     "inferred": "treatment",
+     "correct": "control"
+    },
+    {
+     "run": "SRR23447032",
+     "title": "A375, CD58-mid, rep 1",
+     "inferred": "treatment",
+     "correct": "control"
+    },
+    {
+     "run": "SRR23447053",
+     "title": "A375, Day 6, rep 2",
+     "inferred": "control",
+     "correct": "reference"
+    },
+    {
+     "run": "SRR23447054",
+     "title": "A375, Day 6, rep 2",
+     "inferred": "control",
+     "correct": "reference"
+    },
+    {
+     "run": "SRR23447055",
+     "title": "A375, Day 6, rep 2",
+     "inferred": "control",
+     "correct": "reference"
+    },
+    {
+     "run": "SRR23447056",
+     "title": "A375, Day 6, rep 2",
+     "inferred": "control",
+     "correct": "reference"
+    },
+    {
+     "run": "SRR23447057",
+     "title": "A375, Day 6, rep 1",
+     "inferred": "control",
+     "correct": "reference"
+    },
+    {
+     "run": "SRR23447058",
+     "title": "A375, Day 6, rep 1",
+     "inferred": "control",
+     "correct": "reference"
+    },
+    {
+     "run": "SRR23447059",
+     "title": "A375, Day 6, rep 1",
+     "inferred": "control",
+     "correct": "reference"
+    },
+    {
+     "run": "SRR23447060",
+     "title": "A375, Day 6, rep 1",
+     "inferred": "control",
+     "correct": "reference"
+    }
+   ],
+   "contrasts": [],
+   "issues": [
+    "9 sample(s) were sequenced over several runs (e.g. GSM7042314: SRR23447013, SRR23447014, SRR23447015, SRR23447016); their FASTQs must be merged per sample before counting, which this plan does not express",
+    "sorted runs at unstated time have neither an opposite bin nor an unsorted control",
+    "sorted runs at unstated time have neither an opposite bin nor an unsorted control",
+    "no RRID: primary cells",
+    "no valid contrast could be built from the inferred roles",
+    "4 run(s) have no confident role, e.g. SRR23447061 'sgRNA_virus_SRR23447061': name says plasmid / library pool; SRR23447062 'sgRNA_virus_SRR23447062': name says plasmid / library pool; SRR23447063 'sgRNA_virus_SRR23447063': name says plasmid / library pool"
+   ],
+   "ready_contrast_judgement": null,
+   "wrong_but_ready": false
+  }
+ ]
+}

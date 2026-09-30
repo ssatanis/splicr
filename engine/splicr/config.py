@@ -12,7 +12,9 @@ ROOT = ENGINE_DIR.parent
 REFERENCE_DIR = Path(os.environ.get("SPLICR_REFERENCE_DIR", ROOT / "data" / "references"))
 TESTDATA_DIR = Path(os.environ.get("SPLICR_TESTDATA_DIR", ROOT / "data" / "testdata"))
 WORK_DIR = Path(os.environ.get("SPLICR_WORK_DIR", ROOT / "data" / "work"))
-TOOLS_DIR = ENGINE_DIR / ".tools"
+# Overridable so a container (engine/modal_app.py) can keep BAGEL2 and DrugZ
+# clones in the image rather than next to the source it mounts.
+TOOLS_DIR = Path(os.environ.get("SPLICR_TOOLS_DIR", ENGINE_DIR / ".tools"))
 
 LIBRARIES_DIR = REFERENCE_DIR / "libraries"
 GENESETS_DIR = REFERENCE_DIR / "genesets"
@@ -220,7 +222,11 @@ class Settings:
 
     @property
     def tool_bin(self) -> Path:
-        return TOOLS_DIR / "env" / "bin"
+        # SPLICR_TOOL_BIN points at the environment whose python runs BAGEL2 and
+        # DrugZ. Locally that is the micromamba env under engine/.tools; in the
+        # Modal image it is /opt/conda/bin, and without this override BAGEL2 was
+        # launched with a python that did not exist and silently skipped.
+        return Path(os.environ.get("SPLICR_TOOL_BIN", TOOLS_DIR / "env" / "bin"))
 
 
 SETTINGS = Settings()

@@ -1,0 +1,26 @@
+[
+  {
+    "alpha": 1000,
+    "alpha_full": 10000,
+    "ridge": 0.2499,
+    "ridge_full": 0.2789
+  },
+  {
+    "alpha": 3000,
+    "alpha_full": 30000,
+    "ridge": 0.2495,
+    "ridge_full": 0.2791
+  },
+  {
+    "alpha": 10000,
+    "alpha_full": 100000,
+    "ridge": 0.2356,
+    "ridge_full": 0.2634
+  },
+  {
+    "alpha": 30000,
+    "alpha_full": 300000,
+    "ridge": 0.1786,
+    "ridge_full": 0.2396
+  }
+]

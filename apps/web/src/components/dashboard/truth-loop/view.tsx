@@ -157,9 +157,23 @@ export function TruthLoopView(props: TruthLoopProps) {
   const screenScoped = filters.screen !== null;
   const scopeName = screens.find((screen) => screen.id === filters.screen)?.name ?? null;
 
-  const closeDrawer = useCallback(() => setDrawer(null), []);
+  // A link from a hit opens the form with `?log=GENE`. Once the form is closed
+  // that parameter has done its job, and leaving it in the address would reopen
+  // the form on every refresh and in every link sent to a colleague.
+  const forgetPrefill = useCallback(() => {
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has("log") && !url.searchParams.has("logScreen")) return;
+    url.searchParams.delete("log");
+    url.searchParams.delete("logScreen");
+    window.history.replaceState(null, "", `${url.pathname}${url.search}`);
+  }, []);
+  const closeDrawer = useCallback(() => {
+    setDrawer(null);
+    forgetPrefill();
+  }, [forgetPrefill]);
   const done = (message: string) => {
     setDrawer(null);
+    forgetPrefill();
     setStatus(message);
   };
 

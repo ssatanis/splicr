@@ -23,10 +23,14 @@
     "evidence:check": "node scripts/research/evidence_gate.mjs --check-public",
     "test:web": "node --test apps/web/tests/*.test.mjs",
     "data:nih": "node scripts/data/nih-summary.mjs",
-    "data:seed": "node scripts/data/seed-atlas.mjs"
+    "data:seed": "node scripts/data/seed-atlas.mjs",
+    "atlas:snapshot": "engine/.tools/env/bin/python scripts/data/build-atlas-snapshot.py",
+    "atlas:check": "engine/.tools/env/bin/python scripts/data/build-atlas-snapshot.py --check",
+    "db:advisors": "node scripts/db/advisors.mjs"
   },
   "devDependencies": {
     "pg": "^8.18.0",
-    "pg-copy-streams": "^7.0.0"
+    "pg-copy-streams": "^7.0.0",
+    "supabase": "^2.118.0"
   }
 }

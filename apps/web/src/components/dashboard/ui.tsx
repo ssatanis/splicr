@@ -169,8 +169,8 @@ const stageIcon: Record<StageStatus, React.ReactNode> = {
 };
 
 export function StageRail({ stages, compact = false }: { stages: { key: string; title: string; status: StageStatus }[]; compact?: boolean }) {
-  return (
-    <ol className={cn("flex items-center", compact ? "gap-1" : "gap-2 overflow-x-auto thin-scroll pb-1")}>
+  const list = (
+    <ol className={cn("flex items-center", compact ? "gap-1" : "gap-2")}>
       {stages.map((s, i) => (
         <li key={s.key} className="flex items-center gap-2 shrink-0">
           <span
@@ -191,6 +191,15 @@ export function StageRail({ stages, compact = false }: { stages: { key: string; 
         </li>
       ))}
     </ol>
+  );
+  // A rail wider than its column scrolls sideways, and a keyboard needs a stop
+  // to scroll it with. The compact rail never overflows and is left alone.
+  return compact ? (
+    list
+  ) : (
+    <ScrollRegion label="Pipeline stages, scrolls" className="overflow-x-auto thin-scroll pb-1">
+      {list}
+    </ScrollRegion>
   );
 }
 
@@ -717,7 +726,7 @@ export function KpiTile({ label, value, denominator, definition, tone = "ink", h
 // as many rows on screen as the panel can hold.
 // ---------------------------------------------------------------------------
 
-export function DenseTable({ children, compact = false, maxRows, minWidth, className, scrollClassName, label = "Table, scrolls" }: {
+export function DenseTable({ children, compact = false, maxRows, minWidth, className, scrollClassName, label = "Scrollable table" }: {
   children: React.ReactNode;
   /**
    * The name a keyboard user hears when the table is wider than its panel and
