@@ -10,6 +10,15 @@ import { supabaseConfigured } from "@/lib/supabase/env";
 
 type Mode = "login" | "signup";
 
+/**
+ * Whether to offer Google sign-in.
+ *
+ * Off until the provider is actually enabled on the Supabase project, because a
+ * button that returns 400 is worse than no button, and this one sat above the
+ * email form as the first thing a new lab would click.
+ */
+const GOOGLE_ENABLED = process.env.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH === "1";
+
 export function AuthForm({ mode }: { mode: Mode }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -103,14 +112,26 @@ export function AuthForm({ mode }: { mode: Mode }) {
         )}
       </p>
 
-      <button type="button" onClick={google} disabled={busy !== null} className="btn btn-ghost w-full mt-10">
-        {busy === "google" ? <Loader2 className="w-4 h-4 animate-spin" /> : <GoogleGlyph />}
-        Continue with Google
-      </button>
+      {/* The Google provider is disabled on the live Supabase project: its
+          /auth/v1/settings reports every external provider false. A visitor
+          clicking this got a 400 "Unsupported provider" and Supabase's raw error
+          text, on the most prominent control of the page. It is behind a flag
+          rather than deleted, so enabling the provider and setting
+          NEXT_PUBLIC_ENABLE_GOOGLE_AUTH=1 brings it back without a rewrite. */}
+      {GOOGLE_ENABLED ? (
+        <>
+          <button type="button" onClick={google} disabled={busy !== null} className="btn btn-ghost w-full mt-10">
+            {busy === "google" ? <Loader2 className="w-4 h-4 animate-spin" /> : <GoogleGlyph />}
+            Continue with Google
+          </button>
 
-      <div className="my-8 flex items-center gap-4 text-xs text-muted">
-        <span className="h-px flex-1 bg-line" /> or with email <span className="h-px flex-1 bg-line" />
-      </div>
+          <div className="my-8 flex items-center gap-4 text-xs text-muted">
+            <span className="h-px flex-1 bg-line" /> or with email <span className="h-px flex-1 bg-line" />
+          </div>
+        </>
+      ) : (
+        <div className="mt-10" />
+      )}
 
       <form onSubmit={withPassword} className="space-y-7">
         {mode === "signup" && (

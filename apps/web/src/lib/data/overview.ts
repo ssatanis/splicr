@@ -66,17 +66,23 @@ export interface OverviewHit {
   guide_lfcs: number[] | null;
   bayes_factor: number | null;
   novelty: number | null;
-  atlas_hit_count: number | null;
-  atlas_screen_count: number | null;
+  /**
+   * The gene's hit rate across the published Atlas, and whether that makes it a
+   * frequent hitter. Both come from atlas.gene_stats, which holds 84,262 genes
+   * and is refreshed by the splicr-refresh-gene-stats cron.
+   *
+   * The per-hit atlas_hit_count columns are never written --- they are absent
+   * from the COPY list at engine/splicr/db.py:347 --- so reading them gave null
+   * on all 20,916 rows and the tier could never reach four recorded legs. The
+   * public.hit_report view already joins the live table, which is both cheaper
+   * and fresher than the denormalised snapshot would have been.
+   */
+  atlas_hit_rate: number | null;
+  is_frequent_hitter: boolean | null;
   /** Null when the flag read failed; empty only when the screen truly has none. */
-  flags: HitFlag[] | null;
+  flags: string[] | null;
 }
 
-/** One artifact flag as the engine records it: the enum value and its severity. */
-export interface HitFlag {
-  flag: string;
-  severity: "info" | "warn" | "critical";
-}
 
 /**
  * Headline hits plus whether the scoring model has actually run.
@@ -298,9 +304,9 @@ interface HitRow {
   guide_lfcs: number[] | null;
   bayes_factor: number | null;
   novelty: number | null;
-  atlas_hit_count: number | null;
-  atlas_screen_count: number | null;
-  hit_flags: { flag: string; severity: string }[] | null;
+  atlas_gene_hit_rate: number | null;
+  is_frequent_hitter: boolean | null;
+  flags: string[] | null;
 }
 
 /**
@@ -313,16 +319,7 @@ interface HitRow {
 const HIT_COLUMNS =
   "id, screen_id, gene_symbol, direction, verdict, chance_real, fdr, lfc, " +
   "n_guides, n_good_guides, guide_lfcs, bayes_factor, novelty, " +
-  "atlas_hit_count, atlas_screen_count, hit_flags(flag, severity)";
-
-const FLAG_SEVERITIES = new Set(["info", "warn", "critical"]);
-
-function toFlags(rows: HitRow["hit_flags"]): HitFlag[] | null {
-  if (!Array.isArray(rows)) return null;
-  return rows
-    .filter((row) => row && typeof row.flag === "string" && FLAG_SEVERITIES.has(row.severity))
-    .map((row) => ({ flag: row.flag, severity: row.severity as HitFlag["severity"] }));
-}
+  "flags, atlas_gene_hit_rate, is_frequent_hitter";
 
 /** Postgres real[] arrives as an array; anything else is treated as not recorded. */
 function toNumberArray(value: unknown): number[] | null {
@@ -346,9 +343,9 @@ function toHit(row: HitRow): OverviewHit {
     guide_lfcs: toNumberArray(row.guide_lfcs),
     bayes_factor: toNumber(row.bayes_factor),
     novelty: toNumber(row.novelty),
-    atlas_hit_count: toNumber(row.atlas_hit_count),
-    atlas_screen_count: toNumber(row.atlas_screen_count),
-    flags: toFlags(row.hit_flags),
+    atlas_hit_rate: toNumber(row.atlas_gene_hit_rate),
+    is_frequent_hitter: typeof row.is_frequent_hitter === "boolean" ? row.is_frequent_hitter : null,
+    flags: Array.isArray(row.flags) ? row.flags.filter((f) => typeof f === "string") : null,
   };
 }
 
@@ -385,7 +382,7 @@ async function hitsFromComparison(
   limit: number,
 ): Promise<OverviewHit[]> {
   let query = supabase
-    .from("hits")
+    .from("hit_report")
     .select(HIT_COLUMNS)
     .eq("comparison_id", comparisonId)
     .not(column, "is", null);

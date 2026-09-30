@@ -125,11 +125,14 @@ export function evidenceTier(row: CandidateRow): TierResult {
   const hasLfc = num(row.lfc);
   const hasFdr = num(row.fdr);
   const hasConcordance = num(row.guides) && num(row.guidesAgree) && row.guides > 0;
-  const hasAtlas = num(row.atlasHits) && num(row.atlasScreens) && row.atlasScreens > 0;
+  // The Atlas leg reads the live rate, not the per-hit counts. Those counts are
+  // absent from the engine's COPY list so they are null on every real hit, which
+  // capped every real gene at three recorded legs and put Strong out of reach.
+  const hasAtlas = num(row.atlasRate);
   const coreRecorded = [hasLfc, hasFdr, hasConcordance, hasAtlas].filter(Boolean).length;
 
   const concordance = hasConcordance ? row.guidesAgree! / row.guides! : null;
-  const atlasRate = hasAtlas ? row.atlasHits! / row.atlasScreens! : null;
+  const atlasRate = hasAtlas ? row.atlasRate! : null;
 
   components.push({
     label: "Effect size",
@@ -158,9 +161,7 @@ export function evidenceTier(row: CandidateRow): TierResult {
   components.push({
     label: "How often the Atlas calls this gene",
     field: "atlas_hit_count / atlas_screen_count",
-    value: hasAtlas
-      ? `${row.atlasHits} of ${row.atlasScreens} screens`
-      : null,
+    value: hasAtlas ? `${(row.atlasRate! * 100).toFixed(1)}% of published screens` : null,
     bearing: hasAtlas ? "context" : "missing",
     note: hasAtlas ? undefined : "The Atlas check has not been run on this screen.",
   });
@@ -217,7 +218,9 @@ export function evidenceTier(row: CandidateRow): TierResult {
   }
 
   const frequentHitter =
-    scope.includes("frequent_hitter") || (atlasRate !== null && atlasRate > FREQUENT_HITTER_RATE);
+    row.isFrequentHitter === true ||
+    scope.includes("frequent_hitter") ||
+    (atlasRate !== null && atlasRate > FREQUENT_HITTER_RATE);
 
   // --- 3. Strong ------------------------------------------------------------
   const lfcStrong = hasLfc && Math.abs(row.lfc!) >= STRONG_LFC[direction];
@@ -257,7 +260,7 @@ export function evidenceTier(row: CandidateRow): TierResult {
         tier: "Moderate",
         because:
           atlasRate !== null
-            ? `Capped: called in ${row.atlasHits} of ${row.atlasScreens} Atlas screens.`
+            ? `Capped: a hit in ${(atlasRate * 100).toFixed(0)}% of published screens.`
             : "Capped: flagged as a frequent hitter.",
       };
     }

@@ -243,10 +243,14 @@ function WorkspaceOverview({
     guidesAgree: hit.n_good_guides,
     guideLfcs: hit.guide_lfcs,
     direction: hit.direction,
-    flags: hit.flags === null ? null : hit.flags.map((f) => f.flag),
+    flags: hit.flags,
     why: null,
-    atlasHits: hit.atlas_hit_count,
-    atlasScreens: hit.atlas_screen_count,
+    // The per-hit counts are absent from the engine's COPY list, so they stay
+    // null and the live rate from atlas.gene_stats carries this leg instead.
+    atlasHits: null,
+    atlasScreens: null,
+    atlasRate: hit.atlas_hit_rate,
+    isFrequentHitter: hit.is_frequent_hitter,
     screenId: hit.screen_id,
     screenName: screenName.get(hit.screen_id) ?? null,
     benchAssay: null,

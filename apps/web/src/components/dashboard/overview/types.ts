@@ -55,6 +55,18 @@ export interface CandidateRow {
   why: string | null;
   atlasHits: number | null;
   atlasScreens: number | null;
+  /**
+   * The gene's hit rate across the published Atlas, and the precomputed verdict
+   * on whether that makes it a frequent hitter.
+   *
+   * These replace the two counts as the tier's Atlas leg. The counts come from
+   * `hits.atlas_hit_count`, which the engine never writes, so they were null on
+   * every real hit and the tier could not reach four recorded legs. The rate
+   * comes from `atlas.gene_stats` through the `public.hit_report` view, which is
+   * live rather than a snapshot and covers 84,262 genes.
+   */
+  atlasRate: number | null;
+  isFrequentHitter: boolean | null;
   screenId: string;
   screenName: string | null;
   /** The re-test this gene's screen would order, which is the testable part. */
