@@ -1,28 +1,38 @@
--- ============================================================================
--- Reconcile: private.reap_expired_leases() needs explicit enum casts
+-- Fix private.reap_expired_leases(), which has never once succeeded.
 --
--- This migration was applied to the remote database before its source file
--- existed locally. The definition below was recovered from the live catalogue
--- (pg_get_functiondef) on 2026-09-30 and is reproduced verbatim in intent, so
--- the local history and the deployed schema agree.
+-- cron.job_run_details: 4,320 runs, 4,320 failures, zero successes. It is scheduled
+-- every minute and has failed every minute since 2026-09-27.
 --
--- WHY IT WAS NEEDED. The function is `set search_path = ''`, which is correct
--- for a security definer routine but means an unqualified name resolves to
--- nothing. The original body wrote `then 'dead' else 'queued' end`, leaving
--- Postgres to infer the CASE result type as text and then assign text to a
--- public.job_status column. That fails at run time with
---   column "status" is of type public.job_status but expression is of type text
--- and, because the function is called once a minute by the splicr-reap-leases
--- cron job, a stuck lease was never released: every reap attempt errored.
--- The fix is to qualify both branches with the enum type.
--- ============================================================================
+--   ERROR:  column "status" is of type job_status but expression is of type text
+--   LINE 3:  set status = case when attempts >= max_attempts then 'dead' ...
+--   HINT:   You will need to rewrite or cast the expression.
+--
+-- Both CASE branches are bare quoted literals, so the branches are `unknown`, the
+-- CASE resolves to `text`, and assigning text to an enum column needs an explicit
+-- cast. The `where status in ('leased', 'running')` on the next line is fine
+-- because comparing an enum to an unknown literal resolves against the enum --- it
+-- is only the assignment that fails, which is why this looks correct on the page.
+--
+-- The function carries `SET search_path TO ''`, so the type has to be
+-- schema-qualified. Casting each branch rather than the whole CASE makes the
+-- expression's type the enum directly and keeps the error impossible to
+-- reintroduce by editing one branch.
+--
+-- No data was harmed: public.jobs is empty, so no lease has ever needed reaping.
+-- The consequence was latent rather than absent --- the first job to lose its lease
+-- would have sat in 'leased' forever, because the only thing that returns it to the
+-- queue is this function.
+--
+-- The deeper finding is that a job failed 4,320 consecutive times and nothing
+-- reported it. Fixing the cast closes the symptom; an alerting channel is what
+-- closes the cause, and that is tracked separately.
 
 create or replace function private.reap_expired_leases()
-returns int
+returns integer
 language plpgsql
 security definer
-set search_path = ''
-as $$
+set search_path to ''
+as $function$
 declare
   v_count int;
 begin
@@ -42,4 +52,4 @@ begin
   select count(*) into v_count from expired;
   return v_count;
 end;
-$$;
+$function$;
