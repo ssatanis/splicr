@@ -83,7 +83,19 @@ export interface Candidate {
   atlas: { hits: number; tested: number; frequentHitter: boolean } | null;
   status: CandidateStatus;
   decision: { reason: string | null; at: string; by: string | null; count: number } | null;
+  /** Every decision ever recorded for this gene, newest first. */
+  history: DecisionEntry[];
   outcome: OutcomeResult | null;
+}
+
+/** One row of the append-only log, as the board shows it. */
+export interface DecisionEntry {
+  id: string;
+  state: string;
+  reason: string | null;
+  at: string;
+  /** The statistics as they stood when this decision was taken. */
+  evidence: { fdr?: number | null; lfc?: number | null; engine_version?: string | null } | null;
 }
 
 /** One answer to one researcher question, with the values behind it. */
@@ -200,8 +212,19 @@ export function whereItHasBeenSeen(candidate: Candidate): Reading {
 /**
  * A follow-up experiment, with its reasoning exposed.
  *
- * The rules, in order. Each is a statement about what is unresolved, and the
- * experiment proposed is the one that resolves it.
+ * Each rule below is a statement about what is unresolved, and the experiment
+ * proposed is the one that resolves it. Every rule names the recorded evidence
+ * that fired it, what it assumes, and what uncertainty it would reduce, so a
+ * reader who rejects the assumption can reject the suggestion.
+ *
+ * WHEN THERE IS NOTHING TO SAY, IT SAYS NOTHING
+ *
+ * The rules fire on recorded evidence. A run that stored no per-guide effects,
+ * no artifact flags and no Atlas history gives them nothing to fire on, and the
+ * honest answer is that no follow-up follows from what was recorded. An earlier
+ * version fell through to "the guides do not agree unanimously" in that case,
+ * which asserts a disagreement nobody measured. That is the failure mode this
+ * whole module exists to avoid, so the absence is now a first-class result.
  */
 export interface NextExperiment {
   objective: string;
@@ -213,18 +236,31 @@ export interface NextExperiment {
   alternative?: { objective: string; reason: string };
 }
 
-export function nextExperiment(candidate: Candidate): NextExperiment | null {
-  if (candidate.outcome === "validated") return null;
+export type NextExperimentResult =
+  | ({ kind: "suggested" } & NextExperiment)
+  /** Nothing follows from the recorded evidence, and this says which evidence was absent. */
+  | { kind: "none"; because: string };
+
+export function nextExperiment(candidate: Candidate): NextExperimentResult {
+  if (candidate.outcome === "validated") {
+    return {
+      kind: "none",
+      because: "An assay recorded in the Truth Loop already supported this candidate. What to do next is a question about the project, not about the evidence.",
+    };
+  }
 
   const promiscuous = candidate.flags.find((flag) =>
     ["promiscuous_guide", "multi_gene_guide", "single_guide"].includes(flag.flag));
   const frequent = candidate.atlas?.frequentHitter
     || candidate.flags.some((flag) => flag.flag === "frequent_hitter");
   const agree = candidate.guidesAgreeing;
-  const unanimous = agree !== null && agree.total > 1 && agree.agree === agree.total;
+  const measuredGuides = agree !== null && agree.total > 1;
+  const unanimous = measuredGuides && agree.agree === agree.total;
+  const divided = measuredGuides && agree.agree < agree.total;
 
   if (promiscuous) {
     return {
+      kind: "suggested",
       objective: "Repeat the perturbation with independent guides",
       reason: `The phenotype could belong to a sequence rather than to the gene: ${promiscuous.flag.replace(/_/g, " ")} was recorded for this call.`,
       evidence: [
@@ -242,12 +278,13 @@ export function nextExperiment(candidate: Candidate): NextExperiment | null {
 
   if (frequent) {
     return {
+      kind: "suggested",
       objective: "Compare against an untreated arm of the same cells",
       reason: "The gene is called in many unrelated screens, so the signal may be general fitness rather than anything about this treatment.",
       evidence: [
         ...(candidate.atlas && candidate.atlas.tested > 0
           ? [`Called in ${candidate.atlas.hits.toLocaleString("en-US")} of ${candidate.atlas.tested.toLocaleString("en-US")} background screens that measured it.`]
-          : []),
+          : ["An artifact flag recorded this call as a frequent hitter."]),
         ...(candidate.lfc !== null ? [`Effect here is ${signed(candidate.lfc)}.`] : []),
       ],
       assumption: "That the untreated arm is otherwise handled identically, so the only difference is the treatment.",
@@ -255,8 +292,20 @@ export function nextExperiment(candidate: Candidate): NextExperiment | null {
     };
   }
 
+  if (divided) {
+    return {
+      kind: "suggested",
+      objective: "Repeat the perturbation with independent guides",
+      reason: "The guides recorded for this gene do not all point the same way, so the gene mean rests on a subset of them.",
+      evidence: [`${agree.agree} of ${agree.total} guides point the same way as the gene.`],
+      assumption: "That the disagreement is guide efficiency rather than a real difference between the regions they cut.",
+      reduces: "Whether the gene-level call survives a different set of guides.",
+    };
+  }
+
   if (unanimous) {
     return {
+      kind: "suggested",
       objective: "Validate in a second cell model",
       reason: "The call is internally consistent here, so the open question is whether it holds outside this line.",
       evidence: [
@@ -273,14 +322,16 @@ export function nextExperiment(candidate: Candidate): NextExperiment | null {
     };
   }
 
+  // Nothing fired. Name what was missing rather than reaching for a default.
+  const absent: string[] = [];
+  if (agree === null || agree.total <= 1) absent.push("per-guide effects");
+  if (candidate.flags.length === 0) absent.push("artifact flags");
+  if (candidate.atlas === null || candidate.atlas.tested === 0) absent.push("Atlas history");
   return {
-    objective: "Repeat the perturbation with independent guides",
-    reason: "The guides do not agree unanimously, so the gene mean rests on a subset of them.",
-    evidence: agree
-      ? [`${agree.agree} of ${agree.total} guides point the same way as the gene.`]
-      : ["Per-guide effects were not recorded for this run."],
-    assumption: "That the disagreement is guide efficiency rather than a real difference between the regions they cut.",
-    reduces: "Whether the gene-level call survives a different set of guides.",
+    kind: "none",
+    because: absent.length === 0
+      ? "No specific follow-up can be recommended from the recorded evidence."
+      : `No specific follow-up can be recommended from the recorded evidence: this run recorded no ${absent.join(", no ")} for this gene.`,
   };
 }
 

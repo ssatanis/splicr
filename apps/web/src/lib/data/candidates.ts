@@ -35,34 +35,67 @@ export interface CurrentDecision {
 }
 
 export type DecisionsResult =
-  | { status: "found"; current: Map<string, CurrentDecision> }
+  | {
+      status: "found";
+      current: Map<string, CurrentDecision>;
+      /** Every decision ever recorded for this screen, newest first, by gene. */
+      history: Map<string, DecisionRecord[]>;
+    }
   /** The decisions could not be read. Not the same as no decisions. */
   | { status: "unavailable" };
+
+/** A screen's decision log is small; a cap only stops a pathological one. */
+const HISTORY_LIMIT = 500;
 
 /** What this workspace has decided about the genes of one screen. */
 export async function getCandidateDecisions(screenId: string): Promise<DecisionsResult> {
   if (!isUuid(screenId)) return { status: "unavailable" };
   const context = await getCurrentContext();
-  if (!context.user || !context.org) return { status: "found", current: new Map() };
+  if (!context.user || !context.org) return { status: "found", current: new Map(), history: new Map() };
   try {
     const client = await createClient();
+    // One read of the log, rather than the view plus a query per gene. The
+    // current state is the newest row, which is what the view computes too.
     const { data, error } = await client
-      .from("candidate_current")
-      .select("gene_symbol, state, reason, decided_at, decided_by, n_decisions")
-      .eq("screen_id", screenId);
+      .from("candidate_decisions")
+      .select("id, gene_symbol, state, reason, decided_at, decided_by, evidence")
+      .eq("screen_id", screenId)
+      .order("decided_at", { ascending: false })
+      .order("id", { ascending: false })
+      .limit(HISTORY_LIMIT);
     if (error) throw error;
+
     const current = new Map<string, CurrentDecision>();
+    const history = new Map<string, DecisionRecord[]>();
     for (const row of data ?? []) {
-      current.set(String(row.gene_symbol).toUpperCase(), {
-        gene: String(row.gene_symbol),
-        status: String(row.state) as CandidateStatus,
+      const key = String(row.gene_symbol).toUpperCase();
+      const record: DecisionRecord = {
+        id: String(row.id),
+        state: String(row.state),
         reason: (row.reason as string | null) ?? null,
-        decidedAt: String(row.decided_at),
-        decidedBy: (row.decided_by as string | null) ?? null,
-        count: Number(row.n_decisions ?? 1),
-      });
+        decided_at: String(row.decided_at),
+        decided_by: (row.decided_by as string | null) ?? null,
+        evidence: (row.evidence ?? {}) as Record<string, unknown>,
+      };
+      const trail = history.get(key);
+      if (trail) trail.push(record);
+      else history.set(key, [record]);
+      // The first row seen for a gene is its newest, because of the order above.
+      if (!current.has(key)) {
+        current.set(key, {
+          gene: String(row.gene_symbol),
+          status: record.state as CandidateStatus,
+          reason: record.reason,
+          decidedAt: record.decided_at,
+          decidedBy: record.decided_by,
+          count: 1,
+        });
+      } else {
+        const held = current.get(key) as CurrentDecision;
+        held.count += 1;
+      }
     }
-    return { status: "found", current };
+    return { status: "found", current, history };
   } catch (error) {
     console.error(`[data/candidates] ${error instanceof Error ? error.message : "read failed"}`);
     return { status: "unavailable" };

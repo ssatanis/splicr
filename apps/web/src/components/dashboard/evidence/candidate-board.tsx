@@ -15,6 +15,7 @@
  * entitled to know the record of that choice will survive the next reanalysis.
  */
 import { AlertTriangle, ChevronRight, Loader2 } from "lucide-react";
+import Link from "next/link";
 import { useActionState, useId, useState } from "react";
 
 import { recordCandidateDecision } from "@/lib/data/candidate-actions";
@@ -180,6 +181,14 @@ function CandidateRow({ candidate, screenId, canDecide }: {
         </Stat>
 
         <span className="ml-auto flex shrink-0 items-center gap-2">
+          {candidate.status === "needs_validation" && !candidate.outcome && (
+            <Link
+              href={`/dashboard/validation?log=${encodeURIComponent(candidate.gene)}&logScreen=${screenId}`}
+              className="rounded-sm text-[11.5px] text-cyan-600 underline decoration-line-strong underline-offset-2"
+            >
+              Add to validation
+            </Link>
+          )}
           {candidate.outcome && (
             <StatusChip tone="ok">{RESULT_COPY[candidate.outcome].short}</StatusChip>
           )}
@@ -208,42 +217,74 @@ function CandidateRow({ candidate, screenId, canDecide }: {
             </div>
 
             <div className="space-y-3">
-              {next && (
-                <div>
-                  <div className="text-[11px] uppercase tracking-[0.08em] text-muted">What would resolve it</div>
-                  <p className="mt-1 text-[12.5px] font-medium leading-snug text-ink">Suggested: {next.objective}</p>
-                  <p className="mt-0.5 text-[12px] leading-snug text-body">{next.reason}</p>
-                  <dl className="mt-1.5 space-y-1 text-[11.5px] leading-snug">
-                    <div>
-                      <dt className="inline text-muted">Evidence: </dt>
-                      <dd className="inline text-body">{next.evidence.join(" ")}</dd>
-                    </div>
-                    <div>
-                      <dt className="inline text-muted">Assumes: </dt>
-                      <dd className="inline text-body">{next.assumption}</dd>
-                    </div>
-                    <div>
-                      <dt className="inline text-muted">Reduces uncertainty about: </dt>
-                      <dd className="inline text-body">{next.reduces}</dd>
-                    </div>
-                  </dl>
-                  {next.alternative && (
-                    <p className="mt-1.5 text-[11.5px] leading-snug text-muted">
-                      Alternative: {next.alternative.objective}. {next.alternative.reason}
+              <div>
+                <div className="text-[11px] uppercase tracking-[0.08em] text-muted">What would resolve it</div>
+                {next.kind === "none" ? (
+                  <p className="mt-1 text-[12px] leading-snug text-muted">{next.because}</p>
+                ) : (
+                  <>
+                    <p className="mt-1 text-[12.5px] font-medium leading-snug text-ink">Suggested: {next.objective}</p>
+                    <p className="mt-0.5 text-[12px] leading-snug text-body">{next.reason}</p>
+                    <dl className="mt-1.5 space-y-1 text-[11.5px] leading-snug">
+                      <div>
+                        <dt className="inline text-muted">Evidence: </dt>
+                        <dd className="inline text-body">{next.evidence.join(" ")}</dd>
+                      </div>
+                      <div>
+                        <dt className="inline text-muted">Assumes: </dt>
+                        <dd className="inline text-body">{next.assumption}</dd>
+                      </div>
+                      <div>
+                        <dt className="inline text-muted">Reduces uncertainty about: </dt>
+                        <dd className="inline text-body">{next.reduces}</dd>
+                      </div>
+                    </dl>
+                    {next.alternative && (
+                      <p className="mt-1.5 text-[11.5px] leading-snug text-muted">
+                        Alternative: {next.alternative.objective}. {next.alternative.reason}
+                      </p>
+                    )}
+                    <p className="mt-1.5 text-[11px] leading-snug text-muted">
+                      A proposal from the recorded evidence, not a prediction that it will work.
                     </p>
-                  )}
-                </div>
-              )}
+                  </>
+                )}
+              </div>
 
               {canDecide ? (
                 <div className="border-t border-line pt-3">
                   <DecisionForm screenId={screenId} gene={candidate.gene} current={candidate.status} />
                   {candidate.decision && (
                     <p className="mt-2 text-[11px] leading-snug text-muted">
-                      Current decision recorded {new Date(candidate.decision.at).toLocaleDateString("en-US", { dateStyle: "medium" })}
-                      {candidate.decision.count > 1 && `, after ${candidate.decision.count - 1} earlier one${candidate.decision.count === 2 ? "" : "s"}`}.
-                      {candidate.decision.reason && ` "${candidate.decision.reason}"`}
+                      Recorded {new Date(candidate.decision.at).toLocaleDateString("en-US", { dateStyle: "medium" })}
+                      {candidate.decision.reason && `. "${candidate.decision.reason}"`}
                     </p>
+                  )}
+                  {candidate.history.length > 0 && (
+                    <details className="group mt-1.5">
+                      <summary className="cursor-pointer list-none text-[11px] text-muted [&::-webkit-details-marker]:hidden">
+                        <span className="underline decoration-line-strong underline-offset-2">
+                          Decision history ({candidate.history.length})
+                        </span>
+                      </summary>
+                      <ol className="mt-1.5 space-y-1.5 border-l border-line pl-2.5">
+                        {candidate.history.map((entry) => (
+                          <li key={entry.id} className="text-[11px] leading-snug">
+                            <span className="text-ink">{STATE_COPY[entry.state as CandidateStatus]?.label ?? entry.state}</span>
+                            <span className="text-muted">
+                              {" "}on {new Date(entry.at).toLocaleDateString("en-US", { dateStyle: "medium" })}
+                              {entry.evidence?.fdr != null && `, at FDR ${Number(entry.evidence.fdr).toFixed(4)}`}
+                              {entry.evidence?.engine_version && ` from engine ${entry.evidence.engine_version}`}
+                            </span>
+                            {entry.reason && <span className="block text-muted">&ldquo;{entry.reason}&rdquo;</span>}
+                          </li>
+                        ))}
+                      </ol>
+                      <p className="mt-1.5 text-[11px] leading-snug text-muted">
+                        Nothing here is overwritten. Each entry keeps the statistics as they stood when it was
+                        taken, so a reanalysis cannot change what was known at the time.
+                      </p>
+                    </details>
                   )}
                 </div>
               ) : (
@@ -259,15 +300,19 @@ function CandidateRow({ candidate, screenId, canDecide }: {
   );
 }
 
-export function CandidateBoard({ candidates, screenId, canDecide, decisionsKnown }: {
+export function CandidateBoard({ candidates, screenId, canDecide, decisionsKnown, beyondCap = 0 }: {
   candidates: Candidate[];
   screenId: string;
   canDecide: boolean;
   /** False when the decision log could not be read, which is not "no decisions". */
   decisionsKnown: boolean;
+  /** Candidates past the board's cap. Named rather than hidden. */
+  beyondCap?: number;
 }) {
   const counts = tally(candidates);
   const shown: CandidateStatus[] = ["unreviewed", "shortlisted", "needs_validation", "hold", "excluded", "validated"];
+  const [view, setView] = useState<"all" | CandidateStatus | "flagged">("all");
+  const [sort, setSort] = useState<"fdr" | "effect" | "gene" | "decision">("fdr");
 
   if (candidates.length === 0) {
     return (
@@ -278,25 +323,95 @@ export function CandidateBoard({ candidates, screenId, canDecide, decisionsKnown
     );
   }
 
+  // Four views, not fifteen: the ones that correspond to a decision somebody is
+  // in the middle of making.
+  const views: { id: typeof view; label: string; count: number }[] = [
+    { id: "all", label: "All", count: candidates.length },
+    { id: "unreviewed", label: "Unreviewed", count: counts.unreviewed },
+    { id: "shortlisted", label: "Shortlisted", count: counts.shortlisted },
+    { id: "needs_validation", label: "Needs validation", count: counts.needs_validation },
+    { id: "flagged", label: "With artifact flags", count: candidates.filter((c) => c.flags.length > 0).length },
+  ];
+
+  const visible = candidates
+    .filter((candidate) =>
+      view === "all" ? true
+        : view === "flagged" ? candidate.flags.length > 0
+        : candidate.status === view)
+    .slice()
+    .sort((a, b) => {
+      // Null is always last: a missing value is not a small one.
+      const bySize = (x: number | null, y: number | null, descending: boolean) => {
+        if (x === null && y === null) return 0;
+        if (x === null) return 1;
+        if (y === null) return -1;
+        return descending ? y - x : x - y;
+      };
+      switch (sort) {
+        case "effect": return bySize(a.lfc === null ? null : Math.abs(a.lfc), b.lfc === null ? null : Math.abs(b.lfc), true);
+        case "gene": return a.gene.localeCompare(b.gene);
+        case "decision": return shown.indexOf(a.status) - shown.indexOf(b.status) || bySize(a.fdr, b.fdr, false);
+        default: return bySize(a.fdr, b.fdr, false);
+      }
+    });
+
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-line px-[var(--panel-gutter)] py-2 text-[11px]">
-        {shown.filter((state) => counts[state] > 0).map((state) => (
-          <span key={state} className="text-muted" title={STATE_COPY[state].help}>
-            <span className="num text-ink">{counts[state]}</span> {STATE_COPY[state].label.toLowerCase()}
-          </span>
-        ))}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line px-[var(--panel-gutter)] py-2 text-[11px]">
+        <div className="flex flex-wrap gap-1" role="group" aria-label="Filter candidates">
+          {views.filter((entry) => entry.id === "all" || entry.count > 0).map((entry) => (
+            <button
+              key={entry.id}
+              type="button"
+              aria-pressed={view === entry.id}
+              onClick={() => setView(entry.id)}
+              className={cn(
+                "rounded border px-1.5 py-0.5 transition-colors duration-[var(--dur-1)] motion-reduce:transition-none",
+                view === entry.id ? "border-ink bg-ink text-white" : "border-line text-body hover:bg-canvas",
+              )}
+            >
+              {entry.label} <span className="num opacity-70">{entry.count}</span>
+            </button>
+          ))}
+        </div>
+        <label className="ml-auto flex items-center gap-1.5 text-muted">
+          Sort
+          <select
+            value={sort}
+            onChange={(event) => setSort(event.target.value as typeof sort)}
+            className="h-6 rounded border border-line bg-white px-1.5 pr-5 text-[11px] text-ink outline-none focus:border-cyan-500"
+          >
+            <option value="fdr">Recorded FDR</option>
+            <option value="effect">Effect size</option>
+            <option value="gene">Gene</option>
+            <option value="decision">Decision</option>
+          </select>
+        </label>
         {!decisionsKnown && (
-          <span className="text-orange-700">
-            The decision log could not be read, so every gene reads as unreviewed. That is not the same as nobody having decided.
+          <span className="basis-full text-orange-700">
+            The decision log could not be read, so every gene reads as unreviewed. That is not the same as
+            nobody having decided.
           </span>
         )}
       </div>
-      <ul>
-        {candidates.map((candidate) => (
-          <CandidateRow key={candidate.gene} candidate={candidate} screenId={screenId} canDecide={canDecide} />
-        ))}
-      </ul>
+      {visible.length === 0 ? (
+        <p className="px-[var(--panel-gutter)] py-6 text-center text-[12.5px] text-muted">
+          No candidate is in that state yet.
+        </p>
+      ) : (
+        <ul>
+          {visible.map((candidate) => (
+            <CandidateRow key={candidate.gene} candidate={candidate} screenId={screenId} canDecide={canDecide} />
+          ))}
+        </ul>
+      )}
+      {beyondCap > 0 && (
+        <p className="border-t border-line px-[var(--panel-gutter)] py-2 text-[11px] leading-snug text-muted">
+          {formatNumber(beyondCap)} more candidates clear the threshold than this board shows. A list this
+          long is a threshold to reconsider rather than a list to page through; the full set is in the
+          recorded results below.
+        </p>
+      )}
     </div>
   );
 }

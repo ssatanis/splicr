@@ -10,8 +10,6 @@
  * Each fact links to the rows behind it, so none of them is a number a reader
  * has to take on trust.
  */
-import Link from "next/link";
-
 import type { OutcomeResult } from "@/lib/outcomes/model";
 import type { Diagnosis } from "@/lib/report/screen-doctor";
 import { cn, formatNumber } from "@/lib/utils";
@@ -32,7 +30,10 @@ function Fact({ label, value, note, href, tone = "ink" }: {
   return (
     <div className="flex min-w-0 flex-col gap-1.5 border-l border-t border-line px-[var(--panel-gutter)] py-2.5">
       {href ? (
-        <Link href={href} scroll={false} className="rounded-sm hover:opacity-80">{figure}</Link>
+        // An in-page anchor, not a route: the candidates are on this page and
+        // sending the reader through the server to reach them would re-read the
+        // run to show them something already rendered below.
+        <a href={href} className="rounded-sm hover:opacity-80">{figure}</a>
       ) : figure}
       <span className="truncate text-[11px] leading-none text-muted">{label}</span>
       <span className="text-[11px] leading-[1.35] text-muted">{note}</span>

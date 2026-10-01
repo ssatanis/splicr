@@ -16,6 +16,7 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { CandidateBoard } from "@/components/dashboard/evidence/candidate-board";
 import { DecisionSummary } from "@/components/dashboard/evidence/decision-summary";
 import { EffectExplorer } from "@/components/dashboard/evidence/effect-explorer";
 import { ScreenDoctor } from "@/components/dashboard/evidence/screen-doctor";
@@ -33,6 +34,7 @@ import {
 } from "@/components/dashboard/ui";
 import { geneEvidence, type GeneEvidence } from "@/lib/atlas/query";
 import { getAtlasGenes } from "@/lib/atlas/store";
+import { getCandidates } from "@/lib/data/candidate-universe";
 import { getEffectPoints } from "@/lib/data/disagreement";
 import { getCurrentContext } from "@/lib/data/org";
 import { getGeneOutcomes } from "@/lib/data/outcomes";
@@ -80,13 +82,16 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
   // the workspace database and cannot fail the page. If it cannot be read the
   // column says "Not looked up" instead of implying the Atlas has no record.
   let evidence: Map<string, GeneEvidence> | null = null;
-  if (!humanOnly && hits.length > 0) {
+  let atlasIndex: ReturnType<typeof getAtlasGenes> | null = null;
+  if (!humanOnly) {
     try {
-      const index = getAtlasGenes();
-      evidence = new Map(hits.map((hit) => [hit.gene_symbol.toUpperCase(), geneEvidence(index, hit.gene_symbol)]));
+      atlasIndex = getAtlasGenes();
     } catch (error) {
       console.error(`[screens/page] atlas: ${error instanceof Error ? error.message : "read failed"}`);
     }
+  }
+  if (atlasIndex && hits.length > 0) {
+    evidence = new Map(hits.map((hit) => [hit.gene_symbol.toUpperCase(), geneEvidence(atlasIndex, hit.gene_symbol)]));
   }
 
   // The plot draws one comparison at a time. When the table is filtered to a
@@ -104,6 +109,22 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
     hits.length > 0 ? getGeneOutcomes(screen.id, [...new Set(hits.map((hit) => hit.gene_symbol))]) : Promise.resolve(new Map()),
     plotComparison ? getEffectPoints(screen.id, plotComparison.id) : Promise.resolve({ status: "unavailable" } as const),
   ]);
+
+  // The candidates: the recorded hits of the plotted comparison at or below the
+  // page's threshold, with whatever this lab has already decided about them.
+  // The rule is printed beside the count, because 20,916 records are not 20,916
+  // candidates and the difference is a line somebody drew.
+  const universe = run
+    ? await getCandidates({
+        screenId: screen.id,
+        runId: run.id,
+        comparisonId: plotComparison?.id ?? null,
+        comparisonName: plotComparison?.name ?? "this run",
+        maxFdr: SIGNIFICANT_FDR,
+        atlas: atlasIndex,
+        outcomes,
+      })
+    : ({ status: "unavailable" } as const);
 
   const role = context.role;
   const canLog = role === "member" || role === "admin" || role === "owner";
@@ -185,7 +206,7 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
               significantFdr={SIGNIFICANT_FDR}
               significantFlagged={summary.significantFlagged}
               outcomes={outcomes}
-              candidatesHref={hitHref(base, query, { maxFdr: SIGNIFICANT_FDR })}
+              candidatesHref="#candidates"
             />
           </Panel>
 
@@ -198,6 +219,32 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
           </Panel>
 
           <GeneFocusProvider>
+          <Panel
+            id="candidates"
+            title="Candidates"
+            count={
+              universe.status === "found"
+                ? `${formatNumber(universe.candidates.length)} at or below FDR ${SIGNIFICANT_FDR} in ${plotComparison?.name ?? "this run"}`
+                : "unavailable"
+            }
+            body="flush"
+          >
+            {universe.status === "found" ? (
+              <CandidateBoard
+                candidates={universe.candidates}
+                screenId={screen.id}
+                canDecide={canLog}
+                decisionsKnown={universe.decisionsKnown}
+                beyondCap={universe.beyondCap}
+              />
+            ) : (
+              <p className="px-4 py-8 text-center text-[12.5px] text-muted">
+                The candidates could not be read. Reload to try again. Their absence here says nothing
+                about what the run recorded.
+              </p>
+            )}
+          </Panel>
+
           {plotComparison && (
             <Panel
               title="Effect and significance"

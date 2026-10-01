@@ -14,6 +14,8 @@
 
 import { revalidatePath } from "next/cache";
 
+import { geneEvidence } from "@/lib/atlas/query";
+import { getAtlasGenes } from "@/lib/atlas/store";
 import { CANDIDATE_STATES, type CandidateState } from "@/lib/report/candidates";
 import { createClient } from "@/lib/supabase/server";
 
@@ -71,6 +73,23 @@ export async function recordCandidateDecision(formData: FormData): Promise<Actio
       .eq("id", hit.data?.run_id ?? screen.data.current_run_id ?? "")
       .maybeSingle();
 
+    // The Atlas as it stood. Read from the snapshot on disk, so a failure here
+    // records that it was not looked up rather than inventing a count.
+    let atlas: { hits: number; tested: number; frequent_hitter: boolean } | null = null;
+    try {
+      const index = getAtlasGenes();
+      const found = geneEvidence(index, gene);
+      if (found.found) {
+        atlas = {
+          hits: found.hitsBackground,
+          tested: found.testedBackground,
+          frequent_hitter: found.frequentHitter === "above_threshold",
+        };
+      }
+    } catch {
+      atlas = null;
+    }
+
     const evidence = {
       schema: "splicr.candidate_evidence.v1",
       recorded: hit.data !== null,
@@ -82,6 +101,10 @@ export async function recordCandidateDecision(formData: FormData): Promise<Actio
       n_good_guides: hit.data?.n_good_guides ?? null,
       guide_lfcs: hit.data?.guide_lfcs ?? null,
       flags: hit.data?.hit_flags ?? [],
+      comparison_id: hit.data?.comparison_id ?? null,
+      //  Null means the Atlas was not looked up or holds no such gene. It never
+      //  means the gene was measured and never called; that is tested = 0.
+      atlas,
       engine_version: run.data?.engine_version ?? null,
       image_digest: run.data?.image_digest ?? null,
       frozen_at: new Date().toISOString(),
