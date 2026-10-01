@@ -25,13 +25,17 @@ from typing import Any
 from . import state
 
 #: public.screen_requests.status, mapped from ingest.studies.status.
-#: 'discovered' and 'planned' are both "the engine has it and is working",
-#: which is one fact to a researcher even though they are two to the engine.
+#:
+#: Two states rather than four, and two rather than one. 'discovered' and
+#: 'planned' are both "working out which runs are which", which is minutes.
+#: 'fetching' and 'analyzing' are both "pulling the reads and counting them",
+#: which is hours. A researcher watching a request deserves to know which of
+#: those they are waiting for; they do not need the engine's own four.
 _FROM_STUDY = {
-    "discovered": "accepted",
-    "planned": "accepted",
-    "fetching": "accepted",
-    "analyzing": "accepted",
+    "discovered": "planning",
+    "planned": "planning",
+    "fetching": "running",
+    "analyzing": "running",
     "needs_review": "needs_review",
     "published": "published",
     "rejected": "rejected",

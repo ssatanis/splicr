@@ -25,6 +25,8 @@ import { StatusChip, type ChipTone } from "./ui";
 
 const TONE: Record<ScreenRequest["status"], ChipTone> = {
   queued: "wait",
+  planning: "run",
+  running: "run",
   accepted: "run",
   needs_review: "wait",
   published: "ok",

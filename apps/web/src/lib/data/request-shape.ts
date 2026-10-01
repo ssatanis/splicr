@@ -9,6 +9,8 @@
 
 export type ScreenRequestStatus =
   | "queued"
+  | "planning"
+  | "running"
   | "accepted"
   | "needs_review"
   | "published"
@@ -35,9 +37,19 @@ export const REQUEST_COPY: Record<ScreenRequestStatus, { label: string; body: st
     label: "Queued",
     body: "Recorded. The ingest engine picks requests up on its next sweep and reports back here.",
   },
+  planning: {
+    label: "Working out the design",
+    body: "The engine is reading the deposit to decide which runs are the treated arm, the control arm and the reference.",
+  },
+  running: {
+    label: "Analysing",
+    body: "The reads are being fetched, counted and run through QC and hit calling. This is the long part.",
+  },
+  // Kept for rows written before planning and running existed. Nothing writes
+  // it now, and nothing should: it said four different things at once.
   accepted: {
     label: "In progress",
-    body: "The engine recognised the accession, inferred the design and is reanalysing it from the raw reads.",
+    body: "The engine has the accession and is working on it.",
   },
   needs_review: {
     label: "Needs review",

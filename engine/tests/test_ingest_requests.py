@@ -55,16 +55,16 @@ def no_events(monkeypatch):
     monkeypatch.setattr(req.state, "event", lambda *a, **k: None)
 
 
-def test_a_planned_study_moves_the_request_to_accepted(monkeypatch):
+def test_a_planned_study_is_reported_as_planning_not_as_analysing(monkeypatch):
     monkeypatch.setattr("splicr.ingest.runner.request", lambda a: {"accession": "SRP1"})
     conn = FakeConn([
         [("req-1", "GSE1")],                                   # queued requests
         [("planned", "A HeLa olaparib screen", [], None, None)],  # the study row
     ])
     out = req.drain(conn)
-    assert out["handled"] == [{"accession": "GSE1", "resolved": "SRP1", "status": "accepted"}]
+    assert out["handled"] == [{"accession": "GSE1", "resolved": "SRP1", "status": "planning"}]
     status, detail, resolved, request_id = updates(conn)[0]
-    assert (status, resolved, request_id) == ("accepted", "SRP1", "req-1")
+    assert (status, resolved, request_id) == ("planning", "SRP1", "req-1")
     assert detail == "A HeLa olaparib screen"
 
 
@@ -131,10 +131,10 @@ def test_one_broken_request_does_not_stop_the_queue(monkeypatch):
         [("planned", "Fine", [], None, None)],   # the study row for GSE6
     ])
     out = req.drain(conn)
-    assert [entry["status"] for entry in out["handled"]] == ["failed", "accepted"]
+    assert [entry["status"] for entry in out["handled"]] == ["failed", "planning"]
     assert updates(conn)[0][0] == "failed"
     # The second request is still handled, which is the point of this test.
-    assert updates(conn)[1][0] == "accepted"
+    assert updates(conn)[1][0] == "planning"
 
 
 def test_a_request_with_no_study_row_is_a_bug_not_a_verdict(monkeypatch):
@@ -175,3 +175,11 @@ def test_every_ingest_status_maps_to_a_request_status():
 
     missing = set(STATUSES) - set(req._FROM_STUDY)
     assert not missing, f"ingest statuses with no request mapping: {sorted(missing)}"
+
+
+def test_waiting_for_a_design_reads_differently_from_waiting_for_reads():
+    # The two waits are minutes and hours. Collapsing them, as 'accepted' did,
+    # tells a researcher nothing about which one they are in.
+    assert req._FROM_STUDY["discovered"] == req._FROM_STUDY["planned"] == "planning"
+    assert req._FROM_STUDY["fetching"] == req._FROM_STUDY["analyzing"] == "running"
+    assert "accepted" not in req._FROM_STUDY.values()
