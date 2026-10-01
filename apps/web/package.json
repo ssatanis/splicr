@@ -8,7 +8,11 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "vendor": "node scripts/copy-vendor.mjs"
+    "vendor": "node scripts/copy-vendor.mjs",
+    "e2e": "playwright test --project=fast",
+    "e2e:live": "playwright test --project=live",
+    "e2e:seed": "node e2e/fixtures/seed.cjs seed",
+    "e2e:teardown": "node e2e/fixtures/seed.cjs teardown"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",
@@ -30,6 +34,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^24",
     "@types/react": "^19",

@@ -377,6 +377,7 @@ export function CandidateBoard({ candidates, screenId, canDecide, decisionsKnown
         <label className="ml-auto flex items-center gap-1.5 text-muted">
           Sort
           <select
+            aria-label="Sort candidates"
             value={sort}
             onChange={(event) => setSort(event.target.value as typeof sort)}
             className="h-6 rounded border border-line bg-white px-1.5 pr-5 text-[11px] text-ink outline-none focus:border-cyan-500"

@@ -29,7 +29,9 @@
     "atlas:snapshot": "engine/.tools/env/bin/python scripts/data/build-atlas-snapshot.py",
     "atlas:check": "engine/.tools/env/bin/python scripts/data/build-atlas-snapshot.py --check",
     "db:advisors": "node scripts/db/advisors.mjs",
-    "auth:provision": "node scripts/auth/provision-researcher.mjs"
+    "auth:provision": "node scripts/auth/provision-researcher.mjs",
+    "e2e": "npm run e2e -w apps/web",
+    "e2e:live": "npm run e2e:live -w apps/web"
   },
   "devDependencies": {
     "pg": "^8.18.0",
