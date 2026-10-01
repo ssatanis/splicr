@@ -15,6 +15,7 @@ import { useId, useState, type ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
+import { useGeneFocus } from "../evidence/gene-focus";
 import { ROW_HIT } from "../ui";
 
 export function ExpandableHitRow({
@@ -30,15 +31,23 @@ export function ExpandableHitRow({
 }) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
+  const { gene: focused, focus } = useGeneFocus();
+  const isFocused = focused === gene.toUpperCase();
   return (
     <>
-      <tr className={ROW_HIT}>
+      <tr className={cn(ROW_HIT, isFocused && "bg-cyan-50/60")}>
         <td>
           <button
             type="button"
             aria-expanded={open}
             aria-controls={panelId}
-            onClick={() => setOpen((current) => !current)}
+            // Opening a row also rings this gene on the effect plot above, so
+            // the two views are never looking at different genes.
+            onClick={() => {
+              const next = !open;
+              setOpen(next);
+              focus(next ? gene : null);
+            }}
             className="inline-flex items-center gap-1 rounded-sm font-medium text-ink hover:text-orange-600"
           >
             <ChevronRight

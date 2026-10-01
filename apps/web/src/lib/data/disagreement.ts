@@ -25,6 +25,7 @@ import "server-only";
 
 import { getCurrentContext } from "@/lib/data/org";
 import { isUuid } from "@/lib/data/types";
+import type { EffectSeries } from "@/lib/report/effect-series";
 import { createClient } from "@/lib/supabase/server";
 
 /** Mirrors validate.domain_report.GuideEvidence. */
@@ -211,33 +212,34 @@ export async function getGeneDisagreement(
   }
 }
 
-/** One point on the effect-versus-significance plot, exactly as recorded. */
-export interface EffectPoint {
-  gene: string;
-  lfc: number;
-  /** Recorded FDR. Null rows are kept and drawn on their own baseline row. */
-  fdr: number | null;
-  direction: string;
-  /** Whether this gene has a stored guide-disagreement report to open. */
-  hasReport: boolean;
-  fragile: boolean;
-  discordant: boolean;
-}
+export type { EffectSeries } from "@/lib/report/effect-series";
 
 /**
- * How many recorded genes the plot will draw.
- *
- * A genome-wide comparison records about twenty thousand genes. Every one of them
- * is sent, because a plot that silently drops the rows it finds inconvenient is a
- * plot that misrepresents the experiment; the renderer is a canvas for that
- * reason. The cap exists only so a corrupt row count cannot exhaust the response,
- * and when it bites the page says so rather than drawing a subset quietly.
+ * The read goes through `screen_effect_points`, a SECURITY INVOKER function, so
+ * Row Level Security still decides what comes back. It returns one jsonb value,
+ * which matters: PostgREST caps a collection response at a thousand rows for
+ * this project, and no client-side `.limit()` can raise it. Reading the hits
+ * table directly returned the first thousand gene symbols alphabetically and
+ * nothing else, which is how a run with eleven significant genes came to plot
+ * none of them.
  */
-export const EFFECT_POINT_LIMIT = 40000;
-
 export type EffectPointsResult =
-  | { status: "found"; points: EffectPoint[]; recorded: number; truncated: boolean }
+  | { status: "found"; series: EffectSeries }
   | { status: "unavailable" };
+
+/** The shape `screen_effect_points` promises, before it is trusted. */
+function isSeriesPayload(value: unknown): value is {
+  gene: unknown[]; lfc: unknown[]; fdr: unknown[]; marks: unknown[];
+  recorded: number; without_effect: number;
+} {
+  if (typeof value !== "object" || value === null) return false;
+  const r = value as Record<string, unknown>;
+  return (
+    Array.isArray(r.gene) && Array.isArray(r.lfc) && Array.isArray(r.fdr) && Array.isArray(r.marks)
+    && typeof r.recorded === "number" && typeof r.without_effect === "number"
+    && r.lfc.length === r.gene.length && r.fdr.length === r.gene.length && r.marks.length === r.gene.length
+  );
+}
 
 /** Recorded effect and significance for every gene of one comparison. */
 export async function getEffectPoints(
@@ -249,41 +251,23 @@ export async function getEffectPoints(
   if (!context.user || !context.org) return { status: "unavailable" };
   try {
     const client = await createClient();
-    const hits = await client.from("hits")
-      .select("gene_symbol, lfc, fdr, direction", { count: "exact" })
-      .eq("screen_id", screenId)
-      .eq("comparison_id", comparisonId)
-      .not("lfc", "is", null)
-      .order("gene_symbol", { ascending: true })
-      .limit(EFFECT_POINT_LIMIT);
-    if (hits.error) throw hits.error;
-
-    const reports = await client.from("gene_disagreement")
-      .select("gene_symbol, fragile, discordant")
-      .eq("comparison_id", comparisonId)
-      .limit(EFFECT_POINT_LIMIT);
-    if (reports.error) throw reports.error;
-    const flags = new Map(
-      (reports.data ?? []).map((row) => [
-        String(row.gene_symbol).toUpperCase(),
-        { fragile: Boolean(row.fragile), discordant: Boolean(row.discordant) },
-      ]),
-    );
-
-    const points: EffectPoint[] = (hits.data ?? []).map((row) => {
-      const flag = flags.get(String(row.gene_symbol).toUpperCase());
-      return {
-        gene: String(row.gene_symbol),
-        lfc: Number(row.lfc),
-        fdr: row.fdr === null ? null : Number(row.fdr),
-        direction: String(row.direction),
-        hasReport: flag !== undefined,
-        fragile: flag?.fragile ?? false,
-        discordant: flag?.discordant ?? false,
-      };
+    const { data, error } = await client.rpc("screen_effect_points", {
+      p_screen: screenId,
+      p_comparison: comparisonId,
     });
-    const recorded = hits.count ?? points.length;
-    return { status: "found", points, recorded, truncated: recorded > points.length };
+    if (error) throw error;
+    if (!isSeriesPayload(data)) return { status: "unavailable" };
+    return {
+      status: "found",
+      series: {
+        gene: data.gene.map(String),
+        lfc: data.lfc.map(Number),
+        fdr: data.fdr.map((value) => (value === null ? null : Number(value))),
+        marks: data.marks.map(Number),
+        recorded: data.recorded,
+        withoutEffect: data.without_effect,
+      },
+    };
   } catch (error) {
     console.error(`[data/disagreement] points: ${error instanceof Error ? error.message : "read failed"}`);
     return { status: "unavailable" };

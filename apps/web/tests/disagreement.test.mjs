@@ -172,9 +172,15 @@ test("the concordance status values are the engine's, exactly", () => {
 // The loader's query boundaries
 // ---------------------------------------------------------------------------
 
-function harness({ context = workspace, responses = {} } = {}) {
+function harness({ context = workspace, responses = {}, rpc = null } = {}) {
   const queries = [];
-  const client = { from(table) {
+  const rpcCalls = [];
+  const client = {
+    rpc(name, args) {
+      rpcCalls.push({ name, args });
+      return Promise.resolve(rpc ?? { data: null, error: { message: "no rpc configured" } });
+    },
+    from(table) {
     const query = { table, filters: [], orders: [], columns: null, options: null };
     queries.push(query);
     const result = () => responses[table] ?? { data: [], error: null, count: 0 };
@@ -188,8 +194,9 @@ function harness({ context = workspace, responses = {} } = {}) {
         return chain;
       };
     } });
-    return chain;
-  } };
+      return chain;
+    },
+  };
   const mod = loadTs("lib/data/disagreement.ts", {
     mocks: {
       "server-only": {},
@@ -197,7 +204,7 @@ function harness({ context = workspace, responses = {} } = {}) {
       "@/lib/supabase/server": { createClient: async () => client },
     },
   });
-  return { ...mod, queries };
+  return { ...mod, queries, rpcCalls };
 }
 
 test("a signed-out session never reads a workspace report", async () => {
@@ -289,37 +296,63 @@ test("a stored report is returned with the time it was recorded", async () => {
   assert.equal(result.recordedAt, "2026-09-30T18:00:00Z");
 });
 
-test("effect points carry the recorded values and say which genes can be opened", async () => {
+test("effect points carry every recorded value, nulls included", async () => {
   const app = harness({
-    responses: {
-      hits: {
-        data: [
-          { gene_symbol: "PARP1", lfc: -2.31, fdr: 0.00018, direction: "depleted" },
-          { gene_symbol: "ACTB", lfc: 0.04, fdr: null, direction: "enriched" },
-        ],
-        count: 2, error: null,
+    rpc: {
+      data: {
+        recorded: 3,
+        without_effect: 7,
+        gene: ["ACTB", "PARG", "PARP1"],
+        lfc: [0.04, 3.4051, -2.31],
+        // A null FDR stays null. It is not 1, it is not 0, and it is not dropped.
+        fdr: [null, 0.0062, 0.00018],
+        // Bit 1 report exists, bit 2 fragile, bit 4 discordant.
+        marks: [0, 1, 3],
       },
-      gene_disagreement: {
-        data: [{ gene_symbol: "PARP1", fragile: true, discordant: false }],
-        error: null,
-      },
+      error: null,
     },
   });
   const result = await app.getEffectPoints(screenId, cmpId);
   assert.equal(result.status, "found");
-  // A null FDR stays null. It is not 1, it is not 0, and it is not dropped.
-  assert.deepEqual(result.points.map((p) => p.fdr), [0.00018, null]);
-  assert.deepEqual(result.points.map((p) => p.hasReport), [true, false]);
-  assert.deepEqual(result.points.map((p) => p.fragile), [true, false]);
-  assert.equal(result.truncated, false);
-  const hits = app.queries.find((q) => q.table === "hits");
-  assert.deepEqual(hits.filters, [["screen_id", screenId], ["comparison_id", cmpId]]);
+  assert.deepEqual(result.series.gene, ["ACTB", "PARG", "PARP1"]);
+  assert.deepEqual(result.series.fdr, [null, 0.0062, 0.00018]);
+  assert.deepEqual(result.series.marks, [0, 1, 3]);
+  assert.equal(result.series.recorded, 3);
+  // Genes with no recorded effect cannot be placed, and the count says so
+  // rather than the plot quietly calling 3 the whole comparison.
+  assert.equal(result.series.withoutEffect, 7);
+
+  // The read goes through the function, not the hits collection: PostgREST caps
+  // a collection at a thousand rows and silently returned the first thousand
+  // gene symbols alphabetically, which is how a run with eleven significant
+  // genes plotted none of them.
+  assert.equal(app.queries.length, 0);
+  assert.deepEqual(app.rpcCalls, [
+    { name: "screen_effect_points", args: { p_screen: screenId, p_comparison: cmpId } },
+  ]);
+});
+
+test("a payload whose arrays disagree in length is unavailable, not half a plot", async () => {
+  for (const data of [
+    { recorded: 2, without_effect: 0, gene: ["A", "B"], lfc: [1], fdr: [0.1, 0.2], marks: [0, 0] },
+    { recorded: 1, without_effect: 0, gene: ["A"], lfc: [1], fdr: [0.1] },
+    null,
+  ]) {
+    const app = harness({ rpc: { data, error: null } });
+    assert.equal((await app.getEffectPoints(screenId, cmpId)).status, "unavailable");
+  }
+});
+
+test("a read failure is unavailable, never an empty comparison", async () => {
+  const app = harness({ rpc: { data: null, error: { message: "connection reset" } } });
+  assert.equal((await app.getEffectPoints(screenId, cmpId)).status, "unavailable");
 });
 
 test("effect points are unavailable for a malformed id", async () => {
   const app = harness();
   assert.equal((await app.getEffectPoints("nope", cmpId)).status, "unavailable");
   assert.equal(app.queries.length, 0);
+  assert.equal(app.rpcCalls.length, 0);
 });
 
 // ---------------------------------------------------------------------------

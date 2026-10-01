@@ -6,89 +6,166 @@
  * WHAT IT DRAWS AND WHAT IT REFUSES TO
  *
  * One dot per recorded gene, at its recorded log2 fold change and its recorded
- * FDR. Nothing is fitted, smoothed, jittered or thinned. A genome-wide comparison
- * is about twenty thousand dots, which is why this is a canvas: a plot that drops
- * the rows it finds inconvenient misrepresents the experiment, and dropping them
- * for frame rate is still dropping them.
+ * FDR. Nothing is fitted, smoothed, jittered or thinned. A genome-wide
+ * comparison is twenty thousand dots and all twenty thousand are drawn, which
+ * is why this is a canvas: dropping rows for frame rate is still dropping rows,
+ * and the rows a sampler drops are the ones in the tails.
  *
  * Genes with no recorded FDR are not silently omitted and are not drawn at the
- * top as if they were the most significant. They sit on a separate row below the
- * axis, labelled, because "no FDR recorded" is not "FDR 1" and is certainly not
- * "FDR 0".
+ * top as if they were the most significant. They sit on a separate row below
+ * the axis, labelled, because "no FDR recorded" is not "FDR 1" and is certainly
+ * not "FDR 0".
  *
- * The y axis is -log10(FDR) and is clipped at a stated ceiling. A clipped dot is
- * drawn hollow, so a reader can see that its true position is off the top rather
- * than believing the ceiling is the value.
+ * BOTH AXES FOLLOW THE DATA
+ *
+ * An earlier version fixed the vertical axis at -log10(FDR) = 12. A run whose
+ * best FDR is 0.005 reaches 2.3, so four fifths of the panel was empty and
+ * every dot sat in a band a few pixels tall. The axes now take their range from
+ * the comparison, rounded out to a readable tick, and a value past the range is
+ * drawn hollow at the edge so a reader can see that its real position is
+ * further out rather than believing the edge is the value.
  *
  * The thresholds are display filters. Moving them changes which dots are
- * emphasised and recomputes nothing: the axis label says so, and the stored
- * statistics and the stored disagreement report are untouched.
+ * emphasised and recomputes nothing: the stored statistics and the stored
+ * disagreement reports are untouched.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import type { EffectPoint } from "@/lib/data/disagreement";
+import { MARK_DISCORDANT, MARK_FRAGILE, MARK_HAS_REPORT, type EffectSeries } from "@/lib/report/effect-series";
 
-/** -log10(FDR) beyond this is drawn at the ceiling, hollow, and said to be clipped. */
-const Y_CEILING = 12;
-/** Half-width of the x axis in log2 units. A dot beyond it is clipped the same way. */
-const X_LIMIT = 6;
-const PADDING = { top: 14, right: 16, bottom: 46, left: 52 };
+const PADDING = { top: 16, right: 18, bottom: 44, left: 56 };
 /** Below the axis, where genes with no recorded FDR are drawn. */
-const NO_FDR_BAND = 22;
+const NO_FDR_BAND = 20;
+/** A dot beyond this many log2 units is drawn hollow at the edge. */
+const X_HARD_LIMIT = 12;
 
 export interface EffectPlotProps {
-  points: readonly EffectPoint[];
+  series: EffectSeries;
   /** Display threshold on recorded FDR. */
   maxFdr: number;
   /** Display threshold on |log2 fold change|. */
   minAbsLfc: number;
   selected: string | null;
-  onSelect: (gene: string) => void;
-  /** Genes recorded in the run but not drawn, when the row cap bit. */
-  truncatedBy?: number;
+  /** Null when no gene in this comparison has a report to open. */
+  onSelect: ((gene: string) => void) | null;
+  /** Drawn with a ring and a label even when it is not emphasised. */
+  highlight?: string | null;
 }
 
-interface Placed extends EffectPoint {
-  x: number;
-  y: number;
-  emphasised: boolean;
-  clipped: boolean;
-  noFdr: boolean;
+/** The scales the panel is drawn on, taken from the data rather than assumed. */
+interface Scale {
+  xLimit: number;
+  yCeiling: number;
+  xTicks: number[];
+  yTicks: number[];
 }
 
-function transform(points: readonly EffectPoint[], width: number, height: number,
-                   maxFdr: number, minAbsLfc: number): Placed[] {
+/** A tick step that reads as 1, 2 or 5 times a power of ten. */
+function niceStep(span: number, target: number): number {
+  const raw = span / Math.max(1, target);
+  const magnitude = 10 ** Math.floor(Math.log10(raw || 1));
+  const normalised = raw / magnitude;
+  const step = normalised <= 1 ? 1 : normalised <= 2 ? 2 : normalised <= 5 ? 5 : 10;
+  return step * magnitude;
+}
+
+function ticksTo(limit: number, step: number, signed: boolean): number[] {
+  const out: number[] = [];
+  for (let value = signed ? -Math.floor(limit / step) * step : 0; value <= limit + 1e-9; value += step) {
+    out.push(Number(value.toFixed(6)));
+  }
+  return out;
+}
+
+/** -log10(FDR), with the resolution floor RRA reports as 0 treated as "off the top". */
+function significance(fdr: number | null): number {
+  if (fdr === null) return Number.NaN;
+  if (fdr <= 0) return Number.POSITIVE_INFINITY;
+  return -Math.log10(fdr);
+}
+
+function buildScale(series: EffectSeries): Scale {
+  let maxAbsLfc = 0;
+  let maxY = 0;
+  for (let index = 0; index < series.lfc.length; index += 1) {
+    const lfc = Math.abs(series.lfc[index]);
+    if (Number.isFinite(lfc) && lfc < X_HARD_LIMIT && lfc > maxAbsLfc) maxAbsLfc = lfc;
+    const y = significance(series.fdr[index]);
+    if (Number.isFinite(y) && y > maxY) maxY = y;
+  }
+  const xStep = niceStep(Math.max(maxAbsLfc, 1) * 2, 8);
+  const xLimit = Math.max(xStep, Math.ceil(maxAbsLfc / xStep) * xStep);
+  const yStep = niceStep(Math.max(maxY, 1), 5);
+  const yCeiling = Math.max(yStep, Math.ceil(maxY / yStep) * yStep);
+  return {
+    xLimit,
+    yCeiling,
+    xTicks: ticksTo(xLimit, xStep, true),
+    yTicks: ticksTo(yCeiling, yStep, false),
+  };
+}
+
+/** Screen position and emphasis for one gene, recomputed when the panel resizes. */
+interface Frame {
+  x: Float32Array;
+  y: Float32Array;
+  emphasised: Uint8Array;
+  clipped: Uint8Array;
+  noFdr: Uint8Array;
+  emphasisedCount: number;
+  noFdrCount: number;
+  clippedCount: number;
+}
+
+function place(series: EffectSeries, scale: Scale, width: number, height: number,
+               maxFdr: number, minAbsLfc: number): Frame {
+  const n = series.gene.length;
   const plotWidth = Math.max(1, width - PADDING.left - PADDING.right);
   const plotHeight = Math.max(1, height - PADDING.top - PADDING.bottom - NO_FDR_BAND);
-  return points.map((point) => {
-    const lfc = Math.max(-X_LIMIT, Math.min(X_LIMIT, point.lfc));
-    const x = PADDING.left + ((lfc + X_LIMIT) / (2 * X_LIMIT)) * plotWidth;
-    const noFdr = point.fdr === null;
-    let y: number;
-    let clipped = Math.abs(point.lfc) > X_LIMIT;
-    if (noFdr) {
-      y = PADDING.top + plotHeight + NO_FDR_BAND / 2;
+  const x = new Float32Array(n);
+  const y = new Float32Array(n);
+  const emphasised = new Uint8Array(n);
+  const clipped = new Uint8Array(n);
+  const noFdr = new Uint8Array(n);
+  let emphasisedCount = 0;
+  let noFdrCount = 0;
+  let clippedCount = 0;
+
+  for (let index = 0; index < n; index += 1) {
+    const rawLfc = series.lfc[index];
+    const bounded = Math.max(-scale.xLimit, Math.min(scale.xLimit, rawLfc));
+    x[index] = PADDING.left + ((bounded + scale.xLimit) / (2 * scale.xLimit)) * plotWidth;
+
+    const fdr = series.fdr[index];
+    let off = Math.abs(rawLfc) > scale.xLimit;
+    if (fdr === null) {
+      noFdr[index] = 1;
+      noFdrCount += 1;
+      y[index] = PADDING.top + plotHeight + NO_FDR_BAND / 2;
     } else {
-      // FDR 0 is reported by RRA at its resolution floor; treat it as the
-      // ceiling rather than dividing by zero, and mark it clipped.
-      const raw = point.fdr === 0 ? Number.POSITIVE_INFINITY : -Math.log10(point.fdr as number);
-      clipped = clipped || raw > Y_CEILING;
-      y = PADDING.top + plotHeight - (Math.min(raw, Y_CEILING) / Y_CEILING) * plotHeight;
+      const raw = significance(fdr);
+      off = off || raw > scale.yCeiling;
+      y[index] = PADDING.top + plotHeight - (Math.min(raw, scale.yCeiling) / scale.yCeiling) * plotHeight;
+      if (fdr <= maxFdr && Math.abs(rawLfc) >= minAbsLfc) {
+        emphasised[index] = 1;
+        emphasisedCount += 1;
+      }
     }
-    const emphasised =
-      !noFdr && (point.fdr as number) <= maxFdr && Math.abs(point.lfc) >= minAbsLfc;
-    return { ...point, x, y, emphasised, clipped, noFdr };
-  });
+    if (off) {
+      clipped[index] = 1;
+      clippedCount += 1;
+    }
+  }
+  return { x, y, emphasised, clipped, noFdr, emphasisedCount, noFdrCount, clippedCount };
 }
 
 export function EffectPlot({
-  points, maxFdr, minAbsLfc, selected, onSelect, truncatedBy = 0,
+  series, maxFdr, minAbsLfc, selected, onSelect, highlight = null,
 }: EffectPlotProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
-  const [size, setSize] = useState({ width: 720, height: 420 });
-  const [hovered, setHovered] = useState<Placed | null>(null);
-  const [focusIndex, setFocusIndex] = useState(0);
+  const [size, setSize] = useState({ width: 720, height: 360 });
+  const [hovered, setHovered] = useState<number | null>(null);
 
   useEffect(() => {
     const element = wrapRef.current;
@@ -101,13 +178,20 @@ export function EffectPlot({
     return () => observer.disconnect();
   }, []);
 
-  const placed = useMemo(
-    () => transform(points, size.width, size.height, maxFdr, minAbsLfc),
-    [points, size.width, size.height, maxFdr, minAbsLfc],
+  const scale = useMemo(() => buildScale(series), [series]);
+  const frame = useMemo(
+    () => place(series, scale, size.width, size.height, maxFdr, minAbsLfc),
+    [series, scale, size.width, size.height, maxFdr, minAbsLfc],
   );
 
-  /** Only genes with a stored report can be opened, so only they are reachable. */
-  const openable = useMemo(() => placed.filter((p) => p.hasReport), [placed]);
+  const indexOfGene = useMemo(() => {
+    const map = new Map<string, number>();
+    series.gene.forEach((gene, index) => map.set(gene.toUpperCase(), index));
+    return map;
+  }, [series.gene]);
+
+  const selectedIndex = selected ? indexOfGene.get(selected.toUpperCase()) ?? null : null;
+  const highlightIndex = highlight ? indexOfGene.get(highlight.toUpperCase()) ?? null : null;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -121,17 +205,20 @@ export function EffectPlot({
     ctx.clearRect(0, 0, size.width, size.height);
 
     const style = getComputedStyle(canvas);
-    const line = style.getPropertyValue("--plot-line").trim() || "#d6d6d6";
-    const dim = style.getPropertyValue("--plot-dim").trim() || "#6b6b6b";
-    const down = style.getPropertyValue("--plot-depleted").trim() || "#14596b";
-    const up = style.getPropertyValue("--plot-enriched").trim() || "#9a4a16";
-    const ink = style.getPropertyValue("--plot-ink").trim() || "#111111";
+    const read = (name: string, fallback: string) => style.getPropertyValue(name).trim() || fallback;
+    const line = read("--plot-line", "#d6d6d6");
+    const dim = read("--plot-dim", "#6b6b6b");
+    const down = read("--plot-depleted", "#14596b");
+    const up = read("--plot-enriched", "#9a4a16");
+    const ink = read("--plot-ink", "#111111");
 
     const plotWidth = size.width - PADDING.left - PADDING.right;
     const plotHeight = size.height - PADDING.top - PADDING.bottom - NO_FDR_BAND;
     const axisY = PADDING.top + plotHeight;
+    const xAt = (lfc: number) =>
+      PADDING.left + ((Math.max(-scale.xLimit, Math.min(scale.xLimit, lfc)) + scale.xLimit) / (2 * scale.xLimit)) * plotWidth;
+    const yAt = (value: number) => axisY - (Math.min(value, scale.yCeiling) / scale.yCeiling) * plotHeight;
 
-    // Axes and the band that holds genes with no recorded FDR.
     ctx.strokeStyle = line;
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -139,16 +226,16 @@ export function EffectPlot({
     ctx.lineTo(PADDING.left, axisY);
     ctx.lineTo(PADDING.left + plotWidth, axisY);
     ctx.stroke();
-    ctx.setLineDash([2, 3]);
-    ctx.beginPath();
-    ctx.moveTo(PADDING.left, axisY + NO_FDR_BAND);
-    ctx.lineTo(PADDING.left + plotWidth, axisY + NO_FDR_BAND);
-    ctx.stroke();
-    ctx.setLineDash([]);
 
-    // Zero on the effect axis, and the two display thresholds.
-    const xAt = (lfc: number) =>
-      PADDING.left + ((Math.max(-X_LIMIT, Math.min(X_LIMIT, lfc)) + X_LIMIT) / (2 * X_LIMIT)) * plotWidth;
+    if (frame.noFdrCount > 0) {
+      ctx.setLineDash([2, 3]);
+      ctx.beginPath();
+      ctx.moveTo(PADDING.left, axisY + NO_FDR_BAND);
+      ctx.lineTo(PADDING.left + plotWidth, axisY + NO_FDR_BAND);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
     ctx.strokeStyle = dim;
     ctx.beginPath();
     ctx.moveTo(xAt(0), PADDING.top);
@@ -165,80 +252,100 @@ export function EffectPlot({
       ctx.setLineDash([]);
     }
     if (maxFdr > 0 && maxFdr < 1) {
-      const y = axisY - (Math.min(-Math.log10(maxFdr), Y_CEILING) / Y_CEILING) * plotHeight;
       ctx.setLineDash([3, 4]);
       ctx.beginPath();
-      ctx.moveTo(PADDING.left, y);
-      ctx.lineTo(PADDING.left + plotWidth, y);
+      ctx.moveTo(PADDING.left, yAt(-Math.log10(maxFdr)));
+      ctx.lineTo(PADDING.left + plotWidth, yAt(-Math.log10(maxFdr)));
       ctx.stroke();
       ctx.setLineDash([]);
     }
 
-    // Ticks, drawn from the same transform the dots use.
     ctx.fillStyle = dim;
     ctx.font = "10px ui-monospace, SFMono-Regular, Menlo, monospace";
     ctx.textAlign = "center";
-    for (const tick of [-6, -4, -2, 0, 2, 4, 6]) {
-      ctx.fillText(String(tick), xAt(tick), axisY + 14);
-    }
+    const xLabel = (tick: number) => (Math.abs(tick) < 1 && tick !== 0 ? tick.toFixed(1) : String(tick));
+    for (const tick of scale.xTicks) ctx.fillText(xLabel(tick), xAt(tick), axisY + 14);
     ctx.textAlign = "right";
-    for (const tick of [0, 3, 6, 9, 12]) {
-      const y = axisY - (tick / Y_CEILING) * plotHeight;
-      ctx.fillText(String(tick), PADDING.left - 6, y + 3);
-    }
-    ctx.fillText("none", PADDING.left - 6, axisY + NO_FDR_BAND / 2 + 3);
+    for (const tick of scale.yTicks) ctx.fillText(String(tick), PADDING.left - 6, yAt(tick) + 3);
+    if (frame.noFdrCount > 0) ctx.fillText("none", PADDING.left - 6, axisY + NO_FDR_BAND / 2 + 3);
 
-    // Dots. Unemphasised first so the current selection is never buried.
-    const draw = (p: Placed) => {
-      const colour = p.lfc < 0 ? down : up;
+    // Axis titles, so the panel does not need a sentence underneath to say what
+    // it plots.
+    ctx.font = "10px ui-sans-serif, system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("log2 fold change", PADDING.left + plotWidth / 2, size.height - 6);
+    ctx.save();
+    ctx.translate(13, PADDING.top + plotHeight / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText("\u2212log10 FDR", 0, 0);
+    ctx.restore();
+
+    const drawDot = (index: number, radius: number, ringed: boolean) => {
+      const colour = series.lfc[index] < 0 ? down : up;
+      const emphasised = frame.emphasised[index] === 1;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.gene === selected ? 4.5 : p.emphasised ? 2.6 : 1.8, 0, Math.PI * 2);
-      if (p.clipped) {
-        ctx.strokeStyle = p.emphasised ? colour : dim;
+      ctx.arc(frame.x[index], frame.y[index], radius, 0, Math.PI * 2);
+      if (frame.clipped[index] === 1) {
+        ctx.strokeStyle = emphasised ? colour : dim;
         ctx.lineWidth = 1.2;
         ctx.stroke();
       } else {
-        ctx.fillStyle = p.emphasised ? colour : dim;
-        ctx.globalAlpha = p.emphasised ? 0.85 : 0.35;
+        ctx.fillStyle = emphasised ? colour : dim;
+        ctx.globalAlpha = emphasised ? 0.9 : 0.28;
         ctx.fill();
         ctx.globalAlpha = 1;
       }
-      if (p.gene === selected) {
+      if (ringed) {
         ctx.strokeStyle = ink;
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 7, 0, Math.PI * 2);
+        ctx.arc(frame.x[index], frame.y[index], radius + 3.5, 0, Math.PI * 2);
         ctx.stroke();
       }
     };
-    for (const p of placed) if (!p.emphasised) draw(p);
-    for (const p of placed) if (p.emphasised && p.gene !== selected) draw(p);
-    for (const p of placed) if (p.gene === selected) draw(p);
-  }, [placed, selected, size, maxFdr, minAbsLfc]);
 
-  /** Nearest openable gene to a pointer, within a small radius. */
-  const nearest = useCallback((offsetX: number, offsetY: number): Placed | null => {
-    let best: Placed | null = null;
-    let bestDistance = 14 * 14;
-    for (const p of openable) {
-      const distance = (p.x - offsetX) ** 2 + (p.y - offsetY) ** 2;
+    // Background first so an emphasised gene is never buried under the cloud.
+    for (let index = 0; index < series.gene.length; index += 1) {
+      if (frame.emphasised[index] === 0) drawDot(index, 1.6, false);
+    }
+    for (let index = 0; index < series.gene.length; index += 1) {
+      if (frame.emphasised[index] === 1 && index !== selectedIndex && index !== highlightIndex) {
+        drawDot(index, 2.8, false);
+      }
+    }
+    for (const index of [highlightIndex, selectedIndex]) {
+      if (index === null || index === undefined) continue;
+      drawDot(index, 4, true);
+      ctx.fillStyle = ink;
+      ctx.font = "600 11px ui-sans-serif, system-ui, sans-serif";
+      ctx.textAlign = frame.x[index] > size.width - 90 ? "right" : "left";
+      const offset = frame.x[index] > size.width - 90 ? -9 : 9;
+      ctx.fillText(series.gene[index], frame.x[index] + offset, frame.y[index] + 3);
+    }
+  }, [series, scale, frame, selectedIndex, highlightIndex, size, maxFdr, minAbsLfc]);
+
+  /** Nearest gene to a pointer, within a small radius. */
+  const nearest = useCallback((offsetX: number, offsetY: number): number | null => {
+    let best: number | null = null;
+    let bestDistance = 12 * 12;
+    for (let index = 0; index < frame.x.length; index += 1) {
+      const distance = (frame.x[index] - offsetX) ** 2 + (frame.y[index] - offsetY) ** 2;
       if (distance < bestDistance) {
         bestDistance = distance;
-        best = p;
+        best = index;
       }
     }
     return best;
-  }, [openable]);
+  }, [frame]);
 
-  const emphasisedCount = placed.filter((p) => p.emphasised).length;
-  const noFdrCount = placed.filter((p) => p.noFdr).length;
-  const clippedCount = placed.filter((p) => p.clipped).length;
+  const hoveredGene = hovered === null ? null : series.gene[hovered];
+  const hoveredOpens = hovered !== null && onSelect !== null && (series.marks[hovered] & MARK_HAS_REPORT) !== 0;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div
         ref={wrapRef}
-        className="relative min-h-[320px] flex-1"
+        className="relative min-h-[300px] flex-1"
         style={{
           // Read by the canvas so the plot follows the page's own palette rather
           // than hard-coding colours a theme change would leave behind.
@@ -252,13 +359,12 @@ export function EffectPlot({
         <canvas
           ref={canvasRef}
           style={{ width: "100%", height: "100%" }}
-          className="block touch-manipulation"
+          className={hoveredOpens ? "block cursor-pointer touch-manipulation" : "block touch-manipulation"}
           role="img"
           aria-label={
-            `Recorded effect against recorded significance for ${placed.length} genes. `
-            + `${emphasisedCount} pass the current display thresholds. `
-            + `${openable.length} have a guide-disagreement report and can be opened. `
-            + "Use the gene table below this plot to open a gene without a pointer."
+            `Recorded effect against recorded significance for ${series.gene.length.toLocaleString("en-US")} genes. `
+            + `${frame.emphasisedCount.toLocaleString("en-US")} are at or below FDR ${maxFdr} with an effect of at least ${minAbsLfc} in size. `
+            + "The gene table below the plot holds the same genes and needs no pointer."
           }
           onMouseMove={(event) => {
             const rect = event.currentTarget.getBoundingClientRect();
@@ -266,84 +372,57 @@ export function EffectPlot({
           }}
           onMouseLeave={() => setHovered(null)}
           onClick={(event) => {
+            if (!onSelect) return;
             const rect = event.currentTarget.getBoundingClientRect();
             const hit = nearest(event.clientX - rect.left, event.clientY - rect.top);
-            if (hit) onSelect(hit.gene);
+            if (hit !== null && (series.marks[hit] & MARK_HAS_REPORT) !== 0) onSelect(series.gene[hit]);
           }}
         />
-        {hovered && (
+        {hovered !== null && hoveredGene && (
           <div
-            className="pointer-events-none absolute z-10 max-w-[240px] rounded-md border border-line bg-surface px-2.5 py-1.5 text-[11px] leading-snug shadow-sm"
+            className="pointer-events-none absolute z-10 max-w-[230px] rounded-md border border-line bg-surface px-2.5 py-1.5 text-[11px] leading-snug shadow-sm"
             style={{
-              left: Math.min(hovered.x + 10, Math.max(0, size.width - 250)),
-              top: Math.max(0, hovered.y - 46),
+              left: Math.max(0, Math.min(frame.x[hovered] + 10, size.width - 236)),
+              top: Math.max(0, frame.y[hovered] - 44),
             }}
           >
-            <div className="font-medium text-ink">{hovered.gene}</div>
+            <div className="font-medium text-ink">{hoveredGene}</div>
             <div className="num text-muted">
-              log2FC {hovered.lfc.toFixed(2)}
+              log2FC {series.lfc[hovered].toFixed(2)}
               {", "}
-              {hovered.fdr === null ? "no FDR recorded" : `FDR ${hovered.fdr.toExponential(1)}`}
+              {series.fdr[hovered] === null
+                ? "no FDR recorded"
+                : `FDR ${(series.fdr[hovered] as number).toExponential(1)}`}
             </div>
-            {(hovered.fragile || hovered.discordant) && (
+            {(series.marks[hovered] & (MARK_FRAGILE | MARK_DISCORDANT)) !== 0 && (
               <div className="mt-0.5 text-enriched">
-                {[hovered.fragile && "call turns on one guide",
-                  hovered.discordant && "guides disagree more than this screen's norm"]
-                  .filter(Boolean).join("; ")}
+                {[
+                  (series.marks[hovered] & MARK_FRAGILE) !== 0 && "the call turns on one guide",
+                  (series.marks[hovered] & MARK_DISCORDANT) !== 0 && "guides disagree more than this screen's norm",
+                ].filter(Boolean).join("; ")}
               </div>
             )}
-            <div className="mt-0.5 text-muted">Click to open the guide evidence</div>
+            {hoveredOpens && <div className="mt-0.5 text-muted">Click for the guide evidence</div>}
           </div>
         )}
       </div>
 
-      {/* Keyboard path to the same selection. A canvas cannot be tabbed into. */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line px-3 py-2 text-[11px] text-muted">
-        <span>
-          Effect (log2 fold change) horizontally, &minus;log10(recorded FDR) vertically.
-          Thresholds change what is emphasised and recompute nothing.
+      <p className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line px-3 py-1.5 text-[11px] text-muted">
+        <span className="num text-ink">
+          {frame.emphasisedCount.toLocaleString("en-US")} of {series.gene.length.toLocaleString("en-US")} emphasised
         </span>
-        <span className="num">{emphasisedCount} of {placed.length} emphasised</span>
-        {noFdrCount > 0 && (
+        {frame.noFdrCount > 0 && (
+          <span className="num">{frame.noFdrCount.toLocaleString("en-US")} with no recorded FDR, on the row marked none</span>
+        )}
+        {frame.clippedCount > 0 && (
+          <span className="num">{frame.clippedCount.toLocaleString("en-US")} drawn hollow past an axis limit</span>
+        )}
+        {series.withoutEffect > 0 && (
           <span className="num">
-            {noFdrCount} with no recorded FDR, on the row marked &ldquo;none&rdquo;
+            {series.withoutEffect.toLocaleString("en-US")} recorded with no effect, so not placeable
           </span>
         )}
-        {clippedCount > 0 && (
-          <span className="num">{clippedCount} drawn hollow at an axis limit</span>
-        )}
-        {truncatedBy > 0 && (
-          <span className="text-enriched">
-            {truncatedBy} recorded genes are not drawn: the run exceeds this plot&rsquo;s row cap.
-          </span>
-        )}
-        {openable.length > 0 && (
-          <label className="ml-auto flex items-center gap-1.5">
-            <span className="sr-only">Open a gene&rsquo;s guide evidence from the keyboard</span>
-            <select
-              className="h-6 rounded border border-line bg-surface px-1.5 text-[11px] text-ink"
-              value={selected && openable.some((p) => p.gene === selected) ? selected : ""}
-              onChange={(event) => {
-                if (event.target.value) onSelect(event.target.value);
-                setFocusIndex(openable.findIndex((p) => p.gene === event.target.value));
-              }}
-            >
-              <option value="">Open a gene…</option>
-              {openable.slice(0, 500).map((p) => (
-                <option key={p.gene} value={p.gene}>
-                  {p.gene}, log2FC {p.lfc.toFixed(2)}
-                </option>
-              ))}
-            </select>
-            {openable.length > 500 && (
-              <span className="sr-only">
-                The list holds the first 500 of {openable.length}; use the gene table to reach the rest.
-              </span>
-            )}
-          </label>
-        )}
-        <span className="sr-only">{focusIndex >= 0 ? "" : ""}</span>
-      </div>
+      </p>
     </div>
   );
 }

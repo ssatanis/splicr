@@ -63,6 +63,17 @@ export interface WorkspaceStage {
   tool: string | null;
 }
 
+/** The run's recorded QC, which is also what screens.qc rolls up. */
+export interface RunQc {
+  verdict: string;
+  notes: string | null;
+  nnmd: number | null;
+  auroc: number | null;
+  min_replicate_r: number | null;
+  median_replicate_r: number | null;
+  bottlenecked_samples: number | null;
+}
+
 export interface Comparison {
   id: string;
   name: string;
@@ -83,6 +94,8 @@ export interface HitSummary {
 export interface ScreenDetail {
   screen: WorkspaceScreen;
   run: WorkspaceRun | null;
+  /** Null when the run recorded no QC row at all, which is not the same as passing. */
+  qc: RunQc | null;
   stages: WorkspaceStage[];
   comparisons: Comparison[];
   hits: WorkspaceHit[];
@@ -128,7 +141,7 @@ export async function getScreenDetail(
     if (!run) {
       // A dangling current-run pointer is an inconsistent record, not proof no analysis exists.
       if (screen.current_run_id) return { status: "unavailable" };
-      return { status: "found", detail: { screen, run: null, stages: [], comparisons: [], hits: [], total: 0, page, summary: EMPTY_SUMMARY } };
+      return { status: "found", detail: { screen, run: null, qc: null, stages: [], comparisons: [], hits: [], total: 0, page, summary: EMPTY_SUMMARY } };
     }
     const flagJoin = query.flagged ? "hit_flags!inner(flag, severity, message)" : "hit_flags(flag, severity, message)";
     const columns =
@@ -154,7 +167,7 @@ export async function getScreenDetail(
     const base = (select: string) =>
       client.from("hits").select(select, { count: "exact", head: true }).eq("screen_id", screenId).eq("run_id", run.id);
 
-    const [stagesResult, comparisonsResult, hitsResult, depleted, enriched, significant, flagged] = await Promise.all([
+    const [stagesResult, comparisonsResult, hitsResult, depleted, enriched, significant, flagged, qcResult] = await Promise.all([
       client.from("run_stages").select("stage, status, detail, tool")
         .eq("run_id", run.id).order("position"),
       client.from("comparisons").select("id, name, kind, is_primary")
@@ -164,15 +177,19 @@ export async function getScreenDetail(
       base("id").eq("direction", "enriched"),
       base("id").lte("fdr", SIGNIFICANT_FDR),
       base("id, hit_flags!inner(flag)"),
+      client.from("run_qc")
+        .select("verdict, notes, nnmd, auroc, min_replicate_r, median_replicate_r, bottlenecked_samples")
+        .eq("run_id", run.id).maybeSingle(),
     ]);
-    for (const result of [stagesResult, comparisonsResult, hitsResult, depleted, enriched, significant, flagged]) {
+    for (const result of [stagesResult, comparisonsResult, hitsResult, depleted, enriched, significant, flagged, qcResult]) {
       if (result.error) throw result.error;
     }
     // Every recorded row has a direction, so the two arms are the whole run.
     const recorded = (depleted.count ?? 0) + (enriched.count ?? 0);
     return {
       status: "found",
-      detail: { screen, run, stages: (stagesResult.data ?? []) as WorkspaceStage[],
+      detail: { screen, run, qc: (qcResult.data ?? null) as RunQc | null,
+        stages: (stagesResult.data ?? []) as WorkspaceStage[],
         comparisons: (comparisonsResult.data ?? []) as Comparison[],
         hits: (hitsResult.data ?? []) as unknown as WorkspaceHit[], total: hitsResult.count ?? 0, page,
         summary: {

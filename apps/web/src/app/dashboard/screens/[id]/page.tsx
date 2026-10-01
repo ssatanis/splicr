@@ -17,6 +17,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { EffectExplorer } from "@/components/dashboard/evidence/effect-explorer";
+import { GeneFocusProvider } from "@/components/dashboard/evidence/gene-focus";
 import { HitFilters } from "@/components/dashboard/hit-report/filters";
 import { HitTable } from "@/components/dashboard/hit-report/table";
 import {
@@ -56,8 +57,12 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
     );
   }
 
-  const { screen, run, stages, comparisons, hits, total, summary } = result.detail;
+  const { screen, run, qc, stages, comparisons, hits, total, summary } = result.detail;
   const base = `/dashboard/screens/${screen.id}`;
+  // One QC verdict, from the run that produced the results on this page. The
+  // database keeps screens.qc equal to it, so the chip and the stage evidence
+  // cannot disagree the way they did while the rollup was the engine's job.
+  const qcDetail = qc?.notes?.trim() || null;
 
   // A bookmarked page past the end goes to the last page that exists.
   const lastPage = Math.max(1, Math.ceil(total / DETAIL_PAGE_SIZE));
@@ -78,7 +83,6 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
       console.error(`[screens/page] atlas: ${error instanceof Error ? error.message : "read failed"}`);
     }
   }
-  const outcomes = hits.length > 0 ? await getGeneOutcomes(screen.id, [...new Set(hits.map((hit) => hit.gene_symbol))]) : new Map();
 
   // The plot draws one comparison at a time. When the table is filtered to a
   // comparison that is the one plotted, so the two views never disagree about
@@ -88,9 +92,13 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
     ?? comparisons.find((comparison) => comparison.is_primary)
     ?? comparisons[0]
     ?? null;
-  const points = plotComparison
-    ? await getEffectPoints(screen.id, plotComparison.id)
-    : ({ status: "unavailable" } as const);
+
+  // Neither read depends on the other, and each crosses the network, so a
+  // filter change pays for one round trip rather than two.
+  const [outcomes, points] = await Promise.all([
+    hits.length > 0 ? getGeneOutcomes(screen.id, [...new Set(hits.map((hit) => hit.gene_symbol))]) : Promise.resolve(new Map()),
+    plotComparison ? getEffectPoints(screen.id, plotComparison.id) : Promise.resolve({ status: "unavailable" } as const),
+  ]);
 
   const role = context.role;
   const canLog = role === "member" || role === "admin" || role === "owner";
@@ -150,9 +158,11 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
           </div>
         </dl>
         {screen.description && <p className="mt-3 max-w-3xl whitespace-pre-wrap text-[12.5px] leading-snug text-body">{screen.description}</p>}
-        {screen.qc === "fail" && (
+        {(screen.qc === "fail" || screen.qc === "warn") && (
           <p role="alert" className="mt-3 rounded-md bg-orange-50 px-3 py-2 text-[12.5px] leading-snug text-orange-700">
-            QC failed. Review the recorded stage evidence below before interpreting any gene result.
+            {screen.qc === "fail" ? "QC failed." : "QC passed with a warning."}{" "}
+            {qcDetail ?? "The recorded reason is under Analysis provenance below."}{" "}
+            Read the gene results against that.
           </p>
         )}
       </Panel>
@@ -202,33 +212,25 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
             />
           </KpiStrip>
 
+          <GeneFocusProvider>
           {plotComparison && (
             <Panel
               title="Effect and significance"
               count={
                 points.status === "found"
-                  ? `${formatNumber(points.recorded)} recorded genes`
+                  ? `${formatNumber(points.series.recorded)} genes drawn`
                   : "unavailable"
               }
               caveat="Recorded values only. The thresholds emphasise dots and recompute nothing."
               body="flush"
               className="min-h-[460px]"
-              footer={
-                <FootNote>
-                  Click a gene to read its per-guide evidence: how much its guides disagreed
-                  against this screen&rsquo;s own spread, whether its call survives dropping one
-                  guide, and where each guide cut.
-                </FootNote>
-              }
             >
               {points.status === "found" ? (
                 <EffectExplorer
                   screenId={screen.id}
                   screenName={screen.name}
                   comparisonName={plotComparison.name}
-                  points={points.points}
-                  recorded={points.recorded}
-                  truncatedBy={points.recorded - points.points.length}
+                  series={points.series}
                   defaultMaxFdr={SIGNIFICANT_FDR}
                 />
               ) : (
@@ -309,6 +311,7 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
               />
             )}
           </Panel>
+          </GeneFocusProvider>
 
           <Panel title="Analysis provenance" count={`run ${run.id.slice(0, 8)}`} bodyClassName="py-3">
             <dl className="grid gap-x-8 gap-y-2.5 text-[12.5px] sm:grid-cols-2 lg:grid-cols-4">
