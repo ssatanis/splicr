@@ -128,7 +128,7 @@ export function RunsPanel({
             title="No screens came back"
             body="That is either an empty workspace or a read that did not complete, so nothing here is being reported as zero."
             action={
-              <Link href="/dashboard/upload" className="btn btn-teal btn-sm rounded-lg">
+              <Link href="/dashboard/new" className="btn btn-teal btn-sm rounded-lg">
                 Start a run
               </Link>
             }

@@ -77,9 +77,7 @@ for (const [method, table] of [["getWorkspaceScreens", "screens"]]) {
 // Planner read no workspace row and are the same for everyone, and the Truth
 // Loop has its own page tests (truth-loop-page.test.mjs). What is left are the
 // two routes that previously exposed sample records to a demo session.
-const samples = new Set([
-  "@/components/dashboard/screens-table", "@/components/dashboard/upload-wizard",
-]);
+const samples = new Set(["@/components/dashboard/screens-table"]);
 
 function routeHarness(route, context = workspace, result = { status: "ready", rows: [], total: 0, page: 1 }) {
   let sampleReads = 0;
@@ -95,9 +93,14 @@ function routeHarness(route, context = workspace, result = { status: "ready", ro
     };
     if (name === "@/components/dashboard/ui") return {
       Card: ({ children, title }) => React.createElement("section", null, title, children),
+      Panel: ({ children, title }) => React.createElement("section", null, title, children),
       PageHeader: ({ title, body }) => React.createElement("header", null, title, body),
       DenseTable: ({ children }) => React.createElement("table", null, children),
     };
+    if (name === "@/lib/data/screen-requests") return { listScreenRequests: async () => ({ status: "found", requests: [] }) };
+    if (name === "@/lib/data/types") return { ROLE_RANK: { viewer: 1, member: 2, admin: 3, owner: 4 } };
+    if (name === "@/components/dashboard/request-form") return { RequestForm: () => null };
+    if (name === "lucide-react") return new Proxy({}, { get: () => () => null });
     if (name === "@/components/dashboard/workspace-records") return {
       WorkspaceReadNotice: ({ status }) => React.createElement("p", null, status),
       RecordPages: () => null,
@@ -114,7 +117,7 @@ function routeHarness(route, context = workspace, result = { status: "ready", ro
   };
 }
 
-for (const route of ["screens", "upload"]) {
+for (const route of ["screens", "new"]) {
   test(`${route}: signed-in workspace never imports or renders demonstration data`, async () => {
     const app = routeHarness(route);
     const html = await app.render();

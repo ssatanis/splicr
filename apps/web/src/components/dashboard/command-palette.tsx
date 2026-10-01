@@ -72,7 +72,7 @@ const COMMANDS: Item[] = [
   { id: "cmd:connect", group: "Go to", title: "Connect", href: "/dashboard/connect", icon: Cable, keywords: "api keys rest endpoint token" },
   { id: "cmd:settings", group: "Go to", title: "Settings", href: "/dashboard/settings", icon: Settings, keywords: "workspace lab preferences defaults qc" },
   { id: "cmd:members", group: "Go to", title: "Lab members", href: "/dashboard/settings/members", icon: Users, keywords: "people roles invite team permissions" },
-  { id: "act:upload", group: "Actions", title: "Start a new run", subtitle: "Upload FASTQ or a count table", href: "/dashboard/upload", icon: UploadCloud, keywords: "new analyse analyze fastq counts import" },
+  { id: "act:upload", group: "Actions", title: "Start a new run", subtitle: "Upload FASTQ or a count table", href: "/dashboard/new", icon: UploadCloud, keywords: "new analyse analyze fastq counts import" },
   { id: "act:key", group: "Actions", title: "Create an API key", subtitle: "Read this workspace over HTTP", href: "/dashboard/connect", icon: Cable, keywords: "token bearer secret" },
 ];
 

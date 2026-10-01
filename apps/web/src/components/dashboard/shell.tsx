@@ -66,7 +66,7 @@ interface NavItem {
   exact?: boolean;
 }
 
-const UPLOAD = "/dashboard/upload";
+const NEW_SCREEN = "/dashboard/new";
 
 /**
  * Matches on a path segment rather than a string prefix, so `/dashboard/screens`
@@ -289,7 +289,7 @@ function Sidebar({
   onClose?: () => void;
 }) {
   const groupId = useId();
-  const uploadActive = isActive(pathname, UPLOAD);
+  const newScreenActive = isActive(pathname, NEW_SCREEN);
 
   return (
     <div className="flex h-full w-full min-h-0 flex-col">
@@ -352,11 +352,11 @@ function Sidebar({
       <div className={cn("shrink-0", collapsed ? "px-2" : "px-3")}>
         <RailTip label="New screen" when={collapsed}>
           <Link
-            href={UPLOAD}
+            href={NEW_SCREEN}
             onClick={onClose}
             aria-label={collapsed ? "New screen" : undefined}
             className={cn("btn btn-navy w-full", collapsed && "px-0")}
-            aria-current={uploadActive ? "page" : undefined}
+            aria-current={newScreenActive ? "page" : undefined}
           >
             <Plus className="h-4 w-4 shrink-0" aria-hidden="true" />
             {!collapsed && "New screen"}

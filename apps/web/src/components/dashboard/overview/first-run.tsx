@@ -10,7 +10,7 @@
  *
  * WHAT THIS DELIBERATELY DOES NOT SAY
  *
- * It does not offer to upload a screen. `app/dashboard/upload/page.tsx` tells a
+ * It does not offer to upload a screen. `app/dashboard/new/page.tsx` tells a
  * signed-in workspace that "browser analysis is not connected": storage holds no
  * objects, `public.jobs` has no insert policy for a browser, and nothing in engine/
  * consumes a queue. Analysis today is a run of the CLI by someone here.

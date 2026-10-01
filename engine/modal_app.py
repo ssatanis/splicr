@@ -144,16 +144,23 @@ def discover(since: str | None = None, until: str | None = None) -> dict:
 @app.function(**COMMON, cpu=1.0, memory=1024, timeout=1800)
 def sweep(max_process: int = MAX_PROCESS_PER_SWEEP) -> dict:
     """Hand the next pieces of work to plan_study / process_study."""
+    from splicr.ingest import requests as req
     from splicr.ingest import state
 
     with state.connect() as conn:
+        # A lab waiting on a request it made from the console is ahead of the
+        # crawler's backlog: drain those first, then carry whatever the studies
+        # did since the last sweep back onto the requests watching them.
+        drained = req.drain(conn)
+        refreshed = req.refresh(conn)
         to_plan = state.pending(conn, "discovered", limit=50, min_score=MIN_SCORE_TO_PLAN)
         to_process = state.pending(conn, "planned", limit=max_process)
     for acc in to_plan:
         plan_study.spawn(acc)
     for acc in to_process:
         process_study.spawn(acc)
-    return {"planning": to_plan, "processing": to_process}
+    return {"planning": to_plan, "processing": to_process,
+            "requests": drained["handled"], "refreshed": refreshed["refreshed"]}
 
 
 @app.function(**COMMON, cpu=1.0, memory=2048, timeout=3600, schedule=modal.Cron("0 7 * * *"))

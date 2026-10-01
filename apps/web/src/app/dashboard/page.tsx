@@ -201,7 +201,7 @@ function Frame({
           <Greeting {...greeting} />
           <p className="mt-2 max-w-[70ch] text-[13px] leading-snug text-muted">{meta}</p>
         </div>
-        <Link href="/dashboard/upload" className="btn btn-navy btn-sm shrink-0">
+        <Link href="/dashboard/new" className="btn btn-navy btn-sm shrink-0">
           <Plus className="h-4 w-4" aria-hidden="true" /> New screen
         </Link>
       </div>
@@ -428,7 +428,7 @@ function WorkspaceOverview({
             {
               title: "Upload a screen",
               body: "Start the pipeline on a new count table.",
-              href: "/dashboard/upload",
+              href: "/dashboard/new",
               icon: Upload,
             },
             {

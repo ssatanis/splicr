@@ -132,7 +132,7 @@ export function ScreenList({
         icon={FlaskConical}
         title="Run your first screen"
         body="Upload a count table or FASTQ files, or enter a public GEO, SRA or ENA accession."
-        action={{ label: "New screen", href: "/dashboard/upload" }}
+        action={{ label: "New screen", href: "/dashboard/new" }}
       />
     );
   }
