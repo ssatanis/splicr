@@ -114,24 +114,75 @@ test("evidence page renders exact measurements, uncertainty and downloadable sou
   assert.doesNotMatch(html, /Chance real|calibrated confidence for every/);
 });
 
-test("contact action prepares an encoded email draft without claiming delivery", () => {
-  let opened = false;
-  const fakeWindow = { location: { href: "" } };
-  const data = new Map([["name", "A & B"], ["company", "Lab"], ["email", "a@example.test"], ["message", "q=1 & #2"]]);
-  const fakeReact = { useState(initial) { return [initial, () => { opened = true; }]; } };
+test("the contact form submits to the server and promises only what the server sent", async () => {
+  // The form used to open a mailto: draft and say "Nothing is submitted". It now
+  // posts to /api/demo-request, which sends a confirmation to the person and a
+  // notification to the team. That is a real submission, so the honesty question
+  // moved with it: the confirmation state must not promise an email that was not
+  // sent. The route answers `confirmed` with what it actually sent, and the form
+  // repeats only that.
+  const posted = [];
+  let state = { kind: "idle" };
+  const fakeReact = {
+    useState(initial) {
+      if (typeof initial === "string") return [initial, () => {}];
+      return [state, (next) => { state = next; }];
+    },
+  };
+  const data = new Map([
+    ["name", "Ada Lovelace"], ["company", "Lab"],
+    ["email", "a@example.test"], ["message", "q=1 & #2"], ["website", ""],
+  ]);
+  const fakeFetch = async (url, init) => {
+    posted.push({ url, body: JSON.parse(init.body) });
+    return { ok: true, json: async () => ({ ok: true, confirmed: true }) };
+  };
   const { ContactForm } = load("apps/web/src/components/marketing/contact-form.tsx", {
-    react: fakeReact, globals: { window: fakeWindow, FormData: class { get(k) { return data.get(k); } } },
+    react: fakeReact,
+    globals: { FormData: class { get(k) { return data.get(k); } }, fetch: fakeFetch },
   });
+
   const form = ContactForm();
   let prevented = false;
-  form.props.onSubmit({ preventDefault() { prevented = true; }, currentTarget: {} });
-  assert.ok(prevented && opened);
-  const url = new URL(fakeWindow.location.href);
-  assert.equal(url.protocol, "mailto:");
-  assert.equal(url.searchParams.get("subject"), "SplicR: Blinded evaluation");
-  assert.ok(url.searchParams.get("body").includes("q=1 & #2"));
-  const html = renderToStaticMarkup(form);
-  assert.match(html, /Nothing is submitted/);
-  assert.match(html, /Open email draft/);
-  assert.doesNotMatch(html, /Request received/);
+  await form.props.onSubmit({
+    preventDefault() { prevented = true; },
+    currentTarget: { reset() {} },
+  });
+  assert.ok(prevented, "the form must not navigate");
+  assert.equal(posted.length, 1);
+  assert.equal(posted[0].url, "/api/demo-request");
+  assert.equal(posted[0].body.email, "a@example.test");
+  // Sent verbatim: escaping is the email template's job, and mangling it here
+  // would silently alter what a scientist wrote.
+  assert.equal(posted[0].body.message, "q=1 & #2");
+  assert.equal(posted[0].body.website, "", "the honeypot must be submitted empty");
+  assert.equal(state.kind, "sent");
+  assert.equal(state.confirmed, true);
+
+  // Confirmed: the copy may mention the inbox.
+  state = { kind: "sent", name: "Ada", confirmed: true };
+  const confirmed = renderToStaticMarkup(ContactForm());
+  assert.match(confirmed, /Your request is with us/);
+  assert.match(confirmed, /confirmation is on its way/);
+
+  // Not confirmed: it must say so rather than promise an email.
+  state = { kind: "sent", name: "Ada", confirmed: false };
+  const unconfirmed = renderToStaticMarkup(ContactForm());
+  assert.match(unconfirmed, /could not send you a confirmation email/);
+  assert.doesNotMatch(unconfirmed, /confirmation is on its way/);
+  assert.match(unconfirmed, /your request still reached us/);
+
+  // A failure is reported as a failure, never as a silent success.
+  state = { kind: "error", message: "We could not reach the server." };
+  const failed = renderToStaticMarkup(ContactForm());
+  assert.match(failed, /could not reach the server/);
+  assert.doesNotMatch(failed, /Your request is with us/);
+});
+
+test("the demo-request route only claims a confirmation it sent", () => {
+  const source = fs.readFileSync(
+    path.join(root, "apps/web/src/app/api/demo-request/route.ts"), "utf8");
+  // `confirmed` is derived from the send result, never hard-coded true.
+  assert.match(source, /confirmed: Boolean\(outcome\.confirmationId\)/);
+  assert.doesNotMatch(source, /confirmed: true/);
 });

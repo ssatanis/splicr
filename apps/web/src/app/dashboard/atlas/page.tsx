@@ -16,7 +16,7 @@ import { AtlasPager, AtlasScreensTable } from "@/components/dashboard/atlas/scre
 import { FootLink, FootNote, PageHeader, Panel } from "@/components/dashboard/ui";
 import { ORCS_HOME } from "@/lib/atlas/links";
 import { hrefWith, parseScreenQuery } from "@/lib/atlas/params";
-import { corpusFigures, lookupGene, queryScreens } from "@/lib/atlas/query";
+import { lookupGene, queryScreens } from "@/lib/atlas/query";
 import { getAtlasGenes, getAtlasManifest, getAtlasScreenMap, getAtlasScreens } from "@/lib/atlas/store";
 import { formatNumber } from "@/lib/utils";
 
@@ -28,7 +28,6 @@ export default async function AtlasPage(props: PageProps<"/dashboard/atlas">) {
   const query = parseScreenQuery(await props.searchParams);
   const manifest = getAtlasManifest();
   const corpus = getAtlasScreens();
-  const figures = corpusFigures(corpus);
 
   // The 6 MB gene table is only read when a gene is asked about.
   const genes = query.gene !== null ? getAtlasGenes() : null;
@@ -43,10 +42,14 @@ export default async function AtlasPage(props: PageProps<"/dashboard/atlas">) {
 
   return (
     <div className="flex flex-col gap-3 lg:min-h-0 lg:flex-1">
+      {/* No subtitle. The corpus size is the panel's own count below, with its
+          denominator, and the release and licence are in the panel footer, so a
+          line here was the third statement of provenance on one screen. The
+          publication count that used to live here is no longer shown anywhere;
+          it belongs on a corpus page rather than above a search field. */}
       <PageHeader
         dense
         title="Atlas"
-        body={`${formatNumber(figures.screens)} human screens from ${formatNumber(figures.publications)} publications, from BioGRID ORCS ${manifest.release}.`}
         actions={<GeneFinder active={lookup?.status === "found" ? lookup.gene.symbol : null} />}
       />
 
@@ -56,7 +59,10 @@ export default async function AtlasPage(props: PageProps<"/dashboard/atlas">) {
         <Panel
           title={lookup?.status === "found" ? `Screens that called ${lookup.gene.symbol}` : "Published screens"}
           count={`${formatNumber(page.total)} of ${formatNumber(page.corpus)}`}
-          caveat="Each screen keeps its authors' own analysis and hit rule. Compare the record, not the count."
+          /* Not decoration and not a duplicate of the footer's licence line: it is
+             the one statement that stops a reader comparing two screens' hit counts,
+             which they are not comparable, because each screen kept its authors'
+             own rule. docs/11-console-modules.md states the same rule. */
           body="flush"
           className="min-h-[360px] lg:flex-1"
           footer={

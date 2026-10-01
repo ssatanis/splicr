@@ -18,10 +18,13 @@
  * review" is a queue and does. A total tells a reader nothing they can act on,
  * and this page exists to be acted on.
  */
+import { FlaskConical, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 
+import { EmptyState } from "@/components/dashboard/empty-state";
 import { StatusBadge } from "@/components/dashboard/ui";
 import type { RunRow } from "@/components/dashboard/overview/types";
+import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
 // Zone 1 — what is waiting on a decision
@@ -125,9 +128,12 @@ export function ScreenList({
 }) {
   if (screens.length === 0) {
     return (
-      <p className="rounded-xl border border-line bg-white p-6 text-[13px] text-body">
-        No screens yet. Upload a count table to start one.
-      </p>
+      <EmptyState
+        icon={FlaskConical}
+        title="Run your first screen"
+        body="Upload a count table or FASTQ files, or enter a public GEO, SRA or ENA accession."
+        action={{ label: "New screen", href: "/dashboard/upload" }}
+      />
     );
   }
 
@@ -185,60 +191,67 @@ export interface NextAction {
   title: string;
   body: string;
   href: string;
-  /** A count when something is waiting, which makes the card a queue too. */
+  /** A count when something is waiting, which makes the row a queue too. */
   badge?: string | null;
-  /** The one card that carries the accent. Exactly one, or none. */
+  /** Marks the one row that wants a decision. At most one, or none. */
   primary?: boolean;
+  icon?: LucideIcon;
 }
 
 /**
- * Four routes out of the overview.
+ * The routes out of the overview.
  *
- * Orange marks the one card that wants a decision. If two cards were orange
- * neither would mean anything, so `primary` is set on at most one.
+ * These used to be four tall cards, each ending in a large arrow that pointed at
+ * nothing and grew on hover. The arrow said "this is a link", which the title
+ * already said, and the space it needed made a list of four short sentences as
+ * tall as the table of screens above it.
+ *
+ * So: compact rows, an icon at the start rather than an arrow at the end, and
+ * one line of description. Two columns on a wide screen, one on a narrow one,
+ * because a four-across grid squeezes each sentence into four words per line.
  */
 export function NextActions({ actions }: { actions: NextAction[] }) {
+  if (actions.length === 0) return null;
   return (
-    <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      {actions.map((action) => (
-        <li key={action.title}>
-          <Link
-            href={action.href}
-            className={[
-              "group flex h-full flex-col gap-2 rounded-xl border p-5 transition-colors",
-              action.primary
-                ? "border-orange-500/35 bg-orange-50/60 hover:bg-orange-50"
-                : "border-line bg-white hover:bg-cream",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-800/25",
-            ].join(" ")}
-          >
-            <span className="flex items-baseline justify-between gap-2">
-              <span
-                className={[
-                  "text-[14px] font-medium",
-                  action.primary ? "text-orange-700" : "text-ink",
-                ].join(" ")}
-              >
-                {action.title}
-              </span>
-              {action.badge ? (
-                <span className="shrink-0 rounded-full bg-teal-800/8 px-2 py-0.5 text-[11px] tabular-nums text-ink">
-                  {action.badge}
-                </span>
-              ) : null}
-            </span>
-            <span className="text-[12px] leading-snug text-muted">{action.body}</span>
-            <span
-              className={[
-                "mt-auto pt-2 text-[12px] transition-transform group-hover:translate-x-0.5",
-                action.primary ? "text-orange-600" : "text-teal-800/70",
-              ].join(" ")}
+    <ul className="grid gap-2 lg:grid-cols-2">
+      {actions.map((action) => {
+        const Icon = action.icon;
+        return (
+          <li key={action.title}>
+            <Link
+              href={action.href}
+              className={cn(
+                "flex items-start gap-3 rounded-lg border px-3.5 py-3 transition-colors duration-[var(--dur-1)] motion-reduce:transition-none",
+                action.primary
+                  ? "border-line-strong bg-navy-tint hover:bg-navy-tint/70"
+                  : "border-line bg-white hover:bg-mist-soft",
+              )}
             >
-              &rarr;
-            </span>
-          </Link>
-        </li>
-      ))}
+              {Icon && (
+                <Icon
+                  className={cn(
+                    "mt-0.5 h-4 w-4 shrink-0",
+                    action.primary ? "text-navy" : "text-muted",
+                  )}
+                  strokeWidth={1.8}
+                  aria-hidden="true"
+                />
+              )}
+              <span className="min-w-0 flex-1">
+                <span className="flex items-baseline gap-2">
+                  <span className="text-[13.5px] font-medium text-ink">{action.title}</span>
+                  {action.badge ? (
+                    <span className="num shrink-0 rounded-full bg-mist px-1.5 py-px text-[11px] text-body">
+                      {action.badge}
+                    </span>
+                  ) : null}
+                </span>
+                <span className="mt-0.5 block text-[12px] leading-snug text-muted">{action.body}</span>
+              </span>
+            </Link>
+          </li>
+        );
+      })}
     </ul>
   );
 }

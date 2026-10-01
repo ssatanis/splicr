@@ -372,6 +372,82 @@ def _pg_float_array(values: list[float] | None) -> str | None:
     return "{" + ",".join(f"{v:.6g}" for v in values) + "}"
 
 
+def write_guide_effects(conn: "psycopg.Connection", ctx: RunContext,
+                        guides, reference_versions: dict[str, str] | None = None) -> int:
+    """
+    Write the per-guide rows for one comparison, keyed by guide id.
+
+    `guides` are `validate.domain_report.GuideEvidence` rows. Re-running a
+    comparison replaces its rows rather than accumulating them, matching
+    `write_hits`.
+
+    The protein columns are written exactly as the annotation produced them.
+    A guide with no resolvable residue is stored with those columns null and
+    `annotation_evidence = 'none'`; the database CHECK constraints refuse a
+    residue without a transcript, or a curated claim without a feature, so a
+    partially filled row cannot be persisted as if it were annotated.
+    """
+    conn.execute("delete from public.guide_effects where comparison_id = %s",
+                 (ctx.comparison_id,))
+    versions = json.dumps(reference_versions or {})
+    written = 0
+    with conn.cursor().copy(
+        "copy public.guide_effects "
+        "(screen_id, run_id, comparison_id, guide_key, gene_symbol, sequence, "
+        " method, lfc, p_value, fdr, control_mean, treatment_mean, "
+        " chrom, cut_pos, strand, uniprot_accession, mane_transcript, "
+        " protein_residue, n_residues, cds_fraction, in_last_exon, "
+        " features_hit, annotation_evidence, reference_versions) from stdin"
+    ) as copy:
+        for g in guides:
+            copy.write_row((
+                ctx.screen_id, ctx.run_id, ctx.comparison_id, g.guide_key, g.gene,
+                g.sequence, "mageck",
+                None if g.log2_fold_change != g.log2_fold_change else g.log2_fold_change,
+                g.p_value, g.fdr, g.control_mean, g.treatment_mean,
+                g.chromosome, g.cut_position, g.strand,
+                g.uniprot_accession, g.mane_transcript,
+                g.protein_residue, g.n_residues, g.cds_fraction, g.in_last_exon,
+                list(g.features_hit), g.annotation_evidence, versions,
+            ))
+            written += 1
+    return written
+
+
+def write_gene_disagreement(conn: "psycopg.Connection", ctx: RunContext, reports) -> int:
+    """
+    Store one guide-disagreement report per gene for this comparison.
+
+    `reports` are `validate.domain_report.DisagreementReport` objects. The
+    queryable scalars are lifted out of each report and the whole document is
+    stored beside them, so the console renders a recorded value and never
+    reimplements the statistics. Re-running a comparison replaces its rows.
+    """
+    conn.execute("delete from public.gene_disagreement where comparison_id = %s",
+                 (ctx.comparison_id,))
+    written = 0
+    with conn.cursor().copy(
+        "copy public.gene_disagreement "
+        "(screen_id, run_id, comparison_id, gene_symbol, ensembl_gene_id, "
+        " n_guides, n_depleting, mean_lfc, median_lfc, spread, spread_vs_screen, "
+        " discordant, fragile, pivotal_guide, concordance_status, "
+        " concordance_feature, fisher_p, fisher_p_floor, schema_version, report) "
+        "from stdin"
+    ) as copy:
+        for r in reports:
+            copy.write_row((
+                ctx.screen_id, ctx.run_id, ctx.comparison_id, r.gene_symbol,
+                r.ensembl_gene_id, r.n_guides, r.n_depleting,
+                r.mean_log2_fold_change, r.median_log2_fold_change,
+                r.spread, r.spread_vs_screen, r.discordant, r.fragile,
+                r.pivotal_guide, r.concordance.status, r.concordance.feature,
+                r.concordance.fisher_p, r.concordance.fisher_p_floor,
+                "1", r.model_dump_json(),
+            ))
+            written += 1
+    return written
+
+
 def finish_run(conn: "psycopg.Connection", ctx: RunContext, status: str = "complete",
                error: str | None = None) -> None:
     conn.execute(

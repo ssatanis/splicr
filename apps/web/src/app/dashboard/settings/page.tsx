@@ -90,7 +90,7 @@ export default async function SettingsPage(props: PageProps<"/dashboard/settings
       <PageHeader
         eyebrow="Settings"
         title="Lab workspace"
-        body="Your profile, the lab it belongs to, and the defaults every new run starts from. Analysis defaults and QC thresholds change how the next screen is called, so each panel saves on its own."
+        body="Manage your profile, lab, and default settings for new runs. Each section saves separately."
       />
 
       {chips.length > 0 && (

@@ -111,6 +111,19 @@ export function isUuid(value: unknown): value is string {
 export interface SessionUser {
   id: string;
   email: string | null;
+  /**
+   * An honorific the researcher chose for themselves: "Dr.", "Professor".
+   *
+   * It lives in the Auth user's metadata rather than in `profiles` because it
+   * is set during invitation acceptance, before a profile row is the thing the
+   * console reads from, and because adding a column to a table the harmonized
+   * pipeline also touches is not worth it for a greeting. A profile column is
+   * the right home once onboarding writes one.
+   *
+   * It is never a job title. "Research Scientist" is a role and does not belong
+   * in front of somebody's name: see `lib/people.ts`.
+   */
+  preferredTitle: string | null;
 }
 
 export interface Profile {

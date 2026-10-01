@@ -108,9 +108,9 @@ export function Slate({
 
         <p className="text-[12px] text-muted">
           {slate.length} on the slate
-          {strong > 0 ? ` · ${strong} Strong` : ""}
-          {moderate > 0 ? ` · ${moderate} Moderate` : ""}
-          {dropped.length > 0 ? ` · ${dropped.length} dropped` : ""}
+          {strong > 0 ? `, ${strong} Strong` : ""}
+          {moderate > 0 ? `, ${moderate} Moderate` : ""}
+          {dropped.length > 0 ? `, ${dropped.length} dropped` : ""}
         </p>
       </div>
 
@@ -257,9 +257,9 @@ function GeneRow({
                 </span>
               ) : null}
               {typeof row.guidesAgree === "number" && typeof row.guides === "number"
-                ? ` · ${row.guidesAgree}/${row.guides} guides`
+                ? `, ${row.guidesAgree}/${row.guides} guides`
                 : ""}
-              {typeof row.fdr === "number" ? ` · q ${row.fdr.toFixed(3)}` : ""}
+              {typeof row.fdr === "number" ? `, q ${row.fdr.toFixed(3)}` : ""}
             </span>
           ) : (
             <span className="min-w-0 flex-1 truncate text-[11.5px] text-muted">

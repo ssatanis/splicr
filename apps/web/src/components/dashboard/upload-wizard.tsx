@@ -58,7 +58,7 @@ export function UploadWizard() {
             <button
               type="button"
               onClick={() => setFiles(demoFiles)}
-              className="w-full rounded-3xl border-2 border-dashed border-line-strong hover:border-cyan-500 hover:bg-cyan-50/40 transition-colors p-10 text-center"
+              className="w-full rounded-2xl border-2 border-dashed border-line-strong hover:border-cyan-500 hover:bg-cyan-50/40 transition-colors p-10 text-center"
             >
               <FileUp className="w-8 h-8 mx-auto text-cyan-500" />
               <div className="mt-3 text-ink font-medium">Drop files here or click to browse</div>
@@ -76,7 +76,7 @@ export function UploadWizard() {
                   ))}
                 </ul>
                 <div className="mt-3 text-sm text-muted">
-                  {files.length} files · {(totalBytes / 1e9).toFixed(1)} GB · will upload in 6 MB resumable chunks
+                  {files.length} files, {(totalBytes / 1e9).toFixed(1)} GB, will upload in 6 MB resumable chunks
                 </div>
               </div>
             )}
@@ -94,7 +94,7 @@ export function UploadWizard() {
               </span>
               <div>
                 <div className="text-ink font-medium">
-                  {lib.name} · {formatNumber(lib.guides)} guides · {formatNumber(lib.genes)} genes
+                  {lib.name}, {formatNumber(lib.guides)} guides, {formatNumber(lib.genes)} genes
                 </div>
                 <div className="text-sm text-body mt-1">
                   99.6% of sampled reads match. Guide starts at position 24 on the forward strand after the U6 tail; scaffold anchor found at
@@ -116,7 +116,7 @@ export function UploadWizard() {
                   >
                     <div className="font-medium">{l.name}</div>
                     <div className={cn("text-xs mt-0.5", library === l.name ? "text-white/90" : "text-muted")}>
-                      {formatNumber(l.guides)} guides · {l.perGene}/gene · {l.cas} · {l.organism}
+                      {formatNumber(l.guides)} guides, {l.perGene}/gene, {l.cas}, {l.organism}
                     </div>
                   </button>
                 ))}
@@ -208,9 +208,9 @@ export function UploadWizard() {
               <div className="space-y-4">
                 <dl className="grid sm:grid-cols-2 gap-3 text-sm">
                   {[
-                    ["Files", `${(files.length ? files : demoFiles).length} FASTQ · ${((files.length ? totalBytes : demoFiles.reduce((a, f) => a + f.size, 0)) / 1e9).toFixed(1)} GB`],
+                    ["Files", `${(files.length ? files : demoFiles).length} FASTQ, ${((files.length ? totalBytes : demoFiles.reduce((a, f) => a + f.size, 0)) / 1e9).toFixed(1)} GB`],
                     ["Library", `${lib.name} (${formatNumber(lib.guides)} guides)`],
-                    ["Design", "3 conditions · 2 replicates · plasmid + T0"],
+                    ["Design", "3 conditions, 2 replicates, plasmid + T0"],
                     ["Callers", "MAGeCK RRA, MLE, BAGEL2, CRISPRcleanR"],
                     ["Estimated time", "35–50 minutes"],
                     ["Estimated cost", "$1.40 compute"],
@@ -228,7 +228,7 @@ export function UploadWizard() {
             ) : (
               <div className="flex flex-col items-start gap-4">
                 <div className="inline-flex items-center gap-2 text-ink">
-                  <Loader2 className="w-4 h-4 animate-spin text-orange-500" /> Queued as job_01J9… · you will get an email when it finishes
+                  <Loader2 className="w-4 h-4 animate-spin text-orange-500" /> Queued as job_01J9…, you will get an email when it finishes
                 </div>
                 <p className="text-sm text-muted">The backend is not connected yet, so this run is illustrative.</p>
                 <Link href="/dashboard/screens/scr_003" className="btn btn-teal btn-sm">

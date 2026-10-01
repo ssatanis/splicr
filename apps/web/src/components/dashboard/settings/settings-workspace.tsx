@@ -111,7 +111,7 @@ export function SettingsWorkspace({
               className={cn(
                 "-mb-px flex shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-4 py-3 text-sm transition-colors",
                 isActive
-                  ? "border-orange-500 font-medium text-ink"
+                  ? "border-navy font-medium text-ink"
                   : "border-transparent text-muted hover:text-ink",
                 panel.key === "danger" && !isActive && "hover:text-red-700",
               )}
@@ -132,7 +132,7 @@ export function SettingsWorkspace({
               <button
                 type="button"
                 onClick={() => select(panel.key)}
-                className="underline decoration-orange-300 underline-offset-2 hover:decoration-orange-500"
+                className="underline decoration-line-strong underline-offset-2 hover:decoration-navy"
               >
                 {panel.label}
               </button>

@@ -276,7 +276,7 @@ export function queryScreens(
 export function describeScreen(screen: AtlasScreen): string {
   return [screen.screenType, screen.cellLine, screen.phenotype, screen.condition]
     .filter((part): part is string => Boolean(part))
-    .join(" · ");
+    .join(", ");
 }
 
 /** The authors' own hit definition, as recorded. Never paraphrased. */

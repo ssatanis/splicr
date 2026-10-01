@@ -39,7 +39,8 @@
  *  - An explicit demo visitor sees labelled sample screens. A signed-in account
  *    with no workspace receives a missing-workspace state, never sample records.
  */
-import { Plus } from "lucide-react";
+import { CheckCircle2, Compass, ListChecks, Plus, Upload } from "lucide-react";
+import { cookies } from "next/headers";
 import Link from "next/link";
 
 import {
@@ -53,6 +54,7 @@ import type {
   OutcomeRow,
   RunRow,
 } from "@/components/dashboard/overview/types";
+import { Greeting } from "@/components/dashboard/greeting";
 import { MODALITY_SHORT } from "@/components/dashboard/settings/meta";
 import { PageHeader } from "@/components/dashboard/ui";
 import { getCurrentContext, getWorkspaceStats } from "@/lib/data/org";
@@ -72,15 +74,48 @@ import {
   type Screen,
   type Verdict,
 } from "@/lib/mock/data";
+import { greetingName } from "@/lib/people";
+import {
+  FALLBACK_TIME_ZONE,
+  TIME_ZONE_COOKIE,
+  clockIn,
+  greetingIn,
+  isValidTimeZone,
+} from "@/lib/time";
 import { formatDate, formatNumber } from "@/lib/utils";
 
 export const metadata = { title: "Overview" };
 
+/**
+ * The greeting, resolved on the server so the first paint is already right.
+ *
+ * The zone comes from a cookie the console wrote on a previous visit, not from
+ * the request's IP: a laboratory in New York working from a conference in Tokyo
+ * keeps its own clock, and an address is not a clock anyway. On the very first
+ * request there is no cookie, so this renders in UTC and the client corrects it
+ * on mount and remembers the answer for next time.
+ */
+async function resolveGreeting(name: string, lab: string) {
+  const stored = (await cookies()).get(TIME_ZONE_COOKIE)?.value;
+  const timeZone = isValidTimeZone(stored) ? stored : undefined;
+  const zone = timeZone ?? FALLBACK_TIME_ZONE;
+  const now = new Date();
+  return {
+    name,
+    lab,
+    timeZone,
+    initialGreeting: greetingIn(now, zone),
+    initialClock: clockIn(now, zone),
+  };
+}
+
+
+
 export default async function OverviewPage() {
-  const { org, isDemo } = await getCurrentContext();
+  const { org, profile, user, isDemo } = await getCurrentContext();
 
   if (isDemo) {
-    return <SampleOverview signedIn={false} />;
+    return <SampleOverview signedIn={false} greeting={await resolveGreeting("", "Sample workspace")} />;
   }
   if (org === null) {
     return <div className="space-y-4"><PageHeader dense title="Workspace unavailable" body="No active workspace could be resolved for this session." /><p className="text-sm text-muted">Sign in with an account that belongs to a workspace. If you already have one, reload to try again.</p></div>;
@@ -98,7 +133,16 @@ export default async function OverviewPage() {
 
   return (
     <WorkspaceOverview
-      orgName={org.name}
+      greeting={await resolveGreeting(
+        // "Dr. Maya Chen" when a title is set, "Rosalind" when it is not. The
+        // distinction, and why a job title never appears here, is in lib/people.
+        greetingName({
+          fullName: profile?.full_name ?? null,
+          preferredTitle: user?.preferredTitle ?? null,
+          email: user?.email ?? null,
+        }),
+        org.name,
+      )}
       stats={stats}
       recent={recent}
       headline={headline}
@@ -111,23 +155,31 @@ export default async function OverviewPage() {
 // Shared furniture
 // ---------------------------------------------------------------------------
 
+type GreetingProps = React.ComponentProps<typeof Greeting>;
+
 /**
  * The frame both branches render into, so the layout cannot drift between a real
  * workspace and the sample one.
  *
- * The one primary action sits beside the title as well as at the top of the rail.
- * That is a deliberate second copy: starting a run is what a researcher came to
- * do, and the rail is behind a menu button at narrow widths where the title row
- * is the only thing on screen.
+ * The heading is the greeting rather than the laboratory name: the reader knows
+ * which laboratory they are in, and the line under the greeting says so anyway
+ * along with the time on their own clock. What they do not know when the page
+ * arrives is whether the console knows who they are, and this is the line that
+ * answers it.
+ *
+ * The one primary action sits beside the heading as well as at the top of the
+ * rail. That is a deliberate second copy: starting a screen is what a researcher
+ * came to do, and the rail is behind a menu button at narrow widths where the
+ * heading row is the only thing on screen.
  */
 function Frame({
-  title,
+  greeting,
   meta,
   sample,
   strip,
   children,
 }: {
-  title: string;
+  greeting: GreetingProps;
   meta: React.ReactNode;
   sample: boolean;
   strip: React.ReactNode;
@@ -135,27 +187,24 @@ function Frame({
 }) {
   return (
     <>
-      <PageHeader
-        dense
-        title={title}
-        body={
-          sample ? (
-            <span className="flex flex-wrap items-center gap-2">
-              <span className="shrink-0 rounded-[4px] bg-orange-50 px-1.5 py-0.5 text-[11px] leading-[1.4] text-orange-700">
-                Sample data
-              </span>
-              {meta}
-            </span>
-          ) : (
-            meta
-          )
-        }
-        actions={
-          <Link href="/dashboard/upload" className="btn btn-orange btn-sm">
-            <Plus className="h-4 w-4" aria-hidden="true" /> New run
-          </Link>
-        }
-      />
+      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3 pb-1">
+        <div className="min-w-0">
+          <Greeting
+            {...greeting}
+            badge={
+              sample ? (
+                <span className="shrink-0 rounded-md bg-orange-50 px-1.5 py-0.5 text-[11px] leading-[1.4] text-orange-700">
+                  Sample data
+                </span>
+              ) : undefined
+            }
+          />
+          <p className="mt-2 max-w-[70ch] text-[13px] leading-snug text-muted">{meta}</p>
+        </div>
+        <Link href="/dashboard/upload" className="btn btn-navy btn-sm shrink-0">
+          <Plus className="h-4 w-4" aria-hidden="true" /> New screen
+        </Link>
+      </div>
       {strip}
       {/* A vertical stack, not the twelve-column panel grid this page used to
           be. The three zones are read in order and none of them competes with
@@ -212,13 +261,13 @@ function attentionNote(status: string, qc: string, stage: number | null): string
 }
 
 function WorkspaceOverview({
-  orgName,
+  greeting,
   stats,
   recent,
   headline,
   outcomes: loggedOutcomes,
 }: {
-  orgName: string;
+  greeting: GreetingProps;
   stats: WorkspaceStats;
   recent: OverviewScreen[];
   headline: HeadlineHits;
@@ -274,7 +323,7 @@ function WorkspaceOverview({
       `created ${formatDate(screen.created_at)}`,
     ]
       .filter(Boolean)
-      .join(" · "),
+      .join(", "),
   }));
 
   const outcomeRows: OutcomeRow[] = loggedOutcomes.map((outcome) => ({
@@ -294,16 +343,31 @@ function WorkspaceOverview({
   // number that fills the outcome table the ranking is fitted on.
   const unlogged = outcomeRows.filter((outcome) => outcome.result === "pending").length;
 
+  /**
+   * A workspace with nothing in it yet.
+   *
+   * The three counts above and the two tables below would all be zero or empty,
+   * which is accurate and tells a new laboratory nothing. So the page drops
+   * them and offers the three things that are worth doing on day one instead.
+   * Nothing is invented to fill the space: there are no sample screens here and
+   * no placeholder numbers, only the actions that work.
+   *
+   * This is deliberately not the same as a failed read, which keeps the strip
+   * and says the figures could not be fetched.
+   */
+  const fresh = stats.screens === 0;
+
   return (
     <Frame
-      title={orgName}
+      greeting={greeting}
       sample={false}
       meta={
-        stats.screens === 0
-          ? "No screens came back for this workspace. That is either an empty workspace or a read that did not complete, so nothing here is being reported as a measurement."
+        fresh
+          ? "This workspace has no screens yet. Start with experimental data you already have, or with a published accession."
           : `${plural(stats.screens, "screen", "screens")}, ${plural(stats.hits, "hit", "hits")} called and ${plural(stats.outcomes, "bench outcome", "bench outcomes")} logged.`
       }
       strip={
+        fresh ? null : (
         <Decisions
           items={[
             {
@@ -330,17 +394,20 @@ function WorkspaceOverview({
             },
           ]}
         />
+        )
       }
     >
       <section>
         <ZoneHeading
           action={
-            <Link href="/dashboard/screens" className="text-[12px] text-teal-800/70 hover:text-ink">
-              All screens &rarr;
-            </Link>
+            fresh ? null : (
+              <Link href="/dashboard/screens" className="text-[12px] text-muted hover:text-ink">
+                All screens
+              </Link>
+            )
           }
         >
-          Your screens
+          {fresh ? "Start here" : "Your screens"}
         </ZoneHeading>
         <ScreenList screens={runs} hrefFor={(s) => `/dashboard/screens/${s.id}`} />
       </section>
@@ -353,6 +420,7 @@ function WorkspaceOverview({
               title: "Pick this round",
               body: "Rank candidates by what reproduces, then export the order sheet.",
               href: "/dashboard/pick",
+              icon: ListChecks,
               badge: candidates.length > 0 ? `${candidates.length} waiting` : null,
               primary: true,
             },
@@ -360,17 +428,20 @@ function WorkspaceOverview({
               title: "Upload a screen",
               body: "Start the pipeline on a new count table.",
               href: "/dashboard/upload",
+              icon: Upload,
             },
             {
               title: "Log a bench result",
-              body: "Validated, failed or inconclusive. Two seconds.",
+              body: "Validated, failed or inconclusive.",
               href: "/dashboard/validation",
+              icon: CheckCircle2,
               badge: unlogged > 0 ? `${unlogged} open` : null,
             },
             {
               title: "Look up a gene",
               body: "Its history across every published screen in the Atlas.",
               href: "/dashboard/atlas",
+              icon: Compass,
             },
           ]}
         />
@@ -388,7 +459,7 @@ const WINDOW_DAYS = 7;
 
 /** Phenotype, model, library, owner and date, for a run's expanded row. */
 function runDetail(screen: Screen): string {
-  return `${screen.phenotype} · ${screen.cellLine} ${screen.modality} · ${screen.library} · ${screen.owner}, ${formatDate(screen.createdAt)}`;
+  return `${screen.phenotype}, ${screen.cellLine} ${screen.modality}, ${screen.library}, ${screen.owner}, ${formatDate(screen.createdAt)}`;
 }
 
 /**
@@ -399,7 +470,7 @@ function runDetail(screen: Screen): string {
  * than written into the copy, so no sentence here can drift away from the table
  * it is describing.
  */
-function SampleOverview({ signedIn }: { signedIn: boolean }) {
+function SampleOverview({ signedIn, greeting }: { signedIn: boolean; greeting: GreetingProps }) {
   // The sample hit set belongs to the one completed genome-wide screen, so the
   // candidates are attributed to it rather than spread over screens that never
   // called a hit.
@@ -437,7 +508,7 @@ function SampleOverview({ signedIn }: { signedIn: boolean }) {
 
   return (
     <Frame
-      title="Sample workspace"
+      greeting={greeting}
       sample
       meta={
         signedIn
@@ -476,8 +547,8 @@ function SampleOverview({ signedIn }: { signedIn: boolean }) {
       <section>
         <ZoneHeading
           action={
-            <Link href="/dashboard/screens" className="text-[12px] text-teal-800/70 hover:text-ink">
-              All screens &rarr;
+            <Link href="/dashboard/screens" className="text-[12px] text-muted hover:text-ink">
+              All screens
             </Link>
           }
         >
@@ -494,6 +565,7 @@ function SampleOverview({ signedIn }: { signedIn: boolean }) {
               title: "Pick this round",
               body: "Rank candidates by what reproduces, then export the order sheet.",
               href: "/dashboard/pick",
+              icon: ListChecks,
               badge: queue.length > 0 ? `${queue.length} waiting` : null,
               primary: true,
             },
@@ -501,17 +573,20 @@ function SampleOverview({ signedIn }: { signedIn: boolean }) {
               title: "Upload a screen",
               body: "Start the pipeline on a new count table.",
               href: "/dashboard/upload",
+              icon: Upload,
             },
             {
               title: "Log a bench result",
-              body: "Validated, failed or inconclusive. Two seconds.",
+              body: "Validated, failed or inconclusive.",
               href: "/dashboard/validation",
+              icon: CheckCircle2,
               badge: unlogged > 0 ? `${unlogged} open` : null,
             },
             {
               title: "Look up a gene",
               body: "Its history across every published screen in the Atlas.",
               href: "/dashboard/atlas",
+              icon: Compass,
             },
           ]}
         />

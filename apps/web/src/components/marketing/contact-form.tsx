@@ -7,7 +7,12 @@ import { site } from "@/lib/site";
 
 const topics = ["Blinded evaluation", "Research pilot", "Core facility", "REST integration", "Something else"];
 
-type State = { kind: "idle" } | { kind: "sending" } | { kind: "sent"; name: string } | { kind: "error"; message: string };
+type State =
+  | { kind: "idle" }
+  | { kind: "sending" }
+  /** `confirmed` is what the server said it sent, not what the form hoped for. */
+  | { kind: "sent"; name: string; confirmed: boolean }
+  | { kind: "error"; message: string };
 
 export function ContactForm() {
   const [topic, setTopic] = useState(topics[0]);
@@ -23,8 +28,10 @@ export function ContactForm() {
           <h3 className="text-xl text-ink">Thanks, {state.name}.</h3>
         </div>
         <p role="status" className="mt-4 text-body leading-relaxed">
-          Your request is with us and a confirmation is on its way to your inbox. We reply within two business days,
-          usually sooner. If nothing arrives, check your spam folder or email{" "}
+          Your request is with us. {state.confirmed
+            ? "A confirmation is on its way to your inbox; if nothing arrives, check your spam folder."
+            : "We could not send you a confirmation email, so there is nothing to look for in your inbox — your request still reached us."}{" "}
+          We reply within two business days, usually sooner. You can also email{" "}
           <a className="underline" href={`mailto:${site.email}`}>
             {site.email}
           </a>
@@ -56,13 +63,20 @@ export function ContactForm() {
               topic,
             }),
           });
-          const result = (await response.json().catch(() => ({}))) as { error?: string };
+          const result = (await response.json().catch(() => ({}))) as {
+            error?: string;
+            confirmed?: boolean;
+          };
           if (!response.ok) {
             setState({ kind: "error", message: result.error ?? "Something went wrong. Please try again." });
             return;
           }
           form.reset();
-          setState({ kind: "sent", name: name.split(/\s+/)[0] || name });
+          setState({
+            kind: "sent",
+            name: name.split(/\s+/)[0] || name,
+            confirmed: result.confirmed === true,
+          });
         } catch {
           setState({ kind: "error", message: "We could not reach the server. Please check your connection." });
         }

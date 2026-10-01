@@ -8,6 +8,8 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
   Plus,
   Search,
   Settings,
@@ -18,14 +20,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 
-import { Logo } from "@/components/brand/logo";
+import { Logo, LogoMark } from "@/components/brand/logo";
 import { CommandPalette, useCommandPalette } from "@/components/dashboard/command-palette";
-import { initials } from "@/lib/utils";
+import { cn, initials } from "@/lib/utils";
 
 /**
  * The navigation follows the order a screen is actually worked through: look at
  * what moved, analyse the counts against prior art, decide what is real and plan
- * the next one. Upload is not listed here because it is the orange button above
+ * the next one. Upload is not listed here because it is the primary action above
  * the groups, which is the one action the shell offers on every page; listing it
  * twice would be two entry points to the same screen.
  */
@@ -84,11 +86,68 @@ const serverSnapshot = () => "Ctrl ";
 
 export type ShellUser = { name: string; email: string; org: string; demo: boolean };
 
-export function DashboardShell({ user, children }: { user: ShellUser; children: React.ReactNode }) {
+/** Where the desktop rail remembers whether it is collapsed.
+ *
+ *  Browser storage rather than the database: it is a per-device preference, not
+ *  a property of the researcher. Somebody who collapses the rail on a laptop to
+ *  get more width for a hit table has not said anything about how they want the
+ *  console to look on the large screen in the lab, and a migration for it would
+ *  make that decision for them. */
+export const RAIL_COOKIE = "splicr_rail";
+const RAIL_KEY = RAIL_COOKIE;
+
+const RAIL_WIDE = "15rem";
+const RAIL_NARROW = "4.25rem";
+
+/**
+ * The stored preference, kept in a cookie rather than in `localStorage`.
+ *
+ * That choice is what makes the animation correct. The server can read a
+ * cookie, so a researcher who collapsed the rail last visit gets a collapsed
+ * rail in the very first HTML: there is no expanded-then-collapsed render for
+ * them to watch, and the width transition can be on from the start instead of
+ * being switched on afterwards. Browser storage would have meant the opposite
+ * on every single page load.
+ *
+ * It is a per-device preference either way, and it is read as external state so
+ * that a second tab picks up the change.
+ */
+const railListeners = new Set<() => void>();
+
+function subscribeRail(onChange: () => void) {
+  railListeners.add(onChange);
+  return () => {
+    railListeners.delete(onChange);
+  };
+}
+
+function railSnapshot() {
+  return document.cookie.split("; ").includes(`${RAIL_KEY}=1`);
+}
+
+function storeRail(collapsed: boolean) {
+  document.cookie = `${RAIL_KEY}=${collapsed ? "1" : "0"}; path=/; max-age=31536000; samesite=lax`;
+  railListeners.forEach((listener) => listener());
+}
+
+export function DashboardShell({
+  user,
+  railCollapsed,
+  children,
+}: {
+  user: ShellUser;
+  /** What the server read from the rail cookie, so the first paint is already
+   *  the width this researcher chose. */
+  railCollapsed: boolean;
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
   const { open: paletteOpen, setOpen: setPaletteOpen } = useCommandPalette();
+
+  const collapsed = useSyncExternalStore(subscribeRail, railSnapshot, () => railCollapsed);
+  const toggleRail = useCallback(() => storeRail(!railSnapshot()), []);
 
   // The server does not know the viewer's platform, so the glyph is read as
   // external state with a server snapshot. Rendering it directly would mismatch
@@ -99,16 +158,31 @@ export function DashboardShell({ user, children }: { user: ShellUser; children: 
     /* A fixed app shell rather than a document that scrolls.
        The sidebar was sticky inside a page taller than the viewport, which
        works while you are looking at it but means the rail has an end: scroll
-       far enough, or capture the whole page, and the teal simply stops. Here
+       far enough, or capture the whole page, and the rail simply stops. Here
        the shell is exactly the viewport, the rail is a flex child of it, and
        only the content column scrolls. The rail cannot end because it is never
-       longer than the screen. */
-    <div className="flex h-dvh overflow-hidden bg-canvas">
-      <aside className="hidden w-[236px] shrink-0 bg-teal-900 text-white lg:flex">
+       longer than the screen.
+
+       `console` is the theme scope. Everything inside it reads the console's
+       palette: white surfaces, near black type, navy for action. Nothing
+       outside it changes, which is what keeps the public site intact. */
+    <div className="console flex h-dvh overflow-hidden bg-white">
+      <aside
+        style={{ width: collapsed ? RAIL_NARROW : RAIL_WIDE }}
+        className={cn(
+          "hidden shrink-0 overflow-hidden border-r border-line bg-white lg:flex",
+          // Width only, and nothing else: animating padding or content would
+          // make the labels slide, which reads as a panel arriving rather than
+          // a rail narrowing. `motion-reduce` drops it entirely.
+          "transition-[width] duration-[180ms] ease-[var(--ease-out-soft)] motion-reduce:transition-none",
+        )}
+      >
         <Sidebar
           user={user}
           pathname={pathname}
           modifier={modifier}
+          collapsed={collapsed}
+          onToggleRail={toggleRail}
           onSearch={() => setPaletteOpen(true)}
         />
       </aside>
@@ -132,7 +206,7 @@ export function DashboardShell({ user, children }: { user: ShellUser; children: 
             all three and charge the content column 57px of height for it. The
             overview has to fit in that column, which makes every row of chrome
             a row of hit table somebody does not get to see. */}
-        <header className="z-30 shrink-0 border-b border-line bg-canvas/90 backdrop-blur lg:hidden">
+        <header className="z-30 shrink-0 border-b border-line bg-white/90 backdrop-blur lg:hidden">
           <div className="flex h-12 items-center gap-2 px-4">
             <button
               className="icon-btn h-8 w-8"
@@ -145,9 +219,7 @@ export function DashboardShell({ user, children }: { user: ShellUser; children: 
             <Logo href="/dashboard" size="sm" />
             <div className="flex-1" />
             {user.demo && (
-              <span className="chip bg-orange-50 px-2 py-0.5 text-[11px] text-orange-700">
-                Demo data
-              </span>
+              <span className="chip bg-orange-50 text-[11px] text-orange-700">Demo data</span>
             )}
             <button
               type="button"
@@ -199,6 +271,8 @@ function Sidebar({
   user,
   pathname,
   modifier,
+  collapsed = false,
+  onToggleRail,
   onSearch,
   onClose,
 }: {
@@ -206,6 +280,10 @@ function Sidebar({
   pathname: string;
   /** The viewer's own modifier glyph, resolved once by the shell. */
   modifier: string;
+  /** Icons only. Never set in the drawer, which is always at full width. */
+  collapsed?: boolean;
+  /** Present only on desktop, where the rail can be narrowed. */
+  onToggleRail?: () => void;
   onSearch: () => void;
   /** Present only in the drawer, which closes itself once a link is followed. */
   onClose?: () => void;
@@ -219,12 +297,33 @@ function Sidebar({
           notification store behind it. A control that does nothing is the one
           thing this audience reads as a mock-up rather than an instrument, and
           the rail is where they would look first. */}
-      <div className="flex shrink-0 items-center gap-2 px-4 pb-3 pt-4">
-        <Logo tone="light" href="/dashboard" size="sm" />
-        <div className="flex-1" />
+      <div
+        className={cn(
+          "flex shrink-0 items-center gap-2 pb-3 pt-4",
+          collapsed ? "justify-center px-2" : "px-4",
+        )}
+      >
+        {collapsed ? (
+          <Link href="/dashboard" aria-label="SplicR home" className="flex h-8 w-8 items-center justify-center">
+            <LogoMark tone="navy" className="h-5 w-5" />
+          </Link>
+        ) : (
+          <Logo href="/dashboard" size="sm" />
+        )}
+        {!collapsed && <div className="flex-1" />}
+        {onToggleRail && !collapsed && (
+          <button
+            type="button"
+            onClick={onToggleRail}
+            aria-label="Collapse sidebar"
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-muted transition-colors duration-[var(--dur-1)] hover:bg-mist-soft hover:text-ink motion-reduce:transition-none"
+          >
+            <PanelLeftClose className="h-4 w-4" aria-hidden="true" />
+          </button>
+        )}
         {onClose && (
           <button
-            className="flex h-7 w-7 items-center justify-center rounded-md text-white/90 hover:bg-white/10 lg:hidden"
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-muted hover:bg-mist-soft hover:text-ink lg:hidden"
             onClick={onClose}
             aria-label="Close menu"
           >
@@ -233,37 +332,72 @@ function Sidebar({
         )}
       </div>
 
+      {onToggleRail && collapsed && (
+        <div className="shrink-0 px-2 pb-2">
+          <RailTip label="Expand sidebar">
+            <button
+              type="button"
+              onClick={onToggleRail}
+              aria-label="Expand sidebar"
+              className="flex h-9 w-full items-center justify-center rounded-lg text-muted transition-colors duration-[var(--dur-1)] hover:bg-mist-soft hover:text-ink motion-reduce:transition-none"
+            >
+              <PanelLeftOpen className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </RailTip>
+        </div>
+      )}
+
       {/* The one primary action in the console, on every page, above the
-          navigation: starting a run is what a researcher came to do. */}
-      <div className="shrink-0 px-3">
-        <Link
-          href={UPLOAD}
-          onClick={onClose}
-          className="btn btn-orange w-full rounded-lg px-3 py-2 text-[13px]"
-          aria-current={uploadActive ? "page" : undefined}
-        >
-          <Plus className="h-4 w-4" aria-hidden="true" /> New run
-        </Link>
+          navigation: starting a screen is what a researcher came to do. */}
+      <div className={cn("shrink-0", collapsed ? "px-2" : "px-3")}>
+        <RailTip label="New screen" when={collapsed}>
+          <Link
+            href={UPLOAD}
+            onClick={onClose}
+            aria-label={collapsed ? "New screen" : undefined}
+            className={cn("btn btn-navy w-full", collapsed && "px-0")}
+            aria-current={uploadActive ? "page" : undefined}
+          >
+            <Plus className="h-4 w-4 shrink-0" aria-hidden="true" />
+            {!collapsed && "New screen"}
+          </Link>
+        </RailTip>
       </div>
 
       {/* A button, not an input: the palette owns the text field, so a second one
           here would be a decoy that swallows the first keystroke. The shortcut is
           printed because a researcher who never sees it never learns it. */}
-      <div className="mt-2 shrink-0 px-3">
-        <button
-          type="button"
-          onClick={onSearch}
-          className="flex h-8 w-full items-center gap-2 rounded-lg bg-white/10 px-2.5 text-left text-white/80 transition-colors duration-[120ms] hover:bg-white/15 hover:text-white motion-reduce:transition-none"
-        >
-          <Search className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-          <span className="flex-1 truncate text-[12.5px]">Search screens and genes</span>
-          <kbd className="shrink-0 rounded border border-white/25 px-1 text-[10px] text-white/80">
-            {modifier}K
-          </kbd>
-        </button>
+      <div className={cn("mt-2 shrink-0", collapsed ? "px-2" : "px-3")}>
+        <RailTip label={`Search  ${modifier}K`} when={collapsed}>
+          <button
+            type="button"
+            onClick={onSearch}
+            aria-label={collapsed ? "Search screens and genes" : undefined}
+            className={cn(
+              "flex h-8 w-full items-center rounded-lg border border-line bg-white text-left text-muted transition-colors duration-[var(--dur-1)] hover:border-line-strong hover:text-ink motion-reduce:transition-none",
+              collapsed ? "justify-center px-0" : "gap-2 px-2.5",
+            )}
+          >
+            <Search className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            {!collapsed && (
+              <>
+                <span className="flex-1 truncate text-[12.5px]">Search screens and genes</span>
+                <kbd className="shrink-0 rounded border border-line-strong px-1 text-[10px] text-muted">
+                  {modifier}K
+                </kbd>
+              </>
+            )}
+          </button>
+        </RailTip>
       </div>
 
-      <nav aria-label="Workspace" className="thin-scroll mt-5 min-h-0 flex-1 space-y-5 overflow-y-auto px-3 pb-2">
+      <nav
+        aria-label="Workspace"
+        className={cn(
+          "thin-scroll mt-5 min-h-0 flex-1 space-y-5 overflow-y-auto pb-2",
+          collapsed ? "px-2" : "px-3",
+        )}
+      >
         {NAV.map((section, index) => {
           const headingId = `${groupId}-${index}`;
           return (
@@ -271,33 +405,45 @@ function Sidebar({
               {/* A div rather than a heading: these label the lists beside
                   them, and promoting them would put four headings above the
                   page's own h1 in the document outline. */}
-              {section.group && (
-                <div
-                  id={headingId}
-                  className="mb-1 px-3 text-[10px] uppercase tracking-[0.16em] text-white/70"
-                >
-                  {section.group}
-                </div>
-              )}
+              {/* Collapsed, the group label becomes a hairline: the grouping is
+                  still visible, and a five-letter word squeezed into 44px is
+                  not a label, it is noise. */}
+              {section.group &&
+                (collapsed ? (
+                  <div className="mx-2 mb-1.5 h-px bg-line" aria-hidden="true" />
+                ) : (
+                  <div
+                    id={headingId}
+                    className="mb-1 px-2.5 text-[10px] font-medium uppercase tracking-[0.14em] text-muted"
+                  >
+                    {section.group}
+                  </div>
+                ))}
               <ul
                 className="space-y-0.5"
-                aria-labelledby={section.group ? headingId : undefined}
+                aria-labelledby={section.group && !collapsed ? headingId : undefined}
+                aria-label={section.group && collapsed ? section.group : undefined}
               >
                 {section.items.map((item) => {
                   const active = isActive(pathname, item.href, item.exact);
                   const Icon = item.icon;
                   return (
                     <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        onClick={onClose}
-                        className="dash-nav-link py-1.5 text-[12.5px]"
-                        data-active={active}
-                        aria-current={active ? "page" : undefined}
-                      >
-                        <Icon className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden="true" />
-                        {item.label}
-                      </Link>
+                      <RailTip label={item.label} when={collapsed}>
+                        <Link
+                          href={item.href}
+                          onClick={onClose}
+                          className={cn("dash-nav-link", collapsed && "justify-center px-0")}
+                          data-active={active}
+                          aria-current={active ? "page" : undefined}
+                        >
+                          <Icon className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden="true" />
+                          {/* The label stays in the accessibility tree at both
+                              widths. A rail of unlabelled icons is unusable with
+                              a screen reader, and `sr-only` costs nothing. */}
+                          <span className={cn(collapsed && "sr-only")}>{item.label}</span>
+                        </Link>
+                      </RailTip>
                     </li>
                   );
                 })}
@@ -309,27 +455,79 @@ function Sidebar({
 
       {/* Pinned to the bottom of the rail, and shrink-0 so it stays pinned when
           the navigation above it has to scroll on a short viewport. */}
-      <div className="shrink-0 border-t border-white/10 p-3">
-        {user.demo && (
-          <p className="mb-2 rounded-md bg-orange-500/20 px-2 py-1 text-[11px] leading-snug text-white">
-            Demo workspace. Every figure in the console is sample data.
+      <div className={cn("shrink-0 border-t border-line", collapsed ? "p-2" : "p-3")}>
+        {user.demo && !collapsed && (
+          <p className="mb-2 rounded-lg bg-orange-50 px-2 py-1.5 text-[11px] leading-snug text-orange-700">
+            Sample workspace. Every figure in the console is sample data.
           </p>
         )}
-        <div className="flex items-center gap-2.5 px-1 py-1">
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-orange-500 text-[11px] font-medium text-white">
-            {initials(user.name)}
-          </span>
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-[13px] leading-tight text-white">{user.name}</div>
-            <div className="truncate text-[11px] text-white/75">{user.org}</div>
+        <RailTip label={`${user.name}  ${user.org}`} when={collapsed}>
+          <div
+            className={cn(
+              "flex items-center py-1",
+              collapsed ? "justify-center px-0" : "gap-2.5 px-1",
+            )}
+          >
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-navy-tint text-[11px] font-medium text-navy">
+              {initials(user.name)}
+            </span>
+            {!collapsed && (
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-[13px] leading-tight text-ink">{user.name}</div>
+                <div className="truncate text-[11px] text-muted">{user.org}</div>
+              </div>
+            )}
           </div>
-        </div>
+        </RailTip>
         <form action="/auth/signout" method="post" className="mt-1">
-          <button type="submit" className="dash-nav-link w-full text-[12.5px]">
-            <LogOut className="h-4 w-4" aria-hidden="true" /> {user.demo ? "Exit demo" : "Sign out"}
-          </button>
+          <RailTip label="Sign out" when={collapsed}>
+            <button
+              type="submit"
+              aria-label={collapsed ? "Sign out" : undefined}
+              className={cn("dash-nav-link w-full", collapsed && "justify-center px-0")}
+            >
+              <LogOut className="h-4 w-4 shrink-0" aria-hidden="true" />
+              {!collapsed && "Sign out"}
+            </button>
+          </RailTip>
         </form>
       </div>
+    </div>
+  );
+}
+
+/**
+ * The label a collapsed rail control shows beside itself.
+ *
+ * `title` was the obvious choice and is the wrong one: it appears after a delay
+ * the reader did not ask for, it never appears on keyboard focus, and on a
+ * touch device it does not appear at all. This is an ordinary element, shown on
+ * hover and on focus-within, so tabbing through a collapsed rail names every
+ * stop. It is `aria-hidden` because the control it belongs to already has an
+ * accessible name; announcing both would read every item twice.
+ *
+ * `when` is false in the drawer and on an expanded rail, where the label is
+ * already on screen and a second copy would be a duplicate.
+ */
+function RailTip({
+  label,
+  when = true,
+  children,
+}: {
+  label: string;
+  when?: boolean;
+  children: React.ReactNode;
+}) {
+  if (!when) return <>{children}</>;
+  return (
+    <div className="group relative">
+      {children}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 translate-x-[-4px] whitespace-nowrap rounded-lg bg-teal-900 px-2 py-1 text-[11.5px] leading-none text-white opacity-0 shadow-soft transition-[opacity,transform] duration-[var(--dur-2)] group-hover:translate-x-0 group-hover:opacity-100 group-focus-within:translate-x-0 group-focus-within:opacity-100 motion-reduce:transition-none motion-reduce:translate-x-0"
+      >
+        {label}
+      </span>
     </div>
   );
 }
@@ -391,13 +589,13 @@ function MenuDrawer({
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 lg:hidden">
+    <div className="console fixed inset-0 z-50 lg:hidden">
       <button
         type="button"
         tabIndex={-1}
         aria-hidden="true"
         onClick={onClose}
-        className="absolute inset-0 cursor-default bg-teal-950/50 backdrop-blur-[2px]"
+        className="absolute inset-0 cursor-default bg-teal-950/45 backdrop-blur-[2px]"
       />
       <div
         ref={drawer}
@@ -405,7 +603,7 @@ function MenuDrawer({
         aria-modal="true"
         aria-label="Workspace menu"
         tabIndex={-1}
-        className="absolute left-0 top-0 h-full w-[268px] bg-teal-900 text-white shadow-float outline-none"
+        className="absolute left-0 top-0 h-full w-[268px] rounded-r-2xl border-r border-line bg-white shadow-float outline-none"
       >
         <Sidebar
           user={user}

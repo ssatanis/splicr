@@ -22,6 +22,8 @@
     "evidence:generate": "python3 scripts/research/publish_evidence.py",
     "evidence:check": "node scripts/research/evidence_gate.mjs --check-public",
     "test:web": "node --test apps/web/tests/*.test.mjs",
+    "emails:auth": "node apps/web/scripts/build-auth-emails.mjs",
+    "emails:auth:check": "node apps/web/scripts/build-auth-emails.mjs --check",
     "data:nih": "node scripts/data/nih-summary.mjs",
     "data:seed": "node scripts/data/seed-atlas.mjs",
     "atlas:snapshot": "engine/.tools/env/bin/python scripts/data/build-atlas-snapshot.py",

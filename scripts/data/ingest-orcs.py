@@ -57,6 +57,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "engine"))
 
 from splicr import atlas as atlas_mod                                    # noqa: E402
+from splicr import harmonize                                             # noqa: E402
 from splicr import orcs                                                  # noqa: E402
 from splicr.atlas import GeneAccumulator, invert_aliases, summarise_gene_stats  # noqa: E402
 
@@ -633,7 +634,33 @@ def phase_postgres(
 
     screens = store.screens()
     stats_loaded = 0
+    screens_loaded = 0
     screen_uuid: dict[int, str] = {}
+    gene_resolver = harmonize.genes(9606)
+    cell_resolver = harmonize.cell_lines(taxid=9606)
+    gene_cache: dict[str, harmonize.Resolution] = {}
+
+    def gene_resolution(raw: str):
+        if raw not in gene_cache:
+            gene_cache[raw] = gene_resolver.resolve(raw)
+        return gene_cache[raw]
+
+    def reject(cur, source_id: str, kind: str, raw: str, result,
+               n_rows: int = 1) -> None:
+        reason = result.reason or result.status
+        cur.execute(
+            """
+            insert into atlas.harmonization_rejects
+              (source, source_id, entity_kind, raw_value, reason, candidates, n_rows)
+            values ('orcs', %s, %s, %s, %s, %s, %s)
+            on conflict (source, source_id, entity_kind, raw_value) do update set
+              reason = excluded.reason, candidates = excluded.candidates,
+              n_rows = excluded.n_rows, at = now()
+            """,
+            (source_id, kind, raw or "<missing>", f"{result.status}: {reason}",
+             list(result.candidates), n_rows),
+        )
+
     try:
         done = set(checkpoint["screens"])
         todo = [sid for sid in sorted(screens) if sid not in done]
@@ -643,11 +670,16 @@ def phase_postgres(
             with conn.cursor() as cur:
                 for sid in chunk:
                     s = screens[sid]
+                    cell = cell_resolver.resolve(s.cell_line or "")
+                    if not cell.ok:
+                        reject(cur, str(sid), "cell_line", s.cell_line or "", cell,
+                               n_rows=max(1, s.scores_size or 1))
+                        continue
                     cur.execute(
                         """
                         insert into atlas.screens
                           (source, source_id, title, pmid, year, taxid, library_name,
-                           modality, cell_line, phenotype, condition, methodology,
+                           modality, cell_line, cell_line_rrid, phenotype, condition, methodology,
                            analysis_tool, n_genes, n_hits, has_raw_reads, metadata)
                         -- The casts are explicit because modality is an enum
                         -- and metadata is jsonb, and a driver that sends a
@@ -655,12 +687,13 @@ def phase_postgres(
                         -- gets "column is of type public.modality but
                         -- expression is of type text" instead of a coercion.
                         values ('orcs', %s, %s, %s, %s, 9606, %s,
-                                %s::public.modality, %s, %s, %s, %s,
+                                %s::public.modality, %s, %s, %s, %s, %s,
                                 %s, %s, %s, false, %s::jsonb)
                         on conflict (source, source_id) do update set
                           title = excluded.title, pmid = excluded.pmid,
                           year = excluded.year, library_name = excluded.library_name,
                           modality = excluded.modality, cell_line = excluded.cell_line,
+                          cell_line_rrid = excluded.cell_line_rrid,
                           phenotype = excluded.phenotype, condition = excluded.condition,
                           methodology = excluded.methodology,
                           analysis_tool = excluded.analysis_tool,
@@ -675,7 +708,7 @@ def phase_postgres(
                             # modality may be None for an unmapped LIBRARY_TYPE;
                             # the column is nullable and a wrong enum value would
                             # be worse than a null.
-                            s.modality, s.cell_line, s.phenotype, s.condition_name,
+                            s.modality, s.cell_line, cell.id, s.phenotype, s.condition_name,
                             s.library_methodology, s.analysis,
                             s.scores_size, s.number_of_hits,
                             json.dumps({
@@ -703,6 +736,7 @@ def phase_postgres(
                     row = cur.fetchone()
                     if row:
                         screen_uuid[sid] = str(row[0])
+                        screens_loaded += 1
             conn.commit()
             checkpoint["screens"] = sorted(done | set(todo[:start + len(chunk)]))
             save()
@@ -723,18 +757,25 @@ def phase_postgres(
         nhits = table.column("n_hits").to_pylist()
         rates = table.column("hit_rate").to_pylist()
         threshold = atlas_mod.SETTINGS.artifacts.frequent_hitter_rate
-        payload = [
-            (syms[i], tested[i], nhits[i], rates[i] or 0.0,
-             bool(rates[i] is not None and rates[i] > threshold))
-            for i in range(len(syms))
-        ]
+        payload = []
         with conn.cursor() as cur:
+            for i, symbol in enumerate(syms):
+                resolved = gene_resolution(symbol)
+                if not resolved.ok:
+                    reject(cur, "", "gene", symbol, resolved,
+                           n_rows=max(1, int(tested[i] or 0)))
+                    continue
+                payload.append(
+                    (symbol, resolved.id, tested[i], nhits[i], rates[i] or 0.0,
+                     bool(rates[i] is not None and rates[i] > threshold))
+                )
             cur.executemany(
                 """
                 insert into atlas.gene_stats
-                  (gene_symbol, n_screens, n_hits, hit_rate, is_frequent_hitter)
-                values (%s, %s, %s, %s, %s)
+                  (gene_symbol, ensembl_gene_id, n_screens, n_hits, hit_rate, is_frequent_hitter)
+                values (%s, %s, %s, %s, %s, %s)
                 on conflict (gene_symbol) do update set
+                  ensembl_gene_id = excluded.ensembl_gene_id,
                   n_screens = excluded.n_screens, n_hits = excluded.n_hits,
                   hit_rate = excluded.hit_rate,
                   is_frequent_hitter = excluded.is_frequent_hitter,
@@ -772,14 +813,25 @@ def phase_postgres(
                 s1 = tb.column("score1").to_pylist()
                 with conn.cursor() as cur:
                     cur.execute("delete from atlas.screen_hits where screen_id = %s", (uuid,))
+                    accepted = []
+                    for j in range(len(g)):
+                        resolved = gene_resolution(g[j])
+                        if resolved.ok:
+                            accepted.append((uuid, g[j], resolved.id, h[j], s1[j]))
+                        else:
+                            reject(cur, str(sid), "gene", g[j], resolved)
                     with cur.copy(
-                        "copy atlas.screen_hits (screen_id, gene_symbol, is_hit, score) "
+                        "copy atlas.screen_hits "
+                        "(screen_id, gene_symbol, ensembl_gene_id, is_hit, score) "
                         "from stdin"
                     ) as cp:
-                        for j in range(len(g)):
-                            cp.write_row((uuid, g[j], h[j], s1[j]))
+                        for row in accepted:
+                            cp.write_row(row)
                 conn.commit()
-                n_rows += len(g)
+                # Rows the gate refused are ledgered, not loaded, so they must
+                # not be counted here: this number is what atlas.screen_hits now
+                # holds, and the difference is queryable in the reject ledger.
+                n_rows += len(accepted)
                 done_rows.add(sid)
                 checkpoint["rows"] = sorted(done_rows)
                 if len(done_rows) % 50 == 0:
@@ -787,7 +839,7 @@ def phase_postgres(
                     print(f"    {len(done_rows):,} screens, {n_rows:,} rows")
             save()
 
-        return {"loaded": True, "screens": len(screens), "gene_stats": stats_loaded,
+        return {"loaded": True, "screens": screens_loaded, "gene_stats": stats_loaded,
                 "hit_rows": n_rows}
     except Exception as exc:
         conn.rollback()

@@ -1,0 +1,291 @@
+/**
+ * The recorded guide-disagreement report, read and not recomputed.
+ *
+ * WHY NOTHING IS CALCULATED HERE
+ *
+ * The statistics behind this report - a gene's spread against the spread the same
+ * screen shows for genes of the same size, whether its call survives dropping one
+ * guide, and the Fisher exact table between depletion and the curated protein
+ * feature the depleting guides share - live in one place:
+ * engine/splicr/validate/domain_report.py. The engine computes them at analysis
+ * time against a named reference release and stores the document. This module
+ * reads it.
+ *
+ * That is deliberate. A second implementation in TypeScript would be a second
+ * definition of the same statistics, and the two would drift. The shape is pinned
+ * by `disagreement.schema.json`, generated from the pydantic model; a Python test
+ * fails if the model changes without regenerating it and a Node test fails if the
+ * types below stop covering it.
+ *
+ * Authorization is the session's own. Every query goes through the request-scoped
+ * Supabase client, so Row Level Security decides what is visible, and the
+ * organization is taken from the session and never from the URL.
+ */
+import "server-only";
+
+import { getCurrentContext } from "@/lib/data/org";
+import { isUuid } from "@/lib/data/types";
+import { createClient } from "@/lib/supabase/server";
+
+/** Mirrors validate.domain_report.GuideEvidence. */
+export interface GuideEvidence {
+  guide_key: string;
+  gene: string | null;
+  sequence: string | null;
+  log2_fold_change: number;
+  /** Deviation from this gene's own mean. This is the disagreement. */
+  residual: number;
+  depleted: boolean;
+  p_value: number | null;
+  fdr: number | null;
+  chromosome: string | null;
+  cut_position: number | null;
+  strand: string | null;
+  /** Measured, never predicted. Null wherever no empirical per-guide efficacy exists. */
+  measured_efficacy: number | null;
+  efficacy_source: string | null;
+  control_mean: number | null;
+  treatment_mean: number | null;
+  uniprot_accession: string | null;
+  mane_transcript: string | null;
+  n_residues: number | null;
+  protein_residue: number | null;
+  cds_fraction: number | null;
+  in_last_exon: boolean | null;
+  features_hit: string[];
+  annotation_evidence: "curated" | "cds_only" | "none";
+  /** Why there is no protein context, when there is none. */
+  note: string;
+}
+
+/**
+ * `not_evaluated` means the protein context was never looked up for this gene.
+ * `no_features` means it was looked up and nothing curated covers any resolved
+ * cut. The console says those differently, so they stay different values.
+ */
+export type ConcordanceStatus =
+  | "shared_feature"
+  | "spans_features"
+  | "overlapping"
+  | "no_features"
+  | "not_evaluable"
+  | "not_evaluated";
+
+/** Mirrors validate.domain_report.Concordance. */
+export interface Concordance {
+  status: ConcordanceStatus;
+  feature: string | null;
+  n_depleting_annotated: number;
+  n_other_annotated: number;
+  /** Two-sided Fisher exact p for the 2x2 table, when it could be built. */
+  fisher_p: number | null;
+  /** The smallest p this table's margins allow. Null when there is no table. */
+  fisher_p_floor: number | null;
+  interpretation: string;
+  /** Why a small p here is weaker than it looks. */
+  confound: string;
+}
+
+/** Mirrors validate.domain_report.Provenance. */
+export interface Provenance {
+  coordinate_system: string;
+  reference_versions: Record<string, string>;
+  measurement_source: string;
+  annotated_at: string | null;
+}
+
+/** Mirrors validate.domain_report.DisagreementReport. */
+export interface DisagreementReport {
+  gene_symbol: string;
+  ensembl_gene_id: string | null;
+  uniprot_accession: string | null;
+  mane_transcript: string | null;
+  n_residues: number | null;
+  n_guides: number;
+  mean_log2_fold_change: number;
+  median_log2_fold_change: number;
+  n_depleting: number;
+  depletion_lfc: number;
+  spread: number | null;
+  /** Null when the comparison had too few same-size genes to form a baseline. */
+  spread_vs_screen: number | null;
+  spread_baseline_n_genes: number | null;
+  discordant: boolean;
+  leave_one_out_min: number;
+  leave_one_out_max: number;
+  fragile: boolean;
+  pivotal_guide: string | null;
+  guides: GuideEvidence[];
+  concordance: Concordance;
+  summary: string;
+  provenance: Provenance;
+}
+
+/**
+ * Four outcomes, kept apart.
+ *
+ * `no_report` and `not_analysed` are different facts. The first means this run
+ * produced reports and this gene is not among them, which happens when a gene has
+ * fewer than two guides with a fold change. The second means the run produced no
+ * reports at all, because it predates the table. A reader must not be shown "no
+ * disagreement" for either.
+ */
+export type DisagreementResult =
+  | { status: "found"; report: DisagreementReport; recordedAt: string | null }
+  | { status: "no_report"; gene: string }
+  | { status: "not_analysed" }
+  /** No such screen, or one another workspace owns. The two answer alike so an id cannot be probed. */
+  | { status: "not_found" }
+  | { status: "unavailable" };
+
+/** The document shape, as the schema requires it, before it is trusted. */
+function isReport(value: unknown): value is DisagreementReport {
+  if (typeof value !== "object" || value === null) return false;
+  const r = value as Record<string, unknown>;
+  return (
+    typeof r.gene_symbol === "string" &&
+    typeof r.n_guides === "number" &&
+    typeof r.mean_log2_fold_change === "number" &&
+    typeof r.summary === "string" &&
+    Array.isArray(r.guides) &&
+    typeof r.concordance === "object" && r.concordance !== null &&
+    typeof r.provenance === "object" && r.provenance !== null
+  );
+}
+
+/** A symbol, reduced to the characters a gene symbol can contain. */
+export function normaliseSymbol(gene: string): string {
+  return gene.trim().toUpperCase().replace(/[^A-Z0-9._-]/g, "").slice(0, 64);
+}
+
+/**
+ * The stored report for one gene of one screen.
+ *
+ * The screen is checked against the session's organization before the report is
+ * read, so a report cannot be reached by guessing an id from another workspace,
+ * and Row Level Security refuses it a second time.
+ */
+export async function getGeneDisagreement(
+  screenId: string,
+  gene: string,
+): Promise<DisagreementResult> {
+  const symbol = normaliseSymbol(gene);
+  if (!isUuid(screenId) || symbol.length === 0) return { status: "not_found" };
+  const context = await getCurrentContext();
+  if (context.isDemo || !context.user || !context.org) return { status: "not_found" };
+  try {
+    const client = await createClient();
+    const owned = await client.from("screens")
+      .select("id").eq("id", screenId).eq("org_id", context.org.id).maybeSingle();
+    if (owned.error) throw owned.error;
+    // The same answer whether the screen belongs to somebody else or does not
+    // exist, so this cannot be used to discover another workspace's screen ids.
+    if (!owned.data) return { status: "not_found" };
+
+    const found = await client.from("gene_disagreement")
+      .select("report, created_at")
+      .eq("screen_id", screenId)
+      .eq("gene_symbol", symbol)
+      .eq("schema_version", "1")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (found.error) throw found.error;
+    if (found.data) {
+      if (!isReport(found.data.report)) return { status: "unavailable" };
+      return {
+        status: "found",
+        report: found.data.report,
+        recordedAt: (found.data.created_at as string | null) ?? null,
+      };
+    }
+    // Distinguish "this gene has no report" from "this run stored none".
+    const any = await client.from("gene_disagreement")
+      .select("gene_symbol", { count: "exact", head: true })
+      .eq("screen_id", screenId);
+    if (any.error) throw any.error;
+    return (any.count ?? 0) > 0 ? { status: "no_report", gene: symbol } : { status: "not_analysed" };
+  } catch (error) {
+    console.error(`[data/disagreement] ${error instanceof Error ? error.message : "read failed"}`);
+    return { status: "unavailable" };
+  }
+}
+
+/** One point on the effect-versus-significance plot, exactly as recorded. */
+export interface EffectPoint {
+  gene: string;
+  lfc: number;
+  /** Recorded FDR. Null rows are kept and drawn on their own baseline row. */
+  fdr: number | null;
+  direction: string;
+  /** Whether this gene has a stored guide-disagreement report to open. */
+  hasReport: boolean;
+  fragile: boolean;
+  discordant: boolean;
+}
+
+/**
+ * How many recorded genes the plot will draw.
+ *
+ * A genome-wide comparison records about twenty thousand genes. Every one of them
+ * is sent, because a plot that silently drops the rows it finds inconvenient is a
+ * plot that misrepresents the experiment; the renderer is a canvas for that
+ * reason. The cap exists only so a corrupt row count cannot exhaust the response,
+ * and when it bites the page says so rather than drawing a subset quietly.
+ */
+export const EFFECT_POINT_LIMIT = 40000;
+
+export type EffectPointsResult =
+  | { status: "found"; points: EffectPoint[]; recorded: number; truncated: boolean }
+  | { status: "unavailable" };
+
+/** Recorded effect and significance for every gene of one comparison. */
+export async function getEffectPoints(
+  screenId: string,
+  comparisonId: string,
+): Promise<EffectPointsResult> {
+  if (!isUuid(screenId) || !isUuid(comparisonId)) return { status: "unavailable" };
+  const context = await getCurrentContext();
+  if (context.isDemo || !context.user || !context.org) return { status: "unavailable" };
+  try {
+    const client = await createClient();
+    const hits = await client.from("hits")
+      .select("gene_symbol, lfc, fdr, direction", { count: "exact" })
+      .eq("screen_id", screenId)
+      .eq("comparison_id", comparisonId)
+      .not("lfc", "is", null)
+      .order("gene_symbol", { ascending: true })
+      .limit(EFFECT_POINT_LIMIT);
+    if (hits.error) throw hits.error;
+
+    const reports = await client.from("gene_disagreement")
+      .select("gene_symbol, fragile, discordant")
+      .eq("comparison_id", comparisonId)
+      .limit(EFFECT_POINT_LIMIT);
+    if (reports.error) throw reports.error;
+    const flags = new Map(
+      (reports.data ?? []).map((row) => [
+        String(row.gene_symbol).toUpperCase(),
+        { fragile: Boolean(row.fragile), discordant: Boolean(row.discordant) },
+      ]),
+    );
+
+    const points: EffectPoint[] = (hits.data ?? []).map((row) => {
+      const flag = flags.get(String(row.gene_symbol).toUpperCase());
+      return {
+        gene: String(row.gene_symbol),
+        lfc: Number(row.lfc),
+        fdr: row.fdr === null ? null : Number(row.fdr),
+        direction: String(row.direction),
+        hasReport: flag !== undefined,
+        fragile: flag?.fragile ?? false,
+        discordant: flag?.discordant ?? false,
+      };
+    });
+    const recorded = hits.count ?? points.length;
+    return { status: "found", points, recorded, truncated: recorded > points.length };
+  } catch (error) {
+    console.error(`[data/disagreement] points: ${error instanceof Error ? error.message : "read failed"}`);
+    return { status: "unavailable" };
+  }
+}

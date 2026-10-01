@@ -1,32 +1,14 @@
-import type { Metadata } from "next";
-import { Suspense } from "react";
+import { redirect } from "next/navigation";
 
-import { AuthForm } from "@/components/auth/auth-form";
-import { AuthPanel } from "@/components/auth/auth-panel";
-
-export const metadata: Metadata = { title: "Create account" };
-
+/**
+ * Public signup is closed: a researcher gets into SplicR because a lab invited
+ * their address. The route is kept as a redirect rather than deleted so that
+ * old links, bookmarks and anything still pointing here land on the sign-in
+ * page instead of a 404 that looks like the product is broken.
+ *
+ * This is a convenience, not a control. Account creation is refused in the
+ * database, so removing this file would change nothing about who can sign up.
+ */
 export default function SignupPage() {
-  return (
-    <AuthPanel
-      aside={
-        <div className="mt-10 grid grid-cols-3 gap-4 text-sm">
-          {[
-            ["Free", "for public data, with a citation"],
-            ["$150–250", "per screen for labs"],
-            ["Pilots", "for cores, biotech and pharma"],
-          ].map(([v, l]) => (
-            <div key={v} className="rounded-2xl bg-white/10 p-4">
-              <div className="text-xl font-medium">{v}</div>
-              <div className="text-white/90 mt-1">{l}</div>
-            </div>
-          ))}
-        </div>
-      }
-    >
-      <Suspense>
-        <AuthForm mode="signup" />
-      </Suspense>
-    </AuthPanel>
-  );
+  redirect("/login");
 }

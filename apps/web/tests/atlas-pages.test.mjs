@@ -60,11 +60,21 @@ const params = (search = {}) => ({ searchParams: Promise.resolve(search) });
 test("the default page lists fifty screens, states its provenance and never loads the gene table", async () => {
   geneReads = 0;
   const html = await render(atlasPage, params());
-  assert.match(html, /1,952 human screens from 358 publications, from BioGRID ORCS 2\.0\.18/);
   assert.equal((html.match(/<tr class="row-hit"/g) ?? []).length, 50);
   assert.match(html, /1&#x27;?[––-]50 of 1,952|1–50 of 1,952/);
-  assert.match(html, /MIT licence/);
-  assert.match(html, /Each screen keeps its authors&#x27; own analysis and hit rule/);
+  // Provenance moved to one place. The page used to say where the records come
+  // from three times over: a subtitle, a caveat strip and the footer. The
+  // footer is the one that stays, because it is beside the licence and the
+  // link, and it is still asserted here.
+  assert.match(html, /BioGRID ORCS 2\.0\.18, MIT licence/);
+  assert.ok(
+    !/human screens from .* publications/.test(html),
+    "the corpus subtitle is gone and does not come back",
+  );
+  assert.ok(
+    !/own analysis and hit rule/.test(html),
+    "and so is the caveat strip that repeated it",
+  );
   assert.equal(geneReads, 0, "the 6 MB gene table is not read unless a gene is asked about");
 });
 

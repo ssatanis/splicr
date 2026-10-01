@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="x-ua-compatible" content="ie=edge">
+<meta name="x-apple-disable-message-reformatting">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<title>SplicR</title>
+<!--[if mso]>
+<style>body,table,td,a,div,p,h1{font-family:Arial,Helvetica,sans-serif !important;}</style>
+<![endif]-->
+<style>
+  @media only screen and (max-width:620px) {
+    .sp-shell { padding:24px 14px 40px !important; }
+    .sp-card { padding:28px 22px 30px !important; }
+    .sp-h1 { font-size:23px !important; line-height:30px !important; }
+  }
+</style>
+</head>
+<body style="margin:0;padding:0;width:100%;background:#ffffff;color:#111111;-webkit-font-smoothing:antialiased;">
+<div style="display:none;max-height:0;max-width:0;overflow:hidden;opacity:0;mso-hide:all;">Confirm this address to continue setting up your SplicR account.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;">
+  <tr><td class="sp-shell" align="center" style="padding:44px 20px 56px;">
+    <table role="presentation" align="center" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;border-collapse:separate;">
+      <tr><td class="sp-card" style="padding:38px 40px 36px;border:1px solid #E2E2E2;border-radius:2px;background:#ffffff;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,Helvetica,sans-serif;font-size:15px;line-height:20px;mso-line-height-rule:exactly;font-weight:700;letter-spacing:0.005em;color:#111111;">SplicR</td>
+          <td align="right" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,Helvetica,sans-serif;font-size:10px;line-height:20px;mso-line-height-rule:exactly;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#757575;">Email verification</td>
+        </tr>
+      </table>
+      <div style="height:1px;line-height:1px;font-size:0;background:#24334B;margin:14px 0 0;">&nbsp;</div>
+      <h1 class="sp-h1" style="margin:34px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,Helvetica,sans-serif;font-size:27px;line-height:34px;mso-line-height-rule:exactly;font-weight:600;letter-spacing:-0.016em;color:#111111;">Confirm your email address</h1>
+      <p style="margin:18px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,Helvetica,sans-serif;font-size:15px;line-height:25px;mso-line-height-rule:exactly;color:#3D3D3D;">Confirm this address to continue setting up your <strong style="color:#111111;font-weight:600;">SplicR</strong> account. The link works once.</p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0 0;background:#F7F7F7;border:1px solid #E2E2E2;border-radius:2px;">
+        <tr><td style="padding:18px 20px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+            <td style="padding:0 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,Helvetica,sans-serif;font-size:10px;line-height:14px;mso-line-height-rule:exactly;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#757575;">Address to confirm</td>
+          </tr>
+          <tr>
+            <td style="padding:5px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,Helvetica,sans-serif;font-size:15px;line-height:22px;mso-line-height-rule:exactly;color:#111111;word-break:break-word;">{{ .Email }}</td>
+          </tr></table>
+        </td></tr>
+      </table>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:30px 0 0;">
+        <tr><td bgcolor="#24334B" style="background:#24334B;border-radius:2px;">
+          <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:13px 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,Helvetica,sans-serif;font-size:14px;line-height:18px;mso-line-height-rule:exactly;font-weight:600;letter-spacing:0.01em;color:#ffffff;text-decoration:none;border-radius:2px;">Confirm email address</a>
+        </td></tr>
+      </table>
+      <div style="margin:26px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,Helvetica,sans-serif;font-size:12px;line-height:20px;mso-line-height-rule:exactly;color:#757575;">
+        If the button does not open, paste this address into your browser.
+      </div>
+      <div style="margin:7px 0 0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;font-size:12px;line-height:19px;mso-line-height-rule:exactly;color:#24334B;word-break:break-all;">{{ .ConfirmationURL }}</div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:34px 0 0;">
+        <tr><td style="border-top:1px solid #E2E2E2;padding:22px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,Helvetica,sans-serif;font-size:12px;line-height:20px;mso-line-height-rule:exactly;color:#757575;">
+          If you did not expect this message, you can ignore it. No account will be activated without this confirmation.
+          <div style="margin:22px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,Helvetica,sans-serif;font-size:11px;line-height:18px;mso-line-height-rule:exactly;color:#757575;">
+            <span style="font-weight:600;color:#111111;letter-spacing:0.01em;">SplicR</span><br>
+            New York, NY<br>
+            splicr.org
+          </div>
+        </td></tr>
+      </table>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>

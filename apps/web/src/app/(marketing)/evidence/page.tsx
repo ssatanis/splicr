@@ -26,7 +26,7 @@ export default function EvidencePage() {
     <MarketingNav />
     <div className="container-x py-14 md:py-20 space-y-16">
       <header className="max-w-3xl">
-        <div className="eyebrow">Research measurements · {evidence.measurement_date}</div>
+        <div className="eyebrow">Research measurements, {evidence.measurement_date}</div>
         <h1 className="mt-4 display text-ink text-4xl md:text-6xl">Evidence you can inspect.</h1>
         <p className="mt-6 text-lg text-body">We reproduced published benchmarks, tested new models and audited actual sequencing data. The work corrected reliability problems; it did not demonstrate a new benchmark leader or perfect biological accuracy.</p>
         <p className="mt-4 text-body">Public workspace access is not enabled. These results describe the documented research snapshot and local implementation, not a completed prospective laboratory validation.</p>
@@ -40,10 +40,18 @@ export default function EvidencePage() {
             <tbody>{benchmark.map(row=><tr key={row.label}><th scope="row" className="text-left font-normal">{row.label}</th><td className="tabular-nums">{row.value.toFixed(6)}</td></tr>)}</tbody>
           </table>
         </div>
-        <p className="mt-5 text-body">Router minus ensemble: {evidence.router.paired_vs_ensemble.mean.toFixed(6)}; paired publication-bootstrap 95% interval [{evidence.router.paired_vs_ensemble.ci95.map(v=>v.toFixed(6)).join(", ")}]. No advantage was established and the candidate was not promoted.</p>
+        {/*
+          The difference below is between two numbers, so both are stated. Quoting
+          a difference whose operands appear nowhere on the page leaves a reader
+          unable to check it, and the two matched rankings - the router on the
+          released context, and the published ensemble on its own inputs - are the
+          comparison this interval is actually about. The table above reports the
+          library-aware experiment, which is a different and non-matched one.
+        */}
+        <p className="mt-5 text-body">On the same released context, without the target&apos;s measured gene library, SplicR&apos;s phenotype router scored {evidence.router.mean.toFixed(6)} against {evidence.references.published_ensemble.mean.toFixed(6)} for the published frontier ensemble. Router minus ensemble: {evidence.router.paired_vs_ensemble.mean.toFixed(6)}; paired publication-bootstrap 95% interval [{evidence.router.paired_vs_ensemble.ci95.map(v=>v.toFixed(6)).join(", ")}] over {evidence.router.paired_vs_ensemble.n_publications} publications. The interval spans zero: no advantage was established and the candidate was not promoted.</p>
         <p className="mt-4 text-body">Published model rankings were replayed from saved files. No fresh model API calls were made. The oracle selects with test answers and is not deployable. The public test had already been explored historically, so it is not an untouched prospective cohort.</p>
         <details className="mt-5 rounded-xl border border-line p-5"><summary className="cursor-pointer font-medium">Why earlier SplicR numbers differ</summary><p className="mt-3 text-body">The original supplied-library phenotype prior reproduced at {evidence.legacy_prior.andcg100.toFixed(6)}. A separate archived fusion scored 0.219952 versus 0.219324 for an equally filtered/padded ensemble, with a paired interval spanning zero. Those experiments used the target&apos;s measured gene library and different training inputs. Their scores cannot be compared directly with the unaltered rankings above. Full details remain in the reproduction report.</p></details>
-        <p className="mt-4 text-sm"><a className="underline" href="https://github.com/Genentech/AssayBench">Official implementation</a>{" · "}<a className="underline" href="https://huggingface.co/datasets/Genentech/assaybench">Official dataset</a></p>
+        <p className="mt-4 text-sm"><a className="underline" href="https://github.com/Genentech/AssayBench">Official implementation</a>{", "}<a className="underline" href="https://huggingface.co/datasets/Genentech/assaybench">Official dataset</a></p>
       </section>
       <section id="post-screen" className="scroll-mt-8">
         <h2 className="text-3xl font-medium">Which hits reproduce</h2>

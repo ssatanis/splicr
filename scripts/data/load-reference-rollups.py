@@ -11,8 +11,12 @@ Writes, each in one transaction, replacing the release's rows:
                             Ensembl gene id through harmonize.enforce; unmappable genes
                             are quarantined to data/work/quarantine/, not written
     atlas.cell_models       DepMap models with Cellosaurus RRIDs (~2.2k rows)
-    atlas.gene_stats        BioGRID ORCS per-gene hit frequency (~87k rows) and
-                            is_common_essential from the DepMap summary
+    atlas.gene_stats        BioGRID ORCS per-gene hit frequency and
+                            is_common_essential from the DepMap summary. ORCS
+                            names ~87k things "genes"; the ~25k that resolve to a
+                            current Ensembl gene are written, and the rest -
+                            non-targeting controls, placeholders and retired ids -
+                            are refused to atlas.harmonization_rejects
     atlas.data_sources      engine/splicr/sources.py
 
 These are the tables `atlas_corpus_state()` and the Hit Report join against.
@@ -115,6 +119,22 @@ def main() -> int:
         from read_parquet('{REFERENCE_DIR}/orcs/atlas/gene_stats.parquet')
         where symbol is not null and n_screens_tested > 0""").fetchall()
 
+    # atlas.gene_stats.ensembl_gene_id is NOT NULL and trigger-checked since
+    # 20260930155420, so the ORCS rollup is resolved here rather than written as
+    # free text. Most of what ORCS calls a gene is a non-targeting control or a
+    # placeholder; those are refused and ledgered, never silently dropped.
+    orcs_rows: list[tuple] = []
+    orcs_rejects: list[tuple] = []
+    for sym, n, hits, rate in orcs:
+        r = g.resolve(sym)
+        if r.ok:
+            orcs_rows.append((sym, r.id, n, hits, rate, sym in common, (rate or 0) > 0.25))
+        else:
+            orcs_rejects.append((
+                "orcs", "", "gene", sym or "<missing>",
+                f"{r.status}: {r.reason or r.status}", list(r.candidates), max(1, int(n or 0)),
+            ))
+
     src_rows = [(s.id, s.name, s.layer, s.modality, s.scale, s.access, s.url, s.licence, s.status,
                  s.holdings, list(s.lake_datasets), list(s.harmonized_to), s.notes or None)
                 for s in sources.SOURCES]
@@ -123,7 +143,8 @@ def main() -> int:
           f"{sum(r[12] for r in dep_rows):,} selective); {len(quarantine):,} quarantined "
           f"(no current Ensembl gene or ambiguous){f', see {qpath}' if len(quarantine) else ''}")
     print(f"cell_models     {len(models):,} rows ({sum(1 for m in models if m[1]):,} with RRID)")
-    print(f"gene_stats      {len(orcs):,} rows from BioGRID ORCS")
+    print(f"gene_stats      {len(orcs_rows):,} of {len(orcs):,} ORCS symbols resolve to a current "
+          f"Ensembl gene; {len(orcs_rejects):,} refused to atlas.harmonization_rejects")
     print(f"data_sources    {len(src_rows)} rows")
     if not args.go:
         print("dry run; pass --go to write")
@@ -154,10 +175,19 @@ def main() -> int:
                  json.dumps({"subtype": subtype, "source": f"DepMap {RELEASE}"})))
 
         cur.execute("truncate atlas.gene_stats")
-        with cur.copy("copy atlas.gene_stats (gene_symbol, n_screens, n_hits, hit_rate, is_common_essential, "
-                      "is_frequent_hitter) from stdin") as cp:
-            for sym, n, hits, rate in orcs:
-                cp.write_row((sym, n, hits, rate, sym in common, (rate or 0) > 0.25))
+        with cur.copy("copy atlas.gene_stats (gene_symbol, ensembl_gene_id, n_screens, n_hits, hit_rate, "
+                      "is_common_essential, is_frequent_hitter) from stdin") as cp:
+            for row in orcs_rows:
+                cp.write_row(row)
+        if orcs_rejects:
+            cur.executemany(
+                "insert into atlas.harmonization_rejects "
+                "  (source, source_id, entity_kind, raw_value, reason, candidates, n_rows) "
+                "values (%s,%s,%s,%s,%s,%s,%s) "
+                "on conflict (source, source_id, entity_kind, raw_value) do update set "
+                "  reason = excluded.reason, candidates = excluded.candidates, "
+                "  n_rows = excluded.n_rows, at = now()",
+                orcs_rejects)
         cur.execute("""update atlas.gene_stats s set gene_id = g.id
                        from atlas.genes g where g.taxid = 9606 and g.symbol = s.gene_symbol""")
 

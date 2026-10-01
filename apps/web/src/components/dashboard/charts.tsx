@@ -21,10 +21,18 @@ import {
 
 import type { Hit, Sample } from "@/lib/mock/data";
 
+import {
+  ATTENTION,
+  DEPLETED,
+  ENRICHED,
+  GRID,
+  LINE_STRONG,
+  axisStyle,
+  tooltipStyle,
+} from "./chart-colors";
 import { verdictColor } from "./ui";
 
-const axisStyle = { fontSize: 11, fill: "#848d9a" };
-const grid = "#e6ebef";
+const grid = GRID;
 
 /**
  * Render a chart only once the browser has it, inside a box of the final height.
@@ -71,7 +79,7 @@ function HitTip({ active, payload }: Partial<TooltipContentProps<number, string>
     <div className="rounded-xl bg-white border border-line shadow-card px-3 py-2 text-xs">
       <div className="text-ink font-medium">{h.gene}</div>
       <div className="text-muted">
-        LFC {h.lfc} · FDR {h.fdr.toExponential(1)} · demo score {h.chance.toFixed(3)}
+        LFC {h.lfc}, FDR {h.fdr.toExponential(1)}, demo score {h.chance.toFixed(3)}
       </div>
       <div className="text-muted">{h.verdict}</div>
     </div>
@@ -91,10 +99,10 @@ export function VolcanoChart({ hits, onSelect, height = 320 }: { hits: Hit[]; on
         <CartesianGrid stroke={grid} strokeDasharray="3 3" />
         <XAxis type="number" dataKey="lfc" name="log2 fold change" tick={axisStyle} domain={[-reach, reach]} tickFormatter={(v) => Number(v).toFixed(1)} label={{ value: "log2 fold change", position: "insideBottom", offset: -4, ...axisStyle }} />
         <YAxis type="number" dataKey="nlp" name="-log10 p" tick={axisStyle} label={{ value: "-log10 p", angle: -90, position: "insideLeft", ...axisStyle }} />
-        <ReferenceLine x={0} stroke="#d3dbe1" />
-        <ReferenceLine x={1} stroke="#d3dbe1" strokeDasharray="4 4" />
-        <ReferenceLine x={-1} stroke="#d3dbe1" strokeDasharray="4 4" />
-        <ReferenceLine y={2} stroke="#d3dbe1" strokeDasharray="4 4" />
+        <ReferenceLine x={0} stroke={LINE_STRONG} />
+        <ReferenceLine x={1} stroke={LINE_STRONG} strokeDasharray="4 4" />
+        <ReferenceLine x={-1} stroke={LINE_STRONG} strokeDasharray="4 4" />
+        <ReferenceLine y={2} stroke={LINE_STRONG} strokeDasharray="4 4" />
         <Tooltip content={<HitTip />} cursor={{ strokeDasharray: "3 3" }} />
         <Scatter data={data} onClick={(d) => onSelect?.(d as unknown as Hit)} cursor="pointer">
           {data.map((d) => (
@@ -110,13 +118,13 @@ export function DiscoveryMap({ hits, onSelect, height = 420 }: { hits: Hit[]; on
   return (
     <ChartFrame height={height}>
       <ScatterChart margin={{ top: 10, right: 16, bottom: 16, left: 0 }}>
-        <ReferenceArea x1={0.5} x2={1} y1={0.5} y2={1} fill="#f87315" fillOpacity={0.06} />
-        <ReferenceArea x1={0} x2={0.5} y1={0.5} y2={1} fill="#174f62" fillOpacity={0.05} />
+        <ReferenceArea x1={0.5} x2={1} y1={0.5} y2={1} fill={ENRICHED} fillOpacity={0.07} />
+        <ReferenceArea x1={0} x2={0.5} y1={0.5} y2={1} fill={DEPLETED} fillOpacity={0.06} />
         <CartesianGrid stroke={grid} strokeDasharray="3 3" />
         <XAxis type="number" dataKey="chance" domain={[0, 1]} tick={axisStyle} tickFormatter={(v) => Number(v).toFixed(1)} label={{ value: "illustrative model score →", position: "insideBottom", offset: -8, ...axisStyle }} />
         <YAxis type="number" dataKey="novelty" domain={[0, 1]} tick={axisStyle} tickFormatter={(v) => `${Math.round(v * 100)}%`} label={{ value: "how new it is →", angle: -90, position: "insideLeft", ...axisStyle }} />
-        <ReferenceLine x={0.5} stroke="#d3dbe1" />
-        <ReferenceLine y={0.5} stroke="#d3dbe1" />
+        <ReferenceLine x={0.5} stroke={LINE_STRONG} />
+        <ReferenceLine y={0.5} stroke={LINE_STRONG} />
         <Tooltip content={<HitTip />} cursor={{ strokeDasharray: "3 3" }} />
         <Scatter data={hits} onClick={(d) => onSelect?.(d as unknown as Hit)} cursor="pointer">
           {hits.map((d) => (
@@ -145,11 +153,11 @@ export function QcBars({ samples, metric, label, threshold, height = 220, format
           <CartesianGrid stroke={grid} vertical={false} strokeDasharray="3 3" />
           <XAxis dataKey="name" tick={axisStyle} interval={0} angle={-20} textAnchor="end" height={48} />
           <YAxis tick={axisStyle} tickFormatter={(v) => format(Number(v))} />
-          {threshold !== undefined && <ReferenceLine y={threshold} stroke="#f87315" strokeDasharray="4 4" label={{ value: "threshold", position: "right", ...axisStyle }} />}
-          <Tooltip formatter={(v) => format(Number(v))} contentStyle={{ borderRadius: 12, border: "1px solid #e6ebef", fontSize: 12 }} />
+          {threshold !== undefined && <ReferenceLine y={threshold} stroke={ATTENTION} strokeDasharray="4 4" label={{ value: "threshold", position: "right", ...axisStyle }} />}
+          <Tooltip formatter={(v) => format(Number(v))} contentStyle={tooltipStyle} />
           <Bar dataKey="value" radius={[6, 6, 0, 0]}>
             {data.map((d) => (
-              <Cell key={d.name} fill={d.verdict === "warn" ? "#f87315" : d.verdict === "fail" ? "#c8560d" : "#07b6d3"} />
+              <Cell key={d.name} fill={d.verdict === "warn" ? ATTENTION : d.verdict === "fail" ? "#a3231b" : DEPLETED} />
             ))}
           </Bar>
         </BarChart>
@@ -168,10 +176,10 @@ export function CalibrationChart({ bins, height = 240 }: { bins: { bin: string; 
         <Tooltip
           formatter={(v, name) => [`${Math.round(Number(v) * 100)}%`, name === "observed" ? "Observed validated" : "Predicted"]}
           labelFormatter={(l) => `Predicted ${Math.round(Number(l) * 100)}%`}
-          contentStyle={{ borderRadius: 12, border: "1px solid #e6ebef", fontSize: 12 }}
+          contentStyle={tooltipStyle}
         />
-        <Line type="linear" dataKey="predicted" stroke="#d3dbe1" strokeDasharray="4 4" dot={false} isAnimationActive={false} />
-        <Line type="monotone" dataKey="observed" stroke="#f87315" strokeWidth={2.5} dot={{ r: 4, fill: "#f87315", strokeWidth: 0 }} />
+        <Line type="linear" dataKey="predicted" stroke={LINE_STRONG} strokeDasharray="4 4" dot={false} isAnimationActive={false} />
+        <Line type="monotone" dataKey="observed" stroke={ENRICHED} strokeWidth={2.5} dot={{ r: 4, fill: ENRICHED, strokeWidth: 0 }} />
       </LineChart>
     </ChartFrame>
   );

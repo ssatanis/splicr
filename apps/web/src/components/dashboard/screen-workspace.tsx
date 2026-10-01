@@ -26,6 +26,7 @@ import { buildReport, excelAmbiguousSymbols, hitsForScreen, VERDICT_ORDER } from
 import { cn, formatDate, formatNumber, formatPercent } from "@/lib/utils";
 
 import { DiscoveryMap, QcBars, RankChart, VolcanoChart } from "./charts";
+import { ATTENTION, NAVY } from "./chart-colors";
 import { ModalDrawer } from "./drawer";
 import { OUTCOME_RESULT } from "./outcome-badge";
 import { ROW, ROW_TARGET } from "./overview-tables";
@@ -288,7 +289,7 @@ function QcPanel({ hits }: { hits: Hit[] }) {
         <Kpi
           label="Essential vs nonessential"
           value={controlSeparation.auroc.toFixed(2)}
-          hint={`AUROC · Atlas median ${controlSeparation.atlasMedianAuroc}`}
+          hint={`AUROC, Atlas median ${controlSeparation.atlasMedianAuroc}`}
           tone="cyan"
         />
         <Kpi label="NNMD" value={controlSeparation.nnmd} hint="≤ -1.25 passes" />
@@ -325,7 +326,7 @@ function QcPanel({ hits }: { hits: Hit[] }) {
             <ul className="mt-3 flex flex-wrap gap-2">
               {movedHits.map((h) => (
                 <li key={h.gene} className="chip bg-mist-soft text-xs">
-                  {h.gene} · {h.chance.toFixed(3)}
+                  {h.gene}, {h.chance.toFixed(3)}
                 </li>
               ))}
             </ul>
@@ -358,7 +359,7 @@ function QcPanel({ hits }: { hits: Hit[] }) {
                 </span>
                 <span className="inline-flex items-center gap-2">
                   <span className="progress-track w-24">
-                    <span className="progress-fill block" style={{ width: `${c.r * 100}%`, background: c.r < 0.85 ? "#f87315" : "#07b6d3" }} />
+                    <span className="progress-fill block" style={{ width: `${c.r * 100}%`, background: c.r < 0.85 ? ATTENTION : NAVY }} />
                   </span>
                   <span className="tabular-nums text-ink w-10 text-right">{c.r.toFixed(2)}</span>
                 </span>
@@ -628,7 +629,7 @@ function ArtifactsPanel({ hits, onSelect }: { hits: Hit[]; onSelect: (h: Hit) =>
                   aria-haspopup="dialog"
                   className="chip bg-mist-soft hover:bg-teal-800 hover:text-white text-xs"
                 >
-                  {h.gene} · {h.chance.toFixed(3)}
+                  {h.gene}, {h.chance.toFixed(3)}
                 </button>
               ))}
               {list.length > 14 && <span className="chip text-xs">+{list.length - 14} more</span>}
@@ -667,7 +668,7 @@ function AtlasPanel({ screen, hits }: { screen: Screen; hits: Hit[] }) {
                 <div>
                   <div className="text-ink font-medium">{a.title}</div>
                   <div className="text-xs text-muted mt-0.5">
-                    {a.id} · {a.source} · {a.cellLine} · {a.library} · {a.phenotype} · {a.year}
+                    {a.id}, {a.source}, {a.cellLine}, {a.library}, {a.phenotype}, {a.year}
                   </div>
                 </div>
                 <div className="text-right shrink-0">
@@ -703,7 +704,7 @@ function AtlasPanel({ screen, hits }: { screen: Screen; hits: Hit[] }) {
 function planCsv(screen: Screen, plan: Hit[]): string {
   const header = [
     "# SplicR validation plan. SAMPLE DATA, not a measurement of any real screen.",
-    `# screen: ${screen.id} · ${screen.name}`,
+    `# screen: ${screen.id}, ${screen.name}`,
     `# assay: ${screen.benchAssay}`,
     `# ranked by illustrative model score, artifacts and genes already answered at the bench removed`,
     "# guide sequences are not in this file: the sample dataset carries no guide table, so none is invented here",
@@ -858,7 +859,7 @@ function ValidationPanel({ screen }: { screen: Screen }) {
                   <span>
                     <span className="font-medium text-ink">{hit.gene}</span>
                     <span className="block text-xs text-muted">
-                      {outcome.assay} · logged {formatDate(outcome.loggedAt)} by {outcome.by}
+                      {outcome.assay}, logged {formatDate(outcome.loggedAt)} by {outcome.by}
                     </span>
                   </span>
                   <span className="shrink-0 text-right">
@@ -874,7 +875,7 @@ function ValidationPanel({ screen }: { screen: Screen }) {
 
       <Card
         title="Plate map"
-        subtitle={`96-well · duplicate wells per gene · controls in columns ${CONTROL_COLUMNS.map((c) => c + 1).join(" and ")}`}
+        subtitle={`96-well, duplicate wells per gene, controls in columns ${CONTROL_COLUMNS.map((c) => c + 1).join(" and ")}`}
       >
         <div className="grid grid-cols-12 gap-1">
           {wells.map((w) => {
@@ -946,7 +947,7 @@ function ReportPanel({ screen }: { screen: Screen }) {
       <div className="space-y-4">
         <Card
           title="Hit Report"
-          subtitle={`${doc.reportId} · run completed ${doc.run.completedAt ? formatDate(doc.run.completedAt) : "not recorded"}`}
+          subtitle={`${doc.reportId}, run completed ${doc.run.completedAt ? formatDate(doc.run.completedAt) : "not recorded"}`}
         >
           {doc.notice && (
             <p className="rounded-2xl border-l-4 border-orange-500 bg-orange-50 px-4 py-3 text-sm text-ink">
@@ -994,17 +995,17 @@ function ReportPanel({ screen }: { screen: Screen }) {
 
           <ul className="mt-2 space-y-1.5 text-xs text-muted">
             <li>
-              <span className="text-ink">PDF</span> · A4, print ready: summary, verdict breakdown, methods, the full
+              <span className="text-ink">PDF</span>, A4, print ready: summary, verdict breakdown, methods, the full
               provenance record and{" "}
               {doc.hits.length > 60 ? `the top 60 of ${formatNumber(doc.hits.length)}` : `all ${formatNumber(doc.hits.length)}`} ranked
               hits.
             </li>
             <li>
-              <span className="text-ink">CSV</span> · {formatNumber(doc.hits.length)} rows, one per gene, 21 columns,
+              <span className="text-ink">CSV</span>, {formatNumber(doc.hits.length)} rows, one per gene, 21 columns,
               with provenance in a # preamble. Read it in R with readr::read_csv(path, comment = &quot;#&quot;).
             </li>
             <li>
-              <span className="text-ink">JSON</span> · the same rows plus every tool version, parameter and reference
+              <span className="text-ink">JSON</span>, the same rows plus every tool version, parameter and reference
               release, schema {doc.run.analysisSchema}, for a pipeline to consume.
             </li>
           </ul>

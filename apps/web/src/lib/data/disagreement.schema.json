@@ -1,0 +1,553 @@
+{
+  "$defs": {
+    "Concordance": {
+      "additionalProperties": false,
+      "description": "Whether the guides that moved cut somewhere the ones that did not, did not.\n\n`status` is an observation, never a conclusion:\n\n  shared_feature   every annotated depleting guide cuts one curated feature,\n                   and no annotated non-depleting guide cuts it\n  spans_features   the depleting guides cut more than one curated feature\n  overlapping      a non-depleting guide cuts the same feature as a\n                   depleting one\n  no_features      the protein context was looked up and no curated feature\n                   covers any resolved cut\n  not_evaluable    it was looked up, and too few guides resolved to a residue\n                   to build the table\n  not_evaluated    it was never looked up for this gene. Different from\n                   no_features, and the console says so differently: one is an\n                   absence of annotation, the other an absence of a lookup.",
+      "properties": {
+        "confound": {
+          "default": "Guides cutting the same region share chromatin state, copy number, exon and off-target neighbourhood, so their fold changes are correlated for reasons independent of the annotated feature. The table treats them as independent and therefore overstates the evidence.",
+          "title": "Confound",
+          "type": "string"
+        },
+        "feature": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Feature"
+        },
+        "fisher_p": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fisher P"
+        },
+        "fisher_p_floor": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fisher P Floor"
+        },
+        "interpretation": {
+          "title": "Interpretation",
+          "type": "string"
+        },
+        "n_depleting_annotated": {
+          "title": "N Depleting Annotated",
+          "type": "integer"
+        },
+        "n_other_annotated": {
+          "title": "N Other Annotated",
+          "type": "integer"
+        },
+        "status": {
+          "enum": [
+            "shared_feature",
+            "spans_features",
+            "overlapping",
+            "no_features",
+            "not_evaluable",
+            "not_evaluated"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "n_depleting_annotated",
+        "n_other_annotated",
+        "interpretation"
+      ],
+      "title": "Concordance",
+      "type": "object"
+    },
+    "GuideEvidence": {
+      "additionalProperties": false,
+      "description": "One guide: what was measured, where it cut, and what is known about there.\n\nThe same object all the way through. It is what `annotate_guides` produces,\nwhat `db.write_guide_effects` stores, what the recorded route reads back and\nwhat `build_report` reports. There is deliberately no second per-guide type:\na measurement that has to be copied between representations is a measurement\nthat can be copied onto the wrong guide.",
+      "properties": {
+        "annotation_evidence": {
+          "default": "none",
+          "enum": [
+            "curated",
+            "cds_only",
+            "none"
+          ],
+          "title": "Annotation Evidence",
+          "type": "string"
+        },
+        "cds_fraction": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cds Fraction"
+        },
+        "chromosome": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Chromosome"
+        },
+        "control_mean": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Control Mean"
+        },
+        "cut_position": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cut Position"
+        },
+        "depleted": {
+          "title": "Depleted",
+          "type": "boolean"
+        },
+        "efficacy_source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Efficacy Source"
+        },
+        "fdr": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fdr"
+        },
+        "features_hit": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Features Hit",
+          "type": "array"
+        },
+        "gene": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Gene"
+        },
+        "guide_key": {
+          "title": "Guide Key",
+          "type": "string"
+        },
+        "in_last_exon": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "In Last Exon"
+        },
+        "log2_fold_change": {
+          "title": "Log2 Fold Change",
+          "type": "number"
+        },
+        "mane_transcript": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mane Transcript"
+        },
+        "measured_efficacy": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Measured Efficacy"
+        },
+        "n_residues": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "N Residues"
+        },
+        "note": {
+          "default": "",
+          "title": "Note",
+          "type": "string"
+        },
+        "p_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "P Value"
+        },
+        "protein_residue": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Protein Residue"
+        },
+        "residual": {
+          "title": "Residual",
+          "type": "number"
+        },
+        "sequence": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sequence"
+        },
+        "strand": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Strand"
+        },
+        "treatment_mean": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Treatment Mean"
+        },
+        "uniprot_accession": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Uniprot Accession"
+        }
+      },
+      "required": [
+        "guide_key",
+        "log2_fold_change",
+        "residual",
+        "depleted"
+      ],
+      "title": "GuideEvidence",
+      "type": "object"
+    },
+    "Provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "annotated_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Annotated At"
+        },
+        "coordinate_system": {
+          "default": "1-based residue index of the MANE Select transcript",
+          "title": "Coordinate System",
+          "type": "string"
+        },
+        "measurement_source": {
+          "title": "Measurement Source",
+          "type": "string"
+        },
+        "reference_versions": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Reference Versions",
+          "type": "object"
+        }
+      },
+      "required": [
+        "reference_versions",
+        "measurement_source"
+      ],
+      "title": "Provenance",
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "concordance": {
+      "$ref": "#/$defs/Concordance"
+    },
+    "depletion_lfc": {
+      "title": "Depletion Lfc",
+      "type": "number"
+    },
+    "discordant": {
+      "title": "Discordant",
+      "type": "boolean"
+    },
+    "ensembl_gene_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Ensembl Gene Id"
+    },
+    "fragile": {
+      "title": "Fragile",
+      "type": "boolean"
+    },
+    "gene_symbol": {
+      "title": "Gene Symbol",
+      "type": "string"
+    },
+    "guides": {
+      "items": {
+        "$ref": "#/$defs/GuideEvidence"
+      },
+      "title": "Guides",
+      "type": "array"
+    },
+    "leave_one_out_max": {
+      "title": "Leave One Out Max",
+      "type": "number"
+    },
+    "leave_one_out_min": {
+      "title": "Leave One Out Min",
+      "type": "number"
+    },
+    "mane_transcript": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Mane Transcript"
+    },
+    "mean_log2_fold_change": {
+      "title": "Mean Log2 Fold Change",
+      "type": "number"
+    },
+    "median_log2_fold_change": {
+      "title": "Median Log2 Fold Change",
+      "type": "number"
+    },
+    "n_depleting": {
+      "title": "N Depleting",
+      "type": "integer"
+    },
+    "n_guides": {
+      "title": "N Guides",
+      "type": "integer"
+    },
+    "n_residues": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "N Residues"
+    },
+    "pivotal_guide": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Pivotal Guide"
+    },
+    "provenance": {
+      "$ref": "#/$defs/Provenance"
+    },
+    "spread": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Spread"
+    },
+    "spread_baseline_n_genes": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Spread Baseline N Genes"
+    },
+    "spread_vs_screen": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Spread Vs Screen"
+    },
+    "summary": {
+      "title": "Summary",
+      "type": "string"
+    },
+    "uniprot_accession": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Uniprot Accession"
+    }
+  },
+  "required": [
+    "gene_symbol",
+    "n_guides",
+    "mean_log2_fold_change",
+    "median_log2_fold_change",
+    "n_depleting",
+    "depletion_lfc",
+    "discordant",
+    "leave_one_out_min",
+    "leave_one_out_max",
+    "fragile",
+    "guides",
+    "concordance",
+    "summary",
+    "provenance"
+  ],
+  "title": "DisagreementReport",
+  "type": "object"
+}

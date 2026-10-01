@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Copied out of the pinned pdbe-molstar package by scripts/copy-vendor.mjs.
+    // It is a 6 MB minified third-party bundle, not source in this repository.
+    "public/vendor/**",
   ]),
 ]);
 

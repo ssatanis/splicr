@@ -1,0 +1,415 @@
+import { site } from "@/lib/site";
+
+/**
+ * The six Supabase Auth email templates, built from one theme.
+ *
+ * These are the only messages a researcher sees before they are inside the
+ * console, so they are the first impression of the product. They are built here
+ * rather than typed into the Supabase dashboard so that the theme is shared, the
+ * copy is reviewable, and the tests can hold the whole set to one standard.
+ * `npm run emails:auth` renders them to `supabase/templates/*.html`, which is
+ * what gets pasted into Authentication, Email Templates.
+ *
+ * Constraints that shape every decision below:
+ *
+ * - Email clients are not browsers. Layout is tables, every style that matters
+ *   is inline, and the one `<style>` block only holds a small-screen refinement
+ *   that the message does not depend on.
+ * - No images, no logo file, no web fonts, no tracking pixel, no script. There
+ *   is nothing to block, nothing to fail to load, and nothing that leaks a read.
+ * - Palette is white, near black and dark navy. Greys are near black at a fixed
+ *   opacity over white, resolved to hex because older Outlook drops `rgb()` with
+ *   an alpha channel.
+ * - The body text is the message. A client that strips the `<style>` block, the
+ *   border radius and the background colours still renders a correct,
+ *   readable, actionable email.
+ *
+ * Go template variables are left untouched for Supabase to substitute:
+ * `{{ .ConfirmationURL }}`, `{{ .Token }}`, `{{ .Email }}`, `{{ .NewEmail }}`.
+ * Supabase Auth does not expose the configured OTP lifetime to a template, so
+ * no message here states a number of hours it cannot verify. Each one says the
+ * link or code works once, which is true regardless of how expiry is configured.
+ */
+
+/* ------------------------------------------------------------------ theme */
+
+/** Near black. The colour of every heading and every piece of primary text. */
+const INK = "#111111";
+/** Dark navy. Reserved for the button, the rule under the masthead and the
+ *  numerals in the invitation steps. Nothing decorative is navy. */
+const NAVY = "#24334B";
+/** Near black over white at 82%, 58%, 12%, 6% and 3.5%. Prose and muted text
+ *  clear WCAG AA on white: #3D3D3D is 10.9:1, #757575 is 4.6:1. */
+const PROSE = "#3D3D3D";
+const MUTED = "#757575";
+const LINE = "#E2E2E2";
+const HAIR = "#F1F1F1";
+const TINT = "#F7F7F7";
+
+/** Single quotes throughout: these strings are interpolated into `style="..."`
+ *  attributes, and a double quote inside a family name would close the
+ *  attribute early and silently drop every declaration after it. */
+const FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,Helvetica,sans-serif";
+const MONO = "ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace";
+
+/** Outlook on Windows computes line height from the font metrics unless it is
+ *  told not to, which collapses generous leading into cramped leading. */
+const EXACT = "mso-line-height-rule:exactly;";
+
+const esc = (value: string) =>
+  value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+/* ------------------------------------------------------------- primitives */
+
+/** The masthead: the wordmark set as type, and the class of message on the
+ *  right. No logo file, so there is no image to block and no broken alt box. */
+function masthead(eyebrow: string) {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td style="font-family:${FONT};font-size:15px;line-height:20px;${EXACT}font-weight:700;letter-spacing:0.005em;color:${INK};">${esc(site.name)}</td>
+          <td align="right" style="font-family:${FONT};font-size:10px;line-height:20px;${EXACT}font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:${MUTED};">${esc(eyebrow)}</td>
+        </tr>
+      </table>
+      <div style="height:1px;line-height:1px;font-size:0;background:${NAVY};margin:14px 0 0;">&nbsp;</div>`;
+}
+
+const h1 = (text: string) =>
+  `<h1 class="sp-h1" style="margin:34px 0 0;font-family:${FONT};font-size:27px;line-height:34px;${EXACT}font-weight:600;letter-spacing:-0.016em;color:${INK};">${text}</h1>`;
+
+const p = (text: string, top = 18) =>
+  `<p style="margin:${top}px 0 0;font-family:${FONT};font-size:15px;line-height:25px;${EXACT}color:${PROSE};">${text}</p>`;
+
+const strong = (text: string) => `<strong style="color:${INK};font-weight:600;">${text}</strong>`;
+
+/** A quiet inset for the facts the message turns on: which address was invited,
+ *  which address is being changed to. Label above value, so a narrow client
+ *  never has to reflow a two-column row. */
+function facts(rows: Array<[string, string]>) {
+  const body = rows
+    .map(
+      ([label, value], index) => `<tr>
+            <td style="padding:${index === 0 ? "0" : "16px"} 0 0;font-family:${FONT};font-size:10px;line-height:14px;${EXACT}font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:${MUTED};">${esc(label)}</td>
+          </tr>
+          <tr>
+            <td style="padding:5px 0 0;font-family:${FONT};font-size:15px;line-height:22px;${EXACT}color:${INK};word-break:break-word;">${value}</td>
+          </tr>`,
+    )
+    .join("");
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0 0;background:${TINT};border:1px solid ${LINE};border-radius:2px;">
+        <tr><td style="padding:18px 20px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${body}</table>
+        </td></tr>
+      </table>`;
+}
+
+/** The numbered sequence in the invitation. Navy numerals, hairline between
+ *  steps, no icons. It tells an invited researcher what the link leads to, which
+ *  is the one thing the invitation cannot show them in advance. */
+function steps(items: string[]) {
+  const body = items
+    .map(
+      (item, index) => `<tr>
+            <td width="26" valign="top" style="padding:${index === 0 ? "0" : "13px"} 0 0;font-family:${FONT};font-size:12px;line-height:22px;${EXACT}font-weight:700;color:${NAVY};">${index + 1}</td>
+            <td valign="top" style="padding:${index === 0 ? "0" : "13px"} 0 0;font-family:${FONT};font-size:14px;line-height:22px;${EXACT}color:${PROSE};">${item}</td>
+          </tr>`,
+    )
+    .join(`<tr><td colspan="2" style="padding:13px 0 0;"><div style="height:1px;line-height:1px;font-size:0;background:${HAIR};">&nbsp;</div></td></tr>`);
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0 0;">${body}</table>`;
+}
+
+/** Navy button. The colour is on the `<td>` as well as in CSS, because Outlook
+ *  paints the cell and ignores the background on the anchor. */
+const button = (href: string, label: string) =>
+  `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:30px 0 0;">
+        <tr><td bgcolor="${NAVY}" style="background:${NAVY};border-radius:2px;">
+          <a href="${href}" style="display:inline-block;padding:13px 24px;font-family:${FONT};font-size:14px;line-height:18px;${EXACT}font-weight:600;letter-spacing:0.01em;color:#ffffff;text-decoration:none;border-radius:2px;">${label}</a>
+        </td></tr>
+      </table>`;
+
+/** The one-time code, large enough to read off a screen and transcribe. */
+const code = (token: string) =>
+  `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0 0;background:${TINT};border:1px solid ${LINE};border-radius:2px;">
+        <tr><td align="center" style="padding:24px 20px;font-family:${MONO};font-size:31px;line-height:38px;${EXACT}font-weight:600;letter-spacing:0.16em;color:${INK};">${token}</td></tr>
+      </table>`;
+
+/** The button is the primary path; this is the path for a client that strips it,
+ *  a forwarded message, or a researcher reading mail on a device they will not
+ *  sign in on. `break-all` keeps a long token from widening the message. */
+const fallback = (href: string) =>
+  `<div style="margin:26px 0 0;font-family:${FONT};font-size:12px;line-height:20px;${EXACT}color:${MUTED};">
+        If the button does not open, paste this address into your browser.
+      </div>
+      <div style="margin:7px 0 0;font-family:${MONO};font-size:12px;line-height:19px;${EXACT}color:${NAVY};word-break:break-all;">${href}</div>`;
+
+/** The safety note, then the sender, set quietly. No links, no social, no
+ *  unsubscribe: these are account security messages, not mail a researcher
+ *  should be able to opt out of and then be locked out by. */
+function footer(note: string) {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:34px 0 0;">
+        <tr><td style="border-top:1px solid ${LINE};padding:22px 0 0;font-family:${FONT};font-size:12px;line-height:20px;${EXACT}color:${MUTED};">
+          ${note}
+          <div style="margin:22px 0 0;font-family:${FONT};font-size:11px;line-height:18px;${EXACT}color:${MUTED};">
+            <span style="font-weight:600;color:${INK};letter-spacing:0.01em;">${esc(site.name)}</span><br>
+            ${esc(site.location)}<br>
+            ${esc(new URL(site.url).hostname)}
+          </div>
+        </td></tr>
+      </table>`;
+}
+
+/**
+ * The document around a message.
+ *
+ * `width="600"` is for Outlook, which ignores `max-width`; the inline
+ * `width:100%;max-width:600px` is for everything else, so the same table is a
+ * fixed 600 on the desktop client and fluid on a phone. The colour-scheme metas
+ * ask Apple Mail and Outlook not to invert the palette; Gmail inverts regardless,
+ * and dark text on white inverts to light text on dark, which stays legible.
+ */
+function shell({ preheader, inner }: { preheader: string; inner: string }) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="x-ua-compatible" content="ie=edge">
+<meta name="x-apple-disable-message-reformatting">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<title>${esc(site.name)}</title>
+<!--[if mso]>
+<style>body,table,td,a,div,p,h1{font-family:Arial,Helvetica,sans-serif !important;}</style>
+<![endif]-->
+<style>
+  @media only screen and (max-width:620px) {
+    .sp-shell { padding:24px 14px 40px !important; }
+    .sp-card { padding:28px 22px 30px !important; }
+    .sp-h1 { font-size:23px !important; line-height:30px !important; }
+  }
+</style>
+</head>
+<body style="margin:0;padding:0;width:100%;background:#ffffff;color:${INK};-webkit-font-smoothing:antialiased;">
+<div style="display:none;max-height:0;max-width:0;overflow:hidden;opacity:0;mso-hide:all;">${esc(preheader)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;">
+  <tr><td class="sp-shell" align="center" style="padding:44px 20px 56px;">
+    <table role="presentation" align="center" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;border-collapse:separate;">
+      <tr><td class="sp-card" style="padding:38px 40px 36px;border:1px solid ${LINE};border-radius:2px;background:#ffffff;">
+      ${inner}
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`;
+}
+
+/* --------------------------------------------------------------- messages */
+
+export type AuthEmailKey =
+  | "confirm_signup"
+  | "invite"
+  | "magic_link"
+  | "change_email"
+  | "reset_password"
+  | "reauthentication";
+
+export type AuthEmail = {
+  key: AuthEmailKey;
+  /** The template's name in Supabase, Authentication, Email Templates. */
+  dashboard: string;
+  /** File name under `supabase/templates`. */
+  file: string;
+  subject: string;
+  /** The line a client shows next to the subject before the message is opened. */
+  preheader: string;
+  /** Go template variables this body depends on Supabase substituting. */
+  variables: string[];
+  html: string;
+};
+
+const URL_VAR = "{{ .ConfirmationURL }}";
+const TOKEN_VAR = "{{ .Token }}";
+const EMAIL_VAR = "{{ .Email }}";
+const NEW_EMAIL_VAR = "{{ .NewEmail }}";
+
+/** Public signup is disabled, so this template exists as defence in depth: if a
+ *  confirmation is ever issued, administratively or by mistake, it is branded
+ *  and truthful rather than a Supabase default. */
+const confirmSignup: AuthEmail = {
+  key: "confirm_signup",
+  dashboard: "Confirm signup",
+  file: "confirm-signup.html",
+  subject: `Confirm your ${site.name} email`,
+  preheader: `Confirm this address to continue setting up your ${site.name} account.`,
+  variables: [URL_VAR, EMAIL_VAR],
+  html: shell({
+    preheader: `Confirm this address to continue setting up your ${site.name} account.`,
+    inner: `${masthead("Email verification")}
+      ${h1("Confirm your email address")}
+      ${p(`Confirm this address to continue setting up your ${strong(site.name)} account. The link works once.`)}
+      ${facts([["Address to confirm", EMAIL_VAR]])}
+      ${button(URL_VAR, "Confirm email address")}
+      ${fallback(URL_VAR)}
+      ${footer(
+        `If you did not expect this message, you can ignore it. No account will be activated without this confirmation.`,
+      )}`,
+  }),
+};
+
+const INVITE_PREHEADER = `Verify your address and set a password to finish setting up your ${site.name} account.`;
+
+const invite: AuthEmail = {
+  key: "invite",
+  dashboard: "Invite user",
+  file: "invite-user.html",
+  subject: `You have been invited to ${site.name}`,
+  preheader: INVITE_PREHEADER,
+  variables: [URL_VAR, EMAIL_VAR],
+  html: shell({
+    preheader: INVITE_PREHEADER,
+    inner: `${masthead("Invitation")}
+      ${h1(`Your ${esc(site.name)} access is ready`)}
+      ${p(
+        `You have been invited to create a ${strong(site.name)} researcher account. Use the secure link below to verify your email address and finish setting up access.`,
+      )}
+      ${steps([
+        "Verify this email address",
+        "Choose a password",
+        "Complete your laboratory profile",
+      ])}
+      ${facts([["Invitation issued to", EMAIL_VAR]])}
+      ${button(URL_VAR, "Accept invitation")}
+      ${fallback(URL_VAR)}
+      ${footer(
+        `Access to ${esc(site.name)} is invitation only. This invitation was issued for ${EMAIL_VAR} and can be accepted once. If you were not expecting access, you can ignore this message.`,
+      )}`,
+  }),
+};
+
+/** The production sign-in page offers email and password only. This template is
+ *  configured so that an administrative or accidental one-time code still
+ *  arrives looking like the rest of the product. */
+const magicLink: AuthEmail = {
+  key: "magic_link",
+  dashboard: "Magic Link",
+  file: "magic-link.html",
+  subject: `Your ${site.name} verification code`,
+  preheader: `Your one-time ${site.name} verification code.`,
+  variables: [TOKEN_VAR, URL_VAR],
+  html: shell({
+    preheader: `Your one-time ${site.name} verification code.`,
+    inner: `${masthead("Verification")}
+      ${h1("Verify your request")}
+      ${p(`Enter this one-time code in ${strong(site.name)}. It can be used once.`)}
+      ${code(TOKEN_VAR)}
+      ${p("If your sign-in flow offers a secure link instead of a code, continue here.", 26)}
+      ${button(URL_VAR, "Continue securely")}
+      ${fallback(URL_VAR)}
+      ${footer(
+        "If you did not request this code, you can ignore this email. Nobody can sign in with it unless it is entered.",
+      )}`,
+  }),
+};
+
+const changeEmail: AuthEmail = {
+  key: "change_email",
+  dashboard: "Change Email Address",
+  file: "change-email.html",
+  subject: `Confirm your new ${site.name} email`,
+  preheader: `Confirm the new email address for your ${site.name} account.`,
+  variables: [URL_VAR, EMAIL_VAR, NEW_EMAIL_VAR],
+  html: shell({
+    preheader: `Confirm the new email address for your ${site.name} account.`,
+    inner: `${masthead("Account security")}
+      ${h1("Confirm your new email address")}
+      ${p(
+        `A request was made to change the email address on your ${strong(site.name)} account. The change takes effect only after it is confirmed.`,
+      )}
+      ${facts([
+        ["Current address", EMAIL_VAR],
+        ["New address", NEW_EMAIL_VAR],
+      ])}
+      ${button(URL_VAR, "Confirm new address")}
+      ${fallback(URL_VAR)}
+      ${footer(
+        `If you did not request this change, do not confirm it. Sign in to ${esc(site.name)} and review your account security.`,
+      )}`,
+  }),
+};
+
+const resetPassword: AuthEmail = {
+  key: "reset_password",
+  dashboard: "Reset Password",
+  file: "reset-password.html",
+  subject: `Reset your ${site.name} password`,
+  preheader: `Choose a new password for your ${site.name} account.`,
+  variables: [URL_VAR, EMAIL_VAR],
+  html: shell({
+    preheader: `Choose a new password for your ${site.name} account.`,
+    inner: `${masthead("Password reset")}
+      ${h1("Reset your password")}
+      ${p(
+        `We received a request to reset the password for the ${strong(site.name)} account registered to this address. Use the secure link below to choose a new one. The link works once.`,
+      )}
+      ${facts([["Account", EMAIL_VAR]])}
+      ${button(URL_VAR, "Choose a new password")}
+      ${fallback(URL_VAR)}
+      ${footer(
+        "If you did not request a password reset, you can ignore this email. Your current password remains unchanged.",
+      )}`,
+  }),
+};
+
+const reauthentication: AuthEmail = {
+  key: "reauthentication",
+  dashboard: "Reauthentication",
+  file: "reauthentication.html",
+  subject: `Verify your ${site.name} identity`,
+  preheader: `Your verification code for a sensitive ${site.name} account action.`,
+  variables: [TOKEN_VAR],
+  html: shell({
+    preheader: `Your verification code for a sensitive ${site.name} account action.`,
+    inner: `${masthead("Identity verification")}
+      ${h1("Verify your identity")}
+      ${p(
+        `Enter this verification code in ${strong(site.name)} to continue with the account action you requested. It can be used once.`,
+      )}
+      ${code(TOKEN_VAR)}
+      ${footer(
+        `Do not share this code with anyone. If you did not start this action, sign in to ${esc(site.name)} and review your account security.`,
+      )}`,
+  }),
+};
+
+/** Every template, in the order they appear in the Supabase dashboard. */
+export const AUTH_EMAILS: AuthEmail[] = [
+  confirmSignup,
+  invite,
+  magicLink,
+  changeEmail,
+  resetPassword,
+  reauthentication,
+];
+
+export const authEmail = (key: AuthEmailKey): AuthEmail => {
+  const found = AUTH_EMAILS.find((email) => email.key === key);
+  if (!found) throw new Error(`Unknown auth email template: ${key}`);
+  return found;
+};
+
+/** Placeholder values for previewing a template outside Supabase. Deliberately
+ *  obvious: nothing here should ever be mistaken for a live link or code. */
+export const PREVIEW_VALUES: Record<string, string> = {
+  [URL_VAR]: `${site.url}/auth/confirm?token_hash=PREVIEW_TOKEN_HASH_NOT_A_REAL_LINK&type=invite`,
+  [TOKEN_VAR]: "418 902",
+  [EMAIL_VAR]: "researcher@example.edu",
+  [NEW_EMAIL_VAR]: "new.address@example.edu",
+};
+
+/** Substitutes the preview values so a template can be looked at in a browser. */
+export function renderPreview(email: AuthEmail): string {
+  return Object.entries(PREVIEW_VALUES).reduce(
+    (html, [variable, value]) => html.split(variable).join(value),
+    email.html,
+  );
+}

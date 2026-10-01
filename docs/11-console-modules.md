@@ -47,8 +47,18 @@ human screens only) and its bench status. It filters by direction, FDR, flags,
 comparison and gene, sorts by recorded statistics only, and never ranks by
 likelihood of validating. The export is the recorded run, written at full precision.
 
+Above the table, an effect-versus-significance plot draws one dot per recorded
+gene; clicking one opens that gene's per-guide evidence — how much its guides
+disagreed against this screen's own spread, whether the call survives dropping one
+guide, where each guide cut, and the AlphaFold model of the unedited protein. The
+drawer renders the report the engine stored and recomputes nothing. See
+[guide disagreement and Escape](12-escape-and-deep-dive.md).
+
 - Limits: no PDF for workspace runs (501 with a message). Exports stop at 50,000
-  rows and say so in the file and in a header.
+  rows and say so in the file and in a header. A gene needs at least two guides
+  with a recorded fold change to have a disagreement report; runs analysed before
+  `public.guide_effects` existed have none, and the drawer says which of those two
+  it is rather than implying the guides agreed.
 - Code: `src/lib/data/screen-detail.ts`, `screen-report.ts`, `src/lib/report/`,
   `src/components/dashboard/hit-report/`.
 

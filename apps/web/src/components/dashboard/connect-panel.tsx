@@ -338,7 +338,7 @@ function KeyRow({ apiKey, canManage }: { apiKey: ApiKey; canManage: boolean }) {
                   type="button"
                   onClick={revoke}
                   disabled={pending}
-                  className="rounded-md bg-orange-500 px-2 py-1 text-[11px] text-white hover:bg-orange-600 disabled:opacity-60"
+                  className="rounded-lg bg-navy px-2 py-1 text-[11px] text-white hover:bg-navy-hover disabled:opacity-60"
                 >
                   {pending ? <Loader2 className="h-3 w-3 animate-spin" aria-label="Revoking" /> : "Yes, revoke"}
                 </button>

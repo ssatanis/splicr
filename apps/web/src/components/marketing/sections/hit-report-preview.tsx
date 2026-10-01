@@ -17,7 +17,7 @@ export function HitReportPreview() {
         </Reveal>
         <Reveal delay={0.1} className="min-w-0">
           <article className="rounded-3xl border border-line bg-white p-6 shadow-card">
-            <div className="eyebrow">GSE145743 · olaparib versus DMSO</div>
+            <div className="eyebrow">GSE145743, olaparib versus DMSO</div>
             <h3 className="mt-3 text-2xl font-medium">{hit.gene}</h3>
             <dl className="mt-5 grid grid-cols-2 gap-5 text-sm">
               <div><dt className="text-muted">Observed log₂ fold change</dt><dd className="mt-1 tabular-nums">{hit.lfc}</dd></div>

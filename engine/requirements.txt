@@ -50,6 +50,13 @@ seaborn==0.13.2
 openpyxl==3.1.5
 ScreenPro2==0.7.0
 
+# === the service API (engine/splicr/api) ===
+# Serves the stateless analysis endpoints. It is an internal service: the
+# engine connects with the Postgres secret key and bypasses Row Level
+# Security, so nothing a browser can reach may call it directly.
+fastapi==0.142.2
+uvicorn==0.54.0
+
 # === rs3 support (installed explicitly; rs3 itself needs --no-deps) ===
 sglearn==1.2.5
 seqfold==0.10.2
@@ -57,6 +64,7 @@ biopython==1.88
 
 # === full pinned pip environment (transitive deps included) ===
 absl-py==2.5.0
+annotated-doc==0.0.5
 adjustText==1.4.0
 aiohappyeyeballs==2.7.1
 aiohttp==3.14.3
@@ -89,6 +97,7 @@ docstring_parser==0.18.0
 donfig==0.8.1.post1
 duckdb==1.5.5
 et_xmlfile==2.0.0
+fastapi==0.142.2
 ffq==0.3.1
 filelock==4.0.4
 flatbuffers==25.12.19
@@ -145,6 +154,7 @@ numpy==1.26.4
 openpyxl==3.1.5
 opt_einsum==3.4.0
 optree==0.20.0
+opentelemetry-api==1.45.0
 pandas==2.3.3
 patsy==1.0.3
 pillow==12.3.0
@@ -187,6 +197,7 @@ six==1.17.0
 sniffio==1.3.1
 sorted_nearest==0.0.41
 soupsieve==2.10
+starlette==1.7.0
 statsmodels==0.15.0
 stdlib-list==0.12.0
 sympy==1.14.0
@@ -204,6 +215,7 @@ typing-inspection==0.4.4
 tzdata==2026.4
 umap-learn==0.5.12
 urllib3==2.8.0
+uvicorn==0.54.0
 watermark==2.6.0
 Werkzeug==3.1.8
 wheel==0.48.0

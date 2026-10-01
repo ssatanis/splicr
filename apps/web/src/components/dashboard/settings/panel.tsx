@@ -154,7 +154,7 @@ export function PanelForm({
         onChange={recheck}
         onInput={recheck}
         onReset={handleReset}
-        className="rounded-3xl border border-line bg-white p-5 md:p-6"
+        className="rounded-2xl border border-line bg-white p-5 md:p-6"
       >
         <header className="mb-5">
           <h2 className="text-lg font-medium tracking-tight text-ink">{title}</h2>

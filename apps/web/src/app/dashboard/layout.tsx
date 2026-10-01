@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 
-import { DashboardShell, type ShellUser } from "@/components/dashboard/shell";
+import { DashboardShell, RAIL_COOKIE, type ShellUser } from "@/components/dashboard/shell";
 import { supabaseConfigured } from "@/lib/supabase/env";
 import { DEMO_COOKIE } from "@/lib/supabase/proxy";
 import { createClient } from "@/lib/supabase/server";
@@ -35,6 +35,13 @@ async function resolveUser(): Promise<ShellUser> {
 }
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const user = await resolveUser();
-  return <DashboardShell user={user}>{children}</DashboardShell>;
+  const [user, cookieStore] = await Promise.all([resolveUser(), cookies()]);
+  // Read here rather than in the shell so the rail is already the right width
+  // in the first HTML, instead of widening and then closing after hydration.
+  const railCollapsed = cookieStore.get(RAIL_COOKIE)?.value === "1";
+  return (
+    <DashboardShell user={user} railCollapsed={railCollapsed}>
+      {children}
+    </DashboardShell>
+  );
 }

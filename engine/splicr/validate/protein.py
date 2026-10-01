@@ -36,6 +36,7 @@ from __future__ import annotations
 import functools
 import gzip
 import json
+import os
 import re
 import time
 import urllib.parse
@@ -152,6 +153,24 @@ def _cds_index():
     return by_gene
 
 
+def cds_intervals(gene: str) -> tuple[tuple[str, int, int, str], ...]:
+    """
+    The gene's MANE Select CDS intervals, as (chrom, start, end, strand).
+
+    The same rows `locate` numbers residues from, so anything that searches inside
+    the CDS - a guide designer, for instance - searches the exact region whose
+    residues `locate` will then report. Empty when the gene has no MANE Select
+    transcript in the cache. 0-based, half-open, in genomic order.
+    """
+    exons = _cds_index().get(gene)
+    if not exons:
+        return ()
+    return tuple(
+        (str(exon["chrom"]), int(exon["start"]), int(exon["end"]), str(exon["strand"]))
+        for exon in sorted(exons, key=lambda e: int(e["start"]))
+    )
+
+
 def locate(gene: str, chrom: str, pos: int) -> CodonPosition | None:
     """Codon index of a 0-based genomic position inside `gene`'s MANE CDS."""
     exons = _cds_index().get(gene)
@@ -200,19 +219,114 @@ def _fetch_uniprot(gene: str) -> dict | None:
     return None
 
 
+#: Rewrite the feature cache to disk after this many new genes. The file is
+#: rewritten whole rather than appended, so flushing on every miss costs
+#: quadratic work over a shortlist; flushing never loses the whole batch to one
+#: interrupted run. `flush_features()` writes the remainder.
+_CACHE_FLUSH_EVERY = 64
+_pending_features = 0
+
+
+@functools.lru_cache(maxsize=1)
+def _uniprot_disk_cache() -> dict[str, tuple[str | None, tuple[tuple[str, int, int, str], ...]]]:
+    """The small on-demand UniProt feature cache, keyed by approved symbol."""
+    if not UNIPROT_CACHE.exists():
+        return {}
+    import pandas as pd
+
+    out = {}
+    for row in pd.read_parquet(UNIPROT_CACHE).itertuples(index=False):
+        raw = json.loads(row.features_json)
+        out[str(row.gene)] = (row.accession or None, tuple(
+            (str(ft[0]), int(ft[1]), int(ft[2]), str(ft[3])) for ft in raw
+        ))
+    return out
+
+
+def _write_uniprot_disk_cache(cache) -> None:
+    import pandas as pd
+
+    rows = [
+        {"gene": gene, "accession": accession,
+         "features_json": json.dumps(features, separators=(",", ":"))}
+        for gene, (accession, features) in sorted(cache.items())
+    ]
+    UNIPROT_CACHE.parent.mkdir(parents=True, exist_ok=True)
+    # A distinct temporary name per process: two annotation jobs writing the same
+    # tmp path would otherwise interleave and one would replace a half-written
+    # file. The rename itself is atomic, so a reader never sees a partial cache.
+    tmp = UNIPROT_CACHE.with_suffix(f".parquet.{os.getpid()}.tmp")
+    try:
+        pd.DataFrame(rows, columns=["gene", "accession", "features_json"]).to_parquet(
+            tmp, compression="zstd", index=False
+        )
+        tmp.replace(UNIPROT_CACHE)
+    finally:
+        tmp.unlink(missing_ok=True)
+
+
+def flush_features() -> bool:
+    """
+    Write any feature records fetched since the last flush.
+
+    Call it once after a batch of `feature_records` lookups. Returns whether
+    anything was written. A read-only reference directory is not an error: the
+    in-process cache still holds the batch.
+    """
+    global _pending_features
+    if _pending_features == 0:
+        return False
+    try:
+        _write_uniprot_disk_cache(_uniprot_disk_cache())
+    except OSError:
+        return False
+    _pending_features = 0
+    return True
+
+
 @functools.lru_cache(maxsize=20000)
-def features(gene: str) -> tuple[str | None, tuple[tuple[str, int, int], ...]]:
-    """(UniProt accession, features as (type, start, end)) for a gene symbol."""
+def feature_records(gene: str) -> tuple[str | None, tuple[tuple[str, int, int, str], ...]]:
+    """UniProt features as ``(type, start, end, description)`` with disk caching."""
+    global _pending_features
+    gene = gene.upper()
+    cache = _uniprot_disk_cache()
+    if gene in cache:
+        return cache[gene]
     rec = _fetch_uniprot(gene)
     if not rec:
-        return None, ()
-    out = []
-    for ft in rec.get("features", []):
-        loc = ft.get("location", {})
-        s, e = loc.get("start", {}).get("value"), loc.get("end", {}).get("value")
-        if s and e:
-            out.append((ft.get("type", ""), int(s), int(e)))
-    return rec.get("primaryAccession"), tuple(out)
+        value = (None, ())
+    else:
+        out = []
+        for ft in rec.get("features", []):
+            loc = ft.get("location", {})
+            s, e = loc.get("start", {}).get("value"), loc.get("end", {}).get("value")
+            if s and e:
+                out.append((ft.get("type", ""), int(s), int(e),
+                            ft.get("description") or ft.get("type", "")))
+        value = (rec.get("primaryAccession"), tuple(out))
+    cache[gene] = value
+    _pending_features += 1
+    if _pending_features >= _CACHE_FLUSH_EVERY:
+        flush_features()
+    return value
+
+
+@functools.lru_cache(maxsize=20000)
+def features(gene: str) -> tuple[str | None, tuple[tuple[str, int, int], ...]]:
+    """Backward-compatible ``(accession, (type, start, end)...)`` view."""
+    accession, records = feature_records(gene)
+    return accession, tuple((kind, start, end) for kind, start, end, _ in records)
+
+
+def domains_at(gene: str, residue: int) -> tuple[str, ...]:
+    """Curated UniProt feature/domain names covering one 1-based residue."""
+    _, records = feature_records(gene)
+    names = {
+        description or kind
+        for kind, start, end, description in records
+        if start <= residue <= end and kind in (CATALYTIC | STRUCTURAL)
+    }
+    return tuple(sorted(names))
 
 
 def impact(gene: str, chrom: str, cut_pos: int,
@@ -234,7 +348,8 @@ def impact(gene: str, chrom: str, cut_pos: int,
     if not use_uniprot or not in_frame_deletions:
         return out
 
-    acc, feats = features(gene)
+    acc, records = feature_records(gene)
+    feats = tuple((kind, start, end) for kind, start, end, _ in records)
     out.uniprot = acc
     if not feats:
         out.note = "no reviewed UniProt entry with residue features"

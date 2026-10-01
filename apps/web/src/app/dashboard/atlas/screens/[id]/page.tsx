@@ -386,7 +386,7 @@ export default async function AtlasScreenPage(props: PageProps<"/dashboard/atlas
                         <span className="num shrink-0 text-[11px] text-muted">#{other.id}</span>
                       </span>
                       <span className="mt-0.5 block truncate text-[11px] text-muted">
-                        {[other.cellLine, other.phenotype].filter(Boolean).join(" · ")}
+                        {[other.cellLine, other.phenotype].filter(Boolean).join(", ")}
                       </span>
                       <span className="num mt-0.5 block text-[11px] text-body">
                         {formatNumber(shared)} shared genes, overlap {(jaccard * 100).toFixed(1)}%

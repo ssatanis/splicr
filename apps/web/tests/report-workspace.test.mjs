@@ -63,7 +63,7 @@ test("the file says what it is and what it is not, and carries no sample label",
   assert.match(head, /engine splicr 0\.1\.0; container sha256:abc/);
   assert.match(head, /recorded_model_score: a stored, uncalibrated model output\. It is not a validation probability/);
   assert.match(head, /Blank means not recorded, which is not zero/);
-  assert.match(head, /screen: 00000000-0000-4000-8000-000000000001 · RSL3 screen/);
+  assert.match(head, /screen: 00000000-0000-4000-8000-000000000001, RSL3 screen/);
   assert.doesNotMatch(csv, /SAMPLE|sample data|invented/i);
 });
 

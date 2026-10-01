@@ -15,6 +15,7 @@ ready rather than failing later with a confusing error.
 from __future__ import annotations
 
 import argparse
+import json
 import shutil
 import subprocess
 import sys
@@ -303,6 +304,73 @@ def cmd_graph(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_escape(args: argparse.Namespace) -> int:
+    """
+    Paralog-compensation hypotheses for one gene in one DepMap model.
+
+    Reads the pinned paralog build and the reference lake and prints every
+    evidence channel. Nothing here needs a screen: this is the reference-data half
+    of the analysis, for checking what the engine would say about a pair before a
+    screen is run. The screen-aware path is splicr.escape.analysis.analyse.
+    """
+    from . import harmonize
+    from .escape import analysis, paralogs
+
+    genes = harmonize.genes(harmonize.HUMAN)
+    resolution = genes.resolve(args.gene)
+    if not resolution.ok:
+        print(f"{args.gene!r} did not resolve to a current Ensembl gene: "
+              f"{resolution.reason or resolution.status}", file=sys.stderr)
+        return 2
+    lookup = paralogs.paralogs_of(resolution.id)
+    if not lookup.covered:
+        print(f"{resolution.label}: {lookup.note}")
+        print("Build the paralog reference with scripts/data/build-paralogs.py --hgnc")
+        return 1
+    symbols = {p: (genes.resolve(p).label or p) for p in lookup.partners}
+    found, unreached, note = analysis.hypotheses_for(
+        resolution.id, model_id=args.model, symbol=resolution.label or args.gene,
+        symbol_of=symbols)
+    if not found:
+        print(f"{resolution.label}: {note}")
+        return 0
+    from .escape import evidence
+
+    # Every candidate is evaluated; --limit shortens the printout, so the strongest
+    # is never dropped for being alphabetically late.
+    print(evidence.summarise(found, limit=args.limit))
+    if len(found) > args.limit:
+        print(f"{len(found) - args.limit} weaker candidate paralog(s) were evaluated "
+              f"and are not shown; raise --limit to see them.")
+    if unreached:
+        print(f"{unreached} further candidate paralog(s) were not evaluated at all.")
+    print(f"Paralog build: {', '.join(lookup.releases)}")
+    return 0
+
+
+def cmd_schema(args: argparse.Namespace) -> int:
+    """
+    Print the JSON Schema of an API response model.
+
+    The console renders these documents, so its TypeScript types have to match
+    them. Rather than being copied by hand and drifting, the schema is generated
+    from the pydantic model and committed; a Python test fails when the model
+    changes without the file being regenerated, and a Node test fails when the
+    TypeScript stops covering the schema's required fields.
+
+        python -m splicr schema disagreement > \
+          apps/web/src/lib/data/disagreement.schema.json
+    """
+    from .api.schemas import MODELS, schema_for
+
+    if args.model not in MODELS:
+        print(f"unknown model {args.model!r}; known: {', '.join(sorted(MODELS))}",
+              file=sys.stderr)
+        return 2
+    print(json.dumps(schema_for(args.model), indent=2, sort_keys=True))
+    return 0
+
+
 # ---------------------------------------------------------------------------
 
 def main(argv: list[str] | None = None) -> int:
@@ -330,6 +398,17 @@ def main(argv: list[str] | None = None) -> int:
     gr.add_argument("--lineage", help="restrict to one DepMap lineage, e.g. Breast")
     gr.add_argument("--limit", type=int, default=20)
     gr.set_defaults(func=cmd_graph)
+
+    es = sub.add_parser("escape", help="paralog-compensation hypotheses for one gene")
+    es.add_argument("gene", help="gene symbol or canonical Ensembl gene id")
+    es.add_argument("--model", default="", help="DepMap ModelID for the expression channel")
+    es.add_argument("--limit", type=int, default=6,
+                    help="candidate paralogs to print; every candidate is evaluated first")
+    es.set_defaults(func=cmd_escape)
+
+    sc = sub.add_parser("schema", help="JSON Schema of an API response model")
+    sc.add_argument("model", help="model name; 'disagreement' is the guide-disagreement report")
+    sc.set_defaults(func=cmd_schema)
 
     d = sub.add_parser("detect", help="identify the library in a FASTQ")
     d.add_argument("fastq")

@@ -21,9 +21,25 @@ export function AgeSection() {
                   A screen can return hundreds of candidates. Effect size, guide support and technical artifacts all matter when choosing follow-up experiments.
                 </p>
               </Reveal>
+              {/*
+                The measured claim, and only the measured claim. What was measured
+                is replication: whether a candidate is called again in a second,
+                independent screen. "Calls right" is a different and larger claim -
+                it implies the candidate is real - and the experiment behind this
+                number cannot support it. The unit is 124 held-out screen PAIRS,
+                not 124 screens.
+
+                Both figures are pinned to apps/web/public/evidence/summary.json by
+                apps/web/tests/post-screen-claim.test.mjs, which also refuses any
+                wording that promises laboratory validation or a probability. Edit
+                the wording freely; do not edit the numbers out of the guard.
+              */}
               <Reveal delay={0.2}>
                 <p>
-                  SplicR gets nine of its top ten calls right, across 124 independent screens. Effect size alone gets seven.
+                  SplicR ranks a screen&apos;s candidates by which survive contact with a
+                  second experiment. Across 124 held-out screen pairs,{" "}
+                  nine of its top ten reproduced in an independent screen,{" "}
+                  against seven for the screen&apos;s own effect size.
                 </p>
               </Reveal>
               <Reveal delay={0.3}>

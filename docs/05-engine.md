@@ -4,6 +4,19 @@ The local analysis engine turns FASTQ or count tables into method-specific gene
 statistics, QC, artifact evidence and a JSON report. It does not currently assign
 calibrated validation probabilities. See [pipeline status](02-pipeline.md).
 
+Beyond hit calling, two modules answer the question after "which genes are hits":
+`splicr.validate.domain_report` reports how much a gene's guides disagreed and
+where each one cut, and `splicr.escape` ranks candidate explanations for a
+phenotype weaker than expected. Both are described in
+[guide disagreement and Escape](12-escape-and-deep-dive.md), with their validation
+status and the claims they refuse to make.
+
+`splicr.api` serves them over HTTP. It is an **internal** service: the engine holds
+the Postgres secret key and bypasses Row Level Security by design, so nothing a
+browser can reach may call it. Every route authorizes its caller with a SplicR
+Connect key and scopes reads to that key''''s organization
+(`engine/splicr/api/security.py`).
+
 ```bash
 bash engine/setup.sh
 export PATH="$PWD/engine/.tools/env/bin:$PATH"

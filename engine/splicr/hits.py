@@ -166,6 +166,60 @@ def essential_direction(
     )
 
 
+@dataclass(frozen=True)
+class GuideEffect:
+    """
+    One guide's own measurement, still attached to the guide that produced it.
+
+    GeneResult.guide_lfcs holds the same fold changes as a bare list, which is
+    all the single-guide artifact check needs. It is not enough to say which
+    guide depleted: MAGeCK's sgRNA summary is not ordered by the library file,
+    guides with no reads never appear in it, and a library can carry more guides
+    for a gene than the comparison scored. Recovering the pairing by position
+    attributes measurements to the wrong reagents, so the key travels with the
+    number from the moment it is parsed.
+    """
+
+    guide_key: str
+    gene: str
+    lfc: float | None = None
+    #: MAGeCK's two-sided sgRNA p-value. Per-guide and not multiplicity
+    #: corrected across a gene's guides; it is not a gene-level p-value and
+    #: must never be combined into one.
+    p_value: float | None = None
+    fdr: float | None = None
+    control_mean: float | None = None
+    treatment_mean: float | None = None
+
+
+def read_guide_effects(workdir: Path, prefix: str = "mageck") -> list[GuideEffect]:
+    """
+    MAGeCK's per-guide rows, keyed by the guide id MAGeCK printed.
+
+    Returns an empty list when the summary is absent, which happens when MAGeCK
+    was not the caller for this comparison. An absent file is not an error here:
+    the gene-level results stand on their own and the per-guide view is simply
+    unavailable.
+    """
+    path = workdir / f"{prefix}.sgrna_summary.txt"
+    if not path.exists():
+        return []
+    out: list[GuideEffect] = []
+    for row in _tsv_rows(path):
+        key, gene = row.get("sgrna"), row.get("Gene")
+        if not key or not gene:
+            continue
+        out.append(GuideEffect(
+            guide_key=key, gene=gene,
+            lfc=_num(row, "LFC"),
+            p_value=_probability(row, "p.twosided"),
+            fdr=_probability(row, "FDR"),
+            control_mean=_num(row, "control_mean"),
+            treatment_mean=_num(row, "treat_mean"),
+        ))
+    return out
+
+
 @dataclass
 class HitTable:
     genes: dict[str, GeneResult]
@@ -175,6 +229,8 @@ class HitTable:
     control: list[str]
     warnings: list[str] = field(default_factory=list)
     direction: DirectionCheck | None = None
+    #: Per-guide rows, when a caller produced them. Empty means unavailable.
+    guide_effects: list[GuideEffect] = field(default_factory=list)
 
     def ranked(self, by: str = "fdr", limit: int | None = None) -> list[GeneResult]:
         def key(g: GeneResult):
@@ -542,6 +598,7 @@ def call_hits(
     genes, warn = run_mageck_rra(counts_file, treatment, control, workdir)
     methods.append("mageck_rra")
     warnings.extend(warn)
+    guide_effects = read_guide_effects(workdir)
 
     if run_mle:
         try:
@@ -608,4 +665,5 @@ def call_hits(
         control=control,
         warnings=warnings,
         direction=direction,
+        guide_effects=guide_effects,
     )

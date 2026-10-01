@@ -355,7 +355,7 @@ export function MethodPanel() {
   const rows: [string, string][] = [
     ["Fraction infected", "1 − exp(−MOI). Cells carry a Poisson number of integrations."],
     ["Cells to transduce", "guides × coverage ÷ fraction infected, so that coverage is held after selection."],
-    ["Two or more guides", "1 − MOI · exp(−MOI) ÷ (1 − exp(−MOI)), among infected cells."],
+    ["Two or more guides", "1 − MOI × exp(−MOI) ÷ (1 − exp(−MOI)), among infected cells."],
     ["Representation", "Guide abundance is lognormal with mean 1 and a 90th/10th percentile ratio equal to your skew. Cells or reads per guide are Poisson. The fraction under a floor is that mixture, integrated numerically."],
     ["Noise floor", "Picking cells adds 1/coverage to the variance of each log abundance and reading reads adds 1/depth. A comparison has two samples; replicates and guides average it down."],
     ["gDNA", "cells × pg per cell. A diploid human cell holds about 6.6 pg."],

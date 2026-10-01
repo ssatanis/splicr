@@ -1,191 +1,154 @@
 "use client";
 
-import { ArrowRight, Loader2, Mail } from "lucide-react";
+import { Loader2, Mail } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
+import { Notice, ProblemNotice } from "@/components/ui/notice";
+import { NEUTRAL_EMAIL_RESULT, authProblem, type Problem } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/client";
 import { supabaseConfigured } from "@/lib/supabase/env";
-
-type Mode = "login" | "signup";
+import { safeNext } from "@/lib/supabase/redirect";
 
 /**
- * Whether to offer Google sign-in.
+ * Sign in. There is no other mode.
  *
- * Off until the provider is actually enabled on the Supabase project, because a
- * button that returns 400 is worse than no button, and this one sat above the
- * email form as the first thing a new lab would click.
+ * SplicR is invitation only, so this form cannot create an account and there is
+ * nothing here that leads to one. Two consequences worth stating, because both
+ * are easy to undo by accident:
+ *
+ *  - `shouldCreateUser: false` on the one-time link. Without it, Supabase's
+ *    default is to create an account for any address that asks for a link,
+ *    which would make this form a public signup with extra steps.
+ *  - The response to a link request is the same sentence whether or not the
+ *    address has an account. Otherwise anyone could use this field to find out
+ *    which researchers are in SplicR.
  */
-const GOOGLE_ENABLED = process.env.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH === "1";
-
-export function AuthForm({ mode }: { mode: Mode }) {
+export function AuthForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const next = params.get("next") ?? "/dashboard";
+  const next = safeNext(params.get("next"));
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [org, setOrg] = useState("");
-  const [busy, setBusy] = useState<null | "password" | "magic" | "google">(null);
-  const [message, setMessage] = useState<{ tone: "ok" | "err"; text: string } | null>(null);
+  const [busy, setBusy] = useState<null | "password" | "link">(null);
+  const [problem, setProblem] = useState<Problem | null>(null);
+  const [sent, setSent] = useState(false);
 
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const unconfigured: Problem = {
+    message: "SplicR could not reach the sign-in service.",
+    action: "Try again in a moment. If this continues, contact your lab administrator.",
+  };
 
-  async function withPassword(e: React.FormEvent) {
-    e.preventDefault();
-    if (!supabaseConfigured) return setMessage({ tone: "err", text: "Supabase is not configured. Use the demo instead." });
+  async function signIn(event: React.FormEvent) {
+    event.preventDefault();
+    setProblem(null);
+    setSent(false);
+    if (!supabaseConfigured) return setProblem(unconfigured);
+
     setBusy("password");
-    setMessage(null);
-    const supabase = createClient();
-    if (mode === "signup") {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}`,
-          data: { full_name: name, organization_name: org },
-        },
-      });
-      setBusy(null);
-      if (error) return setMessage({ tone: "err", text: error.message });
-      return setMessage({ tone: "ok", text: "Check your inbox to confirm your email, then sign in." });
-    }
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await createClient().auth.signInWithPassword({ email, password });
     setBusy(null);
-    if (error) return setMessage({ tone: "err", text: error.message });
+    if (error) return setProblem(authProblem(error));
     router.replace(next);
     router.refresh();
   }
 
-  async function magicLink() {
-    if (!email) return setMessage({ tone: "err", text: "Enter your email first." });
-    if (!supabaseConfigured) return setMessage({ tone: "err", text: "Supabase is not configured. Use the demo instead." });
-    setBusy("magic");
-    setMessage(null);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}` },
+  async function emailLink() {
+    setProblem(null);
+    setSent(false);
+    if (!email.trim()) {
+      return setProblem({ message: "Enter your email address first." });
+    }
+    if (!supabaseConfigured) return setProblem(unconfigured);
+
+    setBusy("link");
+    const { error } = await createClient().auth.signInWithOtp({
+      email: email.trim(),
+      options: {
+        // Non-negotiable. This form signs people in; it does not enrol them.
+        shouldCreateUser: false,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      },
     });
     setBusy(null);
-    if (error) return setMessage({ tone: "err", text: error.message });
-    setMessage({ tone: "ok", text: "Magic link sent. Open it on this device." });
-  }
 
-  async function google() {
-    if (!supabaseConfigured) return setMessage({ tone: "err", text: "Supabase is not configured. Use the demo instead." });
-    setBusy("google");
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}` },
-    });
-    if (error) {
-      setBusy(null);
-      setMessage({ tone: "err", text: error.message });
+    // A rate limit is worth saying out loud, because the reader can act on it.
+    // Everything else, including "this address has no account", gets the same
+    // neutral answer.
+    if (error && /rate limit|too many requests/i.test(error.message)) {
+      return setProblem(authProblem(error));
     }
+    setSent(true);
   }
 
   return (
-    <div>
-      <div className="eyebrow">{mode === "login" ? "Welcome back" : "Create your workspace"}</div>
-      <h2 className="mt-3 display text-ink text-4xl md:text-5xl">
-        {mode === "login" ? "Sign in" : "Get started"}
-      </h2>
-      <p className="mt-4 text-body">
-        {mode === "login" ? (
-          <>
-            New here?{" "}
-            <Link href="/signup" className="text-orange-500 hover:text-orange-600">
-              Create an account
-            </Link>
-          </>
-        ) : (
-          <>
-            Already have one?{" "}
-            <Link href="/login" className="text-orange-500 hover:text-orange-600">
-              Sign in
-            </Link>
-          </>
-        )}
+    <div className="w-full">
+      <h1 className="text-[28px] font-medium leading-tight tracking-[-0.02em] text-ink">Sign in</h1>
+      <p className="mt-2 text-[13.5px] leading-relaxed text-muted">
+        Access to SplicR is by invitation. If you expected an invitation and it has not arrived,
+        contact your lab administrator.
       </p>
 
-      {/* The Google provider is disabled on the live Supabase project: its
-          /auth/v1/settings reports every external provider false. A visitor
-          clicking this got a 400 "Unsupported provider" and Supabase's raw error
-          text, on the most prominent control of the page. It is behind a flag
-          rather than deleted, so enabling the provider and setting
-          NEXT_PUBLIC_ENABLE_GOOGLE_AUTH=1 brings it back without a rewrite. */}
-      {GOOGLE_ENABLED ? (
-        <>
-          <button type="button" onClick={google} disabled={busy !== null} className="btn btn-ghost w-full mt-10">
-            {busy === "google" ? <Loader2 className="w-4 h-4 animate-spin" /> : <GoogleGlyph />}
-            Continue with Google
-          </button>
-
-          <div className="my-8 flex items-center gap-4 text-xs text-muted">
-            <span className="h-px flex-1 bg-line" /> or with email <span className="h-px flex-1 bg-line" />
-          </div>
-        </>
-      ) : (
-        <div className="mt-10" />
-      )}
-
-      <form onSubmit={withPassword} className="space-y-7">
-        {mode === "signup" && (
-          <>
-            <Field id="name" label="Name" value={name} onChange={setName} placeholder="Jane Doe" required />
-            <Field id="org" label="Lab or organization" value={org} onChange={setOrg} placeholder="Englander Institute" />
-          </>
-        )}
-        <Field id="email" label="Email" type="email" value={email} onChange={setEmail} placeholder="you@lab.edu" required />
+      <form onSubmit={signIn} className="mt-7 space-y-4">
+        <Field
+          id="email"
+          label="Email"
+          type="email"
+          value={email}
+          onChange={setEmail}
+          placeholder="you@lab.edu"
+          autoComplete="username"
+          required
+        />
         <Field
           id="password"
           label="Password"
           type="password"
           value={password}
           onChange={setPassword}
-          placeholder={mode === "signup" ? "At least 8 characters" : "Your password"}
+          autoComplete="current-password"
           required
-          minLength={8}
         />
 
-        {message && (
-          <div
-            className={`rounded-xl px-4 py-3 text-sm ${
-              message.tone === "ok" ? "bg-cyan-50 text-teal-800" : "bg-orange-50 text-orange-700"
-            }`}
-          >
-            {message.text}
-          </div>
+        {problem && <ProblemNotice problem={problem} />}
+        {sent && (
+          <Notice tone="success" title="Check your email" action={NEUTRAL_EMAIL_RESULT} />
         )}
 
-        <div className="flex flex-wrap items-center gap-3">
-          <button type="submit" disabled={busy !== null} className="btn btn-cyan">
-            {busy === "password" ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-            {mode === "login" ? "Sign in" : "Create account"} <ArrowRight className="w-4 h-4" />
-          </button>
-          <button type="button" onClick={magicLink} disabled={busy !== null} className="btn btn-ghost">
-            {busy === "magic" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
-            Email me a link
-          </button>
-        </div>
+        <button type="submit" disabled={busy !== null} className="btn btn-navy w-full">
+          {busy === "password" && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+          Sign in
+        </button>
       </form>
 
-      <div className="mt-10 rounded-2xl border border-line p-5 text-sm">
-        <div className="text-ink font-medium">Just looking?</div>
-        <p className="text-body mt-1">Explore the dashboard with a demo screen. No account needed.</p>
-        <a href="/api/demo" className="mt-3 inline-flex items-center gap-1 text-orange-500 hover:text-orange-600">
-          Open the demo <ArrowRight className="w-3.5 h-3.5" />
-        </a>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={emailLink}
+          disabled={busy !== null}
+          className="inline-flex items-center gap-1.5 text-[13px] text-navy underline decoration-line-strong underline-offset-[3px] transition-colors duration-[var(--dur-1)] hover:decoration-navy disabled:opacity-60 motion-reduce:transition-none"
+        >
+          {busy === "link" ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+          ) : (
+            <Mail className="h-3.5 w-3.5" aria-hidden="true" />
+          )}
+          Email me a link
+        </button>
+        <Link
+          href="/forgot-password"
+          className="text-[13px] text-muted underline decoration-line-strong underline-offset-[3px] transition-colors duration-[var(--dur-1)] hover:text-ink hover:decoration-line-strong motion-reduce:transition-none"
+        >
+          Forgot password
+        </Link>
       </div>
     </div>
   );
 }
 
-function Field({
+export function Field({
   id,
   label,
   value,
@@ -193,20 +156,26 @@ function Field({
   type = "text",
   placeholder,
   required,
-  minLength,
+  autoComplete,
+  hint,
+  error,
 }: {
   id: string;
   label: string;
   value: string;
-  onChange: (v: string) => void;
+  onChange: (value: string) => void;
   type?: string;
   placeholder?: string;
   required?: boolean;
-  minLength?: number;
+  autoComplete?: string;
+  hint?: string;
+  /** Shown directly under the field, where the reader is already looking. */
+  error?: string;
 }) {
+  const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined;
   return (
     <div>
-      <label htmlFor={id} className="label-sm">
+      <label htmlFor={id} className="block text-[12.5px] font-medium text-ink">
         {label}
       </label>
       <input
@@ -214,21 +183,23 @@ function Field({
         name={id}
         type={type}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         required={required}
-        minLength={minLength}
-        className="underline-input"
-        autoComplete={type === "password" ? "current-password" : type === "email" ? "email" : "on"}
+        autoComplete={autoComplete}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy}
+        className="mt-1.5 h-10 w-full rounded-lg border border-line-strong bg-white px-3 text-[14px] text-ink outline-none transition-colors duration-[var(--dur-1)] placeholder:text-muted/70 focus:border-navy motion-reduce:transition-none"
       />
+      {error ? (
+        <p id={`${id}-error`} className="mt-1.5 text-[12px] text-red-800">
+          {error}
+        </p>
+      ) : hint ? (
+        <p id={`${id}-hint`} className="mt-1.5 text-[12px] text-muted">
+          {hint}
+        </p>
+      ) : null}
     </div>
-  );
-}
-
-function GoogleGlyph() {
-  return (
-    <svg viewBox="0 0 24 24" className="w-4 h-4" aria-hidden>
-      <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.3-1.6 3.8-5.5 3.8-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.8 3.3 14.6 2.4 12 2.4 6.7 2.4 2.4 6.7 2.4 12s4.3 9.6 9.6 9.6c5.5 0 9.2-3.9 9.2-9.4 0-.6-.1-1.1-.2-1.6H12z" />
-    </svg>
   );
 }

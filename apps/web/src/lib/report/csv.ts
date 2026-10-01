@@ -90,8 +90,8 @@ function preamble(doc: ReportDocument, generatedAt: Date): string[] {
   say("report_id", doc.reportId);
   say("generated", generatedAt.toISOString());
   say("data_source", doc.source === "sample" ? "SplicR sample dataset" : "SplicR workspace");
-  say("screen", `${doc.screen.id} · ${doc.screen.name}`);
-  say("model", `${doc.screen.cellLine} · ${doc.screen.organism} · ${doc.screen.modality}`);
+  say("screen", `${doc.screen.id}, ${doc.screen.name}`);
+  say("model", `${doc.screen.cellLine}, ${doc.screen.organism}, ${doc.screen.modality}`);
   say("phenotype", doc.screen.phenotype);
   say(
     "library",

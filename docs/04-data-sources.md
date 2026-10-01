@@ -21,6 +21,7 @@ file manifests take precedence over shorthand in this table.
 | `libraries/*.txt`, `*.csv`, `*.xlsx` | Addgene / Broad GPP | 24 MB | Terms of use | **No** |
 | `opentargets/*.parquet` | Open Targets 26.09 | 1 MB | CC0 | Yes |
 | `orcs/*.tar.gz` (`--all`) | BioGRID ORCS 2.0.18 | 718 MB | MIT | Yes |
+| `paralogs/*.parquet` | HGNC gene groups (CC0) and Ensembl Compara REST | < 1 MB | CC0 / Ensembl terms | Yes |
 | `depmap/*.csv` (DepMap 24Q4) | Broad DepMap | 3.6 GB | File-specific; local release licence recorded | Review each file |
 | `depmap/26Q1/*.csv` (Chronos only) | Broad DepMap | 444 MB | File-specific; do not extend to third-party portal data | Review each file |
 
@@ -33,6 +34,13 @@ locally does not automatically remove source restrictions. Open Targets has its
 own data agreements; do not transfer its licence to a direct Sanger download.
 See the [Sanger policy](https://depmap.sanger.ac.uk/documentation/data-usage-policy/)
 and [Open Targets licence](https://platform-docs.opentargets.org/licence).
+
+**Paralogs.** `scripts/data/build-paralogs.py` writes two files into
+`data/references/paralogs/`, kept separate on purpose: HGNC gene groups (local, no
+network, a curated family and not a sequence claim) and Ensembl Compara paralogues
+(REST, one gene per request, so the build is incremental and partial builds report
+their own coverage). `SOURCES.txt` there records counts and hashes for whatever a
+checkout has built. See [Escape](12-escape-and-deep-dive.md).
 
 ## Source registry (2026-09-29)
 

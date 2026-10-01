@@ -70,7 +70,7 @@ export function DangerPanel({ org, stats, canDelete, lockedReason }: DangerPanel
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-3xl border border-red-200 bg-white p-5 md:p-6"
+      className="rounded-2xl border border-red-200 bg-white p-5 md:p-6"
     >
       <header className="mb-5 flex items-start gap-3">
         <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-red-600" strokeWidth={1.8} />

@@ -71,8 +71,8 @@ export function workspaceCsv(data: ReportData, generatedAt: Date): string {
     "# SplicR hit report",
     "# data_source: SplicR workspace, the recorded results of this screen's current run",
     `# generated: ${generatedAt.toISOString()}`,
-    `# screen: ${data.screen.id} · ${data.screen.name}`,
-    `# model_system: ${[data.screen.cell_line, data.screen.modality].filter(Boolean).join(" · ") || "not recorded"}`,
+    `# screen: ${data.screen.id}, ${data.screen.name}`,
+    `# model_system: ${[data.screen.cell_line, data.screen.modality].filter(Boolean).join(", ") || "not recorded"}`,
     `# phenotype: ${data.screen.phenotype ?? "not recorded"}`,
     `# screen_status: ${data.screen.status}; qc: ${data.screen.qc}`,
     data.run

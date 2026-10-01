@@ -16,6 +16,7 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { EffectExplorer } from "@/components/dashboard/evidence/effect-explorer";
 import { HitFilters } from "@/components/dashboard/hit-report/filters";
 import { HitTable } from "@/components/dashboard/hit-report/table";
 import {
@@ -31,6 +32,7 @@ import {
 } from "@/components/dashboard/ui";
 import { geneEvidence, type GeneEvidence } from "@/lib/atlas/query";
 import { getAtlasGenes } from "@/lib/atlas/store";
+import { getEffectPoints } from "@/lib/data/disagreement";
 import { getCurrentContext } from "@/lib/data/org";
 import { getGeneOutcomes } from "@/lib/data/outcomes";
 import { DETAIL_PAGE_SIZE, SIGNIFICANT_FDR, getScreenDetail } from "@/lib/data/screen-detail";
@@ -88,6 +90,18 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
     }
   }
   const outcomes = hits.length > 0 ? await getGeneOutcomes(screen.id, [...new Set(hits.map((hit) => hit.gene_symbol))]) : new Map();
+
+  // The plot draws one comparison at a time. When the table is filtered to a
+  // comparison that is the one plotted, so the two views never disagree about
+  // which contrast the reader is looking at; otherwise it is the primary one.
+  const plotComparison =
+    comparisons.find((comparison) => comparison.id === query.comparison)
+    ?? comparisons.find((comparison) => comparison.is_primary)
+    ?? comparisons[0]
+    ?? null;
+  const points = plotComparison
+    ? await getEffectPoints(screen.id, plotComparison.id)
+    : ({ status: "unavailable" } as const);
 
   const role = context.role;
   const canLog = role === "member" || role === "admin" || role === "owner";
@@ -198,6 +212,44 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
               href={hitHref(base, query, { flagged: true })}
             />
           </KpiStrip>
+
+          {plotComparison && (
+            <Panel
+              title="Effect and significance"
+              count={
+                points.status === "found"
+                  ? `${formatNumber(points.recorded)} recorded genes`
+                  : "unavailable"
+              }
+              caveat="Recorded values only. The thresholds emphasise dots and recompute nothing."
+              body="flush"
+              className="min-h-[460px]"
+              footer={
+                <FootNote>
+                  Click a gene to read its per-guide evidence: how much its guides disagreed
+                  against this screen&rsquo;s own spread, whether its call survives dropping one
+                  guide, and where each guide cut.
+                </FootNote>
+              }
+            >
+              {points.status === "found" ? (
+                <EffectExplorer
+                  screenId={screen.id}
+                  screenName={screen.name}
+                  comparisonName={plotComparison.name}
+                  points={points.points}
+                  recorded={points.recorded}
+                  truncatedBy={points.recorded - points.points.length}
+                  defaultMaxFdr={SIGNIFICANT_FDR}
+                />
+              ) : (
+                <p className="px-4 py-10 text-center text-[12.5px] text-muted">
+                  The recorded effects could not be read. Reload to try again. Their absence
+                  here says nothing about what the run recorded.
+                </p>
+              )}
+            </Panel>
+          )}
 
           <Panel
             title="Gene-level evidence"

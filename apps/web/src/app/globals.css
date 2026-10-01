@@ -3,7 +3,7 @@
 /* ------------------------------------------------------------------
    SplicR design tokens
    Colors were sampled from the reference design set:
-   teal #174F62 · orange #F87315 · cyan #07B6D3 · peach #FDD7A9 · mist #E2E7EF
+   teal #174F62, orange #F87315, cyan #07B6D3, peach #FDD7A9, mist #E2E7EF
 ------------------------------------------------------------------- */
 @theme {
   --font-sans: var(--font-outfit), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -56,6 +56,21 @@
   --color-muted: #626b78;
   --color-line: #e6ebef;
   --color-line-strong: #d3dbe1;
+
+  /* The one accent in the authenticated console. Navy carries action and
+     emphasis; it is never decoration. White on #24334b measures 11.9:1. */
+  --color-navy: #24334b;
+  --color-navy-hover: #1b2740;
+  --color-navy-tint: rgb(36 51 75 / 0.07);
+
+  /* Scientific encoding, not chrome. A guide or a gene is depleted or
+     enriched, and that distinction has to survive any repaint of the
+     interface, so it has its own names rather than borrowing a UI colour.
+     Both clear WCAG AA as text on white: 6.6:1 and 6.0:1. */
+  --color-depleted: #14596b;
+  --color-depleted-soft: #d9e7eb;
+  --color-enriched: #9a4a16;
+  --color-enriched-soft: #f3e4d9;
 
   --radius-sheet: 2rem;
   --radius-card: 1.5rem;
@@ -839,4 +854,232 @@
   .panel-in {
     animation: none;
   }
+}
+
+/* ------------------------------------------------------------------
+   The authenticated console.
+
+   The console and the marketing site share typography and components but
+   not a palette. Marketing is the teal, orange and cream reference design;
+   the console is a research instrument, and it is white, near black, and
+   navy for action.
+
+   This is a scoped rewrite of the design tokens rather than a sweep of
+   class names. Tailwind v4 compiles `text-ink` to `color: var(--color-ink)`,
+   so redefining the variable inside `.console` repaints every one of the
+   800-odd usages below this element and nothing above it. A class-by-class
+   sweep of 58 files would leave the next component someone writes painting
+   itself teal again; this cannot.
+
+   The names on the left are the marketing ramps and are kept so the
+   override stays a one-to-one mapping that can be read against the theme
+   block. What they mean in here is:
+
+     teal   navy, the accent
+     orange attention: running, warn, expired, unsaved
+     cyan   confirmed: complete, pass, validated, saved
+     mist   near black at low opacity, for rows and hovers
+
+   Scientific encoding does not come through here. `--color-depleted` and
+   `--color-enriched` are defined once in @theme and mean the same thing on
+   both sides, because a depleted guide is depleted regardless of which
+   surface is drawing it.
+------------------------------------------------------------------- */
+/* The console fills the window, so the marketing page background must not be
+   visible underneath or beside it. This is on the body because that is the
+   element painting it, and `:has` is the only way a nested layout can reach up
+   to say which surface it is. */
+body:has(.console) {
+  background: #ffffff;
+}
+
+.console {
+  /* Neutrals, all near black over white at a fixed opacity. Body text is
+     10.9:1 and muted text is 5.1:1, so both clear WCAG AA. */
+  --color-ink: #111111;
+  --color-body: #3d3d3d;
+  --color-muted: #6b6b6b;
+  --color-line: rgb(17 17 17 / 0.1);
+  --color-line-strong: rgb(17 17 17 / 0.16);
+  --color-canvas: #ffffff;
+  --color-peach: #ffffff;
+  --color-peach-soft: #ffffff;
+  --color-mist: rgb(17 17 17 / 0.07);
+  --color-mist-soft: rgb(17 17 17 / 0.035);
+  --color-cream: rgb(36 51 75 / 0.06);
+
+  /* Navy. 950 and 900 are the only dark surfaces in the console: the modal
+     scrim and the execution terminal. */
+  --color-teal-950: #0b111c;
+  --color-teal-900: #141c2a;
+  --color-teal-800: #24334b;
+  --color-teal-700: #324563;
+  --color-teal-600: #3f5678;
+  --color-teal-500: #4d668c;
+  --color-teal-200: rgb(36 51 75 / 0.22);
+  --color-teal-100: rgb(36 51 75 / 0.12);
+  --color-teal-50: rgb(36 51 75 / 0.06);
+
+  /* Attention. Amber rather than red: a run that is still going, a key that
+     expired and a QC flag are all things to look at, not failures. Red stays
+     reserved for destructive actions and real errors. */
+  --color-orange-900: #5c3208;
+  --color-orange-800: #703c0b;
+  --color-orange-700: #8a4b0f;
+  --color-orange-600: #93500f;
+  --color-orange-500: #a25812;
+  --color-orange-400: #b8671a;
+  --color-orange-300: rgb(138 75 15 / 0.4);
+  --color-orange-100: rgb(138 75 15 / 0.18);
+  --color-orange-50: rgb(138 75 15 / 0.07);
+
+  /* Confirmed. Navy, deliberately: a completed run is not an achievement to
+     celebrate in green, it is a state to read. */
+  --color-cyan-800: #162133;
+  --color-cyan-700: #1e2b40;
+  --color-cyan-600: #24334b;
+  --color-cyan-500: #32455f;
+  --color-cyan-400: #4d668c;
+  --color-cyan-200: rgb(36 51 75 / 0.22);
+  --color-cyan-100: rgb(36 51 75 / 0.14);
+  --color-cyan-50: rgb(36 51 75 / 0.05);
+
+  /* Geometry. The console is rounded, on a scale that steps with the size of
+     the surface: a control is 8px, a panel 12px, an overlay 14px. Nothing is
+     square and nothing is a bubble. */
+  --radius-card: 0.875rem;
+  --radius-panel: 0.75rem;
+
+  background: #ffffff;
+  color: var(--color-body);
+}
+
+/* The console's own button, navy and rectangular-with-soft-corners rather
+   than the marketing pill. Hover is a darker navy and nothing moves: a
+   control that lifts under the cursor reads as a landing page. */
+.console .btn {
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition:
+    background-color var(--dur-2) ease,
+    border-color var(--dur-2) ease,
+    color var(--dur-2) ease;
+}
+
+.console .btn:hover,
+.console .btn:active {
+  transform: none;
+}
+
+.console .btn-navy,
+.console .btn-orange,
+.console .btn-teal,
+.console .btn-cyan {
+  background: var(--color-navy);
+  color: #ffffff;
+}
+
+.console .btn-navy:hover,
+.console .btn-orange:hover,
+.console .btn-teal:hover,
+.console .btn-cyan:hover {
+  background: var(--color-navy-hover);
+}
+
+.console .btn-white,
+.console .btn-ghost {
+  background: #ffffff;
+  color: var(--color-ink);
+  border: 1px solid var(--color-line-strong);
+}
+
+.console .btn-white:hover,
+.console .btn-ghost:hover {
+  background: var(--color-mist-soft);
+}
+
+.console .btn-sm {
+  padding: 0.375rem 0.6875rem;
+  font-size: 0.75rem;
+}
+
+.console .btn-lg {
+  padding: 0.625rem 1.125rem;
+  font-size: 0.875rem;
+}
+
+.console .chip {
+  border-radius: 999px;
+  background: var(--color-mist-soft);
+  color: var(--color-ink);
+  font-size: 0.75rem;
+  padding: 0.1875rem 0.5rem;
+  gap: 0.375rem;
+}
+
+.console .chip-dot::before {
+  background: currentColor;
+  opacity: 0.55;
+}
+
+.console .icon-btn {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  border-color: var(--color-line-strong);
+}
+
+.console .icon-btn:hover {
+  background: var(--color-mist-soft);
+  transform: none;
+}
+
+.console .card,
+.console .card-line {
+  border-radius: var(--radius-panel);
+  border: 1px solid var(--color-line);
+  box-shadow: none;
+}
+
+/* The rail is white now, so the navigation link is dark type on white with a
+   navy tint when selected. The coloured stripe is gone: the tint and the
+   weight carry it, and a 3px bar beside every selected row is decoration in
+   a product that has four navigation groups. */
+.console .dash-nav-link {
+  border-radius: 0.5rem;
+  padding: 0.375rem 0.625rem;
+  color: var(--color-body);
+  font-size: 0.8125rem;
+  font-weight: 400;
+}
+
+.console .dash-nav-link:hover {
+  background: var(--color-mist-soft);
+  color: var(--color-ink);
+}
+
+.console .dash-nav-link[data-active="true"] {
+  background: var(--color-navy-tint);
+  color: var(--color-navy);
+  font-weight: 500;
+}
+
+.console .dash-nav-link[data-active="true"]::before {
+  content: none;
+}
+
+/* One focus treatment across the console, navy, on everything that takes
+   focus from the keyboard. */
+.console :focus-visible {
+  outline: 2px solid var(--color-navy);
+  outline-offset: 2px;
+  border-radius: 0.375rem;
+}
+
+.console input:focus,
+.console select:focus,
+.console textarea:focus {
+  border-color: var(--color-navy);
 }

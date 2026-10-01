@@ -10,7 +10,18 @@ export const DEMO_COOKIE = "splicr_demo";
  * public yet. Routed to the marketing homepage here instead of deleted so
  * the code is ready to flip back on later.
  */
-const DISABLED_PREFIXES = ["/login", "/signup", "/dashboard", "/invite"];
+const DISABLED_PREFIXES = [
+  "/login",
+  "/signup",
+  "/dashboard",
+  "/invite",
+  "/forgot-password",
+  "/reset-password",
+  // The illustrative workspace under /pitch shows invented figures. It belongs
+  // behind the same flag as the real console: on the public site it would serve
+  // numbers that look like measurements to anyone who found the URL.
+  "/pitch",
+];
 
 /**
  * Whether the console answers on this deployment.
@@ -87,7 +98,11 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && (request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/signup")) {
+  // A signed-in researcher has no use for the sign-in page. `/reset-password`
+  // is deliberately not in this list: a recovery link signs somebody in first
+  // and then sends them there, so bouncing an authenticated visitor away from
+  // it would break the one flow it exists for.
+  if (user && ["/login", "/signup", "/forgot-password"].includes(request.nextUrl.pathname)) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 

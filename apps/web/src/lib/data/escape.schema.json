@@ -1,0 +1,388 @@
+{
+  "$defs": {
+    "AssessmentResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "gene": {
+          "title": "Gene",
+          "type": "string"
+        },
+        "n_reference_essentials": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "N Reference Essentials"
+        },
+        "observed_lfc": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Observed Lfc"
+        },
+        "percentile_among_essentials": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Percentile Among Essentials"
+        },
+        "provenance": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Provenance",
+          "type": "object"
+        },
+        "quantile": {
+          "title": "Quantile",
+          "type": "number"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        },
+        "statement": {
+          "title": "Statement",
+          "type": "string"
+        },
+        "symbol": {
+          "title": "Symbol",
+          "type": "string"
+        },
+        "verdict": {
+          "title": "Verdict",
+          "type": "string"
+        },
+        "weak_threshold_lfc": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Weak Threshold Lfc"
+        }
+      },
+      "required": [
+        "gene",
+        "symbol",
+        "verdict",
+        "reason",
+        "percentile_among_essentials",
+        "n_reference_essentials",
+        "weak_threshold_lfc",
+        "observed_lfc",
+        "quantile",
+        "provenance",
+        "statement"
+      ],
+      "title": "AssessmentResponse",
+      "type": "object"
+    },
+    "EscapeTargetResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "assessment": {
+          "$ref": "#/$defs/AssessmentResponse"
+        },
+        "candidates_not_evaluated": {
+          "title": "Candidates Not Evaluated",
+          "type": "integer"
+        },
+        "candidates_not_shown": {
+          "title": "Candidates Not Shown",
+          "type": "integer"
+        },
+        "hypotheses": {
+          "items": {
+            "$ref": "#/$defs/HypothesisResponse"
+          },
+          "title": "Hypotheses",
+          "type": "array"
+        },
+        "leading_candidate": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Leading Candidate"
+        },
+        "note": {
+          "title": "Note",
+          "type": "string"
+        },
+        "statement": {
+          "title": "Statement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "assessment",
+        "hypotheses",
+        "leading_candidate",
+        "candidates_not_evaluated",
+        "candidates_not_shown",
+        "note",
+        "statement"
+      ],
+      "title": "EscapeTargetResponse",
+      "type": "object"
+    },
+    "EvidenceChannelResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "availability": {
+          "title": "Availability",
+          "type": "string"
+        },
+        "interval": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Interval"
+        },
+        "limitation": {
+          "title": "Limitation",
+          "type": "string"
+        },
+        "n_units": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "N Units"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "statement": {
+          "title": "Statement",
+          "type": "string"
+        },
+        "supports": {
+          "title": "Supports",
+          "type": "boolean"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        }
+      },
+      "required": [
+        "name",
+        "availability",
+        "supports",
+        "statement",
+        "value",
+        "interval",
+        "n_units",
+        "unit",
+        "source",
+        "limitation"
+      ],
+      "title": "EvidenceChannelResponse",
+      "type": "object"
+    },
+    "HypothesisResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "available": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Available",
+          "type": "array"
+        },
+        "candidate": {
+          "title": "Candidate",
+          "type": "string"
+        },
+        "candidate_symbol": {
+          "title": "Candidate Symbol",
+          "type": "string"
+        },
+        "channels": {
+          "items": {
+            "$ref": "#/$defs/EvidenceChannelResponse"
+          },
+          "title": "Channels",
+          "type": "array"
+        },
+        "direct_causal_evidence": {
+          "title": "Direct Causal Evidence",
+          "type": "boolean"
+        },
+        "missing": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing",
+          "type": "array"
+        },
+        "model": {
+          "title": "Model",
+          "type": "string"
+        },
+        "provenance": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Provenance",
+          "type": "object"
+        },
+        "statement": {
+          "title": "Statement",
+          "type": "string"
+        },
+        "strength": {
+          "title": "Strength",
+          "type": "string"
+        },
+        "supporting": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Supporting",
+          "type": "array"
+        },
+        "target": {
+          "title": "Target",
+          "type": "string"
+        },
+        "target_symbol": {
+          "title": "Target Symbol",
+          "type": "string"
+        }
+      },
+      "required": [
+        "target",
+        "candidate",
+        "target_symbol",
+        "candidate_symbol",
+        "model",
+        "strength",
+        "supporting",
+        "available",
+        "missing",
+        "direct_causal_evidence",
+        "channels",
+        "provenance",
+        "statement"
+      ],
+      "title": "HypothesisResponse",
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "assessments": {
+      "items": {
+        "$ref": "#/$defs/AssessmentResponse"
+      },
+      "title": "Assessments",
+      "type": "array"
+    },
+    "eligible": {
+      "title": "Eligible",
+      "type": "boolean"
+    },
+    "flagged": {
+      "title": "Flagged",
+      "type": "integer"
+    },
+    "provenance": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Provenance",
+      "type": "object"
+    },
+    "reason": {
+      "title": "Reason",
+      "type": "string"
+    },
+    "screen": {
+      "title": "Screen",
+      "type": "string"
+    },
+    "summary": {
+      "title": "Summary",
+      "type": "string"
+    },
+    "targets": {
+      "items": {
+        "$ref": "#/$defs/EscapeTargetResponse"
+      },
+      "title": "Targets",
+      "type": "array"
+    }
+  },
+  "required": [
+    "screen",
+    "eligible",
+    "reason",
+    "flagged",
+    "assessments",
+    "targets",
+    "provenance",
+    "summary"
+  ],
+  "title": "EscapeResponse",
+  "type": "object"
+}

@@ -128,7 +128,7 @@ export function AtlasScreensTable({
                 </Link>
               </td>
               <td>
-                <Clip width="max-w-[200px]" title={[screen.phenotype, condition, screen.setup].filter(Boolean).join(" · ")}>
+                <Clip width="max-w-[200px]" title={[screen.phenotype, condition, screen.setup].filter(Boolean).join(", ")}>
                   {screen.phenotype ?? "Not recorded"}
                   {condition && <span className="ml-1.5 text-[11px] text-muted">{condition}</span>}
                 </Clip>

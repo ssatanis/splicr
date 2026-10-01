@@ -52,6 +52,11 @@ export function loadTs(entry, { mocks = {}, globals = {} } = {}) {
     });
     const localRequire = (specifier) => {
       if (Object.hasOwn(mocks, specifier)) return mocks[specifier];
+      // A stylesheet import is a bundler instruction, not a module. Next.js turns
+      // it into a CSS chunk; here it has no meaning and parsing it as JavaScript
+      // fails on the first selector. Components that import their own stylesheet
+      // are ordinary components to these tests.
+      if (/\.(css|scss|sass)$/.test(specifier)) return {};
       if (specifier.startsWith(".") || specifier.startsWith("@/")) return load(resolveFile(specifier, file));
       return nodeRequire(specifier);
     };

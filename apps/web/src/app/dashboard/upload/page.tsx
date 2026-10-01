@@ -1,7 +1,7 @@
 import { Card, PageHeader } from "@/components/dashboard/ui";
 import { getCurrentContext } from "@/lib/data/org";
 
-export const metadata = { title: "New run" };
+export const metadata = { title: "New screen" };
 export const dynamic = "force-dynamic";
 
 export default async function UploadPage() {

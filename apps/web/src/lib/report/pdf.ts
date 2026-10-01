@@ -186,10 +186,10 @@ export function toPdf(doc: ReportDocument, generatedAt: Date): Buffer {
       doc.screen.modality,
       doc.library.label,
       doc.screen.phenotype,
-    ].join("  ·  "),
+    ].join("   "),
     { size: 9, color: MUTED, leading: 12.5 },
   );
-  paragraph(`${doc.screen.id}  ·  ${doc.reportId}  ·  generated ${stamp(generatedAt.toISOString())}`, {
+  paragraph(`${doc.screen.id} ,  ${doc.reportId} ,  generated ${stamp(generatedAt.toISOString())}`, {
     size: 8.2,
     color: MUTED,
     leading: 12,
@@ -447,7 +447,7 @@ export function toPdf(doc: ReportDocument, generatedAt: Date): Buffer {
   // ------------------------------------------------------------------ chrome
   pdf.eachPage((page, total) => {
     pdf.hairline(MARGIN, pdf.height - 46, contentWidth, LINE, 0.5);
-    pdf.text(`SplicR hit report  ·  ${doc.reportId}`, MARGIN, pdf.height - 34, { size: 7.2, color: MUTED });
+    pdf.text(`SplicR hit report ,  ${doc.reportId}`, MARGIN, pdf.height - 34, { size: 7.2, color: MUTED });
     if (doc.notice) {
       pdf.text("Sample data", pdf.width / 2, pdf.height - 34, { size: 7.2, font: "bold", color: ORANGE_DEEP, align: "center" });
     }
@@ -460,7 +460,7 @@ export function toPdf(doc: ReportDocument, generatedAt: Date): Buffer {
 
   return pdf.toBuffer({
     title: `SplicR hit report: ${doc.screen.name}${doc.notice ? " (sample data)" : ""}`,
-    subject: `${doc.reportId} · ${doc.run.pipeline} ${doc.run.pipelineVersion}`,
+    subject: `${doc.reportId}, ${doc.run.pipeline} ${doc.run.pipelineVersion}`,
     author: "SplicR",
     createdAt: generatedAt,
     // Deterministic from the report, so re-exporting the same run gives the same

@@ -31,6 +31,99 @@ from .references import Library, load_library
 
 STAGES = ("ingest", "detect", "count", "qc", "hits", "artifacts", "atlas", "score", "report")
 
+#: How many genes get their guides' protein context resolved at analysis time.
+#: Placing one cut in the MANE CDS is cheap; the UniProt feature lookup behind it
+#: is a network call on a cache miss, so a genome-wide run would make twenty
+#: thousand of them for genes nobody opens. The shortlist is the genes that
+#: reached significance, most significant first, and every other guide is still
+#: stored with its measurement and coordinates and says the protein context was
+#: not requested - which is not the same as looked for and not found.
+GUIDE_ANNOTATION_LIMIT = 500
+
+
+def _persist_guide_evidence(conn, ctx, hits: HitTable, library: Library,
+                            significant) -> tuple[int, int]:
+    """
+    Store what the deep dive reads, and never fail the run over it.
+
+    Two tables, one pass:
+
+      public.guide_effects      MAGeCK's own per-guide fold change under the guide
+                                id MAGeCK printed, the library's verified cut
+                                coordinates, and - for the shortlist - the residue
+                                and curated features that cut falls in.
+      public.gene_disagreement  one report per gene with at least two guides: the
+                                spread against this screen's own spread for genes
+                                of the same size, whether the call survives
+                                dropping a guide, and the concordance table.
+
+    The gene-level statistics are computed for every gene, because they are
+    arithmetic on numbers already in hand. The protein context is resolved only
+    for the shortlist, and a gene outside it records concordance_status
+    'not_evaluated' rather than a finding of no annotation.
+
+    Returns (guide rows, gene rows). Either failure is logged as a run event and
+    leaves the gene-level results, which stand on their own, untouched.
+    """
+    from .validate.domain_report import (
+        DEPLETION_LFC, MIN_GUIDES, REFERENCE_VERSIONS, Provenance, annotate_guides,
+        build_report, spread_baseline,
+    )
+
+    if not hits.guide_effects:
+        db.log_event(conn, ctx.run_id,
+                     "no per-guide rows stored: the caller produced no sgRNA summary",
+                     "report", "warn")
+        return 0, 0
+    shortlist = {
+        g.gene for g in sorted(
+            significant, key=lambda g: (g.fdr if g.fdr is not None else 1.0))
+        [:GUIDE_ANNOTATION_LIMIT]
+    }
+    try:
+        annotated = annotate_guides(hits.guide_effects, library, genes=shortlist)
+        guide_rows = db.write_guide_effects(conn, ctx, annotated, REFERENCE_VERSIONS)
+    except Exception as exc:  # noqa: BLE001
+        db.log_event(conn, ctx.run_id,
+                     f"per-guide rows were not stored: {type(exc).__name__}: {exc}",
+                     "report", "warn")
+        return 0, 0
+
+    try:
+        usable = [g for g in annotated
+                  if g.gene and g.log2_fold_change == g.log2_fold_change]
+        baseline, n_baseline = spread_baseline(
+            (g.gene, g.log2_fold_change) for g in usable)
+        by_gene: dict[str, list] = {}
+        for row in usable:
+            by_gene.setdefault(row.gene, []).append(row)
+        provenance = Provenance(
+            reference_versions=REFERENCE_VERSIONS,
+            measurement_source="MAGeCK sgRNA summary for this comparison",
+        )
+        reports = [
+            build_report(
+                gene, rows, ensembl_gene_id=None,
+                uniprot_accession=next((r.uniprot_accession for r in rows
+                                        if r.uniprot_accession), None),
+                mane_transcript=next((r.mane_transcript for r in rows
+                                      if r.mane_transcript), None),
+                n_residues=next((r.n_residues for r in rows if r.n_residues), None),
+                depletion_lfc=DEPLETION_LFC, baseline=baseline or None,
+                baseline_n_genes=n_baseline or None, provenance=provenance,
+                protein_context_requested=gene in shortlist,
+            )
+            for gene, rows in sorted(by_gene.items())
+            if len(rows) >= MIN_GUIDES
+        ]
+        gene_rows = db.write_gene_disagreement(conn, ctx, reports)
+    except Exception as exc:  # noqa: BLE001
+        db.log_event(conn, ctx.run_id,
+                     f"gene disagreement rows were not stored: {type(exc).__name__}: {exc}",
+                     "report", "warn")
+        return guide_rows, 0
+    return guide_rows, gene_rows
+
 
 def _file_sha256(path: Path) -> str | None:
     """Hash existing analysis inputs; missing evidence remains explicit."""
@@ -429,9 +522,13 @@ def run_pipeline(
         result.report_path = report_path
         if persist and conn is not None and ctx is not None:
             written = db.write_hits(conn, ctx, hits, flags)
+            guide_rows, gene_rows = _persist_guide_evidence(conn, ctx, hits, library, sig)
             db.finish_run(conn, ctx, "complete")
             conn.commit()
-            record("report", "done", f"wrote {written:,} hit rows", "splicr.db", t)
+            record("report", "done",
+                   f"wrote {written:,} hit rows, {guide_rows:,} per-guide rows and "
+                   f"{gene_rows:,} guide-disagreement reports",
+                   "splicr.db", t)
         else:
             record("report", "done", str(report_path), "splicr.report", t)
 

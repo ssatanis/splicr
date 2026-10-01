@@ -164,6 +164,7 @@ def _learn_library(conn, accession: str, p: StudyPlan, run, det) -> bool:
 
 def plan(accession: str) -> dict:
     from . import design, metadata
+    from .. import pmc_agent
 
     with state.connect() as conn:
         status = state.status_of(conn, accession)
@@ -174,6 +175,25 @@ def plan(accession: str) -> dict:
             state.event(conn, accession, "plan", "started", "fetching run metadata")
             runs = metadata.fetch_runs(cand)
             p: StudyPlan = design.plan_study(cand, runs)
+            if pmc_agent.needs_context(p):
+                state.event(conn, accession, "context", "started",
+                            f"planner confidence {p.confidence:.2f}; reading PMC Methods")
+                try:
+                    context = pmc_agent.resolve(cand, p)
+                    if context.override is not None:
+                        p.notes.append("PMC context JSON: " + context.override.model_dump_json())
+                    state.event(
+                        conn, accession, "context",
+                        "ok" if context.status == "resolved" else "warn",
+                        (f"resolved: {len(context.override.contrasts[0].control_samples)} control, "
+                         f"{len(context.override.contrasts[0].treatment_samples)} treatment accessions; "
+                         f"confidence {context.override.confidence:.2f}")
+                        if context.override else f"manual review: {context.reason}",
+                        context.model_dump(),
+                    )
+                except Exception as exc:  # noqa: BLE001 - context is a fallback, never a hidden failure
+                    state.event(conn, accession, "context", "warn",
+                                f"PMC Methods lookup failed: {type(exc).__name__}: {exc}")
             if status == "failed":
                 state.transition(conn, accession, "discovered")
             # Raw reads that are not public yet are the normal state of a fresh

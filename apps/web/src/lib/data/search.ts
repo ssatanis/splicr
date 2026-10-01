@@ -120,7 +120,7 @@ export async function searchWorkspace(rawQuery: string): Promise<SearchResponse>
         kind: "screen" as const,
         id: String(row.id),
         title: String(row.name),
-        subtitle: [row.cell_line, row.phenotype, row.status].filter(Boolean).join(" · ") || "Screen",
+        subtitle: [row.cell_line, row.phenotype, row.status].filter(Boolean).join(", ") || "Screen",
         href: `/dashboard/screens/${row.id}`,
       }));
     }

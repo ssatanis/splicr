@@ -69,9 +69,16 @@ export function Logo({
   );
 }
 
-/** Small square glyph for the marquee and list bullets. */
-export function LogoMark({ className, tone = "orange" }: { className?: string; tone?: "orange" | "white" }) {
-  const fill = tone === "white" ? "#ffffff" : "#f87315";
+/** Small square glyph for the marquee, list bullets, and the collapsed console
+ *  rail, where there is no room for the wordmark. */
+export function LogoMark({
+  className,
+  tone = "orange",
+}: {
+  className?: string;
+  tone?: "orange" | "white" | "navy";
+}) {
+  const fill = tone === "white" ? "#ffffff" : tone === "navy" ? "#24334b" : "#f87315";
   return (
     <svg viewBox="0 0 24 24" className={cn("h-4 w-4", className)} aria-hidden>
       <rect x="2" y="10" width="8" height="4" rx="1" fill={fill} />

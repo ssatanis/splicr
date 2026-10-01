@@ -19,7 +19,7 @@ export function RecordPages({ path, page, total }: { path: string; page: number;
   return <nav aria-label="Record pages" className="mt-4 flex gap-4 text-sm">
     {page > 1 && <Link className="underline" href={`${path}?page=${page - 1}`}>Previous</Link>}
     {page > 1 && <Link className="underline" href={path}>First page</Link>}
-    <span>Page {page} · {WORKSPACE_PAGE_SIZE} records per page</span>
+    <span>Page {page}, {WORKSPACE_PAGE_SIZE} records per page</span>
     {page * WORKSPACE_PAGE_SIZE < total && <Link className="underline" href={`${path}?page=${page + 1}`}>Next</Link>}
   </nav>;
 }

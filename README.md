@@ -161,6 +161,24 @@ modal run engine/modal_app.py::main --action process --accession GSE145743
 Details, guarantees and the acceptance test: [docs/06-autonomous-ingest.md](docs/06-autonomous-ingest.md).
 Data platform overview: [docs/01-architecture.md](docs/01-architecture.md#data-platform-reviewed-2026-09-29).
 
+## After the hit list
+
+Two modules answer the question a hit list does not. `splicr.validate.domain_report`
+reports how much a gene's guides disagreed — against that screen's own spread for
+genes of the same size — whether the call survives dropping one guide, and where
+each guide cut on the protein. `splicr.escape` ranks candidate explanations for a
+phenotype weaker than an independent source says it should have been, starting with
+paralog compensation, on six evidence channels with each channel's own limitation
+stated. Neither claims a cause: the experiment that would settle a compensation
+hypothesis is a paired perturbation, and `splicr.multiplex` proposes one.
+
+```bash
+engine/.tools/env/bin/python -m splicr escape ARID1A --model ACH-000001
+```
+
+What each one measures, what it refuses to conclude, and its validation status:
+[docs/12-escape-and-deep-dive.md](docs/12-escape-and-deep-dive.md).
+
 ## Reference data
 
 ```bash

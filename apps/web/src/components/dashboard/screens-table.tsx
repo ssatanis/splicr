@@ -308,7 +308,7 @@ export function ScreensTable() {
                   >
                     {screen.cellLine}
                     <span className="ml-1.5 text-[11px] text-muted">
-                      {screen.organism} · {screen.modality}
+                      {screen.organism}, {screen.modality}
                     </span>
                   </span>
                 </td>
@@ -321,7 +321,7 @@ export function ScreensTable() {
                   <StatusChip tone={statusTone(screen.status)} spinning={screen.status === "running"}>
                     {screen.status}
                     {screen.status !== "complete" && screen.status !== "draft" && (
-                      <span className="num">· {screen.stage}/9</span>
+                      <span className="num">{screen.stage}/9</span>
                     )}
                   </StatusChip>
                 </td>

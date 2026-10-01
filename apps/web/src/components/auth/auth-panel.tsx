@@ -1,44 +1,59 @@
 import Link from "next/link";
 
 import { Logo } from "@/components/brand/logo";
-import { RotatableCoil } from "@/components/three";
 import { site } from "@/lib/site";
 
 /**
- * Two-column frame for login and signup. The artwork sits in its own band
- * behind a scrim so the copy below it always stays readable, at every width.
+ * The frame every auth page renders into.
+ *
+ * Two columns on a wide screen, one column everywhere else. The left panel is
+ * not a hero that collapses on top of the form: below `lg` it is not rendered
+ * at all. Stacking it would push the sign-in fields under a screenful of
+ * product copy on exactly the devices where someone is most likely to be
+ * signing in one-handed, and a person who has arrived at a sign-in page is not
+ * there to read about the product.
  */
-export function AuthPanel({ children, aside }: { children: React.ReactNode; aside?: React.ReactNode }) {
+export function AuthPanel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="grid lg:grid-cols-[1.05fr_1fr] min-h-[calc(100vh-2*var(--sheet-margin))]">
-      <div className="relative bg-teal-800 text-white flex flex-col p-7 md:p-10 lg:p-12 overflow-hidden">
-        <div className="relative z-20 flex items-center justify-between">
-          <Logo tone="light" />
-          <Link href="/" className="text-sm text-white/90 hover:text-white">
+    <div className="grid min-h-dvh lg:grid-cols-[1fr_1fr]">
+      {/* Desktop only. `hidden` rather than a media query on the contents, so
+          nothing in here is downloaded, measured or announced on a phone. */}
+      <aside className="relative hidden flex-col justify-between bg-teal-800 p-12 text-white lg:flex">
+        <div className="flex items-center justify-between">
+          <Logo tone="light" href="/" />
+          <Link
+            href="/"
+            className="text-[13px] text-white/75 transition-colors duration-[var(--dur-1)] hover:text-white motion-reduce:transition-none"
+          >
             Back to site
           </Link>
         </div>
 
-        {/* Artwork band: fixed height, never behind the text. The coil turns
-            under the pointer or the arrow keys, and says so to nobody. */}
-        <div className="relative z-0 h-40 sm:h-52 lg:flex-1 lg:h-auto lg:min-h-[180px] my-6">
-          <RotatableCoil className="absolute inset-0" />
+        <div className="max-w-md">
+          <p className="text-[26px] font-medium leading-[1.25] tracking-[-0.02em] text-white">
+            Inspect the evidence behind your CRISPR hits.
+          </p>
+          <p className="mt-4 text-[14px] leading-relaxed text-white/70">{site.description}</p>
         </div>
 
-        <div className="relative z-20 max-w-md">
-          <h1 className="display text-white text-3xl sm:text-4xl lg:text-5xl">
-            Know which
-            <br />
-            hits are real.
-          </h1>
-          <p className="mt-4 text-white/90 leading-relaxed">{site.description}</p>
-          {aside}
-        </div>
-      </div>
+        <p className="text-[12px] text-white/50">
+          {site.name}
+          <br />
+          {site.location}
+        </p>
+      </aside>
 
-      <div className="flex items-center justify-center p-6 sm:p-10 lg:p-14">
-        <div className="w-full max-w-md">{children}</div>
-      </div>
+      <main className="flex items-center justify-center px-6 py-14 sm:px-10">
+        <div className="w-full max-w-[380px]">
+          {/* The wordmark belongs to the form column when there is no panel
+              beside it, and nowhere else: two wordmarks on one screen is a
+              template, not a product. */}
+          <div className="mb-9 lg:hidden">
+            <Logo href="/" size="sm" />
+          </div>
+          {children}
+        </div>
+      </main>
     </div>
   );
 }

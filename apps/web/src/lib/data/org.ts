@@ -234,9 +234,14 @@ export const getCurrentContext = cache(async (): Promise<WorkspaceContext> => {
 
     if (!userId) return anonymousContext(isDemoCookie);
 
+    const metadata = (claims?.user_metadata ?? null) as { preferred_title?: unknown } | null;
     const user: SessionUser = {
       id: userId,
       email: typeof claims?.email === "string" ? claims.email : null,
+      preferredTitle:
+        typeof metadata?.preferred_title === "string" && metadata.preferred_title.trim()
+          ? metadata.preferred_title.trim()
+          : null,
     };
 
     const [profileResult, membershipResult] = await Promise.all([

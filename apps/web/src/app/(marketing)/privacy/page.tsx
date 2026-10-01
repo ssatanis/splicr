@@ -12,7 +12,7 @@ const sections: LegalSection[] = [
     id: "who",
     title: "Who we are",
     body: [
-      `SplicR ("SplicR", "we", "us") builds CRISPR screen analysis and evidence tools. We are based at ${site.location.replace(/\.$/, "")}. This policy covers splicr.org, the request-a-demo form and the SplicR workspace you reach after signing in.`,
+      `SplicR ("SplicR", "we", "us") builds CRISPR screen analysis and evidence tools. We are based in ${site.location}. This policy covers splicr.org, the request-a-demo form and the SplicR workspace you reach after signing in.`,
       `For anything about your data, write to ${site.email}. A person reads it.`,
     ],
   },

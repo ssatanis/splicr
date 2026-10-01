@@ -54,8 +54,10 @@ export async function POST(request: Request) {
 
   const body = (payload ?? {}) as Record<string, unknown>;
 
-  // A hidden field a person never sees and never fills in.
-  if (str(body.website)) return NextResponse.json({ ok: true }, { status: 202 });
+  // A hidden field a person never sees and never fills in. Answering 202 rather
+  // than an error tells a bot nothing about why it failed. `confirmed: false` is
+  // accurate: nothing was sent.
+  if (str(body.website)) return NextResponse.json({ ok: true, confirmed: false }, { status: 202 });
 
   const name = str(body.name).slice(0, LIMITS.name);
   const email = str(body.email).slice(0, LIMITS.email);
@@ -101,7 +103,13 @@ export async function POST(request: Request) {
       );
     }
     if (outcome.errors.length) console.warn("demo-request: partial failure", outcome.errors);
-    return NextResponse.json({ ok: true }, { status: 200 });
+    // Say which of the two sends actually happened. When the team notification
+    // went out but the confirmation did not, the request IS with us and a
+    // confirmation is NOT on its way, and the form must not promise one.
+    return NextResponse.json(
+      { ok: true, confirmed: Boolean(outcome.confirmationId) },
+      { status: 200 },
+    );
   } catch (error) {
     if (error instanceof EmailNotConfigured) {
       console.error("demo-request: RESEND_API_KEY missing");

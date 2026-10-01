@@ -592,11 +592,15 @@ def check_postgres_sql_matches_the_migrations() -> None:
 
     root = Path(__file__).resolve().parents[2]
     script = (root / "scripts" / "data" / "ingest-orcs.py").read_text()
-    migration = (root / "supabase" / "migrations"
-                 / "20260926000400_atlas_reference.sql").read_text()
+    migration = "\n".join(
+        path.read_text() for path in sorted((root / "supabase" / "migrations").glob("*.sql"))
+    )
 
     def columns_of(table: str) -> set[str]:
-        m = re.search(rf"create table {re.escape(table)} \((.*?)\n\);", migration, re.S)
+        m = re.search(
+            rf"create table (?:if not exists )?{re.escape(table)} \((.*?)\n\);",
+            migration, re.S,
+        )
         if not m:
             return set()
         out = set()
@@ -605,6 +609,9 @@ def check_postgres_sql_matches_the_migrations() -> None:
             if not line or line.startswith(("constraint", "primary key", "unique", "--")):
                 continue
             out.add(line.split()[0])
+        out.update(re.findall(
+            rf"alter table {re.escape(table)} add column if not exists (\w+)", migration
+        ))
         return out
 
     # The bulk path uses COPY rather than INSERT, so both forms are collected.

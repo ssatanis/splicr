@@ -23,9 +23,7 @@
  */
 
 /** Depleted and enriched are drawn as direction, never as red against green. */
-const DEPLETED = "#174f62"; // teal-800
-const ENRICHED = "#c2560a"; // orange-500
-const MUTED = "#9db3bd";
+import { DEPLETED, ENRICHED, MUTED } from "../chart-colors";
 
 export function GuideChart({
   values,

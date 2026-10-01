@@ -28,6 +28,8 @@ import Link from "next/link";
 import type { ScreenStatus, StageStatus, Verdict } from "@/lib/mock/data";
 import { cn } from "@/lib/utils";
 
+import { DEPLETED, ENRICHED, NAVY, SEQUENTIAL } from "./chart-colors";
+
 import { ScrollRegion } from "./scroll-region";
 
 export function Card({ className, children, title, action, subtitle }: {
@@ -38,7 +40,7 @@ export function Card({ className, children, title, action, subtitle }: {
   action?: React.ReactNode;
 }) {
   return (
-    <section className={cn("bg-white rounded-3xl border border-line p-5 md:p-6", className)}>
+    <section className={cn("bg-white rounded-2xl border border-line p-5 md:p-6", className)}>
       {(title || action) && (
         <div className="flex items-start justify-between gap-4 mb-4">
           <div>
@@ -58,7 +60,7 @@ export function Card({ className, children, title, action, subtitle }: {
 
 export function Kpi({ label, value, hint, tone = "ink" }: { label: string; value: React.ReactNode; hint?: string; tone?: "ink" | "orange" | "cyan" }) {
   return (
-    <div className="bg-white rounded-3xl border border-line p-5">
+    <div className="bg-white rounded-2xl border border-line p-5">
       <div className="text-sm text-muted">{label}</div>
       <div className={cn("mt-2 text-3xl font-medium tracking-tight", tone === "orange" ? "text-orange-500" : tone === "cyan" ? "text-cyan-600" : "text-ink")}>
         {value}
@@ -110,12 +112,14 @@ export function PageHeader({ eyebrow, title, body, actions, dense = false }: {
   );
 }
 
+/* A verdict is a category, so these are the two encoding colours plus the
+   accent and two neutrals, never five arbitrary product hues. */
 export const verdictColor: Record<Verdict, string> = {
-  "Real and new": "#f87315",
-  "Real and known": "#07b6d3",
-  "Real but generic": "#3f95a6",
-  Artifact: "#174f62",
-  Uncertain: "#b8c2ca",
+  "Real and new": ENRICHED,
+  "Real and known": NAVY,
+  "Real but generic": "#5b6b84",
+  Artifact: DEPLETED,
+  Uncertain: "#b4b4b4",
 };
 
 export function VerdictBadge({ verdict }: { verdict: Verdict }) {
@@ -149,7 +153,9 @@ export function StatusBadge({ status }: { status: ScreenStatus | "pass" | "warn"
 
 export function Chance({ value, size = "md" }: { value: number; size?: "sm" | "md" }) {
   const pct = Math.round(value * 100);
-  const color = value >= 0.6 ? "#f87315" : value >= 0.4 ? "#07b6d3" : "#174f62";
+  // A score is a quantity, so the bar steps through one hue rather than
+  // changing colour, which would read as changing kind.
+  const color = value >= 0.6 ? SEQUENTIAL[0] : value >= 0.4 ? SEQUENTIAL[1] : SEQUENTIAL[2];
   return (
     <span className="inline-flex items-center gap-2" title="Uncalibrated model score; not a validation probability">
       <span aria-hidden="true" className={cn("progress-track", size === "sm" ? "w-12 h-1.5" : "w-16")}>

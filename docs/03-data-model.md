@@ -1,8 +1,8 @@
 # Data model
 
-This describes migration definitions, not a verified live deployment. The
-repository currently contains 15 migration files; `supabase/migrations` is the
-source of truth. `npm run db:status` reads the configured database state.
+This describes migration definitions, not a verified live deployment.
+`supabase/migrations` is the source of truth; `ls supabase/migrations | wc -l`
+counts them. `npm run db:status` reads the configured database state.
 Schema columns do not establish that a feature is implemented or populated.
 
 ## Tenancy
@@ -28,6 +28,8 @@ screens ──┬── samples ──── screen_files
           └── runs ──┬── run_stages, run_artifacts, run_events
                      ├── sample_qc, run_qc
                      ├── guide_counts        (partitioned)
+                     ├── guide_effects       (one row per guide per comparison)
+                     ├── gene_disagreement   (one report per gene per comparison)
                      ├── hits ──── hit_flags
                      ├── run_neighbors       (similar Atlas screens)
                      └── reports
@@ -36,6 +38,14 @@ screens ──┬── samples ──── screen_files
 A **screen** is the experiment. A **run** is one pass of the pipeline over it.
 Re-running creates a new run and leaves the old results intact, because a
 published figure has to stay reproducible.
+
+`guide_effects` and `gene_disagreement` hold the per-guide evidence the console's
+deep dive reads: the fold change MAGeCK reported **under the guide id MAGeCK
+printed**, the residue that guide's cut resolved to, and the gene-level
+disagreement report computed once at analysis time. They exist because
+`hits.guide_lfcs` is an unlabelled array and pairing it with a library by position
+attributes measurements to the wrong reagents. See
+[guide disagreement and Escape](12-escape-and-deep-dive.md).
 
 `guide_counts` is hash-partitioned into 8 partitions on `screen_id`. Guide by
 sample counts are the largest table by far, and partitioning keeps one screen's

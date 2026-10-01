@@ -12,7 +12,7 @@ const sections: LegalSection[] = [
     id: "agreement",
     title: "Agreement",
     body: [
-      `These terms govern your use of splicr.org, the SplicR workspace and the SplicR Connect hits API (together, the "Service"), operated by SplicR at ${site.location.replace(/\.$/, "")}. By using the Service you agree to them. If you use it for an organization, you confirm you can bind that organization.`,
+      `These terms govern your use of splicr.org, the SplicR workspace and the SplicR Connect hits API (together, the "Service"), operated by SplicR, based in ${site.location}. By using the Service you agree to them. If you use it for an organization, you confirm you can bind that organization.`,
       "If you have signed a separate pilot, evaluation or services agreement with us, that agreement controls wherever it differs from these terms.",
     ],
   },
@@ -110,7 +110,7 @@ const sections: LegalSection[] = [
   {
     id: "contact",
     title: "Contact",
-    body: [`Questions about these terms: ${site.email}, ${site.location.replace(/\.$/, "")}.`],
+    body: [`Questions about these terms: ${site.email}. SplicR is based in ${site.location}.`],
   },
 ];
 

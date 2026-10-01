@@ -226,7 +226,7 @@ export function notificationEmail(request: DemoRequest) {
 export const PREVIEW_REQUEST: DemoRequest = {
   name: "Jane Doe",
   email: "jane@lab.edu",
-  company: "Weill Cornell Medicine",
+  company: "Hudson Genomics",
   topic: "Blinded evaluation",
   message: "We have a genome wide knockout screen in RPE1 and want a second opinion on which twelve hits to validate.",
 };

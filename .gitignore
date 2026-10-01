@@ -68,6 +68,10 @@ engine/analysis/**/*.log
 # Reproducible external-tool intermediates; compact audit summaries are kept.
 data/research/*/tools/
 
+# Copied from the pinned pdbe-molstar package by apps/web/scripts/copy-vendor.mjs.
+# Committing it would be a second 6 MB copy of a dependency nothing could update.
+apps/web/public/vendor/
+
 # Temporary measurement routes. Agents create these to measure geometry; they
 # are never part of the app.
 apps/web/src/app/dashboard/zz-probe/
