@@ -10,6 +10,7 @@ by passing an org_id.
 from __future__ import annotations
 
 import time
+import sys
 import traceback
 import json
 import hashlib
@@ -544,8 +545,14 @@ def run_pipeline(
                 db.log_event(conn, ctx.run_id, result.error, result.failed_at, "error")
                 db.finish_run(conn, ctx, "failed", result.error)
                 conn.commit()
-            except Exception:
-                pass
+            except Exception as recording:  # noqa: BLE001 - the run already failed
+                #  Swallowing this leaves the run marked running for ever with
+                #  no record of why it stopped, which is how a failure becomes
+                #  invisible. The original failure is still what gets raised to
+                #  the caller; this one goes to stderr so an operator sees that
+                #  the record itself is missing.
+                print(f"  FAILED to record the failure: {type(recording).__name__}: {recording}",
+                      file=sys.stderr)
     finally:
         if conn is not None:
             try:

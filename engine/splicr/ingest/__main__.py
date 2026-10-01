@@ -73,6 +73,14 @@ def main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("eval-classifier", help="rerun the labelled classifier evaluation")
 
+    b = sub.add_parser("audit-backlog", help="why every study is where it is; reads only unless --release")
+    b.add_argument("--category", help="show only this category")
+    b.add_argument("--json", action="store_true")
+    b.add_argument("--release", action="store_true",
+                   help="clear the lease on studies an infrastructure failure explains, so the next "
+                        "sweep re-plans them. Changes no status and approves no science.")
+    b.add_argument("--max", type=int, default=25, help="ceiling on --release")
+
     a = ap.parse_args(argv)
 
     if a.cmd == "discover":
@@ -107,6 +115,47 @@ def main(argv: list[str] | None = None) -> int:
             cand = candidate_for(acc)
             plan = design_mod.plan_study(cand, metadata_mod.fetch_runs(cand))
             print(json.dumps(json.loads(plan.to_json()), indent=1))
+        return 0
+
+    if a.cmd == "audit-backlog":
+        from . import audit as audit_mod
+        from . import state as state_mod
+
+        with state_mod.connect() as conn:
+            audits = audit_mod.classify(conn)
+            shown = [x for x in audits if not a.category or x.category == a.category]
+            if a.json:
+                print(json.dumps([x.as_row() for x in shown], indent=1, default=str))
+            else:
+                counts = audit_mod.summarise(audits)
+                print(f"{len(audits)} studies")
+                for category, n in counts.items():
+                    flag = "  RETRYABLE" if category in audit_mod.INFRASTRUCTURE else ""
+                    print(f"  {n:>4}  {category:<28} {audit_mod.CATEGORY_HELP[category]}{flag}")
+                hidden = [x for x in audits if x.hidden_failure]
+                if hidden:
+                    print(f"\n{len(hidden)} failure(s) recorded only in the event log, not on the study row:")
+                    for x in hidden:
+                        print(f"  {x.accession:<14} {x.category:<20} {x.detail[:100]}")
+                if a.category:
+                    print(f"\n{len(shown)} in {a.category}:")
+                    for x in shown:
+                        print(f"  {x.accession:<14} attempts={x.attempts:<3} {x.detail[:110]}")
+
+            candidates = audit_mod.retryable(audits)
+            print(f"\n{len(candidates)} study(ies) an infrastructure failure explains"
+                  + (":" if candidates else "."))
+            for x in candidates:
+                print(f"  {x.accession:<14} {x.category:<20} {x.detail[:100]}")
+            if not a.release:
+                if candidates:
+                    print("\nDry run. Re-run with --release to clear their leases for the next sweep.")
+                return 0
+            if not candidates:
+                print("Nothing to release.")
+                return 0
+            out = audit_mod.release(conn, audits, max_studies=a.max)
+            print(f"Released {len(out['released'])} of {out['considered']}: {', '.join(out['released']) or 'none'}")
         return 0
 
     if a.cmd == "eval-classifier":
