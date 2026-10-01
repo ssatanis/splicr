@@ -83,7 +83,15 @@ def drain(conn, limit: int = 10) -> dict:
         try:
             out = runner.request(accession)
         except Exception as exc:  # noqa: BLE001 - one bad request must not stop the queue
-            _set(conn, request_id, "failed", f"{type(exc).__name__}: {exc}")
+            #  The exception goes to the engine's own log, where somebody can
+            #  act on it. What the researcher is shown is a sentence: a
+            #  traceback in the console tells them nothing they can do, and
+            #  "KeyError: 'accession'" reads as their mistake rather than ours.
+            state.event(conn, None, "request", "error",
+                        f"{accession}: {type(exc).__name__}: {exc}")
+            _set(conn, request_id, "failed",
+                 "SplicR could not look this accession up. The engine recorded why; "
+                 "nothing was analysed. Try again, or check the accession is public.")
             handled.append({"accession": accession, "status": "failed"})
             continue
 

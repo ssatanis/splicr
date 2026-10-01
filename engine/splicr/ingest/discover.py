@@ -157,7 +157,15 @@ def _esummary(db: str, ids: list[str], batch: int = 200) -> list[dict]:
         r = _eutils("esummary", {"db": db, "id": ",".join(chunk), "retmode": "json"},
                     post=True).json()
         result = r.get("result", {})
-        docs.extend(result[u] for u in result.get("uids", []) if u in result)
+        for uid in result.get("uids", []):
+            doc = result.get(uid)
+            #  A uid that does not exist still comes back, as
+            #  {"uid": ..., "error": "cannot get document summary"}. Returning
+            #  that as a document made the caller read doc["accession"] off a
+            #  dict that has no accession, so asking for a GSE that is not in
+            #  GEO raised KeyError instead of saying it is not in GEO.
+            if isinstance(doc, dict) and not doc.get("error"):
+                docs.append(doc)
     return docs
 
 

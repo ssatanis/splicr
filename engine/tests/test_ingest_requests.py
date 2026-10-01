@@ -101,6 +101,24 @@ def test_an_accession_the_engine_refuses_is_rejected_with_its_reason(monkeypatch
     assert updates(conn)[0][:2] == ("rejected", "GSE4 is not a study accession")
 
 
+def test_a_traceback_never_reaches_the_researcher(monkeypatch):
+    """What broke goes to the engine log; what is shown is a sentence."""
+    logged = []
+    monkeypatch.setattr(req.state, "event",
+                        lambda conn, acc, stage, status, message, *a, **k: logged.append(message))
+    monkeypatch.setattr("splicr.ingest.runner.request",
+                        lambda a: (_ for _ in ()).throw(KeyError("accession")))
+    conn = FakeConn([[("req-x", "GSE999999991")]])
+    req.drain(conn)
+    status, detail, _, _ = updates(conn)[0]
+    assert status == "failed"
+    for leak in ["KeyError", "Traceback", "accession'", "None"]:
+        assert leak not in detail, f"{leak!r} leaked into user-visible copy: {detail!r}"
+    assert "nothing was analysed" in detail
+    # And an engineer can still find out what happened.
+    assert any("KeyError" in message for message in logged)
+
+
 def test_one_broken_request_does_not_stop_the_queue(monkeypatch):
     def boom(accession):
         if accession == "GSE5":
@@ -115,7 +133,8 @@ def test_one_broken_request_does_not_stop_the_queue(monkeypatch):
     out = req.drain(conn)
     assert [entry["status"] for entry in out["handled"]] == ["failed", "accepted"]
     assert updates(conn)[0][0] == "failed"
-    assert "NCBI timed out" in updates(conn)[0][1]
+    # The second request is still handled, which is the point of this test.
+    assert updates(conn)[1][0] == "accepted"
 
 
 def test_a_request_with_no_study_row_is_a_bug_not_a_verdict(monkeypatch):
