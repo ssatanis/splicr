@@ -65,7 +65,7 @@ const HIT_COLUMNS =
 export async function getScreenReportData(screenId: string): Promise<ScreenReportResult> {
   if (!isUuid(screenId)) return { status: "not_found" };
   const context = await getCurrentContext();
-  if (context.isDemo || !context.user || !context.org) return { status: "workspace_required" };
+  if (!context.user || !context.org) return { status: "workspace_required" };
   const orgId = context.org.id;
 
   try {

@@ -50,11 +50,7 @@ import {
   ScreenList,
   ZoneHeading,
 } from "@/components/dashboard/overview/zones";
-import type {
-  CandidateRow,
-  OutcomeRow,
-  RunRow,
-} from "@/components/dashboard/overview/types";
+import type { CandidateRow, OutcomeRow, RunRow } from "@/components/dashboard/overview/types";
 import { Greeting } from "@/components/dashboard/greeting";
 import { MODALITY_SHORT } from "@/components/dashboard/settings/meta";
 import { PageHeader } from "@/components/dashboard/ui";
@@ -68,13 +64,6 @@ import {
   type OverviewScreen,
 } from "@/lib/data/overview";
 import type { WorkspaceStats } from "@/lib/data/types";
-import {
-  benchQueue,
-  outcomes,
-  screens,
-  type Screen,
-  type Verdict,
-} from "@/lib/mock/data";
 import { greetingName } from "@/lib/people";
 import {
   FALLBACK_TIME_ZONE,
@@ -96,9 +85,20 @@ export const metadata = { title: "Overview" };
  * request there is no cookie, so this renders in UTC and the client corrects it
  * on mount and remembers the answer for next time.
  */
-async function resolveGreeting(name: string, lab: string) {
+async function resolveGreeting(
+  name: string,
+  lab: string,
+  userTimeZone?: string | null,
+  labTimeZone?: string | null,
+) {
   const stored = (await cookies()).get(TIME_ZONE_COOKIE)?.value;
-  const timeZone = isValidTimeZone(stored) ? stored : undefined;
+  const timeZone = isValidTimeZone(userTimeZone)
+    ? userTimeZone
+    : isValidTimeZone(labTimeZone)
+      ? labTimeZone
+      : isValidTimeZone(stored)
+        ? stored
+        : undefined;
   const zone = timeZone ?? FALLBACK_TIME_ZONE;
   const now = new Date();
   return {
@@ -113,11 +113,7 @@ async function resolveGreeting(name: string, lab: string) {
 
 
 export default async function OverviewPage() {
-  const { org, profile, user, isDemo } = await getCurrentContext();
-
-  if (isDemo) {
-    return <SampleOverview signedIn={false} greeting={await resolveGreeting("", "Sample workspace")} />;
-  }
+  const { org, profile, user } = await getCurrentContext();
   if (org === null) {
     return <div className="space-y-4"><PageHeader dense title="Workspace unavailable" body="No active workspace could be resolved for this session." /><p className="text-sm text-muted">Sign in with an account that belongs to a workspace. If you already have one, reload to try again.</p></div>;
   }
@@ -155,6 +151,8 @@ export default async function OverviewPage() {
           email: user?.email ?? null,
         }),
         org.name,
+        profile?.time_zone,
+        org.time_zone,
       )}
       stats={stats}
       recent={recent}
@@ -188,13 +186,11 @@ type GreetingProps = React.ComponentProps<typeof Greeting>;
 function Frame({
   greeting,
   meta,
-  sample,
   strip,
   children,
 }: {
   greeting: GreetingProps;
   meta: React.ReactNode;
-  sample: boolean;
   strip: React.ReactNode;
   children: React.ReactNode;
 }) {
@@ -202,16 +198,7 @@ function Frame({
     <>
       <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3 pb-1">
         <div className="min-w-0">
-          <Greeting
-            {...greeting}
-            badge={
-              sample ? (
-                <span className="shrink-0 rounded-md bg-orange-50 px-1.5 py-0.5 text-[11px] leading-[1.4] text-orange-700">
-                  Sample data
-                </span>
-              ) : undefined
-            }
-          />
+          <Greeting {...greeting} />
           <p className="mt-2 max-w-[70ch] text-[13px] leading-snug text-muted">{meta}</p>
         </div>
         <Link href="/dashboard/upload" className="btn btn-navy btn-sm shrink-0">
@@ -245,6 +232,8 @@ function plural(n: number, one: string, many: string) {
  * screen, whose stored verdicts are `uncertain` and `artifact`. Keying on the
  * enum is what makes the column mean anything on a signed-in workspace.
  */
+type Verdict = NonNullable<CandidateRow["verdict"]>;
+
 const VERDICT_LABELS: Record<string, Verdict> = {
   real_new: "Real and new",
   real_generic: "Real but generic",
@@ -373,7 +362,6 @@ function WorkspaceOverview({
   return (
     <Frame
       greeting={greeting}
-      sample={false}
       meta={
         fresh
           ? "This workspace has no screens yet. Start with experimental data you already have, or with a published accession."
@@ -435,151 +423,6 @@ function WorkspaceOverview({
               href: "/dashboard/pick",
               icon: ListChecks,
               badge: candidates.length > 0 ? `${candidates.length} waiting` : null,
-              primary: true,
-            },
-            {
-              title: "Upload a screen",
-              body: "Start the pipeline on a new count table.",
-              href: "/dashboard/upload",
-              icon: Upload,
-            },
-            {
-              title: "Log a bench result",
-              body: "Validated, failed or inconclusive.",
-              href: "/dashboard/validation",
-              icon: CheckCircle2,
-              badge: unlogged > 0 ? `${unlogged} open` : null,
-            },
-            {
-              title: "Look up a gene",
-              body: "Its history across every published screen in the Atlas.",
-              href: "/dashboard/atlas",
-              icon: Compass,
-            },
-          ]}
-        />
-      </section>
-    </Frame>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Demo and no-workspace fallback
-// ---------------------------------------------------------------------------
-
-/** The window every windowed count on the sample overview is taken over. */
-const WINDOW_DAYS = 7;
-
-/** Phenotype, model, library, owner and date, for a run's expanded row. */
-function runDetail(screen: Screen): string {
-  return `${screen.phenotype}, ${screen.cellLine} ${screen.modality}, ${screen.library}, ${screen.owner}, ${formatDate(screen.createdAt)}`;
-}
-
-/**
- * The sample overview, shown only when there is no workspace to read.
- *
- * Every number below is invented, so the page says that beside its title and the
- * rail says it again. The counts are computed from the fixtures at render rather
- * than written into the copy, so no sentence here can drift away from the table
- * it is describing.
- */
-function SampleOverview({ signedIn, greeting }: { signedIn: boolean; greeting: GreetingProps }) {
-  // The sample hit set belongs to the one completed genome-wide screen, so the
-  // candidates are attributed to it rather than spread over screens that never
-  // called a hit.
-  const source = screens[0];
-  const queue = benchQueue(source.id);
-
-
-  // Read off the run record rather than typed in here, so the provenance line and
-  // the screen's own Report tab can never name two different tool versions.
-
-
-  const runs: RunRow[] = screens.map((screen) => ({
-    id: screen.id,
-    name: screen.name,
-    status: screen.status,
-    qc: screen.qc,
-    stage: screen.stage,
-    hits: screen.hits,
-    realHits: screen.realHits,
-    attention: attentionNote(screen.status, screen.qc, screen.stage),
-    detail: runDetail(screen),
-  }));
-
-  const outcomeRows: OutcomeRow[] = outcomes.map((outcome) => ({
-    id: outcome.id,
-    gene: outcome.gene,
-    screenId: outcome.screenId,
-    assay: outcome.assay,
-    predicted: outcome.predicted,
-    result: outcome.result,
-  }));
-
-  const flagged = runs.filter((run) => run.attention !== null).length;
-  const unlogged = outcomeRows.filter((outcome) => outcome.result === "pending").length;
-
-  return (
-    <Frame
-      greeting={greeting}
-      sample
-      meta={
-        signedIn
-          ? `You are not in a workspace yet, so none of this is yours. Windowed counts cover the last ${WINDOW_DAYS} days.`
-          : `Nothing here is a measurement. Windowed counts cover the last ${WINDOW_DAYS} days.`
-      }
-      strip={
-        <Decisions
-          items={[
-            {
-              value: queue.length,
-              one: "candidate waiting on a decision",
-              many: "candidates waiting on a decision",
-              clear: "No candidate is waiting on you",
-              href: "/dashboard/pick",
-              lead: true,
-            },
-            {
-              value: flagged,
-              one: "screen needs a QC review",
-              many: "screens need a QC review",
-              clear: "Every screen passed QC",
-              href: "/dashboard/screens",
-            },
-            {
-              value: unlogged,
-              one: "bench result not yet logged",
-              many: "bench results not yet logged",
-              clear: "Every bench result is logged",
-              href: "/dashboard/validation",
-            },
-          ]}
-        />
-      }
-    >
-      <section>
-        <ZoneHeading
-          action={
-            <Link href="/dashboard/screens" className="text-[12px] text-muted hover:text-ink">
-              All screens
-            </Link>
-          }
-        >
-          Your screens
-        </ZoneHeading>
-        <ScreenList screens={runs} hrefFor={(s) => `/dashboard/screens/${s.id}`} />
-      </section>
-
-      <section>
-        <ZoneHeading>What next</ZoneHeading>
-        <NextActions
-          actions={[
-            {
-              title: "Pick this round",
-              body: "Rank candidates by what reproduces, then export the order sheet.",
-              href: "/dashboard/pick",
-              icon: ListChecks,
-              badge: queue.length > 0 ? `${queue.length} waiting` : null,
               primary: true,
             },
             {

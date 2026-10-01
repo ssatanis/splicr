@@ -155,7 +155,11 @@ test("the rail is white with a navy selected state, not a dark wall", () => {
 
 test("the console theme scope is actually applied", () => {
   assert.match(read("apps/web/src/components/dashboard/shell.tsx"), /className="console /);
-  assert.match(read("apps/web/src/app/(auth)/layout.tsx"), /className="console /);
+  assert.doesNotMatch(
+    read("apps/web/src/app/(auth)/layout.tsx"),
+    /className="console /,
+    "auth intentionally inherits the landing-page visual system",
+  );
   assert.match(CSS, /body:has\(\.console\)/, "the page behind the console is white too");
 });
 

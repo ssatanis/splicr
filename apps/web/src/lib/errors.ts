@@ -27,7 +27,7 @@ export type Problem = {
  *  response to "email me a link" and "reset my password", success or failure,
  *  so the form cannot be used to find out who has an account. */
 export const NEUTRAL_EMAIL_RESULT =
-  "If this address belongs to an active SplicR account, a secure link is on its way.";
+  "If this address belongs to an active SplicR account, a one-time code is on its way.";
 
 const AUTH_MESSAGES: Array<[RegExp, Problem]> = [
   [
@@ -38,7 +38,7 @@ const AUTH_MESSAGES: Array<[RegExp, Problem]> = [
     /email not confirmed/i,
     {
       message: "This address has not been confirmed yet.",
-      action: "Open the most recent SplicR email and follow its link.",
+      action: "Enter the code from the most recent SplicR email.",
     },
   ],
   [
@@ -54,7 +54,7 @@ const AUTH_MESSAGES: Array<[RegExp, Problem]> = [
   ],
   [
     /(token has expired|expired|invalid token|otp_expired)/i,
-    { message: "That link has expired or has already been used.", action: "Request a new one." },
+    { message: "That code has expired, is incorrect, or has already been used.", action: "Request a new one." },
   ],
   [
     /user already registered|already been registered/i,

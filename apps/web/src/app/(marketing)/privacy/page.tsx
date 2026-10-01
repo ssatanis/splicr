@@ -22,7 +22,7 @@ const sections: LegalSection[] = [
     body: [
       "We collect only what a feature needs, and it falls into four groups.",
       "- Demo and contact requests: your name, email address, lab or company, the topic you pick and any message you write. This arrives by email and is not copied into a database.",
-      "- Account details: your email address, name, the workspace you belong to and your role in it, plus a password if you set one. If you sign in with Google, Google tells us your email and name; we do not receive your Google password.",
+      "- Account details: your email address, name, the workspace you belong to and your role in it, plus a password if you set one.",
       "- Workspace content: the screens, count tables, sample roles, contrasts, hit calls, validation outcomes and notes you or your teammates add, and the API keys you create for the hits API. An API key is stored only as a one-way hash, so we cannot read it back.",
       "- Technical data: your IP address, browser type and the pages requested, which our hosting provider records in server logs to keep the site running and secure.",
       "We do not ask for financial details, government identifiers or patient data, and you should not put patient-identifiable information into a workspace.",
@@ -56,7 +56,6 @@ const sections: LegalSection[] = [
       "- Vercel hosts the website and its server code.",
       "- Supabase provides the database, sign-in and workspace storage.",
       "- Resend delivers the emails described above.",
-      "- Google, only if you choose Google sign-in.",
       "Some of these providers process data in the United States. Beyond them, we share personal information only if the law requires it, if you ask us to, or as part of a merger or sale of the project, in which case we will tell you first.",
     ],
   },

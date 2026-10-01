@@ -133,6 +133,12 @@ export interface Profile {
   avatar_url: string | null;
   orcid: string | null;
   default_org_id: string | null;
+  preferred_title: string | null;
+  professional_role: string | null;
+  institution: string | null;
+  time_zone: string | null;
+  onboarding_step: number;
+  onboarding_completed_at: string | null;
 }
 
 export interface Organization {
@@ -143,6 +149,9 @@ export interface Organization {
   plan: PlanTier;
   created_at: string;
   updated_at: string;
+  logo_url: string | null;
+  location: string | null;
+  time_zone: string | null;
 }
 
 /** One row of the team table: membership joined to the member's profile. */
@@ -164,6 +173,9 @@ export interface OrgInvite {
   invited_by: string | null;
   expires_at: string;
   created_at: string;
+  delivery_state: "pending" | "sent" | "existing_user" | "failed" | "revoked";
+  delivered_at: string | null;
+  delivery_error: string | null;
   /** Convenience flag so the UI can separate live links from stale ones. */
   expired: boolean;
 }
@@ -198,37 +210,7 @@ export interface WorkspaceContext {
   profile: Profile | null;
   org: Organization | null;
   role: OrgRole | null;
-  /**
-   * True when the visitor has no session and the demo cookie is set. Reads fall
-   * back to empty results and every mutation refuses.
-   */
-  isDemo: boolean;
 }
-
-// ---------------------------------------------------------------------------
-// Demo mode
-// ---------------------------------------------------------------------------
-
-/**
- * The organization id used while browsing without an account. It is the nil
- * UUID, so it is a valid uuid literal that can never match a real row. Reads
- * short circuit on it instead of hitting the database.
- */
-export const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
-
-export const DEMO_ORG: Organization = {
-  id: DEMO_ORG_ID,
-  slug: "demo",
-  name: "Demo workspace",
-  kind: "academic",
-  plan: "free",
-  created_at: "2026-01-01T00:00:00.000Z",
-  updated_at: "2026-01-01T00:00:00.000Z",
-};
-
-/** Shown by every mutation when the visitor is browsing in demo mode. */
-export const DEMO_REFUSAL =
-  "You are browsing the SplicR demo, which is read only. Create an account or sign in to change anything.";
 
 /** All workspace pages hang off this layout, so revalidating it is enough. */
 export const DASHBOARD_PATH = "/dashboard";

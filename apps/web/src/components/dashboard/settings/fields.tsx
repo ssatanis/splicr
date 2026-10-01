@@ -46,7 +46,7 @@ interface TextFieldProps {
   defaultValue?: string;
   placeholder?: string;
   hint?: React.ReactNode;
-  type?: "text" | "email";
+  type?: "text" | "email" | "url";
   maxLength?: number;
   pattern?: string;
   /** Shown by the browser when `pattern` rejects what was typed. */

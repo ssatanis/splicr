@@ -4,12 +4,16 @@
  * the HTML a reader would get.
  */
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import test from "node:test";
 
 import * as React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { loadTs } from "./helpers/load-ts.mjs";
+
+const src = path.join(import.meta.dirname, "../src");
 
 class Redirected extends Error {
   constructor(to) {
@@ -205,23 +209,6 @@ test("the CSV of outcomes keeps the four results, defuses formulas and labels th
   assert.match(sample, /filters: result = failed/);
 });
 
-const demoContext = { isDemo: true, user: null, org: null, role: null };
-
-test("the demonstration is the only path that touches the fixture, and it says so", async () => {
-  const html = await render(pageHarness({ context: demoContext, view: { status: "unavailable" } }));
-  assert.equal(sampleImports, 1);
-  assert.equal(viewCalls.length, 0, "the demonstration never queries a workspace");
-  assert.match(html, /Sample workspace\. These outcomes are invented/);
-  assert.match(html, /TCP1/);
-  assert.match(html, /A375 ferroptosis sensitizers/);
-  assert.match(html, /nothing is saved when you leave the page/);
-  // 1 validated, 1 failed, 1 inconclusive: half of the two decided.
-  assert.match(html, /50% of decided outcomes validated: 1 of 2/);
-  assert.match(html, /Log an outcome/);
-  // A screen that failed cannot have outcomes logged against it.
-  assert.doesNotMatch(html, /A screen that failed/);
-});
-
 test("a workspace never reads the fixture, whatever its state", async () => {
   for (const view of [ready(), { status: "unavailable" }, { status: "workspace_required" }]) {
     await render(pageHarness({ context: workspace, view }));
@@ -229,14 +216,7 @@ test("a workspace never reads the fixture, whatever its state", async () => {
   }
 });
 
-test("demonstration filters use the same address as a workspace", async () => {
-  const html = await render(pageHarness({ context: demoContext, view: { status: "unavailable" } }), { result: "failed" });
-  assert.match(html, /CDC25C/);
-  assert.doesNotMatch(html, /TCP1|ZEB1/);
-  // The tiles still count every result, so choosing one does not hide the others.
-  assert.match(html, /Validated/);
-  assert.match(html, /1 matches?/);
-  const byGene = await render(pageHarness({ context: demoContext, view: { status: "unavailable" } }), { q: "zeb" });
-  assert.match(byGene, /ZEB1/);
-  assert.doesNotMatch(byGene, /TCP1/);
+test("the Truth Loop page has no fixture import or demo branch", () => {
+  const source = fs.readFileSync(path.join(src, "app/dashboard/validation/page.tsx"), "utf8");
+  assert.doesNotMatch(source, /lib\/mock|isDemo|mode=["']demo/);
 });

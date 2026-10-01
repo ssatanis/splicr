@@ -200,12 +200,10 @@ function harness({ context = workspace, responses = {} } = {}) {
   return { ...mod, queries };
 }
 
-test("a demo or signed-out session never reads a workspace report", async () => {
-  for (const context of [{ isDemo: false, user: null, org: null }, { ...workspace, isDemo: true }]) {
-    const app = harness({ context });
-    assert.equal((await app.getGeneDisagreement(screenId, "PARP1")).status, "not_found");
-    assert.equal(app.queries.length, 0);
-  }
+test("a signed-out session never reads a workspace report", async () => {
+  const app = harness({ context: { user: null, org: null } });
+  assert.equal((await app.getGeneDisagreement(screenId, "PARP1")).status, "not_found");
+  assert.equal(app.queries.length, 0);
 });
 
 test("a screen another workspace owns is not found, and no report read follows", async () => {
@@ -318,10 +316,7 @@ test("effect points carry the recorded values and say which genes can be opened"
   assert.deepEqual(hits.filters, [["screen_id", screenId], ["comparison_id", cmpId]]);
 });
 
-test("effect points are unavailable for a demo session and for a malformed id", async () => {
-  const demo = harness({ context: { ...workspace, isDemo: true } });
-  assert.equal((await demo.getEffectPoints(screenId, cmpId)).status, "unavailable");
-  assert.equal(demo.queries.length, 0);
+test("effect points are unavailable for a malformed id", async () => {
   const app = harness();
   assert.equal((await app.getEffectPoints("nope", cmpId)).status, "unavailable");
   assert.equal(app.queries.length, 0);

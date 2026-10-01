@@ -69,6 +69,30 @@ export function LabPanel({
           hint="The university, company or centre the lab sits in."
         />
         <TextField
+          name="location"
+          label="Location"
+          defaultValue={org?.location ?? ""}
+          placeholder="City, region"
+          maxLength={160}
+        />
+        <TextField
+          name="time_zone"
+          label="Lab time zone"
+          defaultValue={org?.time_zone ?? ""}
+          placeholder="America/New_York"
+          maxLength={80}
+          hint="Used for laboratory timestamps when a researcher has no personal override."
+        />
+        <TextField
+          name="logo_url"
+          label="Lab logo URL"
+          type="url"
+          defaultValue={org?.logo_url ?? ""}
+          placeholder="https://lab.example/logo.svg"
+          maxLength={2048}
+          hint="Optional HTTPS asset for reports and shared workspace identity."
+        />
+        <TextField
           name="branding.contact_email"
           label="Contact email"
           type="email"

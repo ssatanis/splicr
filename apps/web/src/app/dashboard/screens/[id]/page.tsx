@@ -45,17 +45,6 @@ const HUMAN = 9606;
 
 export default async function ScreenPage(props: PageProps<"/dashboard/screens/[id]">) {
   const [{ id }, search, context] = await Promise.all([props.params, props.searchParams, getCurrentContext()]);
-  if (context.isDemo) {
-    // The explicit demo session is the only path allowed to import sample data.
-    const [{ ScreenWorkspace }, { screens }] = await Promise.all([
-      import("@/components/dashboard/screen-workspace"),
-      import("@/lib/mock/data"),
-    ]);
-    const screen = screens.find((item) => item.id === id);
-    if (!screen) notFound();
-    return <ScreenWorkspace screen={screen} tab={typeof search.tab === "string" ? search.tab : "overview"} />;
-  }
-
   const query = parseHitQuery(search);
   const result = await getScreenDetail(id, query.page, query);
   if (result.status === "not_found") notFound();

@@ -30,17 +30,21 @@ const KEYS = [
   "reauthentication",
 ];
 
-/** Every colour the six messages are allowed to paint with: white, near black,
- *  dark navy, and near black over white at the four documented opacities. */
+/** Every colour the six messages are allowed to paint with: the public SplicR
+ * brand palette plus its accessible text and line neutrals. */
 const PALETTE = new Set([
   "#ffffff",
-  "#111111",
-  "#24334b",
-  "#3d3d3d",
-  "#757575",
-  "#e2e2e2",
-  "#f1f1f1",
-  "#f7f7f7",
+  "#174f62",
+  "#113d4c",
+  "#bfd8de",
+  "#c2560a",
+  "#fee8c9",
+  "#fff6ea",
+  "#4f6470",
+  "#626b78",
+  "#d3dbe1",
+  "#e6ebef",
+  "#eef5f7",
 ]);
 
 test("the set is the six Supabase templates, once each", () => {
@@ -58,10 +62,10 @@ test("subjects are the agreed lines, with no exclamation and no product jargon",
     AUTH_EMAILS.map((email) => email.subject),
     [
       "Confirm your SplicR email",
-      "You have been invited to SplicR",
-      "Your SplicR verification code",
+      "Your SplicR invitation code",
+      "Your SplicR sign-in code",
       "Confirm your new SplicR email",
-      "Reset your SplicR password",
+      "Your SplicR password reset code",
       "Verify your SplicR identity",
     ],
   );
@@ -140,17 +144,14 @@ for (const email of AUTH_EMAILS) {
   });
 }
 
-test("link-bearing messages also show the address, code-bearing ones do not", () => {
+test("every message is code-only and exposes no authentication infrastructure", () => {
   for (const email of AUTH_EMAILS) {
-    const hasLink = email.variables.includes("{{ .ConfirmationURL }}");
-    assert.equal(
-      email.html.includes("paste this address into your browser"),
-      hasLink,
-      `${email.key} fallback`,
-    );
-    if (hasLink) assert.ok(email.html.includes('<a href="{{ .ConfirmationURL }}"'), email.key);
+    assert.ok(email.variables.includes("{{ .Token }}"), `${email.key} has a one-time code`);
+    assert.ok(!email.html.includes("{{ .ConfirmationURL }}"), `${email.key} has no token link`);
+    assert.ok(!/<a\b|href\s*=/i.test(email.html), `${email.key} has no clickable link`);
+    assert.ok(!/supabase|auth\/v1\/verify|token_hash/i.test(email.html), `${email.key} hides infrastructure`);
+    assert.ok(!/paste this address into your browser/i.test(email.html), `${email.key} has no URL fallback`);
   }
-  // Reauthentication is code only: Supabase provides no link for it.
   assert.deepEqual(authEmail("reauthentication").variables, ["{{ .Token }}"]);
 });
 
@@ -171,6 +172,7 @@ test("the checked-in templates match the module", () => {
 test("the preview substitutes placeholders that cannot be mistaken for live ones", () => {
   const preview = renderPreview(authEmail("invite"));
   assert.ok(!preview.includes("{{"), "no variable survives the preview");
-  assert.ok(preview.includes("PREVIEW_TOKEN_HASH_NOT_A_REAL_LINK"));
+  assert.ok(preview.includes("418902"));
+  assert.ok(!/supabase|auth\/v1\/verify|token_hash/i.test(preview));
   assert.ok(Object.values(PREVIEW_VALUES).every((value) => value.length > 0));
 });

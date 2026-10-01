@@ -172,7 +172,7 @@ export async function getGeneDisagreement(
   const symbol = normaliseSymbol(gene);
   if (!isUuid(screenId) || symbol.length === 0) return { status: "not_found" };
   const context = await getCurrentContext();
-  if (context.isDemo || !context.user || !context.org) return { status: "not_found" };
+  if (!context.user || !context.org) return { status: "not_found" };
   try {
     const client = await createClient();
     const owned = await client.from("screens")
@@ -246,7 +246,7 @@ export async function getEffectPoints(
 ): Promise<EffectPointsResult> {
   if (!isUuid(screenId) || !isUuid(comparisonId)) return { status: "unavailable" };
   const context = await getCurrentContext();
-  if (context.isDemo || !context.user || !context.org) return { status: "unavailable" };
+  if (!context.user || !context.org) return { status: "unavailable" };
   try {
     const client = await createClient();
     const hits = await client.from("hits")

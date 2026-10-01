@@ -1,0 +1,22 @@
+# Local dependency and build output
+node_modules
+**/node_modules
+.next
+**/.next
+*.tsbuildinfo
+
+# The web build uses checked-in summaries, not the raw research lake or the
+# local Python/R execution environments. Excluding these keeps a production
+# upload in megabytes instead of traversing tens of gigabytes.
+/data/
+/engine/.tools/
+/engine/analysis/
+/engine/__pycache__/
+/engine/tests/
+
+# Local tooling and previews
+.codex*
+.claude
+coverage
+apps/web/public/vendor
+apps/web/src/app/dashboard/zz-probe

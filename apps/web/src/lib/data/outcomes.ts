@@ -104,7 +104,7 @@ export function likePattern(text: string): string {
 
 export async function getOutcomeView(filters: OutcomeFilters): Promise<OutcomeViewResult> {
   const context = await getCurrentContext();
-  if (context.isDemo || !context.user || !context.org) return { status: "workspace_required" };
+  if (!context.user || !context.org) return { status: "workspace_required" };
   const orgId = context.org.id;
   const role = context.role;
 
@@ -191,7 +191,7 @@ const EXPORT_CHUNK = 1000;
 
 export async function getOutcomeExport(filters: OutcomeFilters): Promise<OutcomeExportResult> {
   const context = await getCurrentContext();
-  if (context.isDemo || !context.user || !context.org) return { status: "workspace_required" };
+  if (!context.user || !context.org) return { status: "workspace_required" };
   const orgId = context.org.id;
 
   try {
@@ -244,7 +244,7 @@ export async function getGeneOutcomes(
   genes: readonly string[],
 ): Promise<Map<string, { id: string; result: OutcomeResult }> | null> {
   const context = await getCurrentContext();
-  if (context.isDemo || !context.user || !context.org || genes.length === 0) return new Map();
+  if (!context.user || !context.org || genes.length === 0) return new Map();
   try {
     const client = await createClient();
     const result = await client

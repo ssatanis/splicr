@@ -3,8 +3,7 @@
  *
  * A workspace reads its own recorded outcomes for the address in the address
  * bar and logs new ones through server actions that re-check the caller's role.
- * The demonstration is the same view over invented rows held in the browser
- * tab, and it is the only path that imports sample data.
+ * Anonymous and synthetic product paths do not reach this page.
  */
 import { redirect } from "next/navigation";
 
@@ -18,7 +17,6 @@ import {
   OUTCOME_PAGE_SIZE,
   outcomeHref,
   parseOutcomeFilters,
-  type OutcomeRow,
 } from "@/lib/outcomes/model";
 import { GENE_SYMBOL } from "@/lib/outcomes/schema";
 
@@ -41,43 +39,9 @@ function readPrefill(search: Record<string, string | string[] | undefined>) {
 }
 
 export default async function ValidationPage(props: PageProps<"/dashboard/validation">) {
-  const [context, search] = await Promise.all([getCurrentContext(), props.searchParams]);
+  const [, search] = await Promise.all([getCurrentContext(), props.searchParams]);
   const filters = parseOutcomeFilters(search);
   const prefill = readPrefill(search);
-
-  if (context.isDemo) {
-    const { outcomes, screens } = await import("@/lib/mock/data");
-    const names = new Map(screens.map((screen) => [screen.id, screen.name]));
-    const rows: OutcomeRow[] = outcomes.map((outcome) => ({
-      id: outcome.id,
-      screenId: outcome.screenId,
-      screenName: names.get(outcome.screenId) ?? null,
-      gene: outcome.gene,
-      result: outcome.result,
-      assay: outcome.assay,
-      effectSize: null,
-      nGuides: null,
-      predicted: outcome.predicted,
-      modelVersion: null,
-      notes: null,
-      evidenceUrl: null,
-      loggedAt: outcome.loggedAt,
-      loggedBy: outcome.by,
-      hitLinked: true,
-    }));
-    return (
-      <TruthLoopView
-        mode="demo"
-        rows={rows}
-        screens={screens.filter((s) => s.status === "complete").map((s) => ({ id: s.id, name: s.name }))}
-        filters={filters}
-        canWrite
-        canDelete
-        prefill={prefill}
-        exportHref=""
-      />
-    );
-  }
 
   const view = await getOutcomeView(filters);
   if (view.status !== "ready") {

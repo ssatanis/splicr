@@ -61,12 +61,10 @@ const present = (extra = {}) => ({
 const paged = (app) => app.queries.find((q) => q.table === "hits" && !q.options?.head);
 const heads = (app) => app.queries.filter((q) => q.table === "hits" && q.options?.head);
 
-test("anonymous and demo contexts never query workspace rows", async () => {
-  for (const context of [{ isDemo: false, user: null, org: null }, { ...workspace, isDemo: true }]) {
-    const app = harness({ context });
-    assert.equal((await app.getScreenDetail(screenId)).status, "not_found");
-    assert.equal(app.queries.length, 0);
-  }
+test("anonymous contexts never query workspace rows", async () => {
+  const app = harness({ context: { user: null, org: null } });
+  assert.equal((await app.getScreenDetail(screenId)).status, "not_found");
+  assert.equal(app.queries.length, 0);
 });
 
 test("invalid identity and unbounded page input are rejected before reads", async () => {
@@ -243,12 +241,10 @@ const filtersStub = function HitFilters() { return React.createElement("div", { 
 
 const realStore = loadTs("lib/atlas/store.ts", { mocks: { "server-only": {} } });
 let sampleReads = 0;
-let workspaceReads = 0;
 let readArgs = null;
 
 function pageHarness({ context = workspace, result, outcomes = new Map(), atlas = realStore } = {}) {
   sampleReads = 0;
-  workspaceReads = 0;
   const mocks = {
     "server-only": {},
     "next/link": { __esModule: true, default: anchor },
@@ -267,7 +263,7 @@ function pageHarness({ context = workspace, result, outcomes = new Map(), atlas 
     "@/lib/data/screen-detail": {
       DETAIL_PAGE_SIZE: 100,
       SIGNIFICANT_FDR: 0.1,
-      getScreenDetail: async (...args) => { workspaceReads++; readArgs = args; return result; },
+      getScreenDetail: async (...args) => { readArgs = args; return result; },
     },
   };
   Object.defineProperty(mocks, "@/lib/mock/data", { enumerable: true, get() { sampleReads++; return { screens: [{ id: "scr_demo" }] }; } });
@@ -421,12 +417,9 @@ test("exports are offered for a run and link to the report route", async () => {
   assert.match(html, new RegExp(`href="/api/report/${screenId}\\?format=json"`));
 });
 
-test("sample detail is accessible only through explicit demo session", async () => {
-  const demo = pageHarness({ context: { ...workspace, isDemo: true } });
-  assert.match(await demo.render("scr_demo"), /SAMPLE_VIEW/);
-  assert.equal(workspaceReads, 0);
-  const signedIn = pageHarness({ result: { status: "not_found" } });
-  await assert.rejects(() => signedIn.render("scr_demo"), NotFound);
+test("the retired demo marker cannot load sample detail", async () => {
+  const app = pageHarness({ context: { ...workspace, isDemo: true }, result: { status: "not_found" } });
+  await assert.rejects(() => app.render("scr_demo"), NotFound);
   assert.equal(sampleReads, 0);
 });
 

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Suspense } from "react";
 
 import { Card, DenseTable, PageHeader } from "@/components/dashboard/ui";
 import { RecordPages, WorkspaceReadNotice } from "@/components/dashboard/workspace-records";
@@ -10,11 +9,7 @@ export const metadata = { title: "Screens" };
 export const dynamic = "force-dynamic";
 
 export default async function ScreensPage(props: PageProps<"/dashboard/screens">) {
-  const [context, search] = await Promise.all([getCurrentContext(), props.searchParams]);
-  if (context.isDemo) {
-    const { ScreensTable } = await import("@/components/dashboard/screens-table");
-    return <Suspense fallback={<div aria-hidden="true" />}><ScreensTable /></Suspense>;
-  }
+  const [, search] = await Promise.all([getCurrentContext(), props.searchParams]);
   const page = typeof search.page === "string" ? Number(search.page) : 1;
   const result = await getWorkspaceScreens(page);
   return <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pb-6">

@@ -70,15 +70,14 @@ test("the advanced workspace labels its sample status and avoids forbidden brand
   assert.doesNotMatch(files, /\bLLM\b|\bAI[- ]?(powered|generated|assistant|agent)\b/i);
 });
 
-test("the illustrative workspace is gated with the real console, not public", () => {
-  // Every figure on /pitch is invented. On the public site it would serve numbers
-  // that look like measurements to anyone who found the URL, so it lives behind
-  // the same flag as the console whose numbers are real.
+test("the illustrative workspace is gated while the real console remains reachable", () => {
+  // Every figure on /pitch is invented, so it is always unavailable. The real
+  // dashboard remains reachable and applies its own session gate.
   const proxy = fs.readFileSync(srcPath("lib/supabase/proxy.ts"), "utf8");
   const list = proxy.slice(proxy.indexOf("const DISABLED_PREFIXES"),
                            proxy.indexOf("];", proxy.indexOf("const DISABLED_PREFIXES")));
   assert.match(list, /"\/pitch"/);
-  assert.match(list, /"\/dashboard"/);
+  assert.doesNotMatch(list, /"\/dashboard"/);
 });
 
 test("no hidden gesture reaches it from a public page", () => {

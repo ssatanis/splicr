@@ -41,12 +41,12 @@ export interface InviteView {
   token: string;
   expiresLabel: string;
   expired: boolean;
+  deliveryState: "pending" | "sent" | "existing_user" | "failed" | "revoked";
+  deliveryError: string | null;
 }
 
 /** Everything the controls need in order to decide what is allowed. */
 export interface MembersPermissions {
-  /** Read-only demo browsing. Controls render, disabled, and nothing is sent. */
-  demo: boolean;
   /** True for admins and owners: the role and remove controls are theirs. */
   canManage: boolean;
   /** The viewer's own role, which is the ceiling on any role they may grant. */
@@ -73,10 +73,6 @@ export const ROLE_SUMMARY: Record<OrgRole, string> = {
   viewer: "Reads screens, hits and reports. Cannot start a run or change anything.",
 };
 
-/** The one line the page shows a demo visitor. */
-export const DEMO_NOTICE =
-  "You are browsing the SplicR demo. The people below are sample data and every control on this page is disabled.";
-
 const LAST_OWNER_ROLE =
   "This is the only owner of the workspace. Make somebody else an owner first, then this role can change.";
 const LAST_OWNER_REMOVE =
@@ -99,12 +95,8 @@ const OWNER_OUTRANKS_REMOVE = "Only an owner can remove an owner.";
  * re-reads the caller's role inside the action, and Row Level Security checks
  * it again on the statement.
  *
- * Demo mode returns null on purpose. There every control is disabled anyway and
- * the page says why once, which reads better than the same sentence repeated on
- * every row.
  */
 export function roleLockReason(member: MemberView, perms: MembersPermissions): string | null {
-  if (perms.demo) return null;
   if (member.role === "owner" && perms.ownerCount <= 1) return LAST_OWNER_ROLE;
   if (ROLE_RANK[member.role] > ROLE_RANK[perms.callerRole]) return OWNER_OUTRANKS_ROLE;
   return null;
@@ -112,7 +104,6 @@ export function roleLockReason(member: MemberView, perms: MembersPermissions): s
 
 /** Why this member cannot be removed, or null when they can. Mirrors `removeMember`. */
 export function removeLockReason(member: MemberView, perms: MembersPermissions): string | null {
-  if (perms.demo) return null;
   if (member.role === "owner" && perms.ownerCount <= 1) {
     return member.isSelf ? LAST_OWNER_LEAVE : LAST_OWNER_REMOVE;
   }

@@ -59,7 +59,7 @@ export async function GET(
   }
 
   const context = await getCurrentContext();
-  if (context.isDemo || !context.user || !context.org) {
+  if (!context.user || !context.org) {
     return NextResponse.json({ error: "Sign in to read a workspace screen." }, { status: 401 });
   }
 

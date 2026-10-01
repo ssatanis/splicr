@@ -16,6 +16,8 @@ const { site } = loadTs("lib/site.ts");
  *  only by the verification pipeline, never by hand. */
 const ALLOWED = [
   "apps/web/src/app/(marketing)/about/page.tsx",
+  // Required executive email identities, not public location or brand copy.
+  "apps/web/src/lib/executive/constants.ts",
   "apps/web/tests/branding-location.test.mjs",
 ];
 const ALLOWED_DIRS = ["research/", "docs/", "data/", "apps/web/public/evidence/"];

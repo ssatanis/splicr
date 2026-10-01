@@ -1,30 +1,27 @@
 "use client";
 
 /**
- * Invite somebody to the lab, and look after the links that are still open.
+ * Invite somebody to the lab, and look after the codes that are still open.
  *
- * `inviteMember` writes the `org_invites` row and hands back the token exactly
- * once. Nothing in SplicR sends the email yet, so the panel says so and gives
- * the link to send by hand rather than implying an inbox somewhere.
+ * `inviteMember` writes the authorization and invite rows, then the trusted
+ * server sends either an invitation code or an existing-account sign-in code.
  */
 
-import { Check, Copy, Loader2, UserPlus, X } from "lucide-react";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { Loader2, RefreshCw, UserPlus, X } from "lucide-react";
+import { useState, useTransition } from "react";
 
 import { Card, Flag, StatusBadge } from "@/components/dashboard/ui";
-import { inviteMember, revokeInvite } from "@/lib/data/actions";
+import { inviteMember, retryInvite, revokeInvite } from "@/lib/data/actions";
 import { ROLE_LABEL, type OrgRole } from "@/lib/data/types";
 import { cn } from "@/lib/utils";
 
-import { ActionNote, Locked, RoleMenu } from "./controls";
-import { ROLE_CHIP, expiryLabel, inviteUrl, type InviteView } from "./shared";
-
-const EXPIRED_COPY_REASON = "This link has expired. Revoke it and invite again to issue a new one.";
+import { ActionNote, RoleMenu } from "./controls";
+import { ROLE_CHIP, expiryLabel, type InviteView } from "./shared";
 
 interface CreatedInvite {
   email: string;
-  url: string;
   expiresLabel: string;
+  deliveryState: string;
 }
 
 interface PanelNote {
@@ -35,12 +32,10 @@ interface PanelNote {
 export function InvitePanel({
   invites,
   callerRole,
-  demo,
 }: {
   invites: InviteView[];
   /** The viewer's role, which is the highest role they may hand out. */
   callerRole: OrgRole;
-  demo: boolean;
 }) {
   const [isPending, startTransition] = useTransition();
   const [email, setEmail] = useState("");
@@ -54,7 +49,7 @@ export function InvitePanel({
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (demo || busy) return;
+    if (busy) return;
 
     const address = email.trim();
     if (!address) {
@@ -72,15 +67,30 @@ export function InvitePanel({
       }
       setCreated({
         email: address,
-        url: inviteUrl(result.token),
         expiresLabel: expiryLabel(result.expiresAt),
+        deliveryState: result.deliveryState,
       });
       setEmail("");
     });
   }
 
+  function retry(invite: InviteView) {
+    if (busy) return;
+    setListNote(null);
+    setActingId(invite.id);
+    startTransition(async () => {
+      const result = await retryInvite(invite.id);
+      setActingId(null);
+      setListNote(
+        result.ok
+          ? { tone: "ok", text: `The invitation for ${invite.email} was sent again.` }
+          : { tone: "err", text: result.error },
+      );
+    });
+  }
+
   function revoke(invite: InviteView) {
-    if (demo || busy) return;
+    if (busy) return;
     setListNote(null);
     setActingId(invite.id);
     startTransition(async () => {
@@ -112,7 +122,7 @@ export function InvitePanel({
             className="underline-input"
             placeholder="colleague@university.edu"
             value={email}
-            disabled={demo || busy}
+            disabled={busy}
             onChange={(event) => setEmail(event.target.value)}
           />
         </div>
@@ -123,7 +133,7 @@ export function InvitePanel({
             <RoleMenu
               value={role}
               maxRole={callerRole}
-              disabled={demo || busy}
+              disabled={busy}
               label="Role for the person you are inviting"
               align="left"
               onSelect={setRole}
@@ -132,7 +142,7 @@ export function InvitePanel({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button type="submit" className="btn btn-orange btn-sm" disabled={demo || busy}>
+          <button type="submit" className="btn btn-orange btn-sm" disabled={busy}>
             {busy && actingId === null ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
@@ -140,7 +150,7 @@ export function InvitePanel({
             )}
             Create invite
           </button>
-          <span className="text-xs text-muted">The link is good for 14 days.</span>
+          <span className="text-xs text-muted">The invitation code is good for 14 days.</span>
         </div>
 
         {formNote && <ActionNote tone={formNote.tone}>{formNote.text}</ActionNote>}
@@ -150,23 +160,18 @@ export function InvitePanel({
         <div className="mt-4 rounded-2xl border border-cyan-100 bg-cyan-50 p-3">
           <div className="flex items-start justify-between gap-2">
             <p className="min-w-0 text-sm text-ink">
-              The invite for {created.email} is ready. SplicR does not send the email, so send them
-              this link yourself. {created.expiresLabel}.
+              {created.deliveryState === "failed"
+                ? `Access for ${created.email} is authorized, but delivery failed. Retry from the pending invitation below.`
+                : `The invitation for ${created.email} was sent. ${created.expiresLabel}.`}
             </p>
             <button
               type="button"
-              aria-label="Dismiss the new invite link"
+              aria-label="Dismiss the invitation status"
               className="shrink-0 rounded-full p-1 text-muted transition-colors hover:bg-white hover:text-ink"
               onClick={() => setCreated(null)}
             >
               <X className="h-3.5 w-3.5" />
             </button>
-          </div>
-          <div className="mt-2 flex items-center gap-2">
-            <code className="min-w-0 flex-1 truncate rounded-lg bg-white px-2 py-1.5 font-mono text-[11px] text-ink">
-              {created.url}
-            </code>
-            <CopyButton value={created.url} />
           </div>
         </div>
       )}
@@ -185,7 +190,7 @@ export function InvitePanel({
 
         {invites.length === 0 ? (
           <p className="mt-2 text-sm text-muted">
-            Nobody is waiting. Anyone you invite stays here until they join or the link expires.
+            Nobody is waiting. Anyone you invite stays here until they join or the code expires.
           </p>
         ) : (
           <ul className="mt-1 divide-y divide-line">
@@ -203,25 +208,35 @@ export function InvitePanel({
                       >
                         {ROLE_LABEL[invite.role]}
                       </span>
-                      {invite.expired ? <Flag label="Expired" /> : <StatusBadge status="pending" />}
+                      {invite.expired ? (
+                        <Flag label="Expired" />
+                      ) : invite.deliveryState === "failed" ? (
+                        <Flag label="Delivery failed" />
+                      ) : (
+                        <StatusBadge status="pending" />
+                      )}
                       <span className="text-[11px] text-muted">{invite.expiresLabel}</span>
                     </div>
                   </div>
 
                   <div className="flex shrink-0 items-center gap-1.5">
-                    <CopyButton
-                      value={inviteUrl(invite.token)}
-                      disabled={demo || invite.expired}
-                      reason={invite.expired && !demo ? EXPIRED_COPY_REASON : null}
-                      compact
-                    />
+                    {invite.deliveryState === "failed" && !invite.expired && (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => retry(invite)}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-line-strong bg-white px-2.5 py-1.5 text-xs text-ink hover:border-navy"
+                      >
+                        <RefreshCw className="h-3 w-3" /> Retry
+                      </button>
+                    )}
                     <button
                       type="button"
-                      disabled={demo || busy}
+                      disabled={busy}
                       onClick={() => revoke(invite)}
                       className={cn(
                         "inline-flex items-center gap-1.5 rounded-full border border-line-strong bg-white px-2.5 py-1.5 text-xs whitespace-nowrap text-ink transition-colors",
-                        demo || busy
+                        busy
                           ? "cursor-not-allowed opacity-55"
                           : "hover:border-red-200 hover:bg-red-50 hover:text-red-700",
                       )}
@@ -239,85 +254,5 @@ export function InvitePanel({
         )}
       </div>
     </Card>
-  );
-}
-
-/**
- * Copies a value, and falls back to showing it when it cannot.
- *
- * `navigator.clipboard` is missing outside a secure context and can be refused
- * by browser settings, so a copy button that assumes it works is a button that
- * sometimes silently does nothing. On failure the link is revealed, selected,
- * and can be copied by hand.
- */
-function CopyButton({
-  value,
-  disabled = false,
-  reason = null,
-  compact = false,
-}: {
-  value: string;
-  disabled?: boolean;
-  reason?: string | null;
-  compact?: boolean;
-}) {
-  const [state, setState] = useState<"idle" | "done" | "manual">("idle");
-  const timer = useRef<number | null>(null);
-  const field = useRef<HTMLInputElement>(null);
-
-  useEffect(
-    () => () => {
-      if (timer.current !== null) window.clearTimeout(timer.current);
-    },
-    [],
-  );
-
-  useEffect(() => {
-    if (state === "manual") field.current?.select();
-  }, [state]);
-
-  async function copy() {
-    try {
-      if (!navigator.clipboard) throw new Error("clipboard unavailable");
-      await navigator.clipboard.writeText(value);
-      setState("done");
-      if (timer.current !== null) window.clearTimeout(timer.current);
-      timer.current = window.setTimeout(() => setState("idle"), 2200);
-    } catch {
-      setState("manual");
-    }
-  }
-
-  return (
-    <span className="inline-flex flex-col items-end gap-1.5">
-      <Locked reason={disabled ? reason : null}>
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={copy}
-          className={cn(
-            "inline-flex items-center gap-1.5 rounded-full border border-line-strong bg-white px-2.5 py-1.5 text-xs whitespace-nowrap text-ink transition-colors",
-            disabled ? "cursor-not-allowed opacity-55" : "hover:bg-mist-soft",
-          )}
-        >
-          {state === "done" ? (
-            <Check className="h-3 w-3 shrink-0 text-cyan-600" />
-          ) : (
-            <Copy className="h-3 w-3 shrink-0" />
-          )}
-          {state === "done" ? "Copied" : compact ? "Link" : "Copy link"}
-        </button>
-      </Locked>
-
-      {state === "manual" && (
-        <input
-          ref={field}
-          readOnly
-          value={value}
-          aria-label="Invite link, copy it from here"
-          className="w-48 max-w-full rounded-lg border border-line bg-white px-2 py-1 font-mono text-[11px] text-ink"
-        />
-      )}
-    </span>
   );
 }

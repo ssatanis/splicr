@@ -77,8 +77,8 @@ export default async function InvitePage({
       <Sheet>
         <Heading title="You have been invited to a lab" />
         <p className="text-body">
-          Sign in with the address the invite was sent to, and you will land in the workspace. If
-          you have no account yet, create one with that same address first.
+          Use the invitation email sent to this address. It creates the authorized identity for a
+          new researcher; existing researchers can sign in here to accept the workspace invitation.
         </p>
         <div className="mt-6 flex flex-wrap gap-2">
           <Link
@@ -86,12 +86,6 @@ export default async function InvitePage({
             className="btn btn-orange btn-sm"
           >
             Sign in to accept
-          </Link>
-          <Link
-            href={`/signup?next=${encodeURIComponent(`/invite/${token}`)}`}
-            className="btn btn-ghost btn-sm"
-          >
-            Create an account
           </Link>
         </div>
       </Sheet>

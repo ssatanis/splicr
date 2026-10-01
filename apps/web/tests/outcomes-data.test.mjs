@@ -259,11 +259,10 @@ test("the gene lookup is exact and case-insensitive: underscores are escaped, wi
   assert.equal(filterValue(hitQuery, "ilike", "gene_symbol"), "KRAS\\_G12V");
 });
 
-test("demo, signed-out and non-member callers are refused before anything is read", async () => {
+test("signed-out and non-member callers are refused before anything is read", async () => {
   const cases = [
-    [{ isDemo: true, user: null, org: null }, /demo/i],
-    [{ isDemo: false, user: null, org: null }, /session has ended/],
-    [{ isDemo: false, user: { id: USER }, org: null }, /not a member of a SplicR workspace/],
+    [{ user: null, org: null }, /session has ended/],
+    [{ user: { id: USER }, org: null }, /not a member of a SplicR workspace/],
   ];
   for (const [context, message] of cases) {
     const app = actionsHarness({ context });

@@ -18,7 +18,6 @@ import { InvitePanel } from "@/components/dashboard/members/invite-panel";
 import { MembersTable } from "@/components/dashboard/members/members-table";
 import { RoleLegend } from "@/components/dashboard/members/role-legend";
 import {
-  DEMO_NOTICE,
   expiryLabel,
   type InviteView,
   type MemberView,
@@ -32,13 +31,10 @@ import {
   type OrgInvite,
   type OrgMember,
 } from "@/lib/data/org";
-import { DEMO_ORG, roleAtLeast, type OrgRole } from "@/lib/data/types";
-import { demoInvites, demoMembers } from "@/lib/mock/members";
+import { roleAtLeast, type OrgRole } from "@/lib/data/types";
 import { formatDate } from "@/lib/utils";
 
 export const metadata = { title: "Lab members" };
-
-const DAY_MS = 86_400_000;
 
 interface MembersViewProps {
   orgName: string;
@@ -56,16 +52,12 @@ export default async function MembersPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const [{ user, org, role, isDemo }, query] = await Promise.all([
+  const [{ user, org, role }, query] = await Promise.all([
     getCurrentContext(),
     searchParams,
   ]);
   const joined = query.joined === "1";
 
-  // Only an explicit demo session may display illustrative people or invites.
-  if (isDemo) {
-    return <MembersView {...demoView()} />;
-  }
   if (user === null) {
     return <Card title="Session unavailable"><p>Sign in again to view your workspace members.</p></Card>;
   }
@@ -77,7 +69,7 @@ export default async function MembersPage({
         <Card>
           <Empty
             title="You are not in a workspace yet"
-            body="A workspace holds the screens, runs and validation outcomes your lab shares. Create one, or open the invite link somebody sent you."
+            body="A workspace holds the screens, runs and validation outcomes your lab shares. Create one, or enter the invitation code somebody sent you."
             action={
               <Link href="/dashboard/settings" className="btn btn-teal btn-sm">
                 Workspace settings
@@ -109,7 +101,6 @@ export default async function MembersPage({
       notice={null}
       joined={joined}
       perms={{
-        demo: false,
         canManage,
         // A viewer or a member never reaches a control, so the ceiling only
         // matters for admins and owners. Default to viewer rather than to
@@ -145,45 +136,9 @@ function toInviteViews(rows: OrgInvite[]): InviteView[] {
     token: invite.token,
     expiresLabel: expiryLabel(invite.expires_at, now),
     expired: invite.expired,
+    deliveryState: invite.delivery_state,
+    deliveryError: invite.delivery_error,
   }));
-}
-
-/** Sample content for demo mode, with every control shown and disabled. */
-function demoView(): MembersViewProps {
-  const now = Date.now();
-
-  return {
-    orgName: DEMO_ORG.name,
-    notice: DEMO_NOTICE,
-    members: demoMembers.map((member) => ({
-      id: member.id,
-      name: member.name,
-      email: member.email,
-      role: member.role,
-      joinedLabel: formatDate(new Date(now - member.joinedDaysAgo * DAY_MS).toISOString()),
-      isSelf: false,
-    })),
-    invites: demoInvites.map((invite) => ({
-      id: invite.id,
-      email: invite.email,
-      role: invite.role,
-      token: invite.token,
-      expiresLabel: expiryLabel(
-        new Date(now + invite.expiresInDays * DAY_MS).toISOString(),
-        now,
-      ),
-      expired: invite.expiresInDays <= 0,
-    })),
-    perms: {
-      demo: true,
-      // An owner's view, so the demo shows the whole page rather than the
-      // stripped down one a viewer would get. Nothing here can be submitted:
-      // the controls are disabled, and every action refuses demo callers.
-      canManage: true,
-      callerRole: "owner",
-      ownerCount: demoMembers.filter((member) => member.role === "owner").length,
-    },
-  };
 }
 
 function Header() {
@@ -203,7 +158,7 @@ function Header() {
 
 function MembersView({ orgName, members, invites, perms, notice, joined }: MembersViewProps) {
   const count = members.length;
-  const callerRole: OrgRole | null = perms.demo ? null : perms.callerRole;
+  const callerRole: OrgRole | null = perms.callerRole;
 
   return (
     <div className="space-y-5">
@@ -253,7 +208,7 @@ function MembersView({ orgName, members, invites, perms, notice, joined }: Membe
 
         <div className="min-w-0 space-y-5">
           {perms.canManage && (
-            <InvitePanel invites={invites} callerRole={perms.callerRole} demo={perms.demo} />
+            <InvitePanel invites={invites} callerRole={perms.callerRole} />
           )}
           <RoleLegend callerRole={callerRole} />
         </div>

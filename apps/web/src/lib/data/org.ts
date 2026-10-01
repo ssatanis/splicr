@@ -12,17 +12,13 @@
  */
 import "server-only";
 
-import { cookies } from "next/headers";
 import { cache } from "react";
 
 import { supabaseConfigured } from "@/lib/supabase/env";
-import { DEMO_COOKIE } from "@/lib/supabase/proxy";
 import { createClient } from "@/lib/supabase/server";
 
 import {
   DEFAULT_WORKSPACE_SETTINGS,
-  DEMO_ORG,
-  DEMO_ORG_ID,
   ROLE_RANK,
   isOrgKind,
   isOrgRole,
@@ -73,6 +69,12 @@ interface ProfileRow {
   avatar_url: string | null;
   orcid?: string | null;
   default_org_id?: string | null;
+  preferred_title?: string | null;
+  professional_role?: string | null;
+  institution?: string | null;
+  time_zone?: string | null;
+  onboarding_step?: number | null;
+  onboarding_completed_at?: string | null;
 }
 
 interface OrganizationRow {
@@ -83,6 +85,9 @@ interface OrganizationRow {
   plan: string;
   created_at: string;
   updated_at: string;
+  logo_url?: string | null;
+  location?: string | null;
+  time_zone?: string | null;
 }
 
 interface MembershipRow {
@@ -105,6 +110,9 @@ interface InviteRow {
   invited_by: string | null;
   expires_at: string;
   created_at: string;
+  delivery_state: OrgInvite["delivery_state"];
+  delivered_at: string | null;
+  delivery_error: string | null;
 }
 
 interface ApiKeyRow {
@@ -119,9 +127,9 @@ interface ApiKeyRow {
   revoked_at: string | null;
 }
 
-const PROFILE_COLUMNS = "id, email, full_name, avatar_url, orcid, default_org_id";
-const ORGANIZATION_COLUMNS = "id, slug, name, kind, plan, created_at, updated_at";
-const INVITE_COLUMNS = "id, email, role, token, invited_by, expires_at, created_at";
+const PROFILE_COLUMNS = "id, email, full_name, avatar_url, orcid, default_org_id, preferred_title, professional_role, institution, time_zone, onboarding_step, onboarding_completed_at";
+const ORGANIZATION_COLUMNS = "id, slug, name, kind, plan, created_at, updated_at, logo_url, location, time_zone";
+const INVITE_COLUMNS = "id, email, role, token, invited_by, expires_at, created_at, delivery_state, delivered_at, delivery_error";
 const API_KEY_COLUMNS =
   "id, name, key_prefix, scopes, created_by, created_at, last_used_at, expires_at, revoked_at";
 
@@ -148,7 +156,7 @@ function noteFailure(scope: string, detail: unknown): void {
 
 /** A real organization id, as opposed to the demo placeholder. */
 function isQueryableOrgId(orgId: string | null | undefined): orgId is string {
-  return isUuid(orgId) && orgId !== DEMO_ORG_ID && supabaseConfigured;
+  return isUuid(orgId) && supabaseConfigured;
 }
 
 function toOrganization(row: OrganizationRow | null): Organization | null {
@@ -161,6 +169,9 @@ function toOrganization(row: OrganizationRow | null): Organization | null {
     plan: isPlanTier(row.plan) ? row.plan : "free",
     created_at: row.created_at,
     updated_at: row.updated_at,
+    logo_url: row.logo_url ?? null,
+    location: row.location ?? null,
+    time_zone: row.time_zone ?? null,
   };
 }
 
@@ -173,6 +184,12 @@ function toProfile(row: ProfileRow | null): Profile | null {
     avatar_url: row.avatar_url ?? null,
     orcid: row.orcid ?? null,
     default_org_id: row.default_org_id ?? null,
+    preferred_title: row.preferred_title ?? null,
+    professional_role: row.professional_role ?? null,
+    institution: row.institution ?? null,
+    time_zone: row.time_zone ?? null,
+    onboarding_step: row.onboarding_step ?? 1,
+    onboarding_completed_at: row.onboarding_completed_at ?? null,
   };
 }
 
@@ -191,15 +208,12 @@ function apiKeyStatus(row: ApiKeyRow, now: number): ApiKeyStatus {
   return "active";
 }
 
-function anonymousContext(isDemo: boolean): WorkspaceContext {
-  // A demo visitor gets the lowest role so that any role gated control is
-  // already closed before the mutation refuses as well.
+function anonymousContext(): WorkspaceContext {
   return {
     user: null,
     profile: null,
-    org: isDemo ? DEMO_ORG : null,
-    role: isDemo ? "viewer" : null,
-    isDemo,
+    org: null,
+    role: null,
   };
 }
 
@@ -221,10 +235,7 @@ function anonymousContext(isDemo: boolean): WorkspaceContext {
  * gets a read-only demo context, and anyone else gets nulls.
  */
 export const getCurrentContext = cache(async (): Promise<WorkspaceContext> => {
-  const cookieStore = await cookies();
-  const isDemoCookie = cookieStore.get(DEMO_COOKIE)?.value === "1";
-
-  if (!supabaseConfigured) return anonymousContext(isDemoCookie);
+  if (!supabaseConfigured) return anonymousContext();
 
   try {
     const supabase = await createClient();
@@ -232,10 +243,19 @@ export const getCurrentContext = cache(async (): Promise<WorkspaceContext> => {
     const claims = claimsData?.claims;
     const userId = typeof claims?.sub === "string" ? claims.sub : null;
 
-    if (!userId) return anonymousContext(isDemoCookie);
+    if (!userId) return anonymousContext();
+
+    // Authentication proves ownership of an Auth identity; this grant decides
+    // whether that identity may enter SplicR. Revoking access therefore takes
+    // effect on the next server render, including magic-link sessions.
+    const access = await supabase.rpc("has_splicr_access");
+    if (access.error || access.data !== true) {
+      if (access.error) noteFailure("getCurrentContext access grant", access.error);
+      return anonymousContext();
+    }
 
     const metadata = (claims?.user_metadata ?? null) as { preferred_title?: unknown } | null;
-    const user: SessionUser = {
+    let user: SessionUser = {
       id: userId,
       email: typeof claims?.email === "string" ? claims.email : null,
       preferredTitle:
@@ -259,6 +279,7 @@ export const getCurrentContext = cache(async (): Promise<WorkspaceContext> => {
     }
 
     const profile = toProfile(asRow<ProfileRow>(profileResult.data));
+    if (profile?.preferred_title) user = { ...user, preferredTitle: profile.preferred_title };
     const memberships = asRows<MembershipRow>(membershipResult.data);
 
     const preferred =
@@ -271,10 +292,10 @@ export const getCurrentContext = cache(async (): Promise<WorkspaceContext> => {
     const roleValue = preferred?.role;
     const role = isOrgRole(roleValue) ? roleValue : null;
 
-    return { user, profile, org, role: org ? role : null, isDemo: false };
+    return { user, profile, org, role: org ? role : null };
   } catch (error) {
     noteFailure("getCurrentContext", error);
-    return anonymousContext(isDemoCookie);
+    return anonymousContext();
   }
 });
 
@@ -446,6 +467,9 @@ export async function listInvites(orgId: string): Promise<OrgInvite[]> {
       invited_by: row.invited_by,
       expires_at: row.expires_at,
       created_at: row.created_at,
+      delivery_state: row.delivery_state,
+      delivered_at: row.delivered_at,
+      delivery_error: row.delivery_error,
       expired: Date.parse(row.expires_at) <= now,
     }));
   } catch (error) {

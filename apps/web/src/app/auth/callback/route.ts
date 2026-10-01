@@ -32,7 +32,9 @@ export async function GET(request: Request) {
   const type = searchParams.get("type") as EmailOtpType | null;
 
   const requested = safeNext(searchParams.get("next"));
-  const destination = type && NEEDS_PASSWORD.includes(type) ? "/reset-password" : requested;
+  const destination = type && NEEDS_PASSWORD.includes(type)
+    ? `/reset-password?next=${encodeURIComponent(type === "invite" ? "/dashboard/onboarding" : requested)}`
+    : requested;
 
   const supabase = await createClient();
 

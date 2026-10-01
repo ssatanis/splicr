@@ -5,11 +5,7 @@ export const metadata = { title: "New screen" };
 export const dynamic = "force-dynamic";
 
 export default async function UploadPage() {
-  const context = await getCurrentContext();
-  if (context.isDemo) {
-    const { UploadWizard } = await import("@/components/dashboard/upload-wizard");
-    return <div><PageHeader eyebrow="Demonstration" title="Upload preview" body="Illustrative files and run progress. No files are uploaded or analyzed." /><UploadWizard /></div>;
-  }
+  await getCurrentContext();
   return <div className="flex flex-col gap-4">
     <PageHeader dense title="Upload a screen" body="New analysis" />
     <Card title="Browser analysis is not connected">

@@ -16,7 +16,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseConfigured } from "@/lib/supabase/env";
 
-import { DEMO_ORG_ID, isUuid, type Modality } from "./types";
+import { isUuid, type Modality } from "./types";
 
 // ---------------------------------------------------------------------------
 // Shapes
@@ -195,9 +195,8 @@ function rows<T>(data: unknown): T[] {
   return Array.isArray(data) ? (data as T[]) : [];
 }
 
-/** A real organization id, as opposed to the demo placeholder. */
 function queryable(orgId: string | null | undefined): orgId is string {
-  return isUuid(orgId) && orgId !== DEMO_ORG_ID && supabaseConfigured;
+  return isUuid(orgId) && supabaseConfigured;
 }
 
 /**

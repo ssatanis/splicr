@@ -17,7 +17,6 @@ import { revalidatePath } from "next/cache";
 import { getCurrentContext, getOrgRole } from "@/lib/data/org";
 import {
   DASHBOARD_PATH,
-  DEMO_REFUSAL,
   actionFailed,
   type ActionResult,
 } from "@/lib/data/types";
@@ -38,7 +37,6 @@ import { createClient } from "@/lib/supabase/server";
 export async function deleteWorkspace(formData: FormData): Promise<ActionResult> {
   const context = await getCurrentContext();
 
-  if (context.isDemo) return actionFailed(DEMO_REFUSAL);
   if (!context.user) return actionFailed("Your session has ended. Sign in again and retry.");
   if (!context.org) return actionFailed("You are not a member of a SplicR workspace yet.");
 

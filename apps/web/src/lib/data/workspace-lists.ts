@@ -24,7 +24,7 @@ export type WorkspaceListResult<T> =
 async function readList<T>(table: "screens", columns: string, date: string, page: number): Promise<WorkspaceListResult<T>> {
   if (!Number.isSafeInteger(page) || page < 1 || page > 10000) return { status: "invalid_page" };
   const context = await getCurrentContext();
-  if (context.isDemo || !context.user || !context.org) return { status: "workspace_required" };
+  if (!context.user || !context.org) return { status: "workspace_required" };
   try {
     const client = await createClient();
     const result = await client.from(table).select(columns, { count: "exact" })

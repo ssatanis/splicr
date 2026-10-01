@@ -102,7 +102,7 @@ export async function searchWorkspace(rawQuery: string): Promise<SearchResponse>
   }
 
   const context = await getCurrentContext().catch(() => null);
-  const canSeeScreens = Boolean(context?.org) && !context?.isDemo;
+  const canSeeScreens = Boolean(context?.org);
   let screens: SearchHit[] = [];
   if (canSeeScreens) {
     const supabase = await createClient().catch(() => null);

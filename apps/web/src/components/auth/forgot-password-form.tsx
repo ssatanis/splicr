@@ -5,8 +5,9 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { Field } from "@/components/auth/auth-form";
+import { VerifyCodeForm } from "@/components/auth/verify-code-form";
 import { Notice, ProblemNotice } from "@/components/ui/notice";
-import { NEUTRAL_EMAIL_RESULT, authProblem, type Problem } from "@/lib/errors";
+import { authProblem, type Problem } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/client";
 import { supabaseConfigured } from "@/lib/supabase/env";
 
@@ -20,7 +21,7 @@ import { supabaseConfigured } from "@/lib/supabase/env";
  * told to check their inbox and finding nothing.
  *
  * Supabase's reset does not create accounts, so there is no equivalent of the
- * one-time link's `shouldCreateUser` to set here.
+ * one-time code request's `shouldCreateUser` to set here.
  */
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
@@ -52,42 +53,41 @@ export function ForgotPasswordForm() {
 
   if (sent) {
     return (
-      <div className="w-full">
-        <h1 className="text-[28px] font-medium leading-tight tracking-[-0.02em] text-ink">Check your email</h1>
-        <p className="mt-2 text-[13.5px] leading-relaxed text-muted">{NEUTRAL_EMAIL_RESULT}</p>
-        <p className="mt-4 text-[13px] leading-relaxed text-muted">
-          The link can be used once. If it has expired by the time you open it, request another.
-        </p>
-        <Link href="/login" className="btn btn-ghost mt-7 w-full">
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back to sign in
-        </Link>
-      </div>
+      <VerifyCodeForm
+        purpose="recovery"
+        initialEmail={email.trim()}
+        onCancel={() => {
+          setSent(false);
+          setProblem(null);
+        }}
+      />
     );
   }
 
   return (
     <div className="w-full">
-      <h1 className="text-[28px] font-medium leading-tight tracking-[-0.02em] text-ink">Reset your password</h1>
-      <p className="mt-2 text-[13.5px] leading-relaxed text-muted">
-        Enter the address on your SplicR account and we will send a secure link for choosing a new
+      <p className="eyebrow mb-3">Secure access</p>
+      <h1 className="font-serif text-[42px] font-medium leading-[0.98] tracking-[-0.03em] text-ink sm:text-[48px]">Reset your password</h1>
+      <p className="mt-3 text-[14px] leading-relaxed text-muted">
+        Enter the address on your SplicR account and we will send a one-time code for choosing a new
         password.
       </p>
 
-      <form onSubmit={request} className="mt-7 space-y-4">
+      <form onSubmit={request} className="mt-8 space-y-4" aria-busy={busy}>
         <Field
           id="email"
           label="Email"
           type="email"
           value={email}
           onChange={setEmail}
-          placeholder="you@lab.edu"
+          placeholder="you@institution.edu"
           autoComplete="username"
           required
         />
         {problem && <ProblemNotice problem={problem} />}
-        <button type="submit" disabled={busy} className="btn btn-navy w-full">
+        <button type="submit" disabled={busy} className="btn btn-teal w-full">
           {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
-          Send reset link
+          Send reset code
         </button>
       </form>
 
@@ -101,7 +101,7 @@ export function ForgotPasswordForm() {
         tone="info"
         className="mt-7"
         title="Access to SplicR is by invitation."
-        action="Resetting a password does not create an account."
+        action="Contact your lab administrator if you expected access and do not have it."
       />
     </div>
   );

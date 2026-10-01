@@ -54,8 +54,8 @@ for (const [method, table] of [["getWorkspaceScreens", "screens"]]) {
     assert.deepEqual(app.reads[0].filters, [["org_id", workspace.org.id]]);
     assert.deepEqual(app.reads[0].range, [100, 149]);
   });
-  test(`${method} rejects demo, expired session and invalid pages before queries`, async () => {
-    for (const context of [{ ...workspace, isDemo: true }, { ...workspace, user: null }, { ...workspace, org: null }]) {
+  test(`${method} rejects expired session and invalid pages before queries`, async () => {
+    for (const context of [{ ...workspace, user: null }, { ...workspace, org: null }]) {
       const app = listHarness(context);
       assert.equal((await app[method]()).status, "workspace_required");
       assert.equal(app.reads.length, 0);
@@ -76,7 +76,7 @@ for (const [method, table] of [["getWorkspaceScreens", "screens"]]) {
 // Atlas, Planner and Truth Loop are not here on purpose. The Atlas and the
 // Planner read no workspace row and are the same for everyone, and the Truth
 // Loop has its own page tests (truth-loop-page.test.mjs). What is left are the
-// two routes that show sample records to a demo session.
+// two routes that previously exposed sample records to a demo session.
 const samples = new Set([
   "@/components/dashboard/screens-table", "@/components/dashboard/upload-wizard",
 ]);
@@ -121,11 +121,11 @@ for (const route of ["screens", "upload"]) {
     assert.doesNotMatch(html, /EXPLICIT_DEMO_CONTENT/);
     assert.equal(app.reads().sampleReads, 0);
   });
-  test(`${route}: explicit demo remains separate from workspace queries`, async () => {
+  test(`${route}: a retired demo marker cannot select fixture content`, async () => {
     const app = routeHarness(route, { ...workspace, isDemo: true });
-    assert.match(await app.render(), /EXPLICIT_DEMO_CONTENT/);
-    assert.equal(app.reads().sampleReads, 1);
-    assert.equal(app.reads().dataReads, 0);
+    assert.doesNotMatch(await app.render(), /EXPLICIT_DEMO_CONTENT/);
+    assert.equal(app.reads().sampleReads, 0);
+    assert.equal(app.reads().dataReads, route === "screens" ? 1 : 0);
   });
 }
 

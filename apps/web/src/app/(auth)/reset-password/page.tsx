@@ -4,14 +4,14 @@ import { Suspense } from "react";
 import { AuthPanel } from "@/components/auth/auth-panel";
 import { SetPasswordForm } from "@/components/auth/set-password-form";
 
-export const metadata: Metadata = { title: "Choose a password" };
+export const metadata: Metadata = { title: "Create your password" };
 
 /**
- * Where both the password-reset link and the invitation link land.
+ * Where both the password-reset code and invitation code flows land.
  *
- * Reaching this page means the link's token has already been exchanged for a
- * session by `/auth/callback`. Without that session there is nothing to update,
- * which the form says rather than failing silently on submit.
+ * Reaching this page normally means the code has already been exchanged for a
+ * session. Without that session there is nothing to update, which the form says
+ * rather than failing silently on submit.
  */
 export default function ResetPasswordPage() {
   return (

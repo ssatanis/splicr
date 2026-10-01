@@ -396,16 +396,8 @@ export interface ConnectPanelProps {
   origin: string;
   orgName: string;
   role: OrgRole | null;
-  /** Owners and admins only, and never in demo mode. */
+  /** Owners and admins only. */
   canManage: boolean;
-  /** True when the visitor has no session and is browsing the demo. */
-  isDemo: boolean;
-  /**
-   * True when `keys` are the demo stand-ins rather than rows from the database.
-   * The panel says so, because a reader must never mistake a fixture for a
-   * credential that exists.
-   */
-  keysAreDemo: boolean;
 }
 
 function Callout({ tone, title, children }: { tone: "info" | "warn"; title: string; children: React.ReactNode }) {
@@ -429,7 +421,7 @@ function Callout({ tone, title, children }: { tone: "info" | "warn"; title: stri
   );
 }
 
-export function ConnectPanel({ keys, screens, origin, orgName, role, canManage, isDemo, keysAreDemo }: ConnectPanelProps) {
+export function ConnectPanel({ keys, screens, origin, orgName, role, canManage }: ConnectPanelProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [minted, setMinted] = useState<{ key: string; name: string } | null>(null);
   const [picked, setPicked] = useState<string | null>(null);
@@ -476,14 +468,7 @@ export function ConnectPanel({ keys, screens, origin, orgName, role, canManage, 
         actions={createButton}
       />
 
-      {isDemo && (
-        <Callout tone="info" title="You are browsing the demo">
-          The demo has no workspace of its own, so nothing is stored and no key can be created. The snippets below are real
-          and point at this instance. Sign in to make a key against your own screens.
-        </Callout>
-      )}
-
-      {!isDemo && !canManage && (
+      {!canManage && (
         <Callout tone="warn" title="Keys are an owner and admin matter">
           Your role in {orgName} is {role ? ROLE_LABEL[role].toLowerCase() : "unassigned"}, so this list is empty for you even
           if the workspace has keys. Ask an owner or an admin to make one, then paste it into the snippets below.
@@ -523,8 +508,7 @@ export function ConnectPanel({ keys, screens, origin, orgName, role, canManage, 
 
       <Panel
         title="API keys"
-        count={keysAreDemo ? "sample rows" : keys.length > 0 ? `${formatNumber(liveKeys)} live of ${formatNumber(keys.length)}` : orgName}
-        caveat={keysAreDemo ? "Sample rows. None of these is a real key, and none can authenticate anything." : undefined}
+        count={keys.length > 0 ? `${formatNumber(liveKeys)} live of ${formatNumber(keys.length)}` : orgName}
         body="flush"
         footer={
           <FootNote>
@@ -535,7 +519,7 @@ export function ConnectPanel({ keys, screens, origin, orgName, role, canManage, 
         {keys.length === 0 ? (
           <div className="p-4">
             <Empty
-              title={isDemo ? "No keys in the demo workspace" : "No API keys yet"}
+              title="No API keys yet"
               body="A key lets a script read this workspace over HTTP: the hits from a screen, their artifact flags and the recorded statistics. Each key carries scopes, and revoking one takes effect on its next request."
               action={canManage ? createButton : undefined}
             />
@@ -607,9 +591,7 @@ export function ConnectPanel({ keys, screens, origin, orgName, role, canManage, 
         )}
         {screens.length === 0 && (
           <p className="mb-3 text-[12.5px] text-muted">
-            {isDemo
-              ? "The demo workspace holds no screens of its own, so the example carries a placeholder id."
-              : "This workspace has no screens yet, so the example uses a placeholder id. Once a screen exists its real id appears here."}
+            This workspace has no screens yet, so the example uses a placeholder id. Once a screen exists its real id appears here.
           </p>
         )}
 

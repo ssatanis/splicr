@@ -46,12 +46,6 @@ export function FirstRun({ orgName, contactHref }: { orgName: string; contactHre
               <Link href={contactHref} className="btn btn-orange btn-sm">
                 Send us a screen
               </Link>
-              <Link
-                href="/api/demo"
-                className="text-[13px] text-teal-800/75 underline-offset-2 hover:text-ink hover:underline"
-              >
-                Look around a finished one first
-              </Link>
             </div>
           </div>
 

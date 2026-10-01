@@ -18,13 +18,11 @@ const MIN_LENGTH = 8;
 
 /**
  * Choosing a password, for a researcher who arrived from an invitation or a
- * reset link.
+ * reset code.
  *
- * The field is a normal password input with `autoComplete="new-password"` and a
- * reveal toggle, so a password manager can fill it and a person typing on a
- * phone can check what they typed. There is no second "confirm" field: with a
- * reveal control it catches nothing a careful reader would not, and it doubles
- * the work for the manager-using majority.
+ * Both fields use the standard password-manager autocomplete value. A single
+ * reveal control applies to both, so the pair can be checked without turning
+ * either value into permanently visible text.
  */
 export function SetPasswordForm() {
   const router = useRouter();
@@ -32,6 +30,7 @@ export function SetPasswordForm() {
   const next = safeNext(params.get("next"));
 
   const [password, setPassword] = useState("");
+  const [confirmation, setConfirmation] = useState("");
   const [reveal, setReveal] = useState(false);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<Problem | null>(null);
@@ -62,6 +61,9 @@ export function SetPasswordForm() {
     if (password.length < MIN_LENGTH) {
       return setProblem({ message: `Use at least ${MIN_LENGTH} characters.` });
     }
+    if (password !== confirmation) {
+      return setProblem({ message: "The two passwords do not match." });
+    }
 
     setBusy(true);
     const { error } = await createClient().auth.updateUser({ password });
@@ -75,14 +77,16 @@ export function SetPasswordForm() {
   if (session === "missing") {
     return (
       <div className="w-full">
-        <h1 className="text-[28px] font-medium leading-tight tracking-[-0.02em] text-ink">
-          This link is no longer valid
+        <p className="eyebrow mb-3">Secure access</p>
+        <h1 className="font-serif text-[42px] font-medium leading-[0.98] tracking-[-0.03em] text-ink sm:text-[48px]">
+          Verification required
         </h1>
-        <p className="mt-2 text-[13.5px] leading-relaxed text-muted">
-          The link has expired or has already been used. Your password has not changed.
+        <p className="mt-3 text-[14px] leading-relaxed text-muted">
+          Enter a new invitation or password-reset code before choosing a password. Your password
+          has not changed.
         </p>
-        <Link href="/forgot-password" className="btn btn-navy mt-7 w-full">
-          Request a new link
+        <Link href="/forgot-password" className="btn btn-teal mt-7 w-full">
+          Request a new code
         </Link>
         <Link
           href="/login"
@@ -96,14 +100,15 @@ export function SetPasswordForm() {
 
   return (
     <div className="w-full">
-      <h1 className="text-[28px] font-medium leading-tight tracking-[-0.02em] text-ink">
-        Choose a password
+      <p className="eyebrow mb-3">Finish account setup</p>
+      <h1 className="font-serif text-[42px] font-medium leading-[0.98] tracking-[-0.03em] text-ink sm:text-[48px]">
+        Create your password
       </h1>
-      <p className="mt-2 text-[13.5px] leading-relaxed text-muted">
+      <p className="mt-3 text-[14px] leading-relaxed text-muted">
         This is the password you will use to sign in to SplicR.
       </p>
 
-      <form onSubmit={save} className="mt-7 space-y-4">
+      <form onSubmit={save} className="mt-8 space-y-4" aria-busy={busy}>
         <div>
           <label htmlFor="new-password" className="block text-[12.5px] font-medium text-ink">
             New password
@@ -119,12 +124,12 @@ export function SetPasswordForm() {
               minLength={MIN_LENGTH}
               required
               aria-describedby="new-password-hint"
-              className="h-10 w-full rounded-lg border border-line-strong bg-white pl-3 pr-10 text-[14px] text-ink outline-none transition-colors duration-[var(--dur-1)] focus:border-navy motion-reduce:transition-none"
+              className="h-12 w-full rounded-xl border border-line-strong bg-white pl-3.5 pr-11 text-[14px] text-ink outline-none transition-colors duration-[var(--dur-1)] focus:border-navy motion-reduce:transition-none"
             />
             <button
               type="button"
               onClick={() => setReveal((on) => !on)}
-              className="absolute right-1 top-1 flex h-8 w-8 items-center justify-center rounded-md text-muted transition-colors duration-[var(--dur-1)] hover:text-ink motion-reduce:transition-none"
+              className="absolute right-1 top-2 flex h-8 w-8 items-center justify-center rounded-md text-muted transition-colors duration-[var(--dur-1)] hover:text-ink motion-reduce:transition-none"
               aria-label={reveal ? "Hide password" : "Show password"}
             >
               {reveal ? (
@@ -139,12 +144,29 @@ export function SetPasswordForm() {
           </p>
         </div>
 
+        <div>
+          <label htmlFor="confirm-password" className="block text-[12.5px] font-medium text-ink">
+            Confirm password
+          </label>
+          <input
+            id="confirm-password"
+            name="confirm-password"
+            type={reveal ? "text" : "password"}
+            value={confirmation}
+            onChange={(event) => setConfirmation(event.target.value)}
+            autoComplete="new-password"
+            minLength={MIN_LENGTH}
+            required
+            className="mt-1.5 h-12 w-full rounded-xl border border-line-strong bg-white px-3.5 text-[14px] text-ink outline-none transition-colors duration-[var(--dur-1)] focus:border-navy motion-reduce:transition-none"
+          />
+        </div>
+
         {problem && <ProblemNotice problem={problem} />}
 
         <button
           type="submit"
           disabled={busy || session === "checking"}
-          className="btn btn-navy w-full"
+          className="btn btn-teal w-full"
         >
           {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
           Save password and continue

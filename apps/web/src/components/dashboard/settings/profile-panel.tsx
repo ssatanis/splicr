@@ -52,6 +52,37 @@ export function ProfilePanel({
           autoComplete="name"
           hint="Shown on the team list and beside anything you log in the Truth Loop."
         />
+        <TextField
+          name="preferred_title"
+          label="Preferred title"
+          defaultValue={profile?.preferred_title ?? ""}
+          placeholder="Dr."
+          maxLength={32}
+          hint="Optional honorific used in your greeting. Never inferred from your role."
+        />
+        <TextField
+          name="professional_role"
+          label="Professional role"
+          defaultValue={profile?.professional_role ?? ""}
+          placeholder="Research Scientist"
+          maxLength={120}
+          hint="Your role in the laboratory, separate from your access permission."
+        />
+        <TextField
+          name="institution"
+          label="Institution"
+          defaultValue={profile?.institution ?? ""}
+          placeholder="Research institution"
+          maxLength={160}
+        />
+        <TextField
+          name="time_zone"
+          label="Time zone"
+          defaultValue={profile?.time_zone ?? ""}
+          placeholder="America/New_York"
+          maxLength={80}
+          hint="An IANA zone. Your override takes precedence over the lab and browser clocks."
+        />
         <ReadOnlyField
           label="Email"
           value={email || "Not signed in"}

@@ -28,7 +28,8 @@
     "data:seed": "node scripts/data/seed-atlas.mjs",
     "atlas:snapshot": "engine/.tools/env/bin/python scripts/data/build-atlas-snapshot.py",
     "atlas:check": "engine/.tools/env/bin/python scripts/data/build-atlas-snapshot.py --check",
-    "db:advisors": "node scripts/db/advisors.mjs"
+    "db:advisors": "node scripts/db/advisors.mjs",
+    "auth:provision": "node scripts/auth/provision-researcher.mjs"
   },
   "devDependencies": {
     "pg": "^8.18.0",

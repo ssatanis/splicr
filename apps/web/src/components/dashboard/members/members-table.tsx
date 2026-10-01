@@ -177,7 +177,7 @@ export function MembersTable({
                           <RoleMenu
                             value={member.role}
                             maxRole={perms.callerRole}
-                            disabled={perms.demo || busy || roleLock !== null}
+                            disabled={busy || roleLock !== null}
                             busy={acting}
                             label={`Role for ${member.name}`}
                             onSelect={(next) => applyRole(member, next)}
@@ -204,7 +204,7 @@ export function MembersTable({
                         <Locked reason={removeLock}>
                           <button
                             type="button"
-                            disabled={perms.demo || busy || removeLock !== null}
+                            disabled={busy || removeLock !== null}
                             aria-label={
                               member.isSelf
                                 ? `Leave ${orgName}`
@@ -216,7 +216,7 @@ export function MembersTable({
                             }}
                             className={cn(
                               "inline-flex items-center gap-1.5 rounded-full border border-line-strong bg-white px-2.5 py-1.5 text-xs whitespace-nowrap text-ink transition-colors sm:px-3",
-                              perms.demo || busy || removeLock !== null
+                              busy || removeLock !== null
                                 ? "cursor-not-allowed opacity-55"
                                 : "hover:border-red-200 hover:bg-red-50 hover:text-red-700",
                             )}

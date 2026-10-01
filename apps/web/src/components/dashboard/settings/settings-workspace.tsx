@@ -30,7 +30,6 @@ export interface SettingsWorkspaceProps {
   profile: Profile | null;
   org: Organization | null;
   role: OrgRole | null;
-  isDemo: boolean;
   settings: WorkspaceSettings;
   stats: WorkspaceStats;
   libraries: LibraryOption[];
@@ -60,7 +59,6 @@ export function SettingsWorkspace({
   profile,
   org,
   role,
-  isDemo,
   settings,
   stats,
   libraries,
@@ -210,7 +208,7 @@ export function SettingsWorkspace({
         />
       </div>
 
-      {role !== null && !isDemo && (
+      {role !== null && (
         <p className="text-xs text-muted">
           Your role in this workspace is {ROLE_LABEL[role].toLowerCase()}. Role decides what you may
           change here, and the database checks it again on every save.

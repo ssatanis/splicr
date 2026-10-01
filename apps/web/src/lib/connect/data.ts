@@ -7,7 +7,7 @@ import "server-only";
 
 import { headers } from "next/headers";
 
-import { DEMO_ORG_ID, isUuid } from "@/lib/data/types";
+import { isUuid } from "@/lib/data/types";
 import { supabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
@@ -34,7 +34,7 @@ interface ScreenRow {
  * at a screen this key would actually be allowed to read.
  */
 export async function listConnectScreens(orgId: string, limit = 8): Promise<ConnectScreen[]> {
-  if (!isUuid(orgId) || orgId === DEMO_ORG_ID || !supabaseConfigured) return [];
+  if (!isUuid(orgId) || !supabaseConfigured) return [];
 
   try {
     const supabase = await createClient();

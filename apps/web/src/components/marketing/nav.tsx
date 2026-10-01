@@ -54,14 +54,13 @@ export function MarketingNav({ variant = "pill" }: { variant?: "pill" | "bar" })
 
           <div className="flex items-center gap-2">
             <Link
-              href="/contact"
+              href="/login"
               className={cn(
                 "inline-flex items-center justify-center rounded-full bg-orange-500 text-white whitespace-nowrap",
                 "px-5 sm:px-7 py-3 text-[0.95rem] font-normal transition-colors hover:bg-orange-600",
               )}
             >
-              <span className="sm:hidden">Demo</span>
-              <span className="hidden sm:inline">Request a Demo</span>
+              Portal
             </Link>
             <button
               type="button"
@@ -94,8 +93,8 @@ export function MarketingNav({ variant = "pill" }: { variant?: "pill" | "bar" })
               <Link href="/careers" onClick={close} className="py-3 text-lg border-b border-white/10">
                 Careers
               </Link>
-              <Link href="/contact" onClick={close} className="py-3 text-lg text-orange-300">
-                Request a Demo
+              <Link href="/login" onClick={close} className="py-3 text-lg text-orange-300">
+                Portal
               </Link>
             </div>
           </div>

@@ -18,15 +18,10 @@ import type { CandidateRow } from "@/components/dashboard/overview/types";
 import { PageHeader } from "@/components/dashboard/ui";
 import { getCurrentContext } from "@/lib/data/org";
 import { listHeadlineHits, listRecentScreens } from "@/lib/data/overview";
-import {
-  benchQueue,
-  screens,
-  type Verdict,
-} from "@/lib/mock/data";
 
 export const metadata = { title: "Pick this round" };
 
-const VERDICT_LABELS: Record<string, Verdict> = {
+const VERDICT_LABELS: Record<string, NonNullable<CandidateRow["verdict"]>> = {
   real_new: "Real and new",
   real_generic: "Real but generic",
   real_known: "Real and known",
@@ -35,9 +30,7 @@ const VERDICT_LABELS: Record<string, Verdict> = {
 };
 
 export default async function PickPage() {
-  const { org, isDemo } = await getCurrentContext();
-
-  if (isDemo) return <SamplePick />;
+  const { org } = await getCurrentContext();
   if (org === null) {
     return (
       <PageHeader
@@ -107,56 +100,6 @@ export default async function PickPage() {
   );
 }
 
-function SamplePick() {
-  const source = screens[0];
-  const queue = benchQueue(source.id);
-
-  const rows: CandidateRow[] = queue.map((hit) => ({
-    id: `${source.id}:${hit.gene}`,
-    gene: hit.gene,
-    verdict: hit.verdict,
-    chance: hit.chance,
-    lfc: hit.lfc,
-    fdr: hit.fdr,
-    novelty: hit.novelty,
-    bayes: hit.bayesFactor,
-    guides: hit.guides,
-    guidesAgree: hit.guidesAgree,
-    guideLfcs: hit.guideLfcs,
-    direction: hit.lfc === null ? null : hit.lfc < 0 ? "depleted" : "enriched",
-    flags: hit.flags,
-    why: hit.why,
-    atlasHits: hit.atlasHits,
-    atlasScreens: hit.atlasScreens,
-    atlasRate: hit.atlasScreens > 0 ? hit.atlasHits / hit.atlasScreens : null,
-    isFrequentHitter: hit.atlasScreens > 0 ? hit.atlasHits / hit.atlasScreens > 0.25 : null,
-    screenId: source.id,
-    screenName: source.name,
-    benchAssay: source.benchAssay,
-  }));
-
-  return (
-    <>
-      <PageHeader
-        dense
-        title="Pick this round"
-        body={
-          <span className="flex flex-wrap items-center gap-2">
-            <span className="shrink-0 rounded-[4px] bg-orange-50 px-1.5 py-0.5 text-[11px] leading-[1.4] text-orange-700">
-              Sample data
-            </span>
-            Nothing here is a measurement.
-          </span>
-        }
-      />
-      {source.qc !== "pass" ? (
-        <QcWarning verdict={source.qc} href={`/dashboard/screens/${source.id}?tab=qc`} />
-      ) : null}
-      <Slate rows={rows} />
-      <Provenance scored />
-    </>
-  );
-}
 
 /**
  * A screen whose QC did not pass gates its candidates behind a warning the

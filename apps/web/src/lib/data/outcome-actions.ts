@@ -27,7 +27,6 @@ import { revalidatePath } from "next/cache";
 import { getCurrentContext, getOrgRole } from "@/lib/data/org";
 import {
   DASHBOARD_PATH,
-  DEMO_REFUSAL,
   ROLE_LABEL,
   ROLE_RANK,
   actionFailed,
@@ -63,7 +62,6 @@ interface Caller {
 
 async function authorize(minRole: OrgRole): Promise<{ ok: true; caller: Caller } | { ok: false; error: string }> {
   const context = await getCurrentContext();
-  if (context.isDemo) return actionFailed(DEMO_REFUSAL);
   if (!context.user) return actionFailed(SESSION_ENDED);
   if (!context.org) return actionFailed(NO_WORKSPACE);
   const role = await getOrgRole(context.org.id, context.user.id);

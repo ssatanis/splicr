@@ -22,10 +22,10 @@ into the Message body and set the Subject heading to match.
 | File | Template in the dashboard | Subject |
 | --- | --- | --- |
 | `confirm-signup.html` | Confirm signup | Confirm your SplicR email |
-| `invite-user.html` | Invite user | You have been invited to SplicR |
-| `magic-link.html` | Magic Link | Your SplicR verification code |
+| `invite-user.html` | Invite user | Your SplicR invitation code |
+| `magic-link.html` | Magic Link | Your SplicR sign-in code |
 | `change-email.html` | Change Email Address | Confirm your new SplicR email |
-| `reset-password.html` | Reset Password | Reset your SplicR password |
+| `reset-password.html` | Reset Password | Your SplicR password reset code |
 | `reauthentication.html` | Reauthentication | Verify your SplicR identity |
 
 For the local stack, point `supabase/config.toml` at the files instead of
@@ -33,7 +33,7 @@ pasting them:
 
 ```toml
 [auth.email.template.invite]
-subject = "You have been invited to SplicR"
+subject = "Your SplicR invitation code"
 content_path = "./supabase/templates/invite-user.html"
 ```
 
@@ -55,17 +55,17 @@ pixel. The layout is tables, every style that matters is inline, and the single
 on: a client that strips it still renders a correct 600px email.
 
 Every message carries a hidden preheader, a masthead naming the class of message,
-one heading, one instruction, one action, and a footer saying what to do if it
-was not expected. Messages with a link also print the link as text, for a client
-that strips buttons or a researcher reading mail on a device they will not sign
-in on.
+one heading, one instruction, one one-time code, and a footer saying what to do
+if it was not expected. No message contains a token-bearing link or an
+infrastructure hostname. Researchers enter codes only on a first-party SplicR
+screen.
 
 ## Two things these templates deliberately do not say
 
 **No expiry in hours.** Supabase exposes no lifetime variable to a template, so a
 number here would drift the moment Auth's OTP expiry is changed. Each message
-says the link or code works once, which stays true. If the product needs to show
-a real expiry, it has to come from the page the link opens, not from the email.
+says the code works once, which stays true. If the product needs to show a real
+expiry, it has to come from the verification page, not from the email.
 
 **No plain-text part.** Supabase Auth sends the template as the HTML body and has
 no field for a text alternative. Every message is readable with styles stripped,
@@ -77,10 +77,7 @@ to a Send Email hook, where SplicR builds the whole message.
 1. Paste all six, then trigger each one against a real inbox through the
    configured SMTP sender, not the Supabase built-in.
 2. Check Gmail desktop, Gmail mobile, Apple Mail, Outlook, and a dark-mode client.
-3. Confirm the link opens SplicR and not a Supabase-hosted dead end, and that the
-   redirect target is on the allow list.
-4. Confirm the sending provider is not rewriting links. A one-time authentication
-   link that passes through a click tracker can be consumed by a scanner before
-   the researcher opens it, and they arrive at an already-used link.
-5. Confirm `{{ .Email }}`, `{{ .NewEmail }}` and `{{ .Token }}` render, and that
+3. Confirm each code can be entered at `www.splicr.org/verify` and never exposes
+   the underlying authentication provider.
+4. Confirm `{{ .Email }}`, `{{ .NewEmail }}` and `{{ .Token }}` render, and that
    no `{{` survives in a delivered message.

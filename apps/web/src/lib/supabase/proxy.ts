@@ -3,67 +3,27 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { supabaseConfigured, supabasePublishableKey, supabaseUrl } from "./env";
 
-export const DEMO_COOKIE = "splicr_demo";
-
-/**
- * The console (dashboard, login, signup, invite links) isn't open to the
- * public yet. Routed to the marketing homepage here instead of deleted so
- * the code is ready to flip back on later.
- */
+/** Product experiments with invented figures are never public routes. */
 const DISABLED_PREFIXES = [
-  "/login",
-  "/signup",
-  "/dashboard",
-  "/invite",
-  "/forgot-password",
-  "/reset-password",
-  // The illustrative workspace under /pitch shows invented figures. It belongs
-  // behind the same flag as the real console: on the public site it would serve
-  // numbers that look like measurements to anyone who found the URL.
   "/pitch",
 ];
 
 /**
- * Whether the console answers on this deployment.
- *
- * This used to test `NODE_ENV !== "development"`, which meant production was
- * closed permanently and there was no way to open it: the first lab to be
- * invited would have been redirected to the marketing page, and the only remedy
- * would have been a code change and a deploy. Meanwhile NEXT_PUBLIC_ENABLE_CONSOLE
- * was already set in apps/web/.env.local and nothing anywhere read it, so the
- * switch somebody had reached for did nothing at all.
- *
- * It is an explicit flag now. Absent, the console stays closed, so nothing about
- * the current public deployment changes by merging this. Set it in Vercel when a
- * lab is ready, and it opens without a code change.
- *
- * Local `next dev` keeps working because the flag lives in .env.local, which is
- * where it already was.
- */
-const CONSOLE_OPEN = process.env.NEXT_PUBLIC_ENABLE_CONSOLE === "1";
-
-/**
  * Keeps the Supabase session fresh on every request and gates the
- * dashboard. Visitors without a session can still explore the dashboard
- * in demo mode (cookie set by /api/demo) so the product can be reviewed
- * before the backend is connected.
+ * dashboard. The console has no anonymous product mode: a verified session is
+ * required before any workspace route renders.
  */
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const pathname = request.nextUrl.pathname;
-  if (
-    !CONSOLE_OPEN &&
-    DISABLED_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
-  ) {
+  if (DISABLED_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
   const isDashboard = pathname.startsWith("/dashboard");
-  const isDemo = request.cookies.get(DEMO_COOKIE)?.value === "1";
-
   if (!supabaseConfigured) {
-    if (isDashboard && !isDemo) {
+    if (isDashboard) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
     return response;
@@ -92,7 +52,7 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims ?? null;
 
-  if (isDashboard && !user && !isDemo) {
+  if (isDashboard && !user) {
     const url = new URL("/login", request.url);
     url.searchParams.set("next", request.nextUrl.pathname);
     return NextResponse.redirect(url);

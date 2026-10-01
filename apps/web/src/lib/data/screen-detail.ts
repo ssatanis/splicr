@@ -109,7 +109,7 @@ export async function getScreenDetail(
     return { status: "not_found" };
   }
   const context = await getCurrentContext();
-  if (context.isDemo || !context.user || !context.org) return { status: "not_found" };
+  if (!context.user || !context.org) return { status: "not_found" };
   try {
     const client = await createClient();
     const screenResult = await client.from("screens")

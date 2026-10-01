@@ -1,12 +1,12 @@
 "use client";
 
-import { Loader2, Mail } from "lucide-react";
+import { KeyRound, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
-import { Notice, ProblemNotice } from "@/components/ui/notice";
-import { NEUTRAL_EMAIL_RESULT, authProblem, type Problem } from "@/lib/errors";
+import { ProblemNotice } from "@/components/ui/notice";
+import { authProblem, type Problem } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/client";
 import { supabaseConfigured } from "@/lib/supabase/env";
 import { safeNext } from "@/lib/supabase/redirect";
@@ -18,12 +18,8 @@ import { safeNext } from "@/lib/supabase/redirect";
  * nothing here that leads to one. Two consequences worth stating, because both
  * are easy to undo by accident:
  *
- *  - `shouldCreateUser: false` on the one-time link. Without it, Supabase's
- *    default is to create an account for any address that asks for a link,
- *    which would make this form a public signup with extra steps.
- *  - The response to a link request is the same sentence whether or not the
- *    address has an account. Otherwise anyone could use this field to find out
- *    which researchers are in SplicR.
+ * Invitation codes are issued only by a SplicR administrator. This form never
+ * requests a code and never creates an identity.
  */
 export function AuthForm() {
   const router = useRouter();
@@ -32,9 +28,8 @@ export function AuthForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [busy, setBusy] = useState<null | "password" | "link">(null);
+  const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<Problem | null>(null);
-  const [sent, setSent] = useState(false);
 
   const unconfigured: Problem = {
     message: "SplicR could not reach the sign-in service.",
@@ -44,61 +39,35 @@ export function AuthForm() {
   async function signIn(event: React.FormEvent) {
     event.preventDefault();
     setProblem(null);
-    setSent(false);
     if (!supabaseConfigured) return setProblem(unconfigured);
 
-    setBusy("password");
+    setBusy(true);
     const { error } = await createClient().auth.signInWithPassword({ email, password });
-    setBusy(null);
+    setBusy(false);
     if (error) return setProblem(authProblem(error));
     router.replace(next);
     router.refresh();
   }
 
-  async function emailLink() {
-    setProblem(null);
-    setSent(false);
-    if (!email.trim()) {
-      return setProblem({ message: "Enter your email address first." });
-    }
-    if (!supabaseConfigured) return setProblem(unconfigured);
-
-    setBusy("link");
-    const { error } = await createClient().auth.signInWithOtp({
-      email: email.trim(),
-      options: {
-        // Non-negotiable. This form signs people in; it does not enrol them.
-        shouldCreateUser: false,
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-      },
-    });
-    setBusy(null);
-
-    // A rate limit is worth saying out loud, because the reader can act on it.
-    // Everything else, including "this address has no account", gets the same
-    // neutral answer.
-    if (error && /rate limit|too many requests/i.test(error.message)) {
-      return setProblem(authProblem(error));
-    }
-    setSent(true);
-  }
-
   return (
     <div className="w-full">
-      <h1 className="text-[28px] font-medium leading-tight tracking-[-0.02em] text-ink">Sign in</h1>
-      <p className="mt-2 text-[13.5px] leading-relaxed text-muted">
+      <p className="eyebrow mb-3">Welcome back</p>
+      <h1 className="font-serif text-[42px] font-medium leading-[0.98] tracking-[-0.03em] text-ink sm:text-[48px]">
+        Sign in
+      </h1>
+      <p className="mt-3 text-[14px] leading-relaxed text-muted">
         Access to SplicR is by invitation. If you expected an invitation and it has not arrived,
         contact your lab administrator.
       </p>
 
-      <form onSubmit={signIn} className="mt-7 space-y-4">
+      <form onSubmit={signIn} className="mt-8 space-y-4" aria-busy={busy}>
         <Field
           id="email"
           label="Email"
           type="email"
           value={email}
           onChange={setEmail}
-          placeholder="you@lab.edu"
+          placeholder="you@institution.edu"
           autoComplete="username"
           required
         />
@@ -112,31 +81,24 @@ export function AuthForm() {
           required
         />
 
-        {problem && <ProblemNotice problem={problem} />}
-        {sent && (
-          <Notice tone="success" title="Check your email" action={NEUTRAL_EMAIL_RESULT} />
-        )}
+        <div aria-live="polite">
+          {problem && <ProblemNotice problem={problem} />}
+        </div>
 
-        <button type="submit" disabled={busy !== null} className="btn btn-navy w-full">
-          {busy === "password" && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+        <button type="submit" disabled={busy} className="btn btn-teal w-full">
+          {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
           Sign in
         </button>
       </form>
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <button
-          type="button"
-          onClick={emailLink}
-          disabled={busy !== null}
+        <Link
+          href="/verify?flow=invite"
           className="inline-flex items-center gap-1.5 text-[13px] text-navy underline decoration-line-strong underline-offset-[3px] transition-colors duration-[var(--dur-1)] hover:decoration-navy disabled:opacity-60 motion-reduce:transition-none"
         >
-          {busy === "link" ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-          ) : (
-            <Mail className="h-3.5 w-3.5" aria-hidden="true" />
-          )}
-          Email me a link
-        </button>
+          <KeyRound className="h-3.5 w-3.5" aria-hidden="true" />
+          I have an invitation code
+        </Link>
         <Link
           href="/forgot-password"
           className="text-[13px] text-muted underline decoration-line-strong underline-offset-[3px] transition-colors duration-[var(--dur-1)] hover:text-ink hover:decoration-line-strong motion-reduce:transition-none"
@@ -189,7 +151,7 @@ export function Field({
         autoComplete={autoComplete}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy}
-        className="mt-1.5 h-10 w-full rounded-lg border border-line-strong bg-white px-3 text-[14px] text-ink outline-none transition-colors duration-[var(--dur-1)] placeholder:text-muted/70 focus:border-navy motion-reduce:transition-none"
+        className="mt-1.5 h-12 w-full rounded-xl border border-line-strong bg-white px-3.5 text-[14px] text-ink outline-none transition-colors duration-[var(--dur-1)] placeholder:text-muted/70 focus:border-navy motion-reduce:transition-none"
       />
       {error ? (
         <p id={`${id}-error`} className="mt-1.5 text-[12px] text-red-800">

@@ -23,9 +23,6 @@ function fail(status: number, code: string, message: string): NextResponse {
 
 export async function GET(request: Request): Promise<NextResponse> {
   const context = await getCurrentContext();
-  if (context.isDemo) {
-    return fail(404, "demo", "The demonstration exports from the page itself; it has no stored outcomes.");
-  }
   if (!context.user) return fail(401, "authentication_required", "Sign in to export your workspace's outcomes.");
 
   const filters = parseOutcomeFilters(Object.fromEntries(new URL(request.url).searchParams.entries()));

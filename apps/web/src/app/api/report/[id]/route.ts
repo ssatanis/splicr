@@ -31,17 +31,10 @@
 import { NextResponse } from "next/server";
 
 import { getCurrentContext } from "@/lib/data/org";
-import type { ReportSource } from "@/lib/report/document";
 
 /** node:zlib in the PDF writer, and the body depends on the clock. */
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-/**
- * Only explicit demo sessions can reach the sample renderer.
- * Workspace reports need a separate run-backed document and authorization.
- */
-const SERVED_SOURCE: ReportSource = "sample";
 
 const FORMATS = ["csv", "json", "pdf"] as const;
 type Format = (typeof FORMATS)[number];
@@ -98,74 +91,8 @@ function fail(status: number, code: string, message: string): NextResponse {
 
 export async function GET(request: Request, ctx: RouteContext<"/api/report/[id]">): Promise<NextResponse> {
   const context = await getCurrentContext();
-  if (!context.isDemo) {
-    if (!context.user) {
-      return fail(401, "authentication_required", "Sign in to access workspace results. Sample reports require an explicit demo session.");
-    }
-    return workspaceReport(request, ctx);
+  if (!context.user) {
+    return fail(401, "authentication_required", "Sign in to access workspace results.");
   }
-  const { id } = await ctx.params;
-  const requested = new URL(request.url).searchParams.get("format");
-
-  if (requested === null || !(FORMATS as readonly string[]).includes(requested)) {
-    return fail(
-      400,
-      "bad_request",
-      `format must be one of ${FORMATS.join(", ")}. For example /api/report/${id}?format=csv.`,
-    );
-  }
-  const format = requested as Format;
-
-  const [{ screens }, { buildReport, reportFilename }, { toCsv }, { toJson }, { toPdf }] = await Promise.all([
-    import("@/lib/mock/data"), import("@/lib/report/document"), import("@/lib/report/csv"),
-    import("@/lib/report/json"), import("@/lib/report/pdf"),
-  ]);
-  const screen = screens.find((s) => s.id === id);
-  if (!screen) {
-    return fail(404, "not_found", `No screen ${id}.`);
-  }
-
-  if (screen.status !== "complete") {
-    return fail(
-      409,
-      "not_ready",
-      screen.status === "failed"
-        ? `${screen.name} failed at stage ${screen.stage + 1} of 9, so it has no hit table to export. Fix the flagged sample and re-run.`
-        : `${screen.name} is ${screen.status} at stage ${screen.stage + 1} of 9. A report is only exported once hit calling and scoring have run.`,
-    );
-  }
-
-  if (SERVED_SOURCE !== "sample") {
-    // Unreachable while the constant above is "sample". It is here so that
-    // Widening this renderer to workspace data requires a separate authorized
-    // data adapter; demo permission cannot authorize workspace records.
-    return fail(
-      501,
-      "not_implemented",
-      "This renderer serves explicit demo sessions only. Workspace reports need an authorized run-backed data adapter.",
-    );
-  }
-
-  const doc = buildReport(screen, SERVED_SOURCE);
-  const now = new Date();
-  const filename = reportFilename(doc, format, now);
-
-  const headers = new Headers({
-    "Content-Type": MEDIA_TYPES[format],
-    "Content-Disposition": `attachment; filename="${filename}"`,
-    "Cache-Control": "no-store",
-    // Named in the response as well as in the file, so a script that pipes the
-    // body somewhere still has the label available.
-    "X-SplicR-Report-Id": doc.reportId,
-    "X-SplicR-Data-Source": doc.source === "sample" ? "sample-dataset" : "workspace",
-  });
-
-  if (format === "pdf") {
-    const pdf = toPdf(doc, now);
-    headers.set("Content-Length", String(pdf.byteLength));
-    return new NextResponse(new Uint8Array(pdf), { status: 200, headers });
-  }
-
-  const body = format === "csv" ? toCsv(doc, now) : toJson(doc, now);
-  return new NextResponse(body, { status: 200, headers });
+  return workspaceReport(request, ctx);
 }

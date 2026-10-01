@@ -37,7 +37,7 @@ const EMPTY_STATS: WorkspaceStats = { screens: 0, runs: 0, hits: 0, outcomes: 0,
  */
 export default async function SettingsPage(props: PageProps<"/dashboard/settings">) {
   const [context, params] = await Promise.all([getCurrentContext(), props.searchParams]);
-  const { user, profile, org, role, isDemo } = context;
+  const { user, profile, org, role } = context;
 
   const [settings, stats, catalog] = await Promise.all([
     org ? getOrgSettings(org.id) : Promise.resolve(DEFAULT_WORKSPACE_SETTINGS),
@@ -48,20 +48,16 @@ export default async function SettingsPage(props: PageProps<"/dashboard/settings
   const requested = params.panel;
   const panel = isPanelKey(requested) ? requested : DEFAULT_PANEL;
 
-  const signedIn = user !== null && !isDemo;
+  const signedIn = user !== null;
   const canEditProfile = signedIn;
   const canEditOrg = signedIn && org !== null && roleAtLeast(role, "admin");
   const canDelete = signedIn && org !== null && role === "owner";
 
-  const profileLockedReason = isDemo
-    ? "The demo has no account behind it, so there is no profile to edit."
-    : !signedIn
+  const profileLockedReason = !signedIn
       ? "Sign in to edit your profile."
       : undefined;
 
-  const orgLockedReason = isDemo
-    ? "The demo workspace is read only. These are the values a new SplicR workspace starts with."
-    : !signedIn
+  const orgLockedReason = !signedIn
       ? "Sign in to change the workspace."
       : org === null
         ? "You are not in a workspace yet, so there is nothing here to change. Accept an invite, or create a workspace, and these panels open up."
@@ -69,9 +65,7 @@ export default async function SettingsPage(props: PageProps<"/dashboard/settings
           ? `Changing how screens are analysed needs the admin role. Yours is ${role ? ROLE_LABEL[role].toLowerCase() : "unknown"}, so this panel is read only.`
           : undefined;
 
-  const deleteLockedReason = isDemo
-    ? "Nothing can be deleted from the demo."
-    : !signedIn
+  const deleteLockedReason = !signedIn
       ? "Sign in to manage the workspace."
       : org === null
         ? "You are not in a workspace yet, so there is nothing to delete."
@@ -83,7 +77,7 @@ export default async function SettingsPage(props: PageProps<"/dashboard/settings
   if (org) {
     chips.push(org.name, ORG_KIND_LABEL[org.kind], `${PLAN_LABEL[org.plan]} plan`);
   }
-  if (role && !isDemo) chips.push(`You are ${ROLE_LABEL[role].toLowerCase()}`);
+  if (role) chips.push(`You are ${ROLE_LABEL[role].toLowerCase()}`);
 
   return (
     <div>
@@ -103,19 +97,7 @@ export default async function SettingsPage(props: PageProps<"/dashboard/settings
         </div>
       )}
 
-      {isDemo && (
-        <p className="mb-5 flex items-start gap-2.5 rounded-2xl border border-orange-100 bg-orange-50 px-4 py-3 text-sm text-orange-800">
-          <Info className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.8} />
-          <span>
-            You are browsing the SplicR demo, so there is no workspace to write to. Every value
-            below is the default a new workspace starts with, taken from the engine configuration
-            rather than from a saved workspace. The guide library list is real, read from the Atlas.
-            Saving is refused, with a message, on every panel.
-          </span>
-        </p>
-      )}
-
-      {!isDemo && org === null && (
+      {org === null && (
         <p className="mb-5 flex items-start gap-2.5 rounded-2xl border border-line bg-white px-4 py-3 text-sm text-body">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" strokeWidth={1.8} />
           <span>
@@ -132,7 +114,6 @@ export default async function SettingsPage(props: PageProps<"/dashboard/settings
         profile={profile}
         org={org}
         role={role}
-        isDemo={isDemo}
         settings={settings}
         stats={stats}
         libraries={catalog.libraries}

@@ -27,6 +27,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { createClient } from "@/lib/supabase/server";
+import { deliverWorkspaceInvite } from "@/lib/auth/invitations";
 
 import { countOrgOwners, getCurrentContext, getOrgRole, getOrgSettings, listMembers } from "./org";
 import {
@@ -35,7 +36,6 @@ import {
   API_SCOPES,
   DASHBOARD_PATH,
   DEFAULT_API_SCOPES,
-  DEMO_REFUSAL,
   ORG_KINDS,
   ORG_ROLES,
   ROLE_LABEL,
@@ -55,6 +55,7 @@ import {
 } from "./types";
 
 import { workspaceSettingsPatchSchema } from "./schemas";
+import { isValidTimeZone } from "@/lib/time";
 
 // ---------------------------------------------------------------------------
 // Shared plumbing
@@ -85,7 +86,6 @@ type Authorization = { ok: true; caller: Caller } | ActionFailure;
 async function authorize(minRole: OrgRole | null = null): Promise<Authorization> {
   const context = await getCurrentContext();
 
-  if (context.isDemo) return actionFailed(DEMO_REFUSAL);
   if (!context.user) return actionFailed(SESSION_ENDED);
   if (!context.org) return actionFailed(NO_WORKSPACE);
 
@@ -183,10 +183,16 @@ const orcidSchema = z
  */
 export async function updateProfile(formData: FormData): Promise<ActionResult> {
   const context = await getCurrentContext();
-  if (context.isDemo) return actionFailed(DEMO_REFUSAL);
   if (!context.user) return actionFailed(SESSION_ENDED);
 
-  const patch: { full_name?: string; orcid?: string | null } = {};
+  const patch: {
+    full_name?: string;
+    orcid?: string | null;
+    preferred_title?: string | null;
+    professional_role?: string | null;
+    institution?: string | null;
+    time_zone?: string | null;
+  } = {};
 
   const name = lastValue(formData, "name");
   if (name !== null) {
@@ -204,6 +210,23 @@ export async function updateProfile(formData: FormData): Promise<ActionResult> {
       if (!parsed.success) return actionFailed(firstIssue(parsed.error));
       patch.orcid = parsed.data;
     }
+  }
+
+  for (const [field, max] of [
+    ["preferred_title", 32],
+    ["professional_role", 120],
+    ["institution", 160],
+  ] as const) {
+    const value = lastValue(formData, field);
+    if (value === null) continue;
+    if (value.length > max) return actionFailed(`${field.replaceAll("_", " ")} is too long.`);
+    patch[field] = value || null;
+  }
+
+  const timeZone = lastValue(formData, "time_zone");
+  if (timeZone !== null) {
+    if (timeZone && !isValidTimeZone(timeZone)) return actionFailed("Choose a valid IANA time zone.");
+    patch.time_zone = timeZone || null;
   }
 
   if (Object.keys(patch).length === 0) {
@@ -396,6 +419,22 @@ export async function updateOrganization(formData: FormData): Promise<ActionResu
     update.kind = parsed.data;
   }
 
+  for (const [field, max] of [
+    ["location", 160],
+    ["logo_url", 2048],
+  ] as const) {
+    const value = lastValue(formData, field);
+    if (value === null) continue;
+    if (value.length > max) return actionFailed(`${field.replaceAll("_", " ")} is too long.`);
+    update[field] = value || null;
+  }
+
+  const timeZone = lastValue(formData, "time_zone");
+  if (timeZone !== null) {
+    if (timeZone && !isValidTimeZone(timeZone)) return actionFailed("Choose a valid IANA time zone.");
+    update.time_zone = timeZone || null;
+  }
+
   const patch = readSettingsPatch(formData);
   if (!patch.ok) return patch;
 
@@ -443,7 +482,7 @@ const uuidSchema = z.uuid("That record id is not valid.");
 export async function inviteMember(
   email: string,
   role: OrgRole,
-): Promise<ActionResultWith<{ token: string; inviteId: string; expiresAt: string }>> {
+): Promise<ActionResultWith<{ token: string; inviteId: string; expiresAt: string; deliveryState: string }>> {
   const auth = await authorize("admin");
   if (!auth.ok) return auth;
   const { org, user, role: callerRole } = auth.caller;
@@ -491,6 +530,34 @@ export async function inviteMember(
     );
   }
 
+  // Expired rows remain visible in history until a replacement is requested.
+  // Remove them now so one address has one active invitation path.
+  await supabase
+    .from("org_invites")
+    .delete()
+    .eq("org_id", org.id)
+    .eq("email", address)
+    .is("accepted_at", null)
+    .lte("expires_at", new Date().toISOString());
+
+  await supabase
+    .from("splicr_access_allowlist")
+    .delete()
+    .eq("org_id", org.id)
+    .eq("email", address);
+
+  const { error: allowError } = await supabase.from("splicr_access_allowlist").insert({
+    email: address,
+    org_id: org.id,
+    role: parsedRole.data,
+    status: "pending",
+    create_workspace: false,
+    invited_by: user.id,
+  });
+  if (allowError) {
+    return dbFailure("inviteMember allowlist", allowError, "Access could not be authorized for that address.");
+  }
+
   const { data, error } = await supabase
     .from("org_invites")
     .insert({ org_id: org.id, email: address, role: parsedRole.data, invited_by: user.id })
@@ -504,8 +571,89 @@ export async function inviteMember(
     return actionFailed("The invite was created but could not be read back.");
   }
 
+  const delivery = await deliverWorkspaceInvite({
+    email: address,
+    orgName: org.name,
+    orgId: org.id,
+    role: parsedRole.data,
+    invitedBy: user.id,
+  });
+  const now = new Date().toISOString();
+  const { error: deliveryError } = await supabase
+    .from("org_invites")
+    .update({
+      delivery_state: delivery.state,
+      delivered_at: delivery.state === "failed" ? null : now,
+      delivery_error: delivery.error,
+      ...(delivery.state === "existing_user" ? { accepted_at: now } : {}),
+    })
+    .eq("id", row.id)
+    .eq("org_id", org.id);
+  if (deliveryError) console.error(`[data/actions] invite delivery state: ${deliveryError.message}`);
+  await supabase
+    .from("splicr_access_allowlist")
+    .update({
+      status: delivery.state === "failed" ? "pending" : delivery.state === "existing_user" ? "active" : "invited",
+      invited_at: delivery.state === "failed" ? null : now,
+    })
+    .eq("org_id", org.id)
+    .eq("email", address);
+
   revalidateWorkspace();
-  return { ok: true, token: row.token, inviteId: row.id, expiresAt: row.expires_at };
+  return {
+    ok: true,
+    token: row.token,
+    inviteId: row.id,
+    expiresAt: row.expires_at,
+    deliveryState: delivery.state,
+  };
+}
+
+/** Retry delivery without issuing a second token or a second database invite. */
+export async function retryInvite(inviteId: string): Promise<ActionResult> {
+  const auth = await authorize("admin");
+  if (!auth.ok) return auth;
+  const { org, user } = auth.caller;
+  const parsed = uuidSchema.safeParse(inviteId);
+  if (!parsed.success) return actionFailed("That invite id is not valid.");
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("org_invites")
+    .select("email, role, expires_at, accepted_at")
+    .eq("id", parsed.data)
+    .eq("org_id", org.id)
+    .maybeSingle();
+  if (error || !data || data.accepted_at) return actionFailed("That invite is no longer pending.");
+  if (Date.parse(data.expires_at) <= Date.now()) return actionFailed("That invite has expired. Issue a new one.");
+
+  const delivery = await deliverWorkspaceInvite({
+    email: data.email,
+    orgName: org.name,
+    orgId: org.id,
+    role: data.role,
+    invitedBy: user.id,
+  });
+  await supabase
+    .from("org_invites")
+    .update({
+      delivery_state: delivery.state,
+      delivered_at: delivery.state === "failed" ? null : new Date().toISOString(),
+      delivery_error: delivery.error,
+      ...(delivery.state === "existing_user" ? { accepted_at: new Date().toISOString() } : {}),
+    })
+    .eq("id", parsed.data)
+    .eq("org_id", org.id);
+  await supabase
+    .from("splicr_access_allowlist")
+    .update({
+      status: delivery.state === "failed" ? "pending" : delivery.state === "existing_user" ? "active" : "invited",
+      invited_at: delivery.state === "failed" ? null : new Date().toISOString(),
+    })
+    .eq("org_id", org.id)
+    .eq("email", data.email);
+  revalidateWorkspace();
+  return delivery.state === "failed" ? actionFailed(delivery.error) : { ok: true };
 }
 
 /** Withdraw a pending invite. Admins and owners only. */
@@ -518,6 +666,19 @@ export async function revokeInvite(inviteId: string): Promise<ActionResult> {
   if (!parsed.success) return actionFailed("That invite id is not valid.");
 
   const supabase = await createClient();
+  const invite = await supabase
+    .from("org_invites")
+    .select("email")
+    .eq("id", parsed.data)
+    .eq("org_id", org.id)
+    .maybeSingle();
+  if (invite.data?.email) {
+    await supabase
+      .from("splicr_access_allowlist")
+      .delete()
+      .eq("org_id", org.id)
+      .eq("email", invite.data.email);
+  }
   const { data, error } = await supabase
     .from("org_invites")
     .delete()
