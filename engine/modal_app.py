@@ -219,6 +219,30 @@ def doctor() -> dict:
                              "mean_bf_nonessential": round(sum(bf[g] for g in non if g in bf) / len(non), 2)}
     import numpy, pandas
     out["numpy"], out["pandas"] = numpy.__version__, pandas.__version__
+
+    # The imports every unit of work performs before it does anything, checked
+    # here rather than discovered by a study failing. runner.plan imports
+    # pmc_agent first, and a deploy from a clean checkout once shipped an image
+    # with no pydantic: planning died on import and the only trace was a study
+    # event nobody was reading.
+    imports = {}
+    for name, target in {
+        "planner": "splicr.ingest.runner",
+        "pmc_agent": "splicr.pmc_agent",
+        "design": "splicr.ingest.design",
+        "metadata": "splicr.ingest.metadata",
+        "requests": "splicr.ingest.requests",
+        "hits": "splicr.hits",
+        "db": "splicr.db",
+        "pydantic": "pydantic",
+    }.items():
+        try:
+            __import__(target)
+            imports[name] = "ok"
+        except Exception as exc:  # noqa: BLE001 - reporting is the whole point
+            imports[name] = f"FAILED {type(exc).__name__}: {exc}"
+    out["imports"] = imports
+    out["healthy"] = all(value == "ok" for value in imports.values())
     ref = Path(os.environ["SPLICR_REFERENCE_DIR"])
     out["references"] = sorted(p.name for p in ref.iterdir()) if ref.exists() else "MISSING"
     from splicr.references import available_libraries
