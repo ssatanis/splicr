@@ -63,6 +63,11 @@ image = (
     .pip_install(
         "duckdb==1.5.5", "pyarrow==25.0.1", "psycopg[binary]==3.3.6", "requests==2.34.2", "boto3==1.43.103",
         "scikit-learn==1.9.1", "statsmodels", "openpyxl==3.1.5",
+        # splicr.pmc_agent and splicr.ingest.pmc_context declare their schemas
+        # with pydantic, and runner.plan imports pmc_agent before it does
+        # anything else. Without this, planning dies on import for every study
+        # and the ingest stops silently. Pinned to engine/requirements.txt.
+        "pydantic==2.13.5",
     )
     .run_commands(
         # Same BAGEL2 commit as the local engine/.tools/bagel2 (v2.0 build 115).

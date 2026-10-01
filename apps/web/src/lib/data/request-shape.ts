@@ -47,9 +47,12 @@ export const REQUEST_COPY: Record<ScreenRequestStatus, { label: string; body: st
     label: "In the Atlas",
     body: "Reanalysed and recorded. Reanalysed screens are shared evidence and live in the Atlas, not in this workspace's screen list.",
   },
+  // Covers both "there is no such accession" and "this deposit is not a pooled
+  // screen". The label cannot name one of those, because the status does not
+  // know which it was; `detail` carries the engine's actual reason.
   rejected: {
-    label: "Not a screen the engine can process",
-    body: "The engine could not treat this as a pooled CRISPR screen. That is a statement about what the deposit contains, not about the experiment.",
+    label: "Not accepted",
+    body: "The engine could not take this accession up for reanalysis. That is a statement about what the deposit contains, not about the experiment.",
   },
   failed: {
     label: "Failed",

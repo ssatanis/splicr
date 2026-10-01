@@ -87,7 +87,7 @@ def drain(conn, limit: int = 10) -> dict:
             #  act on it. What the researcher is shown is a sentence: a
             #  traceback in the console tells them nothing they can do, and
             #  "KeyError: 'accession'" reads as their mistake rather than ours.
-            state.event(conn, None, "request", "error",
+            state.event(conn, None, "request", "failed",
                         f"{accession}: {type(exc).__name__}: {exc}")
             _set(conn, request_id, "failed",
                  "SplicR could not look this accession up. The engine recorded why; "
