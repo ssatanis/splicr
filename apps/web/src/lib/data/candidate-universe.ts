@@ -71,13 +71,14 @@ export async function getCandidates({
       .lte("fdr", maxFdr);
     if (comparisonId !== null) query = query.eq("comparison_id", comparisonId);
 
-    const { data, error, count } = await query
-      .order("fdr", { ascending: true, nullsFirst: false })
-      .order("gene_symbol")
-      .limit(CANDIDATE_LIMIT);
+    // The decisions do not depend on which hits come back, and each crosses the
+    // network, so the board costs one round trip rather than two.
+    const [{ data, error, count }, decisions] = await Promise.all([
+      query.order("fdr", { ascending: true, nullsFirst: false }).order("gene_symbol").limit(CANDIDATE_LIMIT),
+      getCandidateDecisions(screenId),
+    ]);
     if (error) throw error;
 
-    const decisions = await getCandidateDecisions(screenId);
     const current = decisions.status === "found" ? decisions.current : new Map();
     const history: Map<string, DecisionRecord[]> = decisions.status === "found" ? decisions.history : new Map();
 
