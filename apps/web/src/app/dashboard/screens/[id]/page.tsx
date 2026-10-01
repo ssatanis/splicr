@@ -16,7 +16,9 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { DecisionSummary } from "@/components/dashboard/evidence/decision-summary";
 import { EffectExplorer } from "@/components/dashboard/evidence/effect-explorer";
+import { ScreenDoctor } from "@/components/dashboard/evidence/screen-doctor";
 import { GeneFocusProvider } from "@/components/dashboard/evidence/gene-focus";
 import { HitFilters } from "@/components/dashboard/hit-report/filters";
 import { HitTable } from "@/components/dashboard/hit-report/table";
@@ -24,8 +26,6 @@ import {
   Card,
   FootLink,
   FootNote,
-  KpiStrip,
-  KpiTile,
   PageHeader,
   Panel,
   StatusChip,
@@ -36,8 +36,9 @@ import { getAtlasGenes } from "@/lib/atlas/store";
 import { getEffectPoints } from "@/lib/data/disagreement";
 import { getCurrentContext } from "@/lib/data/org";
 import { getGeneOutcomes } from "@/lib/data/outcomes";
-import { DETAIL_PAGE_SIZE, SIGNIFICANT_FDR, getScreenDetail } from "@/lib/data/screen-detail";
+import { DETAIL_PAGE_SIZE, SIGNIFICANT_FDR, getScreenDetail, qcEvidence } from "@/lib/data/screen-detail";
 import { hitHref, isFiltered, parseHitQuery } from "@/lib/report/hit-query";
+import { diagnose } from "@/lib/report/screen-doctor";
 import { formatNumber } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -60,9 +61,13 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
   const { screen, run, qc, stages, comparisons, hits, total, summary } = result.detail;
   const base = `/dashboard/screens/${screen.id}`;
   // One QC verdict, from the run that produced the results on this page. The
-  // database keeps screens.qc equal to it, so the chip and the stage evidence
-  // cannot disagree the way they did while the rollup was the engine's job.
-  const qcDetail = qc?.notes?.trim() || null;
+  // database keeps screens.qc equal to it, so the chip, the health panel and
+  // the stage evidence cannot disagree the way they did while the rollup was
+  // the engine's job.
+  // Screen Doctor reads the QC the run recorded. It computes no statistic:
+  // every figure it prints is stored and every judgement names the published
+  // threshold it was made against.
+  const diagnosis = diagnose(qcEvidence(qc));
 
   // A bookmarked page past the end goes to the last page that exists.
   const lastPage = Math.max(1, Math.ceil(total / DETAIL_PAGE_SIZE));
@@ -158,13 +163,6 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
           </div>
         </dl>
         {screen.description && <p className="mt-3 max-w-3xl whitespace-pre-wrap text-[12.5px] leading-snug text-body">{screen.description}</p>}
-        {(screen.qc === "fail" || screen.qc === "warn") && (
-          <p role="alert" className="mt-3 rounded-md bg-orange-50 px-3 py-2 text-[12.5px] leading-snug text-orange-700">
-            {screen.qc === "fail" ? "QC failed." : "QC passed with a warning."}{" "}
-            {qcDetail ?? "The recorded reason is under Analysis provenance below."}{" "}
-            Read the gene results against that.
-          </p>
-        )}
       </Panel>
 
       {!run ? (
@@ -176,41 +174,28 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
         </Card>
       ) : (
         <>
-          <KpiStrip
-            title="This run"
-            count={`${formatNumber(summary.recorded)} gene and comparison records`}
-            className="shrink-0"
-            footer={<FootNote>Counted over the whole run, whatever filter the table has</FootNote>}
+          <Panel
+            title="Screen summary"
+            count={`run ${run.id.slice(0, 8)}`}
+            body="flush"
           >
-            <KpiTile
-              label="Recorded"
-              value={formatNumber(summary.recorded)}
-              denominator="records"
-              definition="One per gene per comparison, exactly as the engine wrote them."
+            <DecisionSummary
+              diagnosis={diagnosis}
+              significant={summary.significant}
+              significantFdr={SIGNIFICANT_FDR}
+              significantFlagged={summary.significantFlagged}
+              outcomes={outcomes}
+              candidatesHref={hitHref(base, query, { maxFdr: SIGNIFICANT_FDR })}
             />
-            <KpiTile
-              label={`FDR at most ${SIGNIFICANT_FDR}`}
-              value={formatNumber(summary.significant)}
-              denominator={`of ${formatNumber(summary.recorded)}`}
-              definition="A record with no recorded FDR is not counted here, and is not called insignificant."
-              tone="cyan"
-              href={hitHref(base, query, { maxFdr: SIGNIFICANT_FDR })}
-            />
-            <KpiTile
-              label="Depleted / enriched"
-              value={`${formatNumber(summary.depleted)} / ${formatNumber(summary.enriched)}`}
-              denominator="records"
-              definition="The two arms of the comparison. Together they are every record."
-            />
-            <KpiTile
-              label="With artifact flags"
-              value={formatNumber(summary.flagged)}
-              denominator={`of ${formatNumber(summary.recorded)}`}
-              definition="A flag is a reason to check the hit, not a verdict on it."
-              tone="orange"
-              href={hitHref(base, query, { flagged: true })}
-            />
-          </KpiStrip>
+          </Panel>
+
+          <Panel
+            title="Screen health"
+            count={diagnosis.verdict === "pending" ? "no QC recorded" : `QC ${diagnosis.verdict}`}
+            body="flush"
+          >
+            <ScreenDoctor diagnosis={diagnosis} />
+          </Panel>
 
           <GeneFocusProvider>
           {plotComparison && (
@@ -244,7 +229,11 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
 
           <Panel
             title="Gene-level evidence"
-            count={filtered ? `${formatNumber(total)} match` : `${formatNumber(total)} records`}
+            count={
+              filtered
+                ? `${formatNumber(total)} match`
+                : `${formatNumber(total)} records, ${formatNumber(summary.depleted)} depleted and ${formatNumber(summary.enriched)} enriched`
+            }
             caveat="FDR, effect and artifact flags are different evidence. Validation probabilities are not available."
             body="flush"
             className="min-h-[320px]"

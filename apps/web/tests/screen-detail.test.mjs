@@ -146,7 +146,7 @@ test("the run summary counts the whole run, ignores the filter, and stays inside
   assert.equal(result.status, "found");
   assert.equal(result.detail.total, 7, "the filtered count is the paged query's");
   const h = heads(custom);
-  assert.equal(h.length, 4);
+  assert.equal(h.length, 5);
   for (const q of h) {
     assert.ok(q.filters.some(([k, v]) => k === "screen_id" && v === screenId));
     assert.ok(q.filters.some(([k, v]) => k === "run_id" && v === runId));
@@ -158,6 +158,12 @@ test("the run summary counts the whole run, ignores the filter, and stays inside
   assert.ok(h.some((q) => q.filters.some(([k, v]) => k === "direction" && v === "enriched")));
   assert.ok(h.some((q) => q.extra.some(([m, col, v]) => m === "lte" && col === "fdr" && v === custom.mod.SIGNIFICANT_FDR)));
   assert.ok(h.some((q) => /hit_flags!inner/.test(q.columns)));
+  // The candidate count on the summary is flagged-and-significant, so one head
+  // query carries both the inner join and the significance threshold, and that
+  // threshold is the page's own rather than whatever the reader filtered to.
+  assert.ok(h.some((q) =>
+    /hit_flags!inner/.test(q.columns)
+    && q.extra.some(([m, col, v]) => m === "lte" && col === "fdr" && v === custom.mod.SIGNIFICANT_FDR)));
   assert.equal(result.detail.summary.recorded, 14, "recorded is the two arms together");
 });
 
@@ -176,7 +182,7 @@ test("a genuinely unrun screen has explicit empty evidence", async () => {
   assert.equal(result.status, "found");
   assert.equal(result.detail.run, null);
   assert.equal(result.detail.hits.length, 0);
-  assert.deepEqual(result.detail.summary, { recorded: 0, depleted: 0, enriched: 0, significant: 0, flagged: 0 });
+  assert.deepEqual(result.detail.summary, { recorded: 0, depleted: 0, enriched: 0, significant: 0, flagged: 0, significantFlagged: 0 });
 });
 
 test("database errors return unavailable and never substitute sample rows", async () => {
@@ -241,6 +247,15 @@ function anchor({ href, children, ...rest }) {
 const filtersStub = function HitFilters() { return React.createElement("div", { "data-stub": "filters" }); };
 
 const realStore = loadTs("lib/atlas/store.ts", { mocks: { "server-only": {} } });
+// The page reads the QC document through this reducer. It is loaded for real so
+// the page cannot be shown to work against a shape the loader never produces.
+const realDetail = loadTs("lib/data/screen-detail.ts", {
+  mocks: {
+    "server-only": {},
+    "@/lib/data/org": { getCurrentContext: async () => workspace },
+    "@/lib/supabase/server": { createClient: async () => ({ from: () => ({}) }) },
+  },
+});
 let sampleReads = 0;
 let readArgs = null;
 
@@ -265,6 +280,8 @@ function pageHarness({ context = workspace, result, outcomes = new Map(), atlas 
       DETAIL_PAGE_SIZE: 100,
       SIGNIFICANT_FDR: 0.1,
       getScreenDetail: async (...args) => { readArgs = args; return result; },
+      // The real reducer: the page must not build its own view of the QC blob.
+      qcEvidence: realDetail.qcEvidence,
     },
   };
   Object.defineProperty(mocks, "@/lib/mock/data", { enumerable: true, get() { sampleReads++; return { screens: [{ id: "scr_demo" }] }; } });
@@ -276,13 +293,13 @@ function pageHarness({ context = workspace, result, outcomes = new Map(), atlas 
   };
 }
 
-const summary = { recorded: 1, depleted: 1, enriched: 0, significant: 1, flagged: 0 };
+const summary = { recorded: 1, depleted: 1, enriched: 0, significant: 1, flagged: 0, significantFlagged: 0 };
 const found = (over = {}, hitOver = {}) => ({
   status: "found",
   detail: {
     screen: { id: screenId, name: "Actual experiment", modality: "knockout", status: "complete", qc: "pass", cell_line: "A375", phenotype: "ferroptosis", taxid: 9606, description: null },
     run: { id: runId, status: "complete", engine_version: "actual-engine-version", image_digest: null, error: null },
-    stages: [], comparisons: [{ id: cmpId, name: "Drug vs vehicle" }], total: 1, page: 1, summary,
+    stages: [], comparisons: [{ id: cmpId, name: "Drug vs vehicle" }], total: 1, page: 1, summary, qc: null,
     hits: [{
       id: "h", comparison_id: cmpId, gene_symbol: "TP53", direction: "enriched", lfc: 0, fdr: 0.00001234, p_value: null,
       bayes_factor: null, n_guides: 4, n_good_guides: 0, chance_real: null, hit_flags: [], guide_lfcs: [0, 1, 2, 3], ...hitOver,
@@ -308,14 +325,19 @@ test("a measured zero effect is 0, not 'Not recorded', and a missing p-value is 
   assert.match(html, /<td class="num-col">Not recorded<\/td>/);
 });
 
-test("the run summary states its denominators and never a validation rate", async () => {
-  const html = await pageHarness({ result: found({ summary: { recorded: 200, depleted: 120, enriched: 80, significant: 37, flagged: 9 } }) }).render();
-  assert.match(html, /200 gene and comparison records/);
-  assert.match(html, /FDR at most 0\.1/);
+test("the summary states its denominators and never a validation rate", async () => {
+  const html = await pageHarness({
+    result: found({ summary: { recorded: 200, depleted: 120, enriched: 80, significant: 37, flagged: 9, significantFlagged: 4 } }),
+  }).render();
+  // The decision layer: how many candidates, out of what, and how many of them
+  // carry a flag. Every figure keeps its denominator.
   assert.match(html, /37/);
-  assert.match(html, /of 200/);
-  assert.match(html, /120 \/ 80/);
-  assert.match(html, /A record with no recorded FDR is not counted here, and is not called insignificant/);
+  assert.match(html, /At or below FDR 0\.1/);
+  assert.match(html, /4 of 37/);
+  assert.match(html, /A record with no recorded FDR is not counted/);
+  // The size of the run and its two arms are still on the page, on the panel
+  // that holds the rows rather than in the largest type above them.
+  assert.match(html, /120 depleted and 80 enriched/);
   assert.match(html, /Validation probabilities are not available/);
   assert.doesNotMatch(html, /% validat|likely real|probability of validating:/i);
 });
@@ -389,7 +411,7 @@ test("filters are passed to the loader from the address, and an empty match says
 });
 
 test("a run with no records says that is not evidence of no hits", async () => {
-  const html = await pageHarness({ result: found({ hits: [], total: 0, summary: { recorded: 0, depleted: 0, enriched: 0, significant: 0, flagged: 0 } }) }).render();
+  const html = await pageHarness({ result: found({ hits: [], total: 0, summary: { recorded: 0, depleted: 0, enriched: 0, significant: 0, flagged: 0, significantFlagged: 0 } }) }).render();
   assert.match(html, /does not establish that the experiment had no hits/);
 });
 
@@ -399,17 +421,25 @@ test("a page past the end goes to the last page that exists", async () => {
 });
 
 test("a screen that has not been run explains itself instead of showing an empty table", async () => {
-  const html = await pageHarness({ result: found({ run: null, hits: [], total: 0, stages: [], summary: { recorded: 0, depleted: 0, enriched: 0, significant: 0, flagged: 0 } }) }).render();
+  const html = await pageHarness({ result: found({ run: null, hits: [], total: 0, stages: [], summary: { recorded: 0, depleted: 0, enriched: 0, significant: 0, flagged: 0, significantFlagged: 0 } }) }).render();
   assert.match(html, /Analysis not recorded/);
   assert.match(html, /says\s+nothing about whether the experiment has hits/);
   assert.doesNotMatch(html, /api\/report/);
 });
 
-test("QC failure is a visible alert above the results", async () => {
+test("QC failure is announced above the results, with what to do about it", async () => {
   const failed = found();
   failed.detail.screen.qc = "fail";
+  failed.detail.qc = {
+    verdict: "fail", notes: null, nnmd: -0.2, auroc: 0.52,
+    min_replicate_r: 0.9, median_replicate_r: 0.9, bottlenecked_samples: 0,
+    metrics: { nnmd: -0.2, nnmd_contrast: "ctrl vs plasmid", samples: [], replicate_correlations: [] },
+  };
   const html = await pageHarness({ result: failed }).render();
-  assert.match(html, /role="alert"[^>]*>QC failed/);
+  assert.match(html, /role="alert"/);
+  assert.match(html, /QC failed/);
+  // And the alert carries the concern, not just the word.
+  assert.match(html, /do not separate|Do not read gene results/i);
 });
 
 test("exports are offered for a run and link to the report route", async () => {
