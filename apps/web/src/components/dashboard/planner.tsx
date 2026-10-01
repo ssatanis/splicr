@@ -4,9 +4,25 @@
  * The screen planner.
  *
  * It answers one question before anything is ordered: what does this design
- * need, in guides, cells, reads, weeks and consumables, and where will it be
+ * need, in cells, samples, reads, weeks and consumables, and where will it be
  * thin? Every figure is arithmetic on what the reader typed, with the working
- * printed beside it (see lib/planner/model.ts for the model and its limits).
+ * one fold away (see lib/planner/model.ts for the model and its limits).
+ *
+ * WHY IT IS THREE STEPS
+ *
+ * The first version put every input on the left and every result on the right:
+ * library, cells, MOI, starting cells, doubling time, design, replicates, days,
+ * reads, run yield, skew, two floors, DNA, PCR, six unit costs, six timeline
+ * assumptions, then eight figures, a checks list, a representation table, a
+ * timeline, a sequencing table, a noise table, a cost table and the equations.
+ * All of it is useful and almost none of it is useful at once, so the page was
+ * two metres of scroll in which the one number somebody came for - can I afford
+ * this screen - was indistinguishable from the lognormal integral.
+ *
+ * Nothing was taken away. Design and scale are now two short steps, the plan
+ * sits beside them and updates as you type, and the rest is in Review behind
+ * folds. Every field that existed still exists; the ones most labs never touch
+ * are under Advanced.
  *
  * There is no power percentage. An earlier version showed "Power 97%" from an
  * expression with no alpha, no dispersion and no library size, and a hopeless
@@ -21,7 +37,7 @@
  * sent as a link and reopens exactly as it was.
  */
 
-import { Check, Copy, Download, RotateCcw } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Copy, Download, RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { planCsv } from "@/lib/planner/export";
@@ -42,23 +58,16 @@ import {
 import { cn } from "@/lib/utils";
 
 import { PageHeader, Panel, Segmented } from "./ui";
+import { Disclosure, Field, SelectField, type FieldBag } from "./planner/fields";
 import {
-  Disclosure,
-  Field,
-  SelectField,
-  Section,
-  type FieldBag,
-} from "./planner/fields";
-import {
-  ChecksPanel,
-  CostPanel,
-  MethodPanel,
-  NoisePanel,
-  PlanKpis,
-  RepresentationPanel,
-  SequencingPanel,
-  TimelinePanel,
-} from "./planner/results";
+  CostDetail,
+  Detail,
+  MethodDetail,
+  RepresentationDetail,
+  SequencingDetail,
+  TimelineDetail,
+} from "./planner/details";
+import { PlanChecks, PlanFigures } from "./planner/summary";
 
 function download(filename: string, text: string, type: string) {
   const url = URL.createObjectURL(new Blob([text], { type }));
@@ -71,6 +80,12 @@ function download(filename: string, text: string, type: string) {
 
 const PRESET_INPUTS = PRESETS.map((preset) => ({ preset, inputs: applyPreset(preset) }));
 
+const STEPS = [
+  { id: "design", label: "Design", hint: "What you are screening" },
+  { id: "scale", label: "Scale", hint: "How big the experiment is" },
+  { id: "review", label: "Review", hint: "The plan and its working" },
+] as const;
+
 function sameInputs(a: PlanInputs, b: PlanInputs): boolean {
   return (Object.keys(a) as (keyof PlanInputs)[]).every((key) => a[key] === b[key]);
 }
@@ -79,10 +94,12 @@ export function Planner({ initial }: { initial: PlanInputs }) {
   const [inputs, setInputs] = useState<PlanInputs>(initial);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [issues, setIssues] = useState<Record<string, string>>({});
+  const [step, setStep] = useState(0);
   const [copied, setCopied] = useState<"idle" | "copied" | "failed">("idle");
   const copiedTimer = useRef<number | undefined>(undefined);
 
   const plan = useMemo(() => buildPlan(inputs), [inputs]);
+  const warnings = plan.checks.filter((check) => check.level === "warn").length;
 
   // The address follows the design. replaceState, not navigation: there is
   // nothing to fetch, and twelve keystrokes should not be twelve history entries.
@@ -158,23 +175,24 @@ export function Planner({ initial }: { initial: PlanInputs }) {
   };
 
   const isDefault = sameInputs(inputs, DEFAULT_INPUTS);
+  const ghost = "btn btn-ghost h-7 rounded-md px-2.5 py-0 text-[11px]";
 
   return (
     <div className="flex flex-col gap-3 pb-6">
       <PageHeader
         dense
         title="Screen Planner"
-        body="What a design needs in guides, cells, reads, weeks and consumables, before anything is ordered."
+        body="What a design needs before anything is ordered."
         actions={
           <>
-            <button type="button" onClick={copyLink} className="btn btn-ghost h-7 rounded-md px-2.5 py-0 text-[11px]">
+            <button type="button" onClick={copyLink} className={ghost}>
               {copied === "copied" ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : <Copy className="h-3.5 w-3.5" aria-hidden="true" />}
               {copied === "copied" ? "Link copied" : copied === "failed" ? "Copy the address bar" : "Copy link"}
             </button>
             <button
               type="button"
               onClick={() => download(`splicr-screen-plan_${day}.csv`, planCsv(inputs, rows()), "text/csv;charset=utf-8")}
-              className="btn btn-ghost h-7 rounded-md px-2.5 py-0 text-[11px]"
+              className={ghost}
             >
               <Download className="h-3.5 w-3.5" aria-hidden="true" /> CSV
             </button>
@@ -187,7 +205,7 @@ export function Planner({ initial }: { initial: PlanInputs }) {
                   "application/json",
                 )
               }
-              className="btn btn-ghost h-7 rounded-md px-2.5 py-0 text-[11px]"
+              className={ghost}
             >
               <Download className="h-3.5 w-3.5" aria-hidden="true" /> JSON
             </button>
@@ -200,179 +218,254 @@ export function Planner({ initial }: { initial: PlanInputs }) {
 
       <div className="grid grid-cols-12 content-start gap-4">
         <Panel
-          title="Describe the screen"
-          span={4}
-          className="lg:sticky lg:top-0 lg:max-h-[calc(100dvh-6.5rem)] lg:self-start"
+          title={STEPS[step].label}
+          count={STEPS[step].hint}
+          span={8}
+          bodyClassName="space-y-4"
           footer={
             <>
-              <span className="min-w-0 truncate text-[11px] text-muted">Runs in your browser. Nothing is sent anywhere.</span>
+              <button
+                type="button"
+                onClick={() => setStep((current) => Math.max(0, current - 1))}
+                disabled={step === 0}
+                className={cn(ghost, "disabled:opacity-40")}
+              >
+                <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> Back
+              </button>
               <button
                 type="button"
                 onClick={() => replaceAll(DEFAULT_INPUTS)}
                 disabled={isDefault}
-                className="inline-flex shrink-0 items-center gap-1 text-[11px] text-cyan-600 underline decoration-line-strong underline-offset-2 hover:decoration-cyan-600 disabled:text-muted disabled:no-underline"
+                className="inline-flex items-center gap-1 text-[11px] text-cyan-600 underline decoration-line-strong underline-offset-2 disabled:text-muted disabled:no-underline"
               >
                 <RotateCcw className="h-3 w-3" aria-hidden="true" /> Reset
               </button>
+              <span className="ml-auto">
+                {step < STEPS.length - 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setStep((current) => current + 1)}
+                    className="inline-flex h-7 items-center gap-1 rounded-md bg-ink px-3 text-[11px] font-medium text-white hover:bg-ink/90"
+                  >
+                    {step === 0 ? "Set the scale" : "Review the plan"} <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
+                )}
+              </span>
             </>
           }
-          bodyClassName="space-y-4"
         >
-          <a
-            href="#plan-results"
-            className="block rounded-md bg-cyan-50 px-2.5 py-1.5 text-center text-[12px] text-cyan-700 lg:hidden"
-          >
-            Jump to the plan
-          </a>
-          <div>
-            <div className="mb-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-muted">Start from</div>
-            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Starting points">
-              {PRESET_INPUTS.map(({ preset, inputs: presetInputs }) => {
-                const active = sameInputs(inputs, presetInputs);
-                return (
+          {/* The stepper is navigation, not a wizard that locks you in: every
+              step is reachable at any time, because a reader who wants to change
+              the library from the review should not have to click Back twice. */}
+          <nav aria-label="Planner steps" className="-mt-0.5 flex gap-1.5">
+            {STEPS.map((entry, index) => (
+              <button
+                key={entry.id}
+                type="button"
+                aria-current={index === step ? "step" : undefined}
+                onClick={() => setStep(index)}
+                className={cn(
+                  "flex flex-1 items-center gap-2 rounded-md border px-2.5 py-1.5 text-left text-[12px] transition-colors duration-[var(--dur-1)] motion-reduce:transition-none",
+                  index === step
+                    ? "border-ink bg-ink text-white"
+                    : "border-line bg-white text-body hover:border-line-strong hover:text-ink",
+                )}
+              >
+                <span className={cn(
+                  "num flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px]",
+                  index === step ? "bg-white/20" : "bg-mist-soft text-muted",
+                )}>
+                  {index + 1}
+                </span>
+                <span className="truncate">{entry.label}</span>
+              </button>
+            ))}
+          </nav>
+
+          {step === 0 && (
+            <>
+              <div>
+                <div className="mb-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-muted">Start from</div>
+                <div className="flex flex-wrap gap-1.5" role="group" aria-label="Starting points">
+                  {PRESET_INPUTS.map(({ preset, inputs: presetInputs }) => {
+                    const active = sameInputs(inputs, presetInputs);
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        aria-pressed={active}
+                        title={preset.blurb}
+                        onClick={() => replaceAll(presetInputs)}
+                        className={cn(
+                          "rounded-md border px-2 py-1 text-left text-[11.5px] leading-tight transition-colors duration-[var(--dur-1)] motion-reduce:transition-none",
+                          active ? "border-cyan-500 bg-cyan-50 text-ink" : "border-line bg-white text-body hover:border-line-strong hover:text-ink",
+                        )}
+                      >
+                        {preset.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <SelectField
+                label="Library"
+                value={inputs.library}
+                onChange={(library) => replaceAll({ ...inputs, library })}
+              >
+                <option value="custom">Custom library</option>
+                {PLANNER_LIBRARIES.map((library) => (
+                  <option key={library.slug} value={library.slug}>
+                    {library.name}, {library.organism.toLowerCase()} {MODALITY_NAME[library.modality]}
+                  </option>
+                ))}
+              </SelectField>
+              {catalog ? (
+                <div className="-mt-2 rounded-md bg-mist-soft px-2.5 py-2 text-[11.5px] leading-snug text-body">
+                  <span className="num text-ink">{formatInt(catalog.guides)}</span> guides:{" "}
+                  <span className="num">{formatInt(catalog.guides - catalog.controls)}</span> targeting{" "}
+                  <span className="num">{formatInt(catalog.genes)}</span> genes, plus{" "}
+                  <span className="num">{formatInt(catalog.controls)}</span> controls.{" "}
                   <button
-                    key={preset.id}
                     type="button"
-                    aria-pressed={active}
-                    title={preset.blurb}
-                    onClick={() => replaceAll(presetInputs)}
-                    className={cn(
-                      "rounded-md border px-2 py-1 text-left text-[11.5px] leading-tight transition-colors duration-[var(--dur-1)]",
-                      active ? "border-cyan-500 bg-cyan-50 text-ink" : "border-line bg-white text-body hover:border-line-strong hover:text-ink",
-                    )}
+                    onClick={useAsCustom}
+                    className="text-cyan-600 underline decoration-line-strong underline-offset-2 hover:decoration-cyan-600"
                   >
-                    {preset.label}
+                    Edit as a custom library
                   </button>
-                );
-              })}
-            </div>
-          </div>
+                </div>
+              ) : (
+                <div className="-mt-2 grid grid-cols-3 gap-2">
+                  <Field bag={bag} name="genes" />
+                  <Field bag={bag} name="guidesPerGene" />
+                  <Field bag={bag} name="controls" />
+                </div>
+              )}
 
-          <Section title="Library">
-            <SelectField
-              label="Library"
-              value={inputs.library}
-              onChange={(library) => replaceAll({ ...inputs, library })}
-            >
-              <option value="custom">Custom library</option>
-              {PLANNER_LIBRARIES.map((library) => (
-                <option key={library.slug} value={library.slug}>
-                  {library.name}, {library.organism.toLowerCase()} {MODALITY_NAME[library.modality]}
-                </option>
-              ))}
-            </SelectField>
-            {catalog ? (
-              <div className="rounded-md bg-mist-soft px-2.5 py-2 text-[11.5px] leading-snug text-body">
-                <span className="num text-ink">{formatInt(catalog.guides)}</span> guides:{" "}
-                <span className="num">{formatInt(catalog.guides - catalog.controls)}</span> targeting{" "}
-                <span className="num">{formatInt(catalog.genes)}</span> genes, plus{" "}
-                <span className="num">{formatInt(catalog.controls)}</span> controls.{" "}
-                <button
-                  type="button"
-                  onClick={useAsCustom}
-                  className="text-cyan-600 underline decoration-line-strong underline-offset-2 hover:decoration-cyan-600"
-                >
-                  Edit as a custom library
-                </button>
+              <div>
+                <div className="mb-1 text-[12px] text-ink">Comparison</div>
+                <Segmented
+                  label="Screen design"
+                  value={inputs.design}
+                  onChange={(design) => replaceAll({ ...inputs, design })}
+                  options={[
+                    { value: "treatment", label: "Treated vs control" },
+                    { value: "dropout", label: "Dropout vs day 0" },
+                  ]}
+                />
+                <p className="mt-1 text-[11px] leading-snug text-muted">
+                  {inputs.design === "treatment"
+                    ? "Two arms, each in replicate, and a day-zero reference."
+                    : "One arm in replicate, compared with the day-zero reference."}
+                </p>
               </div>
-            ) : (
-              <div className="grid grid-cols-3 gap-2">
-                <Field bag={bag} name="genes" />
-                <Field bag={bag} name="guidesPerGene" />
-                <Field bag={bag} name="controls" />
-              </div>
-            )}
-          </Section>
 
-          <Section title="Cells">
-            <div className="grid grid-cols-2 gap-2">
-              <Field bag={bag} name="coverage" />
-              <Field bag={bag} name="moi" />
-              <Field bag={bag} name="startingCellsM" />
-              <Field bag={bag} name="doublingHours" />
-            </div>
-          </Section>
-
-          <Section title="Screen">
-            <div>
-              <div className="mb-1 text-[12px] text-ink">Design</div>
-              <Segmented
-                label="Screen design"
-                value={inputs.design}
-                onChange={(design) => replaceAll({ ...inputs, design })}
-                options={[
-                  { value: "treatment", label: "Treated vs control" },
-                  { value: "dropout", label: "Dropout vs day 0" },
-                ]}
-              />
-              <p className="mt-1 text-[11px] leading-snug text-muted">
-                {inputs.design === "treatment"
-                  ? "Two arms, each in replicate, and a day-zero reference."
-                  : "One arm in replicate, compared with the day-zero reference."}
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <Field bag={bag} name="replicates" />
-              <Field bag={bag} name="screenDays" />
-            </div>
-          </Section>
-
-          <Section title="Sequencing">
-            <div className="grid grid-cols-2 gap-2">
-              <Field bag={bag} name="readsPerGuide" />
-              <Field bag={bag} name="runReadsM" />
-              <Field bag={bag} name="skew" />
-              <div />
-              <Field bag={bag} name="cellFloor" />
-              <Field bag={bag} name="readFloor" />
-            </div>
-          </Section>
-
-          <div className="space-y-2">
-            <Disclosure title="DNA and PCR" summary={`${inputs.gdnaPgPerCell} pg, ${inputs.gdnaUgPerPcr} µg`}>
               <div className="grid grid-cols-2 gap-2">
-                <Field bag={bag} name="gdnaPgPerCell" />
-                <Field bag={bag} name="gdnaUgPerPcr" />
+                <Field bag={bag} name="replicates" />
+                <Field bag={bag} name="screenDays" />
               </div>
-            </Disclosure>
-            <Disclosure title="Unit costs" summary="placeholders">
-              <p className="text-[11px] leading-snug text-muted">
-                These are stand-ins, not quotes. Replace them with your core&apos;s prices.
-              </p>
+            </>
+          )}
+
+          {step === 1 && (
+            <>
               <div className="grid grid-cols-2 gap-2">
-                <Field bag={bag} name="costLibrary" />
-                <Field bag={bag} name="costVirus" />
-                <Field bag={bag} name="costCulturePerBillion" />
-                <Field bag={bag} name="costGdnaPerUg" />
-                <Field bag={bag} name="costPcr" />
-                <Field bag={bag} name="costSeqPerMillion" />
+                <Field bag={bag} name="coverage" />
+                <Field bag={bag} name="moi" />
+                <Field bag={bag} name="readsPerGuide" />
+                <Field bag={bag} name="runReadsM" />
               </div>
-            </Disclosure>
-            <Disclosure title="Timeline assumptions" summary="weeks per phase">
-              <div className="grid grid-cols-2 gap-2">
-                <Field bag={bag} name="weeksLibrary" />
-                <Field bag={bag} name="weeksVirus" />
-                <Field bag={bag} name="weeksSelection" />
-                <Field bag={bag} name="weeksHarvest" />
-                <Field bag={bag} name="weeksSequencing" />
-                <Field bag={bag} name="weeksAnalysis" />
+
+              <div className="space-y-2">
+                <Disclosure title="Cells on hand and growth" summary={`${inputs.startingCellsM}M, ${inputs.doublingHours} h`}>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Field bag={bag} name="startingCellsM" />
+                    <Field bag={bag} name="doublingHours" />
+                  </div>
+                </Disclosure>
+                <Disclosure title="Representation thresholds" summary={`skew ${inputs.skew}`}>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Field bag={bag} name="skew" />
+                    <Field bag={bag} name="cellFloor" />
+                    <Field bag={bag} name="readFloor" />
+                  </div>
+                </Disclosure>
+                <Disclosure title="DNA and PCR" summary={`${inputs.gdnaPgPerCell} pg, ${inputs.gdnaUgPerPcr} µg`}>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Field bag={bag} name="gdnaPgPerCell" />
+                    <Field bag={bag} name="gdnaUgPerPcr" />
+                  </div>
+                </Disclosure>
+                <Disclosure title="Unit costs" summary="placeholders, editable">
+                  <p className="text-[11px] leading-snug text-muted">
+                    Stand-ins, not quotes. Replace them with your core&apos;s prices.
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Field bag={bag} name="costLibrary" />
+                    <Field bag={bag} name="costVirus" />
+                    <Field bag={bag} name="costCulturePerBillion" />
+                    <Field bag={bag} name="costGdnaPerUg" />
+                    <Field bag={bag} name="costPcr" />
+                    <Field bag={bag} name="costSeqPerMillion" />
+                  </div>
+                </Disclosure>
+                <Disclosure title="Timeline assumptions" summary="weeks per phase">
+                  <div className="grid grid-cols-3 gap-2">
+                    <Field bag={bag} name="weeksLibrary" />
+                    <Field bag={bag} name="weeksVirus" />
+                    <Field bag={bag} name="weeksSelection" />
+                    <Field bag={bag} name="weeksHarvest" />
+                    <Field bag={bag} name="weeksSequencing" />
+                    <Field bag={bag} name="weeksAnalysis" />
+                  </div>
+                </Disclosure>
               </div>
-            </Disclosure>
-          </div>
+            </>
+          )}
+
+          {step === 2 && (
+            <div className="-my-1">
+              <Detail
+                title="Library representation"
+                summary={`${(plan.representation.cellsBelowFloor * 100).toFixed(2)}% of guides under the cell floor`}
+                defaultOpen
+              >
+                <RepresentationDetail plan={plan} inputs={inputs} />
+              </Detail>
+              <Detail title="Timeline" summary={`${plan.timeline.totalWeeks} weeks over ${plan.timeline.phases.filter((p) => p.days > 0).length} phases`}>
+                <TimelineDetail plan={plan} />
+              </Detail>
+              <Detail title="Sequencing, PCR and the noise floor" summary={`${formatInt(plan.sequencing.pcrTotal)} PCRs`}>
+                <SequencingDetail plan={plan} inputs={inputs} />
+              </Detail>
+              <Detail title="Consumables" summary={`${plan.costs.lines.length} lines`}>
+                <CostDetail plan={plan} />
+              </Detail>
+              <Detail title="How this is calculated" summary="equations and sources">
+                <MethodDetail />
+              </Detail>
+            </div>
+          )}
         </Panel>
 
-        <div id="plan-results" tabIndex={-1} className="col-span-12 flex min-w-0 scroll-mt-4 flex-col gap-4 outline-none lg:col-span-8">
-          <PlanKpis plan={plan} inputs={inputs} />
-          <ChecksPanel plan={plan} />
-          <RepresentationPanel plan={plan} inputs={inputs} />
-          <TimelinePanel plan={plan} />
-          <div className="grid gap-4 md:grid-cols-2">
-            <SequencingPanel plan={plan} inputs={inputs} />
-            <NoisePanel plan={plan} inputs={inputs} />
+        <Panel
+          title="The plan"
+          count={`${plan.library.name}, ${formatInt(plan.library.guides)} guides`}
+          span={4}
+          body="flush"
+          className="lg:sticky lg:top-0 lg:self-start"
+        >
+          <PlanFigures plan={plan} inputs={inputs} />
+          <div className="border-t border-line">
+            <div className="flex items-baseline justify-between gap-2 border-b border-line px-[var(--panel-gutter)] pb-1 pt-2">
+              <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted">Checks</span>
+              <span className={cn("text-[11px]", warnings > 0 ? "text-orange-700" : "text-muted")}>
+                {warnings === 0 ? "nothing needs attention" : `${warnings} need${warnings === 1 ? "s" : ""} attention`}
+              </span>
+            </div>
+            <PlanChecks checks={plan.checks} />
           </div>
-          <CostPanel plan={plan} />
-          <MethodPanel />
-        </div>
+        </Panel>
       </div>
     </div>
   );

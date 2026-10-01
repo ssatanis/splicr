@@ -188,7 +188,7 @@ export function EffectExplorer({
               aria-pressed={maxFdr === value}
               onClick={() => setMaxFdr(value)}
               className={`num ${control} ${
-                maxFdr === value ? "border-ink bg-ink text-surface" : "border-line text-body hover:bg-canvas"
+                maxFdr === value ? "border-ink bg-ink text-white" : "border-line text-body hover:bg-canvas"
               }`}
             >
               {value}
