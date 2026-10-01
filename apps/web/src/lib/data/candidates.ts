@@ -1,0 +1,96 @@
+/**
+ * The candidates of a screen, and whatever the lab has decided about them.
+ *
+ * A candidate is a recorded hit at or below the page's significance threshold.
+ * That is a threshold, not a judgement: the console says which one it used, and
+ * a record with no recorded FDR is not counted and is not called insignificant.
+ *
+ * Reads go through the request-scoped Supabase client, so Row Level Security
+ * decides what comes back, and the organization comes from the session.
+ */
+import "server-only";
+
+import { getCurrentContext } from "@/lib/data/org";
+import { isUuid } from "@/lib/data/types";
+import type { CandidateStatus } from "@/lib/report/candidates";
+import { createClient } from "@/lib/supabase/server";
+
+/** The decision log for one gene, newest first. */
+export interface DecisionRecord {
+  id: string;
+  state: string;
+  reason: string | null;
+  decided_at: string;
+  decided_by: string | null;
+  evidence: Record<string, unknown>;
+}
+
+export interface CurrentDecision {
+  gene: string;
+  status: CandidateStatus;
+  reason: string | null;
+  decidedAt: string;
+  decidedBy: string | null;
+  count: number;
+}
+
+export type DecisionsResult =
+  | { status: "found"; current: Map<string, CurrentDecision> }
+  /** The decisions could not be read. Not the same as no decisions. */
+  | { status: "unavailable" };
+
+/** What this workspace has decided about the genes of one screen. */
+export async function getCandidateDecisions(screenId: string): Promise<DecisionsResult> {
+  if (!isUuid(screenId)) return { status: "unavailable" };
+  const context = await getCurrentContext();
+  if (!context.user || !context.org) return { status: "found", current: new Map() };
+  try {
+    const client = await createClient();
+    const { data, error } = await client
+      .from("candidate_current")
+      .select("gene_symbol, state, reason, decided_at, decided_by, n_decisions")
+      .eq("screen_id", screenId);
+    if (error) throw error;
+    const current = new Map<string, CurrentDecision>();
+    for (const row of data ?? []) {
+      current.set(String(row.gene_symbol).toUpperCase(), {
+        gene: String(row.gene_symbol),
+        status: String(row.state) as CandidateStatus,
+        reason: (row.reason as string | null) ?? null,
+        decidedAt: String(row.decided_at),
+        decidedBy: (row.decided_by as string | null) ?? null,
+        count: Number(row.n_decisions ?? 1),
+      });
+    }
+    return { status: "found", current };
+  } catch (error) {
+    console.error(`[data/candidates] ${error instanceof Error ? error.message : "read failed"}`);
+    return { status: "unavailable" };
+  }
+}
+
+export type HistoryResult =
+  | { status: "found"; decisions: DecisionRecord[] }
+  | { status: "unavailable" };
+
+/** Every decision ever recorded for one gene of one screen, newest first. */
+export async function getDecisionHistory(screenId: string, gene: string): Promise<HistoryResult> {
+  if (!isUuid(screenId)) return { status: "unavailable" };
+  const context = await getCurrentContext();
+  if (!context.user || !context.org) return { status: "found", decisions: [] };
+  try {
+    const client = await createClient();
+    const { data, error } = await client
+      .from("candidate_decisions")
+      .select("id, state, reason, decided_at, decided_by, evidence")
+      .eq("screen_id", screenId)
+      .eq("gene_symbol", gene.toUpperCase())
+      .order("decided_at", { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    return { status: "found", decisions: (data ?? []) as unknown as DecisionRecord[] };
+  } catch (error) {
+    console.error(`[data/candidates] history: ${error instanceof Error ? error.message : "read failed"}`);
+    return { status: "unavailable" };
+  }
+}
