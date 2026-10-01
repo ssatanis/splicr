@@ -10,7 +10,6 @@ import path from "node:path";
 
 //  CommonJS, so the one file serves both Playwright (which transpiles the
 //  suite to CJS) and `node e2e/fixtures/seed.cjs seed` from a terminal.
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { FIXTURE: RAW, seed: rawSeed, teardown: rawTeardown } = require("./seed.cjs");
 
 export const FIXTURE = RAW as {

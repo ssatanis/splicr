@@ -16,6 +16,13 @@ const eslintConfig = defineConfig([
     // It is a 6 MB minified third-party bundle, not source in this repository.
     "public/vendor/**",
   ]),
+  {
+    // The end-to-end suite is CommonJS: Playwright transpiles the specs that
+    // way, and the fixture seed is one file so it can also be run by hand from
+    // a terminal. `require` there is the interop, not a lapse.
+    files: ["e2e/**/*.cjs", "e2e/**/*.ts"],
+    rules: { "@typescript-eslint/no-require-imports": "off" },
+  },
 ]);
 
 export default eslintConfig;
