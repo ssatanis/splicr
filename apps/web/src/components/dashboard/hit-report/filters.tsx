@@ -32,9 +32,20 @@ export function HitFilters({
   const [pending, startTransition] = useTransition();
   const query = useMemo(() => parseHitQuery(Object.fromEntries(params.entries())), [params]);
 
+  /**
+   * A control the reader operated once is a step they can go back from, so it
+   * pushes. The search box does not: it fires on a debounce while somebody is
+   * typing, and twelve keystrokes should not be twelve entries to walk back
+   * through. `replaceText` is that case and only that case.
+   */
   const go = useCallback(
-    (patch: Parameters<typeof hitHref>[2]) => {
-      startTransition(() => router.replace(hitHref(pathname, query, patch), { scroll: false }));
+    (patch: Parameters<typeof hitHref>[2], replaceText = false) => {
+      const href = hitHref(pathname, query, patch);
+      startTransition(() =>
+        replaceText
+          ? router.replace(href, { scroll: false })
+          : router.push(href, { scroll: false }),
+      );
     },
     [pathname, query, router],
   );
@@ -53,7 +64,7 @@ export function HitFilters({
     if (text === written) return;
     const timer = window.setTimeout(() => {
       setWritten(text);
-      go({ q: text.trim() === "" ? null : text.trim() });
+      go({ q: text.trim() === "" ? null : text.trim() }, true);
     }, 260);
     return () => window.clearTimeout(timer);
   }, [text, written, go]);

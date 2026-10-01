@@ -3,12 +3,13 @@
  * a reader is shown, not the deployed Supabase RLS policies.
  */
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import test from "node:test";
 
 import * as React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { loadTs } from "./helpers/load-ts.mjs";
+import { loadTs, srcPath } from "./helpers/load-ts.mjs";
 
 const screenId = "00000000-0000-4000-8000-000000000001";
 const orgId = "00000000-0000-4000-8000-000000000002";
@@ -429,4 +430,41 @@ test("unavailable workspace page names the read failure and contains no sample v
   assert.match(html, /could not be read/);
   assert.doesNotMatch(html, /SAMPLE_VIEW|TP53|91%/);
   assert.equal(sampleReads, 0);
+});
+
+// ---------------------------------------------------------------------------
+// Filters and the back button
+// ---------------------------------------------------------------------------
+
+test("a filter the reader chose is a step they can go back from", () => {
+  const source = fs.readFileSync(srcPath("components/dashboard/hit-report/filters.tsx"), "utf8");
+  // Choosing a direction, an FDR, a comparison or the flag checkbox pushes, so
+  // Back returns to the view before it instead of leaving the screen.
+  assert.match(source, /router\.push\(href, \{ scroll: false \}\)/);
+  // The search box is the exception: it fires on a debounce while somebody is
+  // typing, and twelve keystrokes must not be twelve history entries.
+  assert.match(source, /go\(\{ q: [^}]+\}, true\)/);
+  assert.match(source, /replaceText\s*\?\s*router\.replace/);
+});
+
+test("sorting and paging are history steps too", () => {
+  for (const file of ["components/dashboard/hit-report/table.tsx", "app/dashboard/screens/[id]/page.tsx"]) {
+    const source = fs.readFileSync(srcPath(file), "utf8");
+    const links = [...source.matchAll(/hitHref\(\s*base(?:Path)?,[\s\S]{0,160}?\/>/g)].map((m) => m[0]);
+    for (const link of links) {
+      assert.ok(!/\breplace\b/.test(link),
+        `a sort or page link in ${file} still replaces the history entry:\n${link}`);
+    }
+  }
+});
+
+test("every filter the address carries reaches the database query", () => {
+  const source = fs.readFileSync(srcPath("lib/data/screen-detail.ts"), "utf8");
+  // A control that changes the address but not the statement is a control that
+  // looks like it worked and did nothing.
+  assert.match(source, /if \(query\.direction\) hitsQuery = hitsQuery\.eq\("direction"/);
+  assert.match(source, /if \(query\.maxFdr !== null\) hitsQuery = hitsQuery\.lte\("fdr"/);
+  assert.match(source, /if \(query\.comparison\) hitsQuery = hitsQuery\.eq\("comparison_id"/);
+  assert.match(source, /if \(query\.q !== ""\) hitsQuery = hitsQuery\.ilike\("gene_symbol"/);
+  assert.match(source, /query\.flagged \? "hit_flags!inner/);
 });

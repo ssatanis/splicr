@@ -260,13 +260,13 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
                       {first === 0 ? "No rows" : `${formatNumber(first)}–${formatNumber(last)} of ${formatNumber(total)}`}
                     </span>
                     {query.page > 1 ? (
-                      <Link className={link} href={hitHref(base, query, { page: query.page - 1 })} replace scroll={false}>Previous</Link>
+                      <Link className={link} href={hitHref(base, query, { page: query.page - 1 })} scroll={false}>Previous</Link>
                     ) : (
                       <span className="px-1.5 text-muted/60" aria-disabled="true">Previous</span>
                     )}
                     <span className="num">Page {query.page} of {lastPage}</span>
                     {query.page < lastPage ? (
-                      <Link className={link} href={hitHref(base, query, { page: query.page + 1 })} replace scroll={false}>Next</Link>
+                      <Link className={link} href={hitHref(base, query, { page: query.page + 1 })} scroll={false}>Next</Link>
                     ) : (
                       <span className="px-1.5 text-muted/60" aria-disabled="true">Next</span>
                     )}

@@ -68,7 +68,6 @@ function SortLinkTh({ column, query, basePath }: { column: Column; query: HitQue
     >
       <Link
         href={hitHref(basePath, query, { sort: column.sort, dir: nextDir })}
-        replace
         scroll={false}
         title={column.title}
         className={cn(
