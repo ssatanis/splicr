@@ -280,6 +280,15 @@ async function teardown() {
   try {
     const user = await db.query(`select id from public.profiles where email = $1`, [FIXTURE.email]);
     if (user.rowCount > 0) {
+      // Stored objects are not rows and nothing cascades to them, so a logo a
+      // spec uploaded has to go before the organization that named it does.
+      await db.query(
+        `delete from storage.objects
+          where bucket_id = 'lab-logos'
+            and split_part(name, '/', 1) in (
+              select org_id::text from public.org_members where user_id = $1)`,
+        [user.rows[0].id],
+      );
       await db.query(
         `delete from public.organizations where id in (
            select org_id from public.org_members where user_id = $1)`,

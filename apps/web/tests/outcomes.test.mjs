@@ -94,6 +94,7 @@ test("filtering and sorting are stable and case-insensitive on the gene", () => 
 test("a valid form parses to typed values, and blanks are missing, not zero", () => {
   const ok = schema.parseOutcomeDraft({
     screenId: "0199f4c2-1f8b-7c31-9a0e-2f4f1d8c77aa", gene: " tp53 ", result: "validated",
+    validationType: "independent_guide",
     assay: " Arrayed KO ", nGuides: "3", effectSize: "0", notes: "", evidenceUrl: "https://example.org/nb/12",
   });
   assert.equal(ok.ok, true);
@@ -104,11 +105,91 @@ test("a valid form parses to typed values, and blanks are missing, not zero", ()
   assert.equal(ok.value.notes, null);
   assert.equal(ok.value.evidenceUrl, "https://example.org/nb/12");
 
-  const blank = schema.parseOutcomeDraft({ screenId: "s", gene: "KRAS", result: "pending", assay: "", nGuides: "", effectSize: "", notes: "", evidenceUrl: "" });
+  const blank = schema.parseOutcomeDraft({ screenId: "s", gene: "KRAS", result: "pending", validationType: "independent_guide", assay: "", nGuides: "", effectSize: "", notes: "", evidenceUrl: "" });
   assert.equal(blank.ok, true);
   assert.equal(blank.value.effectSize, null);
   assert.equal(blank.value.nGuides, null);
   assert.equal(blank.value.assay, null);
+});
+
+test("a new outcome must say which experiment it was", () => {
+  // A result without its experiment is not a measurement of anything: a
+  // genetic reproduction and a pharmacologic test are different questions with
+  // different answers, and a row that says only "validated" belongs to
+  // neither.
+  const missing = schema.parseOutcomeDraft({ screenId: "s", gene: "G1", result: "validated" });
+  assert.equal(missing.ok, false);
+  assert.ok(missing.errors.validationType);
+  const unknown = schema.parseOutcomeDraft({
+    screenId: "s", gene: "G1", result: "validated", validationType: "vibes",
+  });
+  assert.equal(unknown.ok, false);
+  assert.ok(unknown.errors.validationType);
+});
+
+test("a prespecified criterion left blank is not recorded, and never a 'no'", () => {
+  // The whole reason these are three-state and not checkboxes. An unchecked
+  // checkbox would record "the perturbation was not independent" for every
+  // form filled in a hurry, which is a measurement claim nobody made.
+  const blank = schema.parseOutcomeDraft({
+    screenId: "s", gene: "G1", result: "validated", validationType: "independent_guide",
+    independentPerturbation: "", distinctConstructs: "", nReplicates: "",
+  });
+  assert.equal(blank.ok, true);
+  assert.equal(blank.value.independentPerturbation, null);
+  assert.equal(blank.value.distinctConstructs, null);
+  assert.equal(blank.value.nReplicates, null);
+
+  const measurement = schema.measurementFromValues(blank.value);
+  assert.equal(measurement.independent_perturbation, null);
+  assert.equal(measurement.n_replicates, null);
+  assert.ok(!("compound" in measurement), "an unrecorded compound is absent, not empty");
+
+  const answered = schema.parseOutcomeDraft({
+    screenId: "s", gene: "G1", result: "validated", validationType: "independent_guide",
+    independentPerturbation: "no", distinctConstructs: "yes", nReplicates: "3",
+  });
+  assert.equal(answered.value.independentPerturbation, false);
+  assert.equal(answered.value.distinctConstructs, true);
+  assert.equal(answered.value.nReplicates, 3);
+  // false and null must stay distinguishable all the way into the measurement.
+  assert.equal(schema.measurementFromValues(answered.value).independent_perturbation, false);
+});
+
+test("a compound and a concentration ride along only where they mean something", () => {
+  const fields = schema.fieldsFor("small_molecule");
+  assert.equal(fields.compound, true);
+  assert.equal(schema.fieldsFor("crispri").compound, false);
+  assert.equal(schema.fieldsFor("independent_guide").constructs, true);
+  assert.equal(schema.fieldsFor("in_vivo").constructs, false);
+  assert.equal(schema.fieldsFor("").compound, false);
+
+  const drug = schema.parseOutcomeDraft({
+    screenId: "s", gene: "PRKDC", result: "failed", validationType: "small_molecule",
+    compound: " AZD7648 ", concentrationUm: "10",
+  });
+  assert.equal(drug.ok, true);
+  const measurement = schema.measurementFromValues(drug.value);
+  assert.equal(measurement.compound, "AZD7648");
+  assert.equal(measurement.concentration_um, 10);
+});
+
+test("a concentration must be a non-negative number", () => {
+  const bad = (concentrationUm) => schema.parseOutcomeDraft({
+    screenId: "s", gene: "G1", result: "failed", validationType: "small_molecule", concentrationUm,
+  });
+  assert.equal(bad("-1").ok, false);
+  assert.equal(bad("abc").ok, false);
+  assert.equal(bad("0").ok, true, "a vehicle-equivalent zero is a real concentration");
+});
+
+test("a replicate count must be a whole number", () => {
+  const n = (nReplicates) => schema.parseOutcomeDraft({
+    screenId: "s", gene: "G1", result: "validated", validationType: "crispri", nReplicates,
+  });
+  assert.equal(n("2.5").ok, false);
+  assert.equal(n("0").ok, false);
+  assert.equal(n("3").ok, true);
 });
 
 test("each bad field gets its own plain message", () => {
@@ -135,7 +216,9 @@ test("gene symbols: real ones pass, hostile ones do not", () => {
 });
 
 test("only web links are stored, whatever the case or the trickery", () => {
-  const link = (evidenceUrl) => schema.parseOutcomeDraft({ screenId: "s", gene: "G1", result: "pending", evidenceUrl });
+  const link = (evidenceUrl) => schema.parseOutcomeDraft({
+    screenId: "s", gene: "G1", result: "pending", validationType: "independent_guide", evidenceUrl,
+  });
   assert.equal(link("HTTPS://Example.org/x").ok, true);
   assert.equal(link("http://example.org/x").ok, true);
   for (const evil of ["javascript:alert(1)", "JaVaScRiPt:alert(1)", "data:text/html,<script>", "file:///etc/passwd", "//example.org", "example.org", "ftp://x.org/a", " javascript:alert(1)"]) {

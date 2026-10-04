@@ -23,6 +23,7 @@ import { SETTINGS_PANELS as PANELS, type PanelKey } from "./panels";
 import { ProfilePanel } from "./profile-panel";
 import { QcPanel } from "./qc-panel";
 import { RetentionPanel } from "./retention-panel";
+import { UsagePanel, type UsagePanelProps } from "./usage-panel";
 
 export interface SettingsWorkspaceProps {
   initialPanel: PanelKey;
@@ -39,6 +40,8 @@ export interface SettingsWorkspaceProps {
   canEditProfile: boolean;
   canEditOrg: boolean;
   canDelete: boolean;
+  /** Everything the usage panel needs, read on the server. */
+  usage: UsagePanelProps;
   /** Why the organization panels are read only, when they are. */
   orgLockedReason?: string;
   profileLockedReason?: string;
@@ -61,6 +64,7 @@ export function SettingsWorkspace({
   role,
   settings,
   stats,
+  usage,
   libraries,
   librariesUnavailable,
   createdLabel,
@@ -159,6 +163,10 @@ export function SettingsWorkspace({
           lockedReason={orgLockedReason}
           onDirtyChange={markDirty}
         />
+      </div>
+
+      <div hidden={active !== "usage"}>
+        <UsagePanel {...usage} />
       </div>
 
       <div hidden={active !== "analysis"}>

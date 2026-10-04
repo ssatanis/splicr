@@ -1083,3 +1083,18 @@ body:has(.console) {
 .console textarea:focus {
   border-color: var(--color-navy);
 }
+
+/* The command palette's own field is the exception.
+   It is focused the moment the dialog opens, before the reader has done
+   anything, and it is the only text field in a box that is plainly the thing
+   being typed into. The ring there outlines a box that already has a border
+   and a caret in it, which reads as an error state rather than as focus.
+   Everything else in the palette, and everything else in the console, keeps
+   the ring. */
+.palette-input:focus,
+.palette-input:focus-visible,
+.console .palette-input:focus,
+.console .palette-input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}

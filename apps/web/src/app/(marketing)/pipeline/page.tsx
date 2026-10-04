@@ -61,7 +61,7 @@ export default function PipelinePage() {
         <Reveal delay={0.1}>
           <div className="mt-14 flex flex-wrap items-center gap-3">
             <LinkButton href="/contact" tone="orange" icon="none">
-              Request a Demo
+              Request access
             </LinkButton>
             <LinkButton href="/technology" tone="ghost" icon="none">
               See the Atlas

@@ -371,6 +371,113 @@ def cmd_schema(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_validation(args: argparse.Namespace) -> int:
+    """
+    What the Validation Network can and cannot currently state.
+
+        python -m splicr validation status
+        python -m splicr validation status --cohort data/validation/outcomes.json
+        python -m splicr validation report --json
+
+    `status` is the command to run before writing a number into a slide. It
+    prints, per question, whether a calibrated probability is available at all
+    and exactly what is outstanding when it is not. An unfitted network is a
+    successful run of this command, not a failure: the absence is the answer.
+    """
+    from .validation.network import format_probability
+    from .validation.report import network_report
+    from .validation.store import load_network
+
+    loaded = load_network(args.cohort)
+
+    if args.action in ("publish", "retract"):
+        from . import db as _db
+        from .validation.publish import publish, retract
+
+        with _db.connect() as conn:
+            if args.action == "retract":
+                changed = retract(conn, args.question)
+                conn.commit()
+                print(f"Retracted {changed} published head(s). Nothing was deleted: "
+                      f"the fits and their metrics stay on record and only the "
+                      f"current claim moved.")
+                return 0
+            if not loaded.network.fitted:
+                print("Nothing to publish: no head could be fitted from this "
+                      "cohort. Run `validation status` to see what is "
+                      "outstanding.", file=sys.stderr)
+                return 1
+            published = publish(conn, loaded.network,
+                                cohort_sha256=loaded.cohort_sha256,
+                                promote=args.promote, notes=args.notes)
+            conn.commit()
+        for row in published:
+            print(f"{row.question:16s} {row.version}  "
+                  f"{row.n_open} of {row.n_strata} contexts open"
+                  f"{'  PROMOTED' if row.promoted else ''}")
+        if not args.promote:
+            print("\nRecorded, not promoted. The console still states that no "
+                  "probability is available. Re-run with --promote to change "
+                  "what the product claims.")
+        return 0
+
+    report = network_report(loaded.network)
+    if args.json:
+        print(json.dumps({"loaded": loaded.as_dict(), "report": report},
+                         indent=2, sort_keys=True, allow_nan=False))
+        return 0
+
+    print(f"Cohort      {loaded.source}")
+    if loaded.problem:
+        print(f"PROBLEM     {loaded.problem}")
+    if loaded.cohort_sha256:
+        print(f"sha256      {loaded.cohort_sha256}")
+    counts = (report.get("cohort") or {}).get("counts") or {}
+    if counts:
+        print(f"Outcomes    {counts.get('total', 0)} recorded, "
+              f"{counts.get('n_decided', 0)} decided "
+              f"({counts.get('validated', 0)} validated, {counts.get('failed', 0)} "
+              f"did not validate, {counts.get('inconclusive', 0)} inconclusive, "
+              f"{counts.get('pending', 0)} pending)")
+        print(f"            {counts.get('n_labs', 0)} laboratories, "
+              f"{counts.get('n_studies', 0)} studies, "
+              f"{counts.get('n_screens', 0)} screens, "
+              f"{counts.get('n_genes', 0)} genes")
+        if counts.get("labs_unattributed"):
+            print(f"            {counts['labs_unattributed']} outcome(s) have no "
+                  f"laboratory recorded and cannot enter a held-out evaluation")
+    print()
+    for question in report["questions"]:
+        head = report["heads"].get(question["question"])
+        print(f"{question['label']}")
+        if head is None:
+            print(f"  unavailable  {question['because']}")
+        else:
+            evaluation = head.get("evaluation") or {}
+            print(f"  available    {head['model']}, "
+                  f"{head['n_decided']} decided outcomes, {head['n_labs']} laboratories")
+            print(f"  calibration  {evaluation.get('calibration', {}).get('chosen')} "
+                  f"from {evaluation.get('calibration_source')}")
+            print(f"  held out     {evaluation.get('headline', 'not evaluated')}")
+            print(f"  evidenced    {format_probability(head['evidenced_low'])} to "
+                  f"{format_probability(head['evidenced_high'])}; outside that the "
+                  f"estimate is reported as a bound")
+            print(f"  version      {head['version']}")
+            open_strata = [s for s in head["coverage"]["strata"] if s["open"]]
+            print(f"  open strata  {len(open_strata)} of "
+                  f"{len(head['coverage']['strata'])}")
+            for stratum in open_strata[:4]:
+                print(f"               {stratum['describe']}: "
+                      f"{stratum['n_decided']} outcomes, {stratum['n_labs']} labs, "
+                      f"{stratum['n_screens']} screens")
+        print()
+    if not report["fitted"]:
+        print("No calibrated validation probability is available anywhere. That is "
+              "the honest state of this cohort, and the console says so on every "
+              "surface that would otherwise show a number.")
+    return 0
+
+
 # ---------------------------------------------------------------------------
 
 def main(argv: list[str] | None = None) -> int:
@@ -405,6 +512,25 @@ def main(argv: list[str] | None = None) -> int:
     es.add_argument("--limit", type=int, default=6,
                     help="candidate paralogs to print; every candidate is evaluated first")
     es.set_defaults(func=cmd_escape)
+
+    va = sub.add_parser("validation",
+                        help="what the Validation Network can currently state")
+    va.add_argument("action", choices=("status", "report", "publish", "retract"),
+                    help="status prints a readable summary; report is the same "
+                         "content and accepts --json; publish writes the fitted "
+                         "heads and their coverage to the database; retract "
+                         "stops claiming a question is calibrated")
+    va.add_argument("--promote", action="store_true",
+                    help="with publish: make these heads the ones the console "
+                         "reads. Without it the fit is recorded and claims "
+                         "nothing.")
+    va.add_argument("--question", action="append",
+                    help="with retract: limit to these questions")
+    va.add_argument("--notes", help="with publish: why this fit was made")
+    va.add_argument("--cohort", help="outcome cohort JSON; the default location "
+                                     "or $SPLICR_VALIDATION_COHORT when omitted")
+    va.add_argument("--json", action="store_true", help="machine-readable output")
+    va.set_defaults(func=cmd_validation)
 
     sc = sub.add_parser("schema", help="JSON Schema of an API response model")
     sc.add_argument("model", help="model name; 'disagreement' is the guide-disagreement report")

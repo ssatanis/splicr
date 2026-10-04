@@ -3,6 +3,9 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 const WORDMARK = "/brand/splicr-wordmark.png";
+/** The S of the wordmark, cut square. Same drawing, same file lineage, so the
+ *  collapsed rail carries the brand rather than a glyph that resembles it. */
+const MARK = "/brand/splicr-mark.png";
 
 const sizes = {
   sm: "h-6",
@@ -69,8 +72,50 @@ export function Logo({
   );
 }
 
-/** Small square glyph for the marquee, list bullets, and the collapsed console
- *  rail, where there is no room for the wordmark. */
+/**
+ * The SplicR logo at one square unit: the S of the wordmark, nothing else.
+ *
+ * Cut from the same PNG the wordmark is drawn from, and tinted the same way, so
+ * the collapsed rail shows the actual logo rather than a mark invented to stand
+ * in for it. It is decorative wherever it appears beside a label, so the
+ * accessible name belongs to the link, not to this.
+ */
+export function LogoGlyph({
+  className,
+  tone = "navy",
+}: {
+  className?: string;
+  tone?: "navy" | "ink" | "white" | "orange";
+}) {
+  const color =
+    tone === "white"
+      ? "var(--color-white)"
+      : tone === "orange"
+        ? "var(--color-orange-500)"
+        : tone === "ink"
+          ? "var(--color-ink)"
+          : "var(--color-navy)";
+  return (
+    <span
+      aria-hidden="true"
+      className={cn("inline-block h-5 w-5 shrink-0", className)}
+      style={{
+        backgroundColor: color,
+        WebkitMaskImage: `url(${MARK})`,
+        maskImage: `url(${MARK})`,
+        WebkitMaskRepeat: "no-repeat",
+        maskRepeat: "no-repeat",
+        WebkitMaskSize: "contain",
+        maskSize: "contain",
+        WebkitMaskPosition: "center",
+        maskPosition: "center",
+      }}
+    />
+  );
+}
+
+/** Abstract spliced-exon bullet, used as a separator in the marketing marquee.
+ *  Not the logo: see `LogoGlyph` for that. */
 export function LogoMark({
   className,
   tone = "orange",

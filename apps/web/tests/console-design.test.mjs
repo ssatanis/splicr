@@ -147,7 +147,7 @@ test("the rail is white with a navy selected state, not a dark wall", () => {
   assert.ok(!/bg-teal-900|bg-teal-800|text-white\/\d/.test(rail),
     "no dark rail treatment remains");
   assert.match(shell, /btn btn-navy/, "the one primary action is navy");
-  assert.match(shell, /New screen/, "and is named for what a researcher starts");
+  assert.match(shell, /New analysis/, "and is named for what a researcher starts");
 
   const scope = CSS.slice(CSS.indexOf('.console .dash-nav-link[data-active="true"] {'));
   assert.match(scope, /background: var\(--color-navy-tint\)/, "selected navigation is a navy tint");

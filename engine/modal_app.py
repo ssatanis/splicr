@@ -127,6 +127,13 @@ def process_study(accession: str) -> dict:
     return runner.process(accession, processes=8)
 
 
+@app.function(**COMMON, cpu=8.0, memory=16384, ephemeral_disk=512 * 1024, timeout=6 * 3600,
+              max_containers=8)
+def process_private_screen() -> dict:
+    from splicr.private_screen import process_one
+    return process_one()
+
+
 @app.function(**COMMON, cpu=1.0, memory=2048, timeout=1800)
 def request_study(accession: str) -> dict:
     """A lab's request: record, plan, and start processing if the plan is ready."""
@@ -164,7 +171,8 @@ def sweep(max_process: int = MAX_PROCESS_PER_SWEEP) -> dict:
         plan_study.spawn(acc)
     for acc in to_process:
         process_study.spawn(acc)
-    return {"planning": to_plan, "processing": to_process,
+    private = process_private_screen.spawn().object_id
+    return {"planning": to_plan, "processing": to_process, "private": private,
             "requests": drained["handled"], "refreshed": refreshed["refreshed"]}
 
 
@@ -263,10 +271,12 @@ def main(action: str = "sweep", accession: str = "", since: str = "", until: str
         print(plan_study.remote(accession))
     elif action == "process":
         print(process_study.remote(accession))
+    elif action == "private":
+        print(process_private_screen.remote())
     elif action == "sweep":
         print(sweep.remote())
     elif action == "doctor":
         import json
         print(json.dumps(doctor.remote(), indent=2))
     else:
-        raise SystemExit(f"unknown action {action!r}: discover | request | plan | process | sweep | doctor")
+        raise SystemExit(f"unknown action {action!r}: discover | request | plan | process | private | sweep | doctor")

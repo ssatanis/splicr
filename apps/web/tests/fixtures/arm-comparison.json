@@ -1,0 +1,654 @@
+{
+  "binomials": [
+    {
+      "n": 1,
+      "p_value": 1.0,
+      "successes": 0
+    },
+    {
+      "n": 1,
+      "p_value": 1.0,
+      "successes": 1
+    },
+    {
+      "n": 2,
+      "p_value": 0.5,
+      "successes": 0
+    },
+    {
+      "n": 2,
+      "p_value": 1.0,
+      "successes": 1
+    },
+    {
+      "n": 2,
+      "p_value": 0.5,
+      "successes": 2
+    },
+    {
+      "n": 3,
+      "p_value": 1.0,
+      "successes": 1
+    },
+    {
+      "n": 4,
+      "p_value": 0.625,
+      "successes": 3
+    },
+    {
+      "n": 11,
+      "p_value": 0.548828125,
+      "successes": 7
+    },
+    {
+      "n": 4,
+      "p_value": 0.125,
+      "successes": 4
+    },
+    {
+      "n": 6,
+      "p_value": 0.03125,
+      "successes": 0
+    },
+    {
+      "n": 20,
+      "p_value": 1.0,
+      "successes": 10
+    },
+    {
+      "n": 20,
+      "p_value": 0.26317596435546875,
+      "successes": 13
+    },
+    {
+      "n": 25,
+      "p_value": 1.5497207641601562e-06,
+      "successes": 1
+    },
+    {
+      "n": 50,
+      "p_value": 1.0,
+      "successes": 25
+    }
+  ],
+  "cases": [
+    {
+      "a": {
+        "expect": {
+          "arm": "splicr",
+          "cost_per_confirmation": 1.2,
+          "lower": 0.4364971778135299,
+          "n_decided": 6,
+          "n_drawn": 7,
+          "n_recorded": 7,
+          "n_validated": 5,
+          "rate": 0.8333333333333334,
+          "upper": 0.9699466302516934
+        },
+        "labels": [
+          1,
+          1,
+          1,
+          1,
+          0,
+          null,
+          1
+        ],
+        "n_drawn": 7
+      },
+      "b": {
+        "expect": {
+          "arm": "fdr",
+          "cost_per_confirmation": 3.5,
+          "lower": 0.0822189240040568,
+          "n_decided": 7,
+          "n_drawn": 8,
+          "n_recorded": 8,
+          "n_validated": 2,
+          "rate": 0.2857142857142857,
+          "upper": 0.6410655481673808
+        },
+        "labels": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          null,
+          0
+        ],
+        "n_drawn": 8
+      },
+      "difference": {
+        "arm": "splicr",
+        "comparator": "fdr",
+        "comparator_rate": 0.2857142857142857,
+        "difference": 0.5476190476190477,
+        "lower": 0.014933911675922174,
+        "rate": 0.8333333333333334,
+        "separated": true,
+        "upper": 0.7927181196949755
+      },
+      "sentence": "splicr confirmed 55% more of its candidates than fdr (83% against 29%), 95% interval +1% to +79%. The interval excludes zero."
+    },
+    {
+      "a": {
+        "expect": {
+          "arm": "splicr",
+          "cost_per_confirmation": 1.0,
+          "lower": 0.4385029682449545,
+          "n_decided": 3,
+          "n_drawn": 3,
+          "n_recorded": 3,
+          "n_validated": 3,
+          "rate": 1.0,
+          "upper": 1.0
+        },
+        "labels": [
+          1,
+          1,
+          1
+        ],
+        "n_drawn": 3
+      },
+      "b": {
+        "expect": {
+          "arm": "fdr",
+          "cost_per_confirmation": null,
+          "lower": 0.0,
+          "n_decided": 3,
+          "n_drawn": 3,
+          "n_recorded": 3,
+          "n_validated": 0,
+          "rate": 0.0,
+          "upper": 0.5614970317550455
+        },
+        "labels": [
+          0,
+          0,
+          0
+        ],
+        "n_drawn": 3
+      },
+      "difference": {
+        "arm": "splicr",
+        "comparator": "fdr",
+        "comparator_rate": 0.0,
+        "difference": 1.0,
+        "lower": 0.2059232824597782,
+        "rate": 1.0,
+        "separated": true,
+        "upper": 1.0
+      },
+      "sentence": "splicr confirmed 100% more of its candidates than fdr (100% against 0%), 95% interval +21% to +100%. The interval excludes zero."
+    },
+    {
+      "a": {
+        "expect": {
+          "arm": "splicr",
+          "cost_per_confirmation": null,
+          "lower": 0.0,
+          "n_decided": 4,
+          "n_drawn": 4,
+          "n_recorded": 4,
+          "n_validated": 0,
+          "rate": 0.0,
+          "upper": 0.4898908364545973
+        },
+        "labels": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "n_drawn": 4
+      },
+      "b": {
+        "expect": {
+          "arm": "fdr",
+          "cost_per_confirmation": 1.0,
+          "lower": 0.5101091635454027,
+          "n_decided": 4,
+          "n_drawn": 4,
+          "n_recorded": 4,
+          "n_validated": 4,
+          "rate": 1.0,
+          "upper": 1.0
+        },
+        "labels": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "n_drawn": 4
+      },
+      "difference": {
+        "arm": "splicr",
+        "comparator": "fdr",
+        "comparator_rate": 1.0,
+        "difference": -1.0,
+        "lower": -1.0,
+        "rate": 0.0,
+        "separated": true,
+        "upper": -0.3071897350036087
+      },
+      "sentence": "splicr confirmed 100% fewer of its candidates than fdr (0% against 100%), 95% interval -100% to -31%. The interval excludes zero."
+    },
+    {
+      "a": {
+        "expect": {
+          "arm": "splicr",
+          "cost_per_confirmation": 2.0,
+          "lower": 0.09453120573423071,
+          "n_decided": 2,
+          "n_drawn": 2,
+          "n_recorded": 2,
+          "n_validated": 1,
+          "rate": 0.5,
+          "upper": 0.9054687942657693
+        },
+        "labels": [
+          1,
+          0
+        ],
+        "n_drawn": 2
+      },
+      "b": {
+        "expect": {
+          "arm": "fdr",
+          "cost_per_confirmation": 2.0,
+          "lower": 0.09453120573423071,
+          "n_decided": 2,
+          "n_drawn": 2,
+          "n_recorded": 2,
+          "n_validated": 1,
+          "rate": 0.5,
+          "upper": 0.9054687942657693
+        },
+        "labels": [
+          1,
+          0
+        ],
+        "n_drawn": 2
+      },
+      "difference": {
+        "arm": "splicr",
+        "comparator": "fdr",
+        "comparator_rate": 0.5,
+        "difference": 0.0,
+        "lower": -0.5734194679697172,
+        "rate": 0.5,
+        "separated": false,
+        "upper": 0.5734194679697172
+      },
+      "sentence": "splicr confirmed 0% more of its candidates than fdr (50% against 50%), 95% interval -57% to +57%. The interval includes zero, so this round does not separate them."
+    },
+    {
+      "a": {
+        "expect": {
+          "arm": "splicr",
+          "cost_per_confirmation": null,
+          "lower": null,
+          "n_decided": 0,
+          "n_drawn": 2,
+          "n_recorded": 2,
+          "n_validated": 0,
+          "rate": null,
+          "upper": null
+        },
+        "labels": [
+          null,
+          null
+        ],
+        "n_drawn": 2
+      },
+      "b": {
+        "expect": {
+          "arm": "fdr",
+          "cost_per_confirmation": 1.0,
+          "lower": 0.3423802275066531,
+          "n_decided": 2,
+          "n_drawn": 2,
+          "n_recorded": 2,
+          "n_validated": 2,
+          "rate": 1.0,
+          "upper": 1.0
+        },
+        "labels": [
+          1,
+          1
+        ],
+        "n_drawn": 2
+      },
+      "difference": {
+        "arm": "splicr",
+        "comparator": "fdr",
+        "comparator_rate": 1.0,
+        "difference": null,
+        "lower": null,
+        "rate": null,
+        "separated": false,
+        "upper": null
+      },
+      "sentence": "No comparison yet: splicr or fdr has no decided outcome."
+    },
+    {
+      "a": {
+        "expect": {
+          "arm": "splicr",
+          "cost_per_confirmation": 1.0,
+          "lower": 0.20654931437723742,
+          "n_decided": 1,
+          "n_drawn": 1,
+          "n_recorded": 1,
+          "n_validated": 1,
+          "rate": 1.0,
+          "upper": 1.0
+        },
+        "labels": [
+          1
+        ],
+        "n_drawn": 1
+      },
+      "b": {
+        "expect": {
+          "arm": "fdr",
+          "cost_per_confirmation": null,
+          "lower": null,
+          "n_decided": 0,
+          "n_drawn": 1,
+          "n_recorded": 1,
+          "n_validated": 0,
+          "rate": null,
+          "upper": null
+        },
+        "labels": [
+          null
+        ],
+        "n_drawn": 1
+      },
+      "difference": {
+        "arm": "splicr",
+        "comparator": "fdr",
+        "comparator_rate": null,
+        "difference": null,
+        "lower": null,
+        "rate": 1.0,
+        "separated": false,
+        "upper": null
+      },
+      "sentence": "No comparison yet: splicr or fdr has no decided outcome."
+    },
+    {
+      "a": {
+        "expect": {
+          "arm": "splicr",
+          "cost_per_confirmation": null,
+          "lower": null,
+          "n_decided": 0,
+          "n_drawn": 1,
+          "n_recorded": 1,
+          "n_validated": 0,
+          "rate": null,
+          "upper": null
+        },
+        "labels": [
+          null
+        ],
+        "n_drawn": 1
+      },
+      "b": {
+        "expect": {
+          "arm": "fdr",
+          "cost_per_confirmation": null,
+          "lower": null,
+          "n_decided": 0,
+          "n_drawn": 1,
+          "n_recorded": 1,
+          "n_validated": 0,
+          "rate": null,
+          "upper": null
+        },
+        "labels": [
+          null
+        ],
+        "n_drawn": 1
+      },
+      "difference": {
+        "arm": "splicr",
+        "comparator": "fdr",
+        "comparator_rate": null,
+        "difference": null,
+        "lower": null,
+        "rate": null,
+        "separated": false,
+        "upper": null
+      },
+      "sentence": "No comparison yet: splicr or fdr has no decided outcome."
+    },
+    {
+      "a": {
+        "expect": {
+          "arm": "splicr",
+          "cost_per_confirmation": 1.0,
+          "lower": 0.7224672001371106,
+          "n_decided": 10,
+          "n_drawn": 10,
+          "n_recorded": 10,
+          "n_validated": 10,
+          "rate": 1.0,
+          "upper": 1.0
+        },
+        "labels": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "n_drawn": 10
+      },
+      "b": {
+        "expect": {
+          "arm": "fdr",
+          "cost_per_confirmation": 1.1111111111111112,
+          "lower": 0.5958499732047616,
+          "n_decided": 10,
+          "n_drawn": 10,
+          "n_recorded": 10,
+          "n_validated": 9,
+          "rate": 0.9,
+          "upper": 0.9821237869049271
+        },
+        "labels": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        "n_drawn": 10
+      },
+      "difference": {
+        "arm": "splicr",
+        "comparator": "fdr",
+        "comparator_rate": 0.9,
+        "difference": 0.09999999999999998,
+        "lower": -0.1894283527495889,
+        "rate": 1.0,
+        "separated": false,
+        "upper": 0.40415002679523837
+      },
+      "sentence": "splicr confirmed 10% more of its candidates than fdr (100% against 90%), 95% interval -19% to +40%. The interval includes zero, so this round does not separate them."
+    },
+    {
+      "a": {
+        "expect": {
+          "arm": "splicr",
+          "cost_per_confirmation": 1.25,
+          "lower": 0.6086904963045967,
+          "n_decided": 25,
+          "n_drawn": 25,
+          "n_recorded": 25,
+          "n_validated": 20,
+          "rate": 0.8,
+          "upper": 0.9113941531319742
+        },
+        "labels": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "n_drawn": 25
+      },
+      "b": {
+        "expect": {
+          "arm": "fdr",
+          "cost_per_confirmation": 2.5,
+          "lower": 0.2340330237774797,
+          "n_decided": 25,
+          "n_drawn": 25,
+          "n_recorded": 25,
+          "n_validated": 10,
+          "rate": 0.4,
+          "upper": 0.5926054264103301
+        },
+        "labels": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "n_drawn": 25
+      },
+      "difference": {
+        "arm": "splicr",
+        "comparator": "fdr",
+        "comparator_rate": 0.4,
+        "difference": 0.4,
+        "lower": 0.12852960292715782,
+        "rate": 0.8,
+        "separated": true,
+        "upper": 0.5998842028486402
+      },
+      "sentence": "splicr confirmed 40% more of its candidates than fdr (80% against 40%), 95% interval +13% to +60%. The interval excludes zero."
+    },
+    {
+      "a": {
+        "expect": {
+          "arm": "splicr",
+          "cost_per_confirmation": 2.0,
+          "lower": 0.1876163064826506,
+          "n_decided": 6,
+          "n_drawn": 10,
+          "n_recorded": 8,
+          "n_validated": 3,
+          "rate": 0.5,
+          "upper": 0.8123836935173494
+        },
+        "labels": [
+          1,
+          0,
+          null,
+          1,
+          0,
+          1,
+          null,
+          0
+        ],
+        "n_drawn": 10
+      },
+      "b": {
+        "expect": {
+          "arm": "fdr",
+          "cost_per_confirmation": 4.0,
+          "lower": 0.045587260809700575,
+          "n_decided": 4,
+          "n_drawn": 10,
+          "n_recorded": 5,
+          "n_validated": 1,
+          "rate": 0.25,
+          "upper": 0.6993581574175981
+        },
+        "labels": [
+          0,
+          0,
+          1,
+          null,
+          0
+        ],
+        "n_drawn": 10
+      },
+      "difference": {
+        "arm": "splicr",
+        "comparator": "fdr",
+        "comparator_rate": 0.25,
+        "difference": 0.25,
+        "lower": -0.29727171095652305,
+        "rate": 0.5,
+        "separated": false,
+        "upper": 0.623320425263369
+      },
+      "sentence": "splicr confirmed 25% more of its candidates than fdr (50% against 25%), 95% interval -30% to +62%. The interval includes zero, so this round does not separate them."
+    }
+  ],
+  "generated_by": "scripts/validation/export_endpoints.py",
+  "n_cases": 10,
+  "note": "Wilson rates per arm and a Newcombe interval on the difference. The console computes these for a round's results page and must agree with the engine to the last digit.",
+  "schema": "splicr.arm-comparison.v1"
+}

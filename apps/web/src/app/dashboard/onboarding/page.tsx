@@ -2,8 +2,9 @@ import { Check } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { LabLogoField } from "@/components/dashboard/settings/logo-field";
 import { getCurrentContext, getOrgRole, getOrgSettings, listMembers } from "@/lib/data/org";
-import { MODALITIES, NORMALIZATIONS } from "@/lib/data/types";
+import { MODALITIES, NORMALIZATIONS, ROLE_LABEL } from "@/lib/data/types";
 import { FALLBACK_TIME_ZONE, isValidTimeZone } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
@@ -81,20 +82,29 @@ export default async function OnboardingPage(props: PageProps<"/dashboard/onboar
           <button className="btn btn-navy">Save and continue</button>
         </form>}
 
-        {step === 2 && <form action={saveLaboratoryIdentity} className="space-y-5">
+        {step === 2 && <div className="space-y-5">
           <div><h2 className="text-xl font-medium text-ink">Laboratory identity</h2><p className="mt-1 text-sm text-muted">Shared across every member, screen, and signed report.</p></div>
-          {!context.org ? <p className="text-sm text-red-700">This invitation is not attached to a laboratory. Ask the sender to issue it again.</p> : canManage ? <div className="grid gap-4 sm:grid-cols-2">
-            {field("Lab display name", "name", context.org.name, { required: true })}
-            {field("Location", "location", context.org.location ?? "", { placeholder: "City, region" })}
-            {field("Lab time zone", "time_zone", context.org.time_zone ?? browserZone, { required: true })}
-            {field("Logo URL", "logo_url", context.org.logo_url ?? "", { type: "url", placeholder: "https://lab.example/logo.svg" })}
-          </div> : <p className="rounded-xl bg-mist-soft p-4 text-sm text-body">{context.org.name} is already configured. An owner or admin controls its shared identity; your personal profile remains yours.</p>}
-          <button className="btn btn-navy" disabled={!context.org}>Continue</button>
-        </form>}
+          {/* The logo saves itself the moment a file is chosen, so it is its own
+              block rather than a field in the form below. Nothing here is
+              required: Continue leaves it unset, and Settings has the same
+              control for the day the lab gets round to it. */}
+          {context.org && canManage && <>
+            <LabLogoField orgName={context.org.name} logoUrl={context.org.logo_url} canEdit />
+            <p className="-mt-3 text-xs text-muted">Optional. You can add or change it later in Settings, under Lab.</p>
+          </>}
+          <form action={saveLaboratoryIdentity} className="space-y-5">
+            {!context.org ? <p className="text-sm text-red-700">This invitation is not attached to a laboratory. Ask the sender to issue it again.</p> : canManage ? <div className="grid gap-4 sm:grid-cols-2">
+              {field("Lab display name", "name", context.org.name, { required: true })}
+              {field("Location", "location", context.org.location ?? "", { placeholder: "City, region" })}
+              {field("Lab time zone", "time_zone", context.org.time_zone ?? browserZone, { required: true })}
+            </div> : <p className="rounded-xl bg-mist-soft p-4 text-sm text-body">{context.org.name} is already configured. An owner or admin controls its shared identity; your personal profile remains yours.</p>}
+            <button className="btn btn-navy" disabled={!context.org}>Continue</button>
+          </form>
+        </div>}
 
         {step === 3 && <form action={continueFromTeam} className="space-y-5">
           <div><h2 className="text-xl font-medium text-ink">Your team</h2><p className="mt-1 text-sm text-muted">{members.length} {members.length === 1 ? "researcher has" : "researchers have"} access to {context.org?.name ?? "this workspace"}.</p></div>
-          <div className="divide-y divide-line rounded-xl border border-line">{members.slice(0, 5).map(member => <div key={member.id} className="flex items-center justify-between px-4 py-3 text-sm"><span>{member.name}<span className="ml-2 text-muted">{member.email}</span></span><span className="capitalize text-muted">{member.role}</span></div>)}</div>
+          <div className="divide-y divide-line rounded-xl border border-line">{members.slice(0, 5).map(member => <div key={member.id} className="flex items-center justify-between px-4 py-3 text-sm"><span>{member.name}<span className="ml-2 text-muted">{member.email}</span></span><span className="text-muted">{ROLE_LABEL[member.role]}</span></div>)}</div>
           <div className="flex flex-wrap gap-3"><button className="btn btn-navy">Continue</button>{canManage && <Link href="/dashboard/settings/members" className="btn btn-ghost">Invite researchers</Link>}</div>
         </form>}
 

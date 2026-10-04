@@ -49,10 +49,19 @@ export const ROLE_RANK: Record<OrgRole, number> = {
   viewer: 1,
 };
 
+/**
+ * What each role is called on screen.
+ *
+ * The database enum stays `member`, because renaming a Postgres enum value that
+ * Row Level Security policies, invite rows and the engine all compare against
+ * would be a migration with nothing to show for it. What a lab actually calls
+ * that person is a researcher, so that is the word the console uses, in one
+ * place, for every sentence that names a role.
+ */
 export const ROLE_LABEL: Record<OrgRole, string> = {
   owner: "Owner",
   admin: "Admin",
-  member: "Member",
+  member: "Researcher",
   viewer: "Viewer",
 };
 

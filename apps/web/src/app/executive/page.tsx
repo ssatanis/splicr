@@ -22,7 +22,7 @@ export default async function ExecutivePage() {
         <header className="flex flex-wrap items-center justify-between gap-4 bg-teal-800 px-5 py-4 text-white sm:px-8">
           <div className="flex items-center gap-5"><Logo tone="light" size="sm" /><span className="hidden h-6 w-px bg-white/25 sm:block" /><span className="text-xs font-semibold uppercase tracking-[0.16em] text-white/75">Executive console</span></div>
           <div className="flex items-center gap-3">
-            <div className="hidden text-right sm:block"><p className="text-sm font-medium">{identity.name}</p><p className="text-[11px] text-white/65">Fresh OTP session · 15 minutes</p></div>
+            <div className="hidden text-right sm:block"><p className="text-sm font-medium">{identity.name}</p></div>
             <form action={endExecutiveSession}><button className="inline-flex items-center gap-2 rounded-full border border-white/25 px-3 py-2 text-xs hover:bg-white/10"><LogOut className="h-3.5 w-3.5" /> End session</button></form>
           </div>
         </header>

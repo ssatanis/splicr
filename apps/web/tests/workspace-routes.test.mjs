@@ -35,7 +35,20 @@ function listHarness(context = workspace, response = { data: [], count: 0, error
   } };
   const exports = execute(listCode, (name) => {
     if (name === "server-only") return {};
-    if (name === "@/lib/data/org") return { getCurrentContext: async () => context };
+    if (name === "@/lib/data/org") return {
+      getCurrentContext: async () => context,
+      getOrgSettings: async () => ({
+        defaults: {
+          modality: "knockout",
+          library_slug: null,
+          normalization: "median_ratio",
+          hit_callers: ["mageck"],
+          fdr_threshold: 0.05,
+          cn_correction: true,
+        },
+        retention: { raw_reads_days: 30 },
+      }),
+    };
     if (name === "@/lib/supabase/server") return { createClient: async () => client };
     throw new Error(`Unexpected dependency ${name}`);
   });
@@ -87,7 +100,20 @@ function routeHarness(route, context = workspace, result = { status: "ready", ro
     if (name === "react/jsx-runtime") return jsxRuntime;
     if (name === "react") return React;
     if (name === "next/link") return { default: ({ children, href }) => React.createElement("a", { href }, children) };
-    if (name === "@/lib/data/org") return { getCurrentContext: async () => context };
+    if (name === "@/lib/data/org") return {
+      getCurrentContext: async () => context,
+      getOrgSettings: async () => ({
+        defaults: {
+          modality: "knockout",
+          library_slug: null,
+          normalization: "median_ratio",
+          hit_callers: ["mageck"],
+          fdr_threshold: 0.05,
+          cn_correction: true,
+        },
+        retention: { raw_reads_days: 30 },
+      }),
+    };
     if (name === "@/lib/data/workspace-lists") return {
       getWorkspaceScreens: async () => { dataReads++; return result; },
     };
@@ -98,7 +124,27 @@ function routeHarness(route, context = workspace, result = { status: "ready", ro
       DenseTable: ({ children }) => React.createElement("table", null, children),
     };
     if (name === "@/lib/data/screen-requests") return { listScreenRequests: async () => ({ status: "found", requests: [] }) };
-    if (name === "@/lib/data/types") return { ROLE_RANK: { viewer: 1, member: 2, admin: 3, owner: 4 } };
+    if (name === "@/lib/data/libraries") return { listLibraries: async () => ({ libraries: [], unavailable: false }) };
+    if (name === "@/components/dashboard/intake/intake-workspace") return {
+      IntakeWorkspace: ({ own, published }) => React.createElement("div", null, own, published),
+    };
+    if (name === "@/components/dashboard/intake/upload-flow") return {
+      UploadFlow: () => React.createElement("div", null, "PRIVATE_UPLOAD_PATH"),
+    };
+    if (name === "@/lib/data/types") return {
+      ROLE_RANK: { viewer: 1, member: 2, admin: 3, owner: 4 },
+      DEFAULT_WORKSPACE_SETTINGS: {
+        defaults: {
+          modality: "knockout",
+          library_slug: null,
+          normalization: "median_ratio",
+          hit_callers: ["mageck"],
+          fdr_threshold: 0.05,
+          cn_correction: true,
+        },
+        retention: { raw_reads_days: 30 },
+      },
+    };
     if (name === "@/components/dashboard/request-form") return { RequestForm: () => null };
     if (name === "lucide-react") return new Proxy({}, { get: () => () => null });
     if (name === "@/components/dashboard/workspace-records") return {

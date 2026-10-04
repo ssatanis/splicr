@@ -22,6 +22,11 @@ import {
   type OutcomeRow,
 } from "@/lib/outcomes/model";
 import { createClient } from "@/lib/supabase/server";
+import {
+  isEndpointDecision,
+  isValidationArm,
+  isValidationType,
+} from "@/lib/validation/model";
 
 export interface OutcomeScreenOption {
   id: string;
@@ -47,13 +52,25 @@ export interface OutcomeView {
 export type OutcomeViewResult = OutcomeView | { status: "workspace_required" | "unavailable" };
 
 export const OUTCOME_COLUMNS =
-  "id, screen_id, gene_symbol, result, assay, effect_size, n_guides, predicted, model_version, notes, evidence_url, hit_id, logged_by, logged_at, screens(name)";
+  "id, screen_id, gene_symbol, result, validation_type, endpoint_id, endpoint_version, " +
+  "endpoint_decision, decision_because, lab_id, arm, round_id, measurement, " +
+  "assay, effect_size, n_guides, predicted, model_version, notes, evidence_url, " +
+  "hit_id, logged_by, logged_at, screens(name)";
 
 export interface OutcomeDbRow {
   id: string;
   screen_id: string;
   gene_symbol: string;
   result: string;
+  validation_type?: string | null;
+  endpoint_id?: string | null;
+  endpoint_version?: number | null;
+  endpoint_decision?: string | null;
+  decision_because?: string | null;
+  lab_id?: string | null;
+  arm?: string | null;
+  round_id?: string | null;
+  measurement?: Record<string, unknown> | null;
   assay: string | null;
   effect_size: number | string | null;
   n_guides: number | null;
@@ -73,16 +90,42 @@ function finite(value: number | string | null | undefined): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-/** A database row as the UI holds it. An unknown result is refused, not defaulted. */
+/**
+ * A database row as the UI holds it. An unknown result is refused, not defaulted.
+ *
+ * The same discipline applies to every new column. A `validation_type` the
+ * console does not recognise becomes null — "not recorded" — rather than being
+ * passed through as a string the renderer would print raw and the ladder would
+ * place on a rung it does not belong to. A row written by a newer deployment
+ * than the one rendering it is the normal case during a rollout, and it must
+ * degrade to "not recorded" rather than to a crash or to a wrong rung.
+ */
 export function toOutcomeRow(row: OutcomeDbRow, loggedByName: string | null = null): OutcomeRow | null {
   if (!isOutcomeResult(row.result)) return null;
   const screen = Array.isArray(row.screens) ? row.screens[0] : row.screens;
+  const validationType = isValidationType(row.validation_type) ? row.validation_type : null;
+  const endpointDecision = isEndpointDecision(row.endpoint_decision)
+    ? row.endpoint_decision
+    : null;
+  const arm = isValidationArm(row.arm) ? row.arm : "unassigned";
   return {
     id: row.id,
     screenId: row.screen_id,
     screenName: screen?.name ?? null,
     gene: row.gene_symbol,
     result: row.result,
+    validationType,
+    endpoint:
+      row.endpoint_id && row.endpoint_version !== null && row.endpoint_version !== undefined
+        ? `${row.endpoint_id}.v${row.endpoint_version}`
+        : null,
+    endpointDecision,
+    decisionBecause: row.decision_because ?? null,
+    labId: row.lab_id ?? null,
+    arm,
+    roundId: row.round_id ?? null,
+    measurement:
+      row.measurement && typeof row.measurement === "object" ? row.measurement : null,
     assay: row.assay,
     effectSize: finite(row.effect_size),
     nGuides: row.n_guides,

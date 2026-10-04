@@ -2,9 +2,11 @@ import { Info } from "lucide-react";
 
 import { DEFAULT_PANEL, isPanelKey } from "@/components/dashboard/settings/panels";
 import { SettingsWorkspace } from "@/components/dashboard/settings/settings-workspace";
+import type { UsagePanelProps, UsageRow } from "@/components/dashboard/settings/usage-panel";
 import { PageHeader } from "@/components/dashboard/ui";
 import { listLibraries } from "@/lib/data/libraries";
 import { getCurrentContext, getOrgSettings, getWorkspaceStats } from "@/lib/data/org";
+import { getOrgUsage, type UsageView } from "@/lib/data/usage";
 import {
   DEFAULT_WORKSPACE_SETTINGS,
   ORG_KIND_LABEL,
@@ -39,10 +41,11 @@ export default async function SettingsPage(props: PageProps<"/dashboard/settings
   const [context, params] = await Promise.all([getCurrentContext(), props.searchParams]);
   const { user, profile, org, role } = context;
 
-  const [settings, stats, catalog] = await Promise.all([
+  const [settings, stats, catalog, usage] = await Promise.all([
     org ? getOrgSettings(org.id) : Promise.resolve(DEFAULT_WORKSPACE_SETTINGS),
     org ? getWorkspaceStats(org.id) : Promise.resolve(EMPTY_STATS),
     listLibraries(),
+    getOrgUsage(org?.id ?? null),
   ]);
 
   const requested = params.panel;
@@ -119,6 +122,7 @@ export default async function SettingsPage(props: PageProps<"/dashboard/settings
         libraries={catalog.libraries}
         librariesUnavailable={catalog.unavailable}
         createdLabel={org ? formatDate(org.created_at) : "Not created yet"}
+        usage={toUsagePanel(usage, org?.name ?? null, canEditOrg, user?.id ?? null)}
         canEditProfile={canEditProfile}
         canEditOrg={canEditOrg}
         canDelete={canDelete}
@@ -128,4 +132,65 @@ export default async function SettingsPage(props: PageProps<"/dashboard/settings
       />
     </div>
   );
+}
+
+/**
+ * The usage read, turned into something a client component can render.
+ *
+ * Every date becomes a string here, on the server, because formatting one
+ * reads the clock and a render may not. A failed read and an empty lab are
+ * kept apart: the first says so and shows no numbers, the second shows zeros,
+ * and neither is allowed to look like the other.
+ */
+function toUsagePanel(
+  usage: UsageView,
+  orgName: string | null,
+  canManage: boolean,
+  selfId: string | null,
+): UsagePanelProps {
+  const empty = {
+    orgName,
+    plan: "free" as const,
+    rows: [] as UsageRow[],
+    totals: null,
+    unattributed: null,
+    canManage,
+  };
+
+  if (usage.status === "no-workspace") {
+    return {
+      ...empty,
+      notice:
+        "You are not in a workspace yet, so there is nothing to account for. Accept an invite, or create a workspace, and this fills in.",
+    };
+  }
+  if (usage.status === "unavailable") {
+    return {
+      ...empty,
+      notice: "Usage could not be read just now. Reload the page, or try again shortly.",
+    };
+  }
+
+  return {
+    orgName,
+    plan: usage.plan,
+    canManage,
+    notice: null,
+    totals: usage.totals,
+    unattributed: usage.unattributed,
+    rows: usage.people.map((person) => ({
+      userId: person.userId,
+      name: person.name,
+      email: person.email,
+      role: person.role,
+      screens: person.screens,
+      runs: person.runs,
+      runs30d: person.runs30d,
+      outcomes: person.outcomes,
+      apiKeys: person.apiKeys,
+      lastActiveLabel: person.lastActiveAt ? formatDate(person.lastActiveAt) : null,
+      joinedLabel: person.joinedAt ? formatDate(person.joinedAt) : "recently",
+      isSelf: selfId !== null && person.userId === selfId,
+    })),
+  };
 }

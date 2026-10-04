@@ -15,6 +15,12 @@
  * results that answer the question and says how many that is.
  */
 
+import type {
+  EndpointDecision,
+  ValidationArm,
+  ValidationType,
+} from "@/lib/validation/model";
+
 export const OUTCOME_RESULTS = ["validated", "failed", "inconclusive", "pending"] as const;
 export type OutcomeResult = (typeof OUTCOME_RESULTS)[number];
 
@@ -52,9 +58,45 @@ export interface OutcomeRow {
   screenName: string | null;
   gene: string;
   result: OutcomeResult;
+  /**
+   * Which experiment this was, or null on a row recorded before the Validation
+   * Network existed.
+   *
+   * Null is not "unknown type" and it is not a default. It means nobody stated
+   * which experiment produced this result, so the row bears on none of the four
+   * questions, enters no model, and is shown and exported exactly as recorded.
+   * The console labels it "Not recorded" rather than guessing.
+   */
+  validationType: ValidationType | null;
+  /** The endpoint it was scored against, as `id.vN`, or null. */
+  endpoint: string | null;
+  /**
+   * The engine's verdict on whether the measurement meets that endpoint.
+   *
+   * A check on the lab's own label, never a replacement for it. Where the two
+   * disagree the disagreement is the finding and both are shown.
+   */
+  endpointDecision: EndpointDecision | null;
+  decisionBecause: string | null;
+  /** The laboratory, where one was recorded. The unit of the cluster bootstrap. */
+  labId: string | null;
+  /** Which selection strategy proposed the candidate, if it came from a round. */
+  arm: ValidationArm;
+  roundId: string | null;
   assay: string | null;
   effectSize: number | null;
   nGuides: number | null;
+  /**
+   * What was measured, under the keys the engine's endpoints read:
+   * independent_perturbation, distinct_from_screen_constructs,
+   * n_perturbations, n_replicates, effect_size, controls, compound,
+   * concentration_um.
+   *
+   * A key that is absent and a key that is null mean the same thing and both
+   * mean "not recorded", which is what makes an endpoint return
+   * `insufficient_record` rather than scoring the record as a failure.
+   */
+  measurement: Record<string, unknown> | null;
   /** The model output stored at the time of the call. Uncalibrated; never a probability. */
   predicted: number | null;
   modelVersion: string | null;

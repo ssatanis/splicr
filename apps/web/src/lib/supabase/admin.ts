@@ -11,9 +11,10 @@ import { supabaseUrl } from "./env";
  */
 export function createAdminClient() {
   const secret = process.env.SUPABASE_SECRET_KEY?.trim();
-  if (!supabaseUrl || !secret) return null;
+  const url = supabaseUrl || process.env.SUPABASE_URL?.trim() || "";
+  if (!url || !secret) return null;
 
-  return createSupabaseClient(supabaseUrl, secret, {
+  return createSupabaseClient(url, secret, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 }

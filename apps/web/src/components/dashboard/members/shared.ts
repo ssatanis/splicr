@@ -61,7 +61,7 @@ export interface MembersPermissions {
 
 /**
  * What each role can actually do, taken from the Row Level Security policies
- * rather than from wishful thinking: members create and update screens and
+ * rather than from wishful thinking: researchers create and update screens and
  * trigger runs, admins additionally manage membership, settings, API keys and
  * screen deletion, owners additionally delete the workspace, and viewers hold
  * select rights alone.
@@ -69,7 +69,8 @@ export interface MembersPermissions {
 export const ROLE_SUMMARY: Record<OrgRole, string> = {
   owner: "Everything an admin can do, and can rename, re-plan or delete the workspace.",
   admin: "Invites people, sets roles, edits workspace settings and manages API keys.",
-  member: "Uploads runs, calls hits, flags artifacts and logs validation outcomes.",
+  member:
+    "Uploads runs, calls hits, flags artifacts and logs validation outcomes. Cannot invite anybody or change a role.",
   viewer: "Reads screens, hits and reports. Cannot start a run or change anything.",
 };
 

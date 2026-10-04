@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   Compass,
   FlaskConical,
+  Gauge,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -20,7 +21,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 
-import { Logo, LogoMark } from "@/components/brand/logo";
+import { Logo, LogoGlyph } from "@/components/brand/logo";
 import { CommandPalette, useCommandPalette } from "@/components/dashboard/command-palette";
 import { cn, initials } from "@/lib/utils";
 
@@ -46,7 +47,8 @@ const NAV: { group: string | null; items: NavItem[] }[] = [
   {
     group: "Decide and plan",
     items: [
-      { href: "/dashboard/validation", label: "Truth Loop", icon: CheckCircle2 },
+      { href: "/dashboard/validation", label: "Truth Loop", icon: CheckCircle2, exact: true },
+      { href: "/dashboard/validation/network", label: "Validation Network", icon: Gauge },
       { href: "/dashboard/planner", label: "Planner", icon: Waypoints },
     ],
   },
@@ -84,7 +86,14 @@ const macSnapshot = () =>
   /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent) ? "⌘" : "Ctrl ";
 const serverSnapshot = () => "Ctrl ";
 
-export type ShellUser = { name: string; email: string; org: string; demo: boolean };
+export type ShellUser = {
+  name: string;
+  email: string;
+  org: string;
+  /** The lab's uploaded logo, or null while it has not set one. */
+  orgLogo: string | null;
+  demo: boolean;
+};
 
 /** Where the desktop rail remembers whether it is collapsed.
  *
@@ -218,9 +227,6 @@ export function DashboardShell({
             </button>
             <Logo href="/dashboard" size="sm" />
             <div className="flex-1" />
-            {user.demo && (
-              <span className="chip bg-orange-50 text-[11px] text-orange-700">Demo data</span>
-            )}
             <button
               type="button"
               onClick={() => setPaletteOpen(true)}
@@ -305,7 +311,7 @@ function Sidebar({
       >
         {collapsed ? (
           <Link href="/dashboard" aria-label="SplicR home" className="flex h-8 w-8 items-center justify-center">
-            <LogoMark tone="navy" className="h-5 w-5" />
+            <LogoGlyph tone="ink" className="h-[18px] w-[18px]" />
           </Link>
         ) : (
           <Logo href="/dashboard" size="sm" />
@@ -348,18 +354,18 @@ function Sidebar({
       )}
 
       {/* The one primary action in the console, on every page, above the
-          navigation: starting a screen is what a researcher came to do. */}
+          navigation: starting an analysis is what a researcher came to do. */}
       <div className={cn("shrink-0", collapsed ? "px-2" : "px-3")}>
-        <RailTip label="New screen" when={collapsed}>
+        <RailTip label="New analysis" when={collapsed}>
           <Link
             href={NEW_SCREEN}
             onClick={onClose}
-            aria-label={collapsed ? "New screen" : undefined}
+            aria-label={collapsed ? "New analysis" : undefined}
             className={cn("btn btn-navy w-full", collapsed && "px-0")}
             aria-current={newScreenActive ? "page" : undefined}
           >
             <Plus className="h-4 w-4 shrink-0" aria-hidden="true" />
-            {!collapsed && "New screen"}
+            {!collapsed && "New analysis"}
           </Link>
         </RailTip>
       </div>
@@ -456,11 +462,6 @@ function Sidebar({
       {/* Pinned to the bottom of the rail, and shrink-0 so it stays pinned when
           the navigation above it has to scroll on a short viewport. */}
       <div className={cn("shrink-0 border-t border-line", collapsed ? "p-2" : "p-3")}>
-        {user.demo && !collapsed && (
-          <p className="mb-2 rounded-lg bg-orange-50 px-2 py-1.5 text-[11px] leading-snug text-orange-700">
-            Sample workspace. Every figure in the console is sample data.
-          </p>
-        )}
         <RailTip label={`${user.name}  ${user.org}`} when={collapsed}>
           <div
             className={cn(
@@ -468,9 +469,21 @@ function Sidebar({
               collapsed ? "justify-center px-0" : "gap-2.5 px-1",
             )}
           >
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-navy-tint text-[11px] font-medium text-navy">
-              {initials(user.name)}
-            </span>
+            {/* The lab's own mark once it has uploaded one, and the person's
+                initials until then. One square either way, so the row does not
+                move the day a logo arrives. */}
+            {user.orgLogo ? (
+              <span
+                role="img"
+                aria-label={`${user.org} logo`}
+                className="h-7 w-7 shrink-0 rounded-full border border-line bg-white bg-contain bg-center bg-no-repeat"
+                style={{ backgroundImage: `url(${JSON.stringify(user.orgLogo)})` }}
+              />
+            ) : (
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-navy-tint text-[11px] font-medium text-navy">
+                {initials(user.name)}
+              </span>
+            )}
             {!collapsed && (
               <div className="min-w-0 flex-1">
                 <div className="truncate text-[13px] leading-tight text-ink">{user.name}</div>
@@ -506,6 +519,20 @@ function Sidebar({
  * stop. It is `aria-hidden` because the control it belongs to already has an
  * accessible name; announcing both would read every item twice.
  *
+ * It is positioned against the viewport, not against the control, and that is
+ * the whole point of the rewrite. An absolutely positioned label at `left-full`
+ * sits outside the rail, which has two consequences that cancelled each other
+ * out and left the label useless: the rail clips it, so nothing was ever
+ * visible, and the navigation is a scroll container, so the label it could not
+ * show still counted towards scrollable width and put a horizontal scrollbar
+ * across the bottom of a 68px rail. A fixed box has the viewport for its
+ * containing block, so no ancestor clips it and no ancestor scrolls for it.
+ *
+ * The coordinates are read when the label is asked for rather than kept in
+ * state, and the label unmounts when it is not shown, so there is nothing to
+ * keep in sync while the rail is idle. Scrolling the navigation under a resting
+ * pointer would strand it, so a scroll anywhere dismisses it.
+ *
  * `when` is false in the drawer and on an expanded rail, where the label is
  * already on screen and a second copy would be a duplicate.
  */
@@ -518,16 +545,47 @@ function RailTip({
   when?: boolean;
   children: React.ReactNode;
 }) {
+  const host = useRef<HTMLDivElement>(null);
+  const [at, setAt] = useState<{ top: number; left: number } | null>(null);
+
+  const show = useCallback(() => {
+    const box = host.current?.getBoundingClientRect();
+    if (box) setAt({ top: box.top + box.height / 2, left: box.right + 8 });
+  }, []);
+  const hide = useCallback(() => setAt(null), []);
+
+  useEffect(() => {
+    if (at === null) return;
+    // Capture, because the scroller is the navigation rather than the window.
+    window.addEventListener("scroll", hide, true);
+    return () => window.removeEventListener("scroll", hide, true);
+  }, [at, hide]);
+
   if (!when) return <>{children}</>;
+
   return (
-    <div className="group relative">
+    <div
+      ref={host}
+      // A tap on a touch screen fires pointerenter and never pointerleave, so
+      // the label would stay on screen until something else moved. A finger has
+      // already pressed the control it would have described.
+      onPointerEnter={(event) => {
+        if (event.pointerType !== "touch") show();
+      }}
+      onPointerLeave={hide}
+      onFocus={show}
+      onBlur={hide}
+    >
       {children}
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 translate-x-[-4px] whitespace-nowrap rounded-lg bg-teal-900 px-2 py-1 text-[11.5px] leading-none text-white opacity-0 shadow-soft transition-[opacity,transform] duration-[var(--dur-2)] group-hover:translate-x-0 group-hover:opacity-100 group-focus-within:translate-x-0 group-focus-within:opacity-100 motion-reduce:transition-none motion-reduce:translate-x-0"
-      >
-        {label}
-      </span>
+      {at && (
+        <span
+          aria-hidden="true"
+          style={{ top: at.top, left: at.left }}
+          className="pointer-events-none fixed z-50 -translate-y-1/2 whitespace-nowrap rounded-lg bg-teal-900 px-2 py-1 text-[11.5px] leading-none text-white shadow-soft"
+        >
+          {label}
+        </span>
+      )}
     </div>
   );
 }

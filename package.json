@@ -31,7 +31,12 @@
     "db:advisors": "node scripts/db/advisors.mjs",
     "auth:provision": "node scripts/auth/provision-researcher.mjs",
     "e2e": "npm run e2e -w apps/web",
-    "e2e:live": "npm run e2e:live -w apps/web"
+    "e2e:live": "npm run e2e:live -w apps/web",
+    "validation:export": "engine/.tools/env/bin/python scripts/validation/export_endpoints.py",
+    "validation:check": "engine/.tools/env/bin/python scripts/validation/export_endpoints.py --check",
+    "validation:status": "PYTHONPATH=engine engine/.tools/env/bin/python -m splicr validation status",
+    "test:validation": "node --test apps/web/tests/validation-contract.test.mjs apps/web/tests/endpoint-decisions.test.mjs apps/web/tests/validation-network.test.mjs apps/web/tests/validation-network-render.test.mjs apps/web/tests/receipt-canonical.test.mjs",
+    "test:engine": "cd engine && PYTHONPATH=. .tools/env/bin/python -m pytest -q -m \"not network and not slow\""
   },
   "devDependencies": {
     "pg": "^8.18.0",

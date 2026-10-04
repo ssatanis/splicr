@@ -84,6 +84,8 @@ def drain(conn, limit: int = 10) -> dict:
 
     handled: list[dict] = []
     for request_id, accession in rows:
+        _set(conn, request_id, "planning",
+             "The ingest engine picked this up and is reading the deposit.")
         try:
             out = runner.request(accession)
         except Exception as exc:  # noqa: BLE001 - one bad request must not stop the queue

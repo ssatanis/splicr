@@ -15,12 +15,15 @@
     "e2e:teardown": "node e2e/fixtures/seed.cjs teardown"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1145.0",
+    "@aws-sdk/s3-request-presigner": "^3.1145.0",
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.1",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.2",
     "clsx": "^2.1.1",
     "lucide-react": "^1.48.0",
+    "modal": "^0.11.0",
     "motion": "^13.4.4",
     "next": "16.3.6",
     "pdbe-molstar": "3.12.0",

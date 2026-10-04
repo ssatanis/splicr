@@ -11,6 +11,15 @@ const nextConfig: NextConfig = {
     "/dashboard": ["./src/lib/atlas/data/**/*"],
     "/dashboard/**": ["./src/lib/atlas/data/**/*"],
   },
+  experimental: {
+    // A lab logo is posted to a Server Action as a file. The default body
+    // limit is 1 MB, which a photographed crest from a university brand pack
+    // exceeds without being in any way unreasonable. The storage bucket
+    // refuses anything over 2 MB and the action checks the same number before
+    // it uploads, so this is the outer of three agreeing limits rather than a
+    // new allowance.
+    serverActions: { bodySizeLimit: "3mb" },
+  },
 };
 
 export default nextConfig;

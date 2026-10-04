@@ -158,6 +158,149 @@ def _report_provenance(workdir: Path, source_dir: Path | None = None) -> dict:
     }
 
 
+def _score_candidates(hits: HitTable, flags, qc, atlas, spec, result) -> dict:
+    """
+    Ask the Validation Network for a calibrated probability per called hit.
+
+    Returns a payload for the stage record and the report, never raising: a
+    scoring failure must not lose a run that has already produced its hits and
+    its QC. A failure comes back as zero estimates with the exception in
+    `detail`, which is a worse outcome than a probability and a much better one
+    than a lost run.
+
+    The four questions are kept apart all the way through. A candidate can come
+    back with a probability for independent genetic reproduction and a refusal
+    for pharmacologic translation, which is the normal case rather than an edge
+    one.
+    """
+    from .validation.endpoints import QUESTIONS
+    from .validation.network import Estimate
+    from .validation.store import load_network
+
+    blank = {"n_estimated": 0, "n_declined": 0, "by_question": {}, "candidates": [],
+             "cohort": None, "detail": "", "metrics": {}}
+    try:
+        loaded = load_network()
+    except Exception as exc:  # noqa: BLE001 - scoring never loses a run
+        blank["detail"] = (f"the validation cohort could not be loaded, so no "
+                           f"probability was estimated: {type(exc).__name__}: {exc}")
+        blank["metrics"] = {"validation_probability": None,
+                            "validation_error": blank["detail"]}
+        return blank
+
+    called = hits.significant(0.1)
+    context = {
+        "assay_class": _assay_class(spec),
+        "modality": spec.modality if spec.modality in
+                    ("knockout", "crispri", "crispra", "base_editing") else "other",
+        "phenotype_family": _phenotype_family(spec),
+        "model_type": "cancer_cell_line",
+        "treatment": spec.condition,
+    }
+    try:
+        candidates = [
+            {"gene": gene.gene,
+             "context": context,
+             "n_genes_scored": len(hits.genes),
+             "hit": {"lfc": gene.lfc, "fdr": gene.fdr, "p_value": gene.p_value,
+                     "bayes_factor": gene.bayes_factor, "norm_z": gene.norm_z,
+                     "n_guides": gene.n_guides, "n_good_guides": gene.n_good_guides,
+                     "direction": "depleted" if (gene.lfc or 0) < 0 else "enriched",
+                     "max_guide_share": gene.max_guide_share,
+                     "atlas_hit_rate": (atlas.hit_rates.get(gene.gene)
+                                        if atlas.available and atlas.hit_rates else None)},
+             "qc": qc.as_dict().get("run", {}) if hasattr(qc, "as_dict") else {},
+             "flags": [f.flag for f in flags.get(gene.gene, [])]}
+            for gene in called
+        ]
+        estimates = loaded.network.estimate_many(candidates)
+    except Exception as exc:  # noqa: BLE001
+        blank["detail"] = (f"candidates could not be scored, so no probability was "
+                           f"estimated: {type(exc).__name__}: {exc}")
+        blank["metrics"] = {"validation_probability": None,
+                            "validation_error": blank["detail"],
+                            "cohort": loaded.as_dict()}
+        return blank
+
+    rows: list[dict] = []
+    n_estimated = 0
+    by_question: dict[str, dict] = {q: {"estimated": 0, "declined": 0, "reasons": {}}
+                                    for q in QUESTIONS}
+    for candidate, per_question in zip(candidates, estimates):
+        row = {"gene": candidate["gene"], "questions": {}}
+        any_available = False
+        for question, value in per_question.items():
+            row["questions"][question] = value.as_dict()
+            if isinstance(value, Estimate):
+                by_question[question]["estimated"] += 1
+                any_available = True
+            else:
+                by_question[question]["declined"] += 1
+                reason = value.reason
+                by_question[question]["reasons"][reason] = (
+                    by_question[question]["reasons"].get(reason, 0) + 1)
+        rows.append(row)
+        if any_available:
+            n_estimated += 1
+
+    n_declined = len(rows) - n_estimated
+    if n_estimated:
+        detail = (f"{n_estimated} of {len(rows)} called hits received at least one "
+                  f"calibrated probability; {n_declined} were outside the "
+                  f"calibrated cohort. {loaded.source}")
+    elif rows:
+        first = next(iter(rows[0]["questions"].values()))
+        detail = (f"no probability was estimated for any of {len(rows)} called "
+                  f"hits. {first.get('because', '')}")
+    else:
+        detail = (f"no hit reached the calling threshold, so nothing was scored. "
+                  f"{loaded.source}")
+
+    return {
+        "n_estimated": n_estimated, "n_declined": n_declined,
+        "by_question": by_question, "candidates": rows,
+        "cohort": loaded.as_dict(), "detail": detail,
+        "metrics": {"n_called": len(rows), "n_estimated": n_estimated,
+                    "n_declined": n_declined, "by_question": by_question,
+                    "cohort": loaded.as_dict(),
+                    "context": context},
+    }
+
+
+def _assay_class(spec) -> str:
+    """The cohort stratum's assay class, from the screen's own declaration."""
+    if spec.condition:
+        return "drug_modifier"
+    phenotype = (spec.phenotype or "").lower()
+    if "reporter" in phenotype or "facs" in phenotype:
+        return "reporter"
+    if spec.fitness_assay is False:
+        return "other"
+    return "ko_fitness"
+
+
+def _phenotype_family(spec) -> str:
+    phenotype = (spec.phenotype or "").lower()
+    if spec.condition:
+        #: A drug arm is resistance or sensitisation and the pipeline does not
+        #: know which from the contrast alone, so it reports the one the
+        #: condition name states and 'other' when it states neither. Guessing
+        #: would put the screen in the wrong stratum, which is worse than
+        #: landing in 'other' and being refused a number.
+        if "resist" in phenotype:
+            return "drug_resistance"
+        if "sensit" in phenotype:
+            return "drug_sensitisation"
+        return "other"
+    if "reporter" in phenotype or "facs" in phenotype:
+        return "reporter"
+    if "differentiat" in phenotype:
+        return "differentiation"
+    if spec.fitness_assay is False:
+        return "other"
+    return "fitness"
+
+
 @dataclass
 class StageRecord:
     stage: str
@@ -185,6 +328,9 @@ class PipelineResult:
     failed_at: str | None = None
     error: str | None = None
     report_path: Path | None = None
+    #: The score stage's output: per-candidate, per-question calibrated
+    #: probabilities, or the named reason there are none.
+    validation: dict | None = None
 
     @property
     def ok(self) -> bool:
@@ -250,6 +396,16 @@ class ScreenInput:
     drugz_paired: bool = False
 
 
+@dataclass
+class ExistingRun:
+    """Database rows already created by the console intake."""
+
+    org_id: str
+    screen_id: str
+    run_id: str
+    comparison_id: str | None = None
+
+
 def run_pipeline(
     spec: ScreenInput,
     workdir: Path,
@@ -257,6 +413,7 @@ def run_pipeline(
     created_by: str | None = None,
     persist: bool = False,
     verbose: bool = True,
+    existing: ExistingRun | None = None,
 ) -> PipelineResult:
     """
     Run the pipeline.
@@ -288,7 +445,7 @@ def run_pipeline(
 
     try:
         if persist:
-            if not org_id:
+            if existing is None and not org_id:
                 raise ValueError("persist=True requires org_id")
             conn = db.open_connection()
 
@@ -331,13 +488,32 @@ def run_pipeline(
                   f"{'+'.join(treat)} vs {'+'.join(ctrl)}")
 
         if persist and conn is not None:
-            screen_id = db.create_screen(conn, org_id, spec.name, spec.library_slug,
-                                         spec.cell_line, spec.phenotype, spec.modality,
-                                         created_by)
-            run_id = db.start_run(conn, screen_id, org_id,
-                                  {"treatment": treat, "control": ctrl,
-                                   "roles": roles, "design_notes": design.notes})
-            ctx = db.RunContext(org_id, screen_id, run_id, "")
+            settings = {"treatment": treat, "control": ctrl,
+                        "roles": roles, "design_notes": design.notes}
+            if existing is not None:
+                screen_id, run_id = existing.screen_id, existing.run_id
+                ctx = db.RunContext(existing.org_id, existing.screen_id, existing.run_id,
+                                    existing.comparison_id or "")
+                conn.execute(
+                    """
+                    update public.runs
+                       set status = 'running',
+                           started_at = coalesce(started_at, now()),
+                           settings = coalesce(nullif(settings, '{}'::jsonb), %s::jsonb)
+                     where id = %s
+                    """,
+                    (json.dumps(settings), existing.run_id),
+                )
+                conn.execute(
+                    "update public.screens set status = 'running', current_run_id = %s where id = %s",
+                    (existing.run_id, existing.screen_id),
+                )
+            else:
+                screen_id = db.create_screen(conn, org_id, spec.name, spec.library_slug,
+                                             spec.cell_line, spec.phenotype, spec.modality,
+                                             created_by)
+                run_id = db.start_run(conn, screen_id, org_id, settings)
+                ctx = db.RunContext(org_id, screen_id, run_id, "")
             result.screen_id, result.run_id = screen_id, run_id
             conn.commit()
         record("ingest", "done", detail, "splicr.ingest", t, design.as_dict())
@@ -431,7 +607,7 @@ def run_pipeline(
                 conn, ctx.screen_id, "primary",
                 [sample_ids[s] for s in treat if s in sample_ids],
                 [sample_ids[s] for s in ctrl if s in sample_ids],
-            )
+            ) if not ctx.comparison_id else ctx.comparison_id
             ctx.comparison_id = comparison_id
             conn.commit()
 
@@ -483,9 +659,24 @@ def run_pipeline(
         # --- 08 score ------------------------------------------------------
         active_stage = "score"
         t = time.time()
-        record("score", "skipped",
-               "no calibrated model is fitted yet, so hits are stored without a confidence",
-               "splicr.score", t)
+        # The Validation Network, if a cohort exists to fit it on.
+        #
+        # This stage used to be hard-coded `skipped`, which was true and
+        # uninformative: it said no calibrated model is fitted without saying
+        # what would change that. It now asks the network, and the network
+        # either returns calibrated per-question probabilities or returns the
+        # named shortfall that keeps the gate shut. Either way the reason is
+        # recorded against the run rather than asserted in a string.
+        #
+        # Nothing here can invent a number. `estimate` consults the coverage
+        # gate before it asks the model, so a run outside the calibrated cohort
+        # produces no probability at all - not a probability that the report
+        # then declines to print.
+        scored = _score_candidates(hits, flags, qc, atlas, spec, result)
+        result.validation = scored
+        record("score",
+               "done" if scored["n_estimated"] > 0 else "skipped",
+               scored["detail"], "splicr.validation", t, scored["metrics"])
 
         # --- 09 report -----------------------------------------------------
         active_stage = "report"
@@ -506,8 +697,16 @@ def run_pipeline(
             "statistics": {"fdr_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
                            "p_value_method": "min(1, 2*min(MAGeCK directional p-values))",
                            "directional_statistics": "tool-native; separate tail families",
-                           "validation_probability": None,
-                           "validation_probability_reason": "no independently calibrated validation model"},
+                           # The score stage answers this now. It is still null
+                           # whenever the coverage gate is shut, and the reason
+                           # is the gate's own sentence rather than a constant.
+                           "validation_probability":
+                               "per candidate and per question; see the validation block"
+                               if (result.validation or {}).get("n_estimated") else None,
+                           "validation_probability_reason":
+                               (result.validation or {}).get("detail")
+                               or "the score stage did not run"},
+            "validation": result.validation,
             "atlas": atlas.metrics(),
             "comparable_screens": [asdict(screen) for screen in atlas.comparable],
             "tool_output_directory": str(workdir / "hits"),
@@ -524,11 +723,25 @@ def run_pipeline(
         if persist and conn is not None and ctx is not None:
             written = db.write_hits(conn, ctx, hits, flags)
             guide_rows, gene_rows = _persist_guide_evidence(conn, ctx, hits, library, sig)
+            #  Both branches of the gate are stored. A refusal is a row saying
+            #  which candidate was considered and why no probability was
+            #  stated, because a gene with no row and a gene the gate declined
+            #  look identical to a reader otherwise. A failure here is logged
+            #  and does not lose a run that has already produced its hits.
+            prediction_rows = 0
+            try:
+                prediction_rows = db.write_validation_predictions(
+                    conn, ctx, result.validation or {})
+            except Exception as exc:  # noqa: BLE001
+                db.log_event(conn, ctx.run_id,
+                             f"validation predictions were not stored: "
+                             f"{type(exc).__name__}: {exc}", "score", "warn")
             db.finish_run(conn, ctx, "complete")
             conn.commit()
             record("report", "done",
-                   f"wrote {written:,} hit rows, {guide_rows:,} per-guide rows and "
-                   f"{gene_rows:,} guide-disagreement reports",
+                   f"wrote {written:,} hit rows, {guide_rows:,} per-guide rows, "
+                   f"{gene_rows:,} guide-disagreement reports and "
+                   f"{prediction_rows:,} validation predictions",
                    "splicr.db", t)
         else:
             record("report", "done", str(report_path), "splicr.report", t)

@@ -50,9 +50,25 @@ def updates(conn):
     return [params for sql, params in conn.statements if sql.startswith("update public.screen_requests set status")]
 
 
+def final_update(conn):
+    return updates(conn)[-1]
+
+
 @pytest.fixture(autouse=True)
 def no_events(monkeypatch):
     monkeypatch.setattr(req.state, "event", lambda *a, **k: None)
+
+
+def test_a_request_is_marked_planning_before_slow_metadata_work(monkeypatch):
+    def no_study(_accession):
+        return {"accession": "GSE0"}
+
+    monkeypatch.setattr("splicr.ingest.runner.request", no_study)
+    conn = FakeConn([[("req-0", "GSE0")], []])
+    req.drain(conn)
+    status, detail, resolved, request_id = updates(conn)[0]
+    assert (status, resolved, request_id) == ("planning", None, "req-0")
+    assert "picked this up" in detail
 
 
 def test_a_planned_study_is_reported_as_planning_not_as_analysing(monkeypatch):
@@ -63,7 +79,7 @@ def test_a_planned_study_is_reported_as_planning_not_as_analysing(monkeypatch):
     ])
     out = req.drain(conn)
     assert out["handled"] == [{"accession": "GSE1", "resolved": "SRP1", "status": "planning"}]
-    status, detail, resolved, request_id = updates(conn)[0]
+    status, detail, resolved, request_id = final_update(conn)
     assert (status, resolved, request_id) == ("planning", "SRP1", "req-1")
     assert detail == "A HeLa olaparib screen"
 
@@ -75,7 +91,7 @@ def test_an_ambiguous_design_says_what_was_ambiguous(monkeypatch):
         [("needs_review", "A study", ["two candidate control arms", "no day zero"], None, None)],
     ])
     req.drain(conn)
-    status, detail, _, _ = updates(conn)[0]
+    status, detail, _, _ = final_update(conn)
     assert status == "needs_review"
     # The engine's own issues, not a sentence chosen from the status.
     assert detail == "two candidate control arms; no day zero"
@@ -88,7 +104,7 @@ def test_a_failed_study_carries_its_stage_and_message(monkeypatch):
         [("failed", "A study", [], "ENA returned no FASTQ for SRR9", "fetch")],
     ])
     req.drain(conn)
-    status, detail, _, _ = updates(conn)[0]
+    status, detail, _, _ = final_update(conn)
     assert status == "failed"
     assert detail == "Failed at fetch: ENA returned no FASTQ for SRR9"
 
@@ -98,7 +114,7 @@ def test_an_accession_the_engine_refuses_is_rejected_with_its_reason(monkeypatch
                         lambda a: {"error": "GSE4 is not a study accession"})
     conn = FakeConn([[("req-4", "GSE4")]])
     req.drain(conn)
-    assert updates(conn)[0][:2] == ("rejected", "GSE4 is not a study accession")
+    assert final_update(conn)[:2] == ("rejected", "GSE4 is not a study accession")
 
 
 def test_a_traceback_never_reaches_the_researcher(monkeypatch):
@@ -110,7 +126,7 @@ def test_a_traceback_never_reaches_the_researcher(monkeypatch):
                         lambda a: (_ for _ in ()).throw(KeyError("accession")))
     conn = FakeConn([[("req-x", "GSE999999991")]])
     req.drain(conn)
-    status, detail, _, _ = updates(conn)[0]
+    status, detail, _, _ = final_update(conn)
     assert status == "failed"
     for leak in ["KeyError", "Traceback", "accession'", "None"]:
         assert leak not in detail, f"{leak!r} leaked into user-visible copy: {detail!r}"
@@ -132,9 +148,9 @@ def test_one_broken_request_does_not_stop_the_queue(monkeypatch):
     ])
     out = req.drain(conn)
     assert [entry["status"] for entry in out["handled"]] == ["failed", "planning"]
-    assert updates(conn)[0][0] == "failed"
+    assert updates(conn)[1][0] == "failed"
     # The second request is still handled, which is the point of this test.
-    assert updates(conn)[1][0] == "planning"
+    assert updates(conn)[3][0] == "planning"
 
 
 def test_a_request_with_no_study_row_is_a_bug_not_a_verdict(monkeypatch):
@@ -144,7 +160,7 @@ def test_a_request_with_no_study_row_is_a_bug_not_a_verdict(monkeypatch):
     monkeypatch.setattr("splicr.ingest.runner.request", lambda a: {"accession": "GSE7"})
     conn = FakeConn([[("req-7", "GSE7")], []])
     req.drain(conn)
-    status, detail, _, _ = updates(conn)[0]
+    status, detail, _, _ = final_update(conn)
     assert status == "failed"
     assert "recorded no study" in detail
 
@@ -158,8 +174,9 @@ def test_no_queued_request_is_left_queued(monkeypatch):
     ])
     req.drain(conn)
     written = updates(conn)
-    assert len(written) == 2
+    assert len(written) == 4
     assert all(row[0] != "queued" for row in written)
+    assert [row[0] for row in written[::2]] == ["planning", "planning"]
 
 
 def test_refresh_follows_the_study_and_moves_nothing(monkeypatch):

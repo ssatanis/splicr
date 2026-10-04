@@ -48,7 +48,7 @@ export default function ContactPage() {
           <div className="mt-20 grid lg:grid-cols-[1fr_1fr] gap-16 items-start">
             <div>
               <Reveal>
-                <h2 className="display text-ink text-4xl md:text-5xl">Request a demo</h2>
+                <h2 className="display text-ink text-4xl md:text-5xl">Request access</h2>
               </Reveal>
               <Reveal delay={0.1} className="mt-10 max-w-md">
                 <ContactForm />

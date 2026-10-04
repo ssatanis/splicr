@@ -195,7 +195,14 @@ function actionsHarness({ context = member, role = "member", handler } = {}) {
 }
 
 const draft = (over = {}) => ({
-  screenId: SCREEN, gene: "tp53", result: "validated", assay: "Arrayed KO", nGuides: "3", effectSize: "-1.2",
+  screenId: SCREEN, gene: "tp53", result: "validated",
+  // Which experiment this was is required on a new outcome: a result without
+  // its experiment bears on none of the four questions and cannot be learned
+  // from. The criteria below are the ones the engine's endpoints read.
+  validationType: "independent_guide",
+  assay: "Arrayed KO", nGuides: "3", effectSize: "-1.2",
+  labId: "LAB-1", independentPerturbation: "yes", distinctConstructs: "yes",
+  nReplicates: "3", compound: "", concentrationUm: "",
   notes: "", evidenceUrl: "", ...over,
 });
 
@@ -280,7 +287,7 @@ test("a viewer cannot log, a member cannot delete, and both are told why", async
   const viewer = actionsHarness({ role: "viewer", handler: writeHandler() });
   const denied = await viewer.logOutcome(draft());
   assert.equal(denied.ok, false);
-  assert.match(denied.error, /need the member role.*Your role is viewer/i);
+  assert.match(denied.error, /need the researcher role.*Your role is viewer/i);
   assert.equal(viewer.queries.length, 0);
   assert.equal((await viewer.updateOutcome(OUTCOME, draft())).ok, false);
 
@@ -335,10 +342,78 @@ test("an edit changes only what the assay found, never the screen, gene or organ
   const result = await app.updateOutcome(OUTCOME, draft({ result: "failed", gene: "SOMETHING_ELSE", screenId: OTHER_ORG }));
   assert.equal(result.ok, true);
   const update = app.queries.find((q) => q.op === "update");
-  assert.deepEqual(Object.keys(update.payload).sort(), ["assay", "effect_size", "evidence_url", "n_guides", "notes", "result"]);
+  assert.deepEqual(Object.keys(update.payload).sort(), [
+    "assay", "decision_because", "effect_size", "endpoint_decision", "endpoint_id",
+    "endpoint_version", "evidence_url", "lab_id", "measurement", "n_guides",
+    "notes", "result", "validation_type",
+  ]);
+  // The point of the assertion above is the absence, not the presence: an edit
+  // never touches the screen, the gene or the organization, because those say
+  // what the outcome is about and changing them would be a different outcome.
+  for (const forbidden of ["screen_id", "gene_symbol", "org_id", "hit_id", "logged_by", "predicted"]) {
+    assert.ok(!(forbidden in update.payload), `an edit must not write ${forbidden}`);
+  }
   assert.equal(update.payload.result, "failed");
   assert.equal(filterValue(update, "eq", "id"), OUTCOME);
   assert.equal(filterValue(update, "eq", "org_id"), ORG);
+});
+
+test("the server scores the measurement against the endpoint, and never the client", async () => {
+  const app = actionsHarness({ handler: writeHandler() });
+  // The verdict is computed server side from the recorded measurement. A
+  // verdict the browser could set is a verdict somebody can set to whatever
+  // they want, which is why the draft has no field for one.
+  const logged = await app.logOutcome(draft({
+    validationType: "independent_guide", result: "validated", effectSize: "-1.4",
+  }));
+  assert.equal(logged.ok, true);
+  const insert = app.queries.find((q) => q.op === "insert");
+  assert.equal(insert.payload.validation_type, "independent_guide");
+  assert.equal(insert.payload.endpoint_id, "ko_fitness_independent_guide");
+  assert.equal(insert.payload.endpoint_version, 1);
+  assert.equal(insert.payload.lab_id, "LAB-1");
+  // Outside a round there is no prespecified laboratory bar, so this endpoint
+  // cannot be scored and says which criterion is missing. That is the correct
+  // state: it is not a failure and it is not a pass.
+  assert.equal(insert.payload.endpoint_decision, "insufficient_record");
+  assert.match(insert.payload.decision_because, /effect threshold/);
+  // The measurement keeps the criteria the endpoints read, with false and null
+  // distinguishable.
+  assert.equal(insert.payload.measurement.independent_perturbation, true);
+  assert.equal(insert.payload.measurement.n_replicates, 3);
+  assert.equal(insert.payload.measurement.effect_size, -1.4);
+});
+
+test("an outcome with no endpoint is stored with no verdict, not a guessed one", async () => {
+  const app = actionsHarness({ handler: writeHandler() });
+  // 'other' bears on no question and has no endpoint, so there is nothing to
+  // score it against. The row is kept and the verdict stays null.
+  const logged = await app.logOutcome(draft({ validationType: "other" }));
+  assert.equal(logged.ok, true);
+  const insert = app.queries.find((q) => q.op === "insert");
+  assert.equal(insert.payload.validation_type, "other");
+  assert.equal(insert.payload.endpoint_id, null);
+  assert.equal(insert.payload.endpoint_version, null);
+  assert.equal(insert.payload.endpoint_decision, null);
+  assert.equal(insert.payload.decision_because, null);
+});
+
+test("a blank criterion is written as null, never as false", async () => {
+  const app = actionsHarness({ handler: writeHandler() });
+  await app.logOutcome(draft({ independentPerturbation: "", distinctConstructs: "", nReplicates: "" }));
+  const insert = app.queries.find((q) => q.op === "insert");
+  const m = insert.payload.measurement;
+  assert.equal(m.independent_perturbation, null);
+  assert.equal(m.distinct_from_screen_constructs, null);
+  assert.equal(m.n_replicates, null);
+  // A false that was recorded stays false, so the two remain distinguishable
+  // all the way into the database.
+  const second = actionsHarness({ handler: writeHandler() });
+  await second.logOutcome(draft({ independentPerturbation: "no" }));
+  assert.equal(
+    second.queries.find((q) => q.op === "insert").payload.measurement.independent_perturbation,
+    false,
+  );
 });
 
 test("editing or deleting an outcome that is not there says so, once", async () => {

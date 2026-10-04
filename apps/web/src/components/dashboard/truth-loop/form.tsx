@@ -17,10 +17,19 @@ import { useId, useRef, useState } from "react";
 import { RESULT_COPY, OUTCOME_RESULTS, type OutcomeRow } from "@/lib/outcomes/model";
 import {
   EMPTY_DRAFT,
+  fieldsFor,
   parseOutcomeDraft,
   type OutcomeDraft,
   type OutcomeFormField,
+  type Tristate,
 } from "@/lib/outcomes/schema";
+import {
+  TYPE_QUESTION,
+  QUESTION_LABEL,
+  VALIDATION_TYPES,
+  VALIDATION_TYPE_HELP,
+  VALIDATION_TYPE_LABEL,
+} from "@/lib/validation/model";
 import { cn } from "@/lib/utils";
 
 import { ModalDrawer } from "../drawer";
@@ -31,14 +40,35 @@ const FIELD =
 
 type Errors = Partial<Record<OutcomeFormField, string>>;
 
+/** A recorded boolean as the form's three states. Null stays blank, not "no". */
+const tristateOf = (value: unknown): Tristate =>
+  value === true ? "yes" : value === false ? "no" : "";
+
+const numberOf = (value: unknown): string =>
+  typeof value === "number" && Number.isFinite(value) ? String(value) : "";
+
+const textOf = (value: unknown): string => (typeof value === "string" ? value : "");
+
 function draftFromRow(row: OutcomeRow): OutcomeDraft {
+  // The measurement round-trips through the same keys the engine's endpoints
+  // read, so amending an outcome cannot silently drop a criterion that was
+  // recorded the first time.
+  const m = row.measurement ?? {};
   return {
     screenId: row.screenId,
     gene: row.gene,
+    validationType: row.validationType ?? "",
     result: row.result,
     assay: row.assay ?? "",
-    nGuides: row.nGuides === null ? "" : String(row.nGuides),
+    nGuides:
+      row.nGuides === null ? numberOf(m.n_perturbations) : String(row.nGuides),
     effectSize: row.effectSize === null ? "" : String(row.effectSize),
+    labId: row.labId ?? "",
+    independentPerturbation: tristateOf(m.independent_perturbation),
+    distinctConstructs: tristateOf(m.distinct_from_screen_constructs),
+    nReplicates: numberOf(m.n_replicates),
+    compound: textOf(m.compound),
+    concentrationUm: numberOf(m.concentration_um),
     notes: row.notes ?? "",
     evidenceUrl: row.evidenceUrl ?? "",
   };
@@ -171,16 +201,27 @@ export function OutcomeDrawer({
   // A failed submit puts the cursor on the first field that needs attention, in
   // reading order, so a keyboard or screen-reader user is not left at the button.
   const focusFirstProblem = (problems: Errors) => {
-    const order: OutcomeFormField[] = ["screenId", "gene", "result", "assay", "nGuides", "effectSize", "notes", "evidenceUrl"];
+    const order: OutcomeFormField[] = [
+      "screenId", "gene", "validationType", "result", "assay",
+      "independentPerturbation", "distinctConstructs", "nGuides", "nReplicates",
+      "effectSize", "compound", "concentrationUm", "labId", "notes", "evidenceUrl",
+    ];
     const key = order.find((field) => problems[field]);
     if (!key) return;
     const selector: Record<OutcomeFormField, string> = {
       screenId: `#${CSS.escape(`${base}-screen`)}`,
       gene: `#${CSS.escape(`${base}-gene`)}`,
+      validationType: `#${CSS.escape(`${base}-type`)}`,
       result: 'input[type="radio"]',
       assay: `#${CSS.escape(`${base}-assay`)}`,
       nGuides: `#${CSS.escape(`${base}-guides`)}`,
       effectSize: `#${CSS.escape(`${base}-effect`)}`,
+      labId: `#${CSS.escape(`${base}-lab`)}`,
+      independentPerturbation: `#${CSS.escape(`${base}-independent`)}`,
+      distinctConstructs: `#${CSS.escape(`${base}-constructs`)}`,
+      nReplicates: `#${CSS.escape(`${base}-replicates`)}`,
+      compound: `#${CSS.escape(`${base}-compound`)}`,
+      concentrationUm: `#${CSS.escape(`${base}-concentration`)}`,
       notes: `#${CSS.escape(`${base}-notes`)}`,
       evidenceUrl: `#${CSS.escape(`${base}-url`)}`,
     };
@@ -195,6 +236,17 @@ export function OutcomeDrawer({
   const effectId = `${base}-effect`;
   const notesId = `${base}-notes`;
   const urlId = `${base}-url`;
+  const typeId = `${base}-type`;
+  const labId = `${base}-lab`;
+  const independentId = `${base}-independent`;
+  const constructsId = `${base}-constructs`;
+  const replicatesId = `${base}-replicates`;
+  const compoundId = `${base}-compound`;
+  const concentrationId = `${base}-concentration`;
+  // Which criteria this experiment makes sense to ask about. A concentration
+  // field on a CRISPRi outcome is a field somebody will fill in wrongly.
+  const relevant = fieldsFor(draft.validationType);
+  const question = draft.validationType ? TYPE_QUESTION[draft.validationType] : null;
   const describe = (id: string, key: OutcomeFormField, hasHint: boolean) =>
     errors[key] ? `${id}-error` : hasHint ? `${id}-hint` : undefined;
 
@@ -269,6 +321,50 @@ export function OutcomeDrawer({
           </>
         )}
 
+        {/* Which experiment this was. It comes before "what did it find",
+            because a result without an experiment is not a measurement of
+            anything, and the question it bears on is shown as soon as the
+            choice is made so nobody has to learn the mapping. */}
+        <Labelled
+          label="Which experiment was this?"
+          id={typeId}
+          error={errors.validationType}
+          hint={
+            draft.validationType
+              ? VALIDATION_TYPE_HELP[draft.validationType]
+              : "A genetic reproduction and a pharmacologic test are different questions with different answers."
+          }
+        >
+          <select
+            id={typeId}
+            value={draft.validationType}
+            onChange={(event) =>
+              set("validationType", event.target.value as OutcomeDraft["validationType"])
+            }
+            aria-invalid={errors.validationType ? true : undefined}
+            aria-describedby={describe(typeId, "validationType", true)}
+            className={cn(
+              FIELD,
+              "pr-6",
+              errors.validationType ? "border-orange-500" : "border-line",
+            )}
+          >
+            <option value="">Choose the experiment</option>
+            {VALIDATION_TYPES.map((kind) => (
+              <option key={kind} value={kind}>
+                {VALIDATION_TYPE_LABEL[kind]}
+              </option>
+            ))}
+          </select>
+        </Labelled>
+        {draft.validationType && (
+          <p className="-mt-2 text-[11.5px] leading-snug text-muted">
+            {question
+              ? `Bears on: ${QUESTION_LABEL[question].toLowerCase()}.`
+              : "Bears on none of the four questions. It is kept and exported, and it enters no model, because its meaning is not fixed."}
+          </p>
+        )}
+
         <fieldset className="min-w-0">
           <legend className="mb-1.5 text-[12px] text-ink">What did the assay find?</legend>
           <div role="radiogroup" aria-describedby={errors.result ? `${base}-result-error` : undefined} className="grid gap-1.5">
@@ -337,6 +433,128 @@ export function OutcomeDrawer({
             />
           </Labelled>
         </div>
+
+        {/* The prespecified criteria. Each is yes, no, or blank, and blank is a
+            third answer rather than a hidden "no": the engine treats an
+            unrecorded criterion as "not scorable", which keeps the outcome out
+            of a rate's numerator and its denominator. A checkbox here would
+            record "no" for every form filled in a hurry. */}
+        <fieldset className="min-w-0 rounded-lg border border-line px-3 py-2.5">
+          <legend className="px-1 text-[12px] text-ink">
+            Prespecified criteria
+          </legend>
+          <p className="mb-2 text-[11.5px] leading-snug text-muted">
+            Leave a criterion blank if it was not recorded. Blank is not
+            &ldquo;no&rdquo;: an outcome missing a criterion the endpoint
+            requires is reported as not scorable, never as a failure.
+          </p>
+          <div className="grid gap-2.5 sm:grid-cols-2">
+            <Labelled
+              label="Independent perturbation"
+              id={independentId}
+              error={errors.independentPerturbation}
+              hint="Not the construct the screen used."
+            >
+              <select
+                id={independentId}
+                value={draft.independentPerturbation}
+                onChange={(event) =>
+                  set("independentPerturbation", event.target.value as Tristate)
+                }
+                aria-describedby={describe(independentId, "independentPerturbation", true)}
+                className={cn(FIELD, "pr-6", errors.independentPerturbation ? "border-orange-500" : "border-line")}
+              >
+                <option value="">Not recorded</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </Labelled>
+            {relevant.constructs && (
+              <Labelled
+                label="Different constructs"
+                id={constructsId}
+                error={errors.distinctConstructs}
+                hint="None of the screening library's own guides."
+              >
+                <select
+                  id={constructsId}
+                  value={draft.distinctConstructs}
+                  onChange={(event) => set("distinctConstructs", event.target.value as Tristate)}
+                  aria-describedby={describe(constructsId, "distinctConstructs", true)}
+                  className={cn(FIELD, "pr-6", errors.distinctConstructs ? "border-orange-500" : "border-line")}
+                >
+                  <option value="">Not recorded</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </select>
+              </Labelled>
+            )}
+            <Labelled
+              label="Biological replicates"
+              id={replicatesId}
+              error={errors.nReplicates}
+              hint="Independent biological replicates, not technical ones."
+            >
+              <input
+                id={replicatesId}
+                inputMode="numeric"
+                value={draft.nReplicates}
+                onChange={(event) => set("nReplicates", event.target.value)}
+                aria-describedby={describe(replicatesId, "nReplicates", true)}
+                className={cn(FIELD, "num", errors.nReplicates ? "border-orange-500" : "border-line")}
+              />
+            </Labelled>
+            <Labelled
+              label="Laboratory"
+              id={labId}
+              error={errors.labId}
+              hint="Who ran it. Two screens from one lab are not two independent observations."
+            >
+              <input
+                id={labId}
+                value={draft.labId}
+                onChange={(event) => set("labId", event.target.value)}
+                autoComplete="off"
+                aria-describedby={describe(labId, "labId", true)}
+                className={cn(FIELD, errors.labId ? "border-orange-500" : "border-line")}
+              />
+            </Labelled>
+          </div>
+          {relevant.compound && (
+            <div className="mt-2.5 grid gap-2.5 sm:grid-cols-2">
+              <Labelled
+                label="Compound"
+                id={compoundId}
+                error={errors.compound}
+                hint="A pharmacologic outcome without the compound cannot be reused."
+              >
+                <input
+                  id={compoundId}
+                  value={draft.compound}
+                  onChange={(event) => set("compound", event.target.value)}
+                  autoComplete="off"
+                  aria-describedby={describe(compoundId, "compound", true)}
+                  className={cn(FIELD, errors.compound ? "border-orange-500" : "border-line")}
+                />
+              </Labelled>
+              <Labelled
+                label="Concentration (µM)"
+                id={concentrationId}
+                error={errors.concentrationUm}
+                hint="A compound dosed below its range is not evidence about the gene."
+              >
+                <input
+                  id={concentrationId}
+                  inputMode="decimal"
+                  value={draft.concentrationUm}
+                  onChange={(event) => set("concentrationUm", event.target.value)}
+                  aria-describedby={describe(concentrationId, "concentrationUm", true)}
+                  className={cn(FIELD, "num", errors.concentrationUm ? "border-orange-500" : "border-line")}
+                />
+              </Labelled>
+            </div>
+          )}
+        </fieldset>
 
         <Labelled label="Notes" id={notesId} error={errors.notes}>
           <textarea

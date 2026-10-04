@@ -36,8 +36,18 @@ import {
   type OutcomeRow,
 } from "@/lib/outcomes/model";
 import { outcomesCsv } from "@/lib/outcomes/csv";
-import { parseOutcomeDraft, type OutcomeDraft } from "@/lib/outcomes/schema";
+import {
+  measurementFromValues,
+  parseOutcomeDraft,
+  type OutcomeDraft,
+} from "@/lib/outcomes/schema";
 import { cn, formatNumber } from "@/lib/utils";
+import {
+  ENDPOINT_DECISION_LABEL,
+  QUESTION_LABEL,
+  TYPE_QUESTION,
+  VALIDATION_TYPE_LABEL,
+} from "@/lib/validation/model";
 
 import { SampleNote, ABOVE_ROW_LINK, ROW_LINK } from "../console";
 import { TextFootLink } from "../console-controls";
@@ -79,6 +89,28 @@ const shortDate = (iso: string) => {
   return Number.isNaN(date.getTime()) ? "Not recorded" : date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 };
 
+/**
+ * Whether the engine's endpoint verdict contradicts the label the lab recorded.
+ *
+ * `insufficient_record` is not a contradiction: it means a criterion the
+ * endpoint requires was not written down, which is a gap in the record rather
+ * than a disagreement about the result. Flagging it as one would nag every
+ * outcome logged outside a round, since those have no prespecified effect bar.
+ */
+/** The experiment, and which of the four questions it bears on. */
+function experimentTitle(type: NonNullable<OutcomeRow["validationType"]>): string {
+  const question = TYPE_QUESTION[type];
+  return question
+    ? `${VALIDATION_TYPE_LABEL[type]} — bears on ${QUESTION_LABEL[question].toLowerCase()}`
+    : `${VALIDATION_TYPE_LABEL[type]} — bears on none of the four questions`;
+}
+
+function disagrees(row: OutcomeRow): boolean {
+  if (row.endpointDecision === null) return false;
+  if (row.endpointDecision === "insufficient_record") return false;
+  return row.endpointDecision !== row.result;
+}
+
 function percent(value: number): string {
   const pct = value * 100;
   return `${pct >= 10 || pct === 0 || pct === 100 ? pct.toFixed(0) : pct.toFixed(1)}%`;
@@ -117,6 +149,14 @@ export function TruthLoopView(props: TruthLoopProps) {
         const created: OutcomeRow = {
           id: `demo-${Date.now().toString(36)}-${v.gene}`,
           screenId: v.screenId, screenName: screenName(v.screenId), gene: v.gene, result: v.result,
+          validationType: v.validationType,
+          // The demo scores nothing. An endpoint decision is the engine's
+          // verdict on a real measurement, and inventing one here would put a
+          // fabricated judgement in the same column a workspace shows a real
+          // one in.
+          endpoint: null, endpointDecision: null, decisionBecause: null,
+          labId: v.labId, arm: "unassigned", roundId: null,
+          measurement: measurementFromValues(v),
           assay: v.assay, effectSize: v.effectSize, nGuides: v.nGuides, predicted: null, modelVersion: null,
           notes: v.notes, evidenceUrl: v.evidenceUrl, loggedAt: new Date().toISOString(), loggedBy: "You", hitLinked: false,
         };
@@ -126,7 +166,9 @@ export function TruthLoopView(props: TruthLoopProps) {
       const existing = demoRows.find((row) => row.id === id);
       if (!existing) return { ok: false, error: "That outcome is not in this workspace." };
       const updated: OutcomeRow = {
-        ...existing, result: v.result, assay: v.assay, effectSize: v.effectSize, nGuides: v.nGuides, notes: v.notes, evidenceUrl: v.evidenceUrl,
+        ...existing, result: v.result, validationType: v.validationType, labId: v.labId,
+        measurement: measurementFromValues(v),
+        assay: v.assay, effectSize: v.effectSize, nGuides: v.nGuides, notes: v.notes, evidenceUrl: v.evidenceUrl,
       };
       setDemoRows((current) => current.map((row) => (row.id === id ? updated : row)));
       return { ok: true, outcome: updated, note: DEMO_NOTE };
@@ -341,7 +383,7 @@ export function TruthLoopView(props: TruthLoopProps) {
             />
           </div>
         ) : (
-          <DenseTable minWidth={880}>
+          <DenseTable minWidth={1020}>
             <caption className="sr-only">
               Bench outcomes, newest first. {canWrite ? "Select a row to amend it." : "Read only."}
             </caption>
@@ -349,6 +391,7 @@ export function TruthLoopView(props: TruthLoopProps) {
               <tr>
                 <Th>Gene</Th>
                 <Th>Screen</Th>
+                <Th>Experiment</Th>
                 <Th>Result</Th>
                 <Th>Assay</Th>
                 <Th align="right">Effect</Th>
@@ -362,16 +405,31 @@ export function TruthLoopView(props: TruthLoopProps) {
                 <tr key={row.id} className={canWrite ? ROW_HIT : undefined}>
                   <td className="font-medium text-ink">
                     {canWrite ? (
-                      <button
-                        type="button"
-                        onClick={() => setDrawer({ kind: "edit", row })}
-                        className={cn("text-left font-medium text-ink hover:text-orange-600", ROW_LINK)}
-                      >
-                        {row.gene}
-                        <span className="sr-only">
-                          , {RESULT_COPY[row.result].label}, {row.result === "pending" ? "open to record the result" : "open to amend"}
-                        </span>
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setDrawer({ kind: "edit", row })}
+                          className={cn("text-left font-medium text-ink hover:text-orange-600", ROW_LINK)}
+                        >
+                          {row.gene}
+                          <span className="sr-only">
+                            , {RESULT_COPY[row.result].label}, {row.result === "pending" ? "open to record the result" : "open to amend"}
+                          </span>
+                        </button>
+                        {/* The ladder, not another number. One outcome says what
+                            one experiment found; the ladder says which of the
+                            six experiments have been run at all, which is the
+                            question a reader actually has next. */}
+                        {!demo && (
+                          <Link
+                            href={`${BASE}?gene=${encodeURIComponent(row.gene)}${filters.screen ? `&screen=${encodeURIComponent(filters.screen)}` : ""}`}
+                            className={cn("ml-1.5 text-[10.5px] font-normal text-cyan-600 underline decoration-line-strong underline-offset-2 hover:decoration-cyan-500", ABOVE_ROW_LINK)}
+                          >
+                            ladder
+                            <span className="sr-only"> for {row.gene}</span>
+                          </Link>
+                        )}
+                      </>
                     ) : (
                       row.gene
                     )}
@@ -385,8 +443,45 @@ export function TruthLoopView(props: TruthLoopProps) {
                       {row.screenName ?? row.screenId}
                     </Link>
                   </td>
+                  {/* Which experiment this was. A result without its experiment
+                      is not a measurement of anything: a genetic reproduction
+                      and a pharmacologic test answer different questions, and
+                      a row recorded before the Validation Network existed says
+                      "Not recorded" rather than being assigned a guess. */}
+                  <td>
+                    {row.validationType === null ? (
+                      <span
+                        className="text-muted"
+                        title="Recorded before the experiment was a required field. It is kept exactly as recorded and bears on none of the four questions."
+                      >
+                        Not recorded
+                      </span>
+                    ) : (
+                      <span
+                        className="block max-w-[170px] truncate text-ink"
+                        title={experimentTitle(row.validationType)}
+                      >
+                        {VALIDATION_TYPE_LABEL[row.validationType]}
+                      </span>
+                    )}
+                  </td>
                   <td>
                     <OutcomeBadge result={row.result} />
+                    {/* The engine's verdict, shown only when it disagrees with
+                        the label the laboratory gave it. The label is never
+                        overwritten: a console that silently corrected a
+                        scientist's own result would be asserting something
+                        nobody measured. Agreement needs no annotation, and
+                        "not scorable" is a gap in the record rather than a
+                        disagreement, so neither is flagged. */}
+                    {disagrees(row) && (
+                      <span
+                        className="mt-0.5 block text-[10.5px] leading-tight text-orange-700"
+                        title={row.decisionBecause ?? undefined}
+                      >
+                        {ENDPOINT_DECISION_LABEL[row.endpointDecision!]} against the endpoint
+                      </span>
+                    )}
                   </td>
                   <td>
                     <span className="block max-w-[200px] truncate" title={row.assay ?? undefined}>

@@ -41,9 +41,50 @@ test("the collapse animates width only, and not for anyone who asked it not to",
 test("a collapsed rail still names everything, to a screen reader and on focus", () => {
   assert.match(SHELL, /function RailTip\(/);
   // Hover alone would leave the rail unusable from the keyboard.
-  assert.match(SHELL, /group-focus-within:opacity-100/);
+  assert.match(SHELL, /onFocus=\{show\}/, "the label appears on keyboard focus");
+  assert.match(SHELL, /onBlur=\{hide\}/, "and leaves again");
   // The label stays in the accessibility tree at both widths.
   assert.match(SHELL, /collapsed && "sr-only"/);
+});
+
+test("the rail label is positioned against the viewport, not inside the scroller", () => {
+  const tip = SHELL.slice(SHELL.indexOf("function RailTip("));
+  // The rail is overflow-hidden and the navigation inside it scrolls. An
+  // absolutely positioned label at left-full was clipped by the first and
+  // counted towards the scrollable width of the second, which is what put a
+  // horizontal scrollbar across the bottom of a 68px rail.
+  assert.ok(!/left-full/.test(tip), "no label hangs off the rail in flow");
+  assert.match(tip, /className="pointer-events-none fixed/, "it is a fixed box");
+  assert.match(tip, /getBoundingClientRect/, "placed from the control it describes");
+  assert.match(tip, /addEventListener\("scroll", hide, true\)/, "and dismissed by a scroll");
+});
+
+test("the collapsed rail shows the SplicR logo, not a stand-in for it", () => {
+  // The rail used to carry an abstract four-rectangle glyph that nothing else
+  // in the brand uses. LogoGlyph is the S of the wordmark, cut from the same
+  // file the wordmark itself is drawn from.
+  assert.match(SHELL, /<LogoGlyph/, "the collapsed rail renders the logo");
+  assert.ok(!/<LogoMark/.test(SHELL), "and not the marquee bullet");
+  const logo = fs.readFileSync(path.join(root, "apps/web/src/components/brand/logo.tsx"), "utf8");
+  assert.match(logo, /const MARK = "\/brand\/splicr-mark\.png"/);
+  assert.ok(
+    fs.existsSync(path.join(root, "apps/web/public/brand/splicr-mark.png")),
+    "and the asset exists",
+  );
+});
+
+test("the command palette field is the one control in the console without a focus ring", () => {
+  const css = fs.readFileSync(path.join(root, "apps/web/src/app/globals.css"), "utf8");
+  // The ring itself is still there for everything else.
+  assert.match(css, /\.console :focus-visible \{\s*\n\s*outline: 2px solid var\(--color-navy\)/);
+  assert.match(css, /\.console \.palette-input:focus-visible/, "and switched off for the palette");
+  const rule = css.slice(css.indexOf(".palette-input:focus,"));
+  assert.match(rule.slice(0, 220), /outline: none/);
+  const palette = fs.readFileSync(
+    path.join(root, "apps/web/src/components/dashboard/command-palette.tsx"),
+    "utf8",
+  );
+  assert.match(palette, /className="palette-input/, "the input carries the class");
 });
 
 test("the mobile drawer is modal and gives focus back", () => {

@@ -1,0 +1,326 @@
+{
+  "default_endpoint": {
+    "another_model": "cross_model_reproduction.v1",
+    "crispra": "orthogonal_genetic_other.v1",
+    "crispri": "orthogonal_crispri.v1",
+    "in_vivo": "in_vivo_reproduction.v1",
+    "independent_guide": "ko_fitness_independent_guide.v1",
+    "independent_guide_set": "ko_fitness_independent_guide_set.v1",
+    "organoid": "organoid_growth_arrayed.v1",
+    "orthogonal_genetic": "orthogonal_genetic_other.v1",
+    "other": null,
+    "rescue": "rescue_complementation.v1",
+    "small_molecule": "pharmacologic_inhibition.v1"
+  },
+  "endpoints": {
+    "cross_model_reproduction.v1": {
+      "assay_class": "ko_fitness",
+      "control_criteria": [
+        "negative_control_guides"
+      ],
+      "definition_sha256": "e3a3fe00e4dc18097cba5079494e5dd9ba53e8d315796230e8f64a798782a179",
+      "direction": "depleted",
+      "effect_metric": "log2_fold_change",
+      "effect_threshold": null,
+      "endpoint_id": "cross_model_reproduction",
+      "key": "cross_model_reproduction.v1",
+      "label": "Reproduction in another cellular model",
+      "min_biological_replicates": 2,
+      "min_independent_perturbations": 1,
+      "negative_means": "A dependency that is real and context-specific is expected to fail this endpoint in the wrong context. A negative here is information about transfer, not about the original hit.",
+      "notes": "",
+      "published_example": null,
+      "question": "cross_model",
+      "requires_distinct_constructs": false,
+      "requires_independent_perturbation": false,
+      "threshold_owner": "laboratory",
+      "validation_types": [
+        "another_model"
+      ],
+      "version": 1
+    },
+    "in_vivo_reproduction.v1": {
+      "assay_class": "in_vivo_growth",
+      "control_criteria": [
+        "vehicle_control"
+      ],
+      "definition_sha256": "a4a85a1be0a98e200c8e55a9f46cdc77670b6844e3bab6ec878ea66cf0cb9aa9",
+      "direction": "depleted",
+      "effect_metric": "log2_fold_change",
+      "effect_threshold": null,
+      "endpoint_id": "in_vivo_reproduction",
+      "key": "in_vivo_reproduction.v1",
+      "label": "Reproduction in vivo",
+      "min_biological_replicates": 3,
+      "min_independent_perturbations": 1,
+      "negative_means": "In vivo failure can be pharmacokinetic, immunological or about the microenvironment, none of which is a statement about the in vitro measurement.",
+      "notes": "",
+      "published_example": null,
+      "question": "cross_model",
+      "requires_distinct_constructs": false,
+      "requires_independent_perturbation": false,
+      "threshold_owner": "laboratory",
+      "validation_types": [
+        "in_vivo"
+      ],
+      "version": 1
+    },
+    "ko_fitness_independent_guide.v1": {
+      "assay_class": "ko_fitness",
+      "control_criteria": [
+        "negative_control_guides",
+        "positive_control_guides"
+      ],
+      "definition_sha256": "d98141e6beca2b42770cca0c15f0ba1ea657bbde3d47915c0f30835925e26359",
+      "direction": "depleted",
+      "effect_metric": "log2_fold_change",
+      "effect_threshold": null,
+      "endpoint_id": "ko_fitness_independent_guide",
+      "key": "ko_fitness_independent_guide.v1",
+      "label": "Independent guide, knockout fitness",
+      "min_biological_replicates": 2,
+      "min_independent_perturbations": 1,
+      "negative_means": "A negative result here says this guide did not reproduce the depletion under this assay. It does not establish that the gene has no phenotype.",
+      "notes": "The default genetic-reproduction endpoint for pooled knockout fitness screens. The effect bar belongs to the assay that measures it.",
+      "published_example": null,
+      "question": "reproduces",
+      "requires_distinct_constructs": true,
+      "requires_independent_perturbation": true,
+      "threshold_owner": "laboratory",
+      "validation_types": [
+        "independent_guide"
+      ],
+      "version": 1
+    },
+    "ko_fitness_independent_guide_set.v1": {
+      "assay_class": "ko_fitness",
+      "control_criteria": [
+        "negative_control_guides",
+        "positive_control_guides"
+      ],
+      "definition_sha256": "d0180cc4a554a087e5913a43c05e81e1fbf48db01a5f0ab540e92534b01b0931",
+      "direction": "depleted",
+      "effect_metric": "log2_fold_change",
+      "effect_threshold": null,
+      "endpoint_id": "ko_fitness_independent_guide_set",
+      "key": "ko_fitness_independent_guide_set.v1",
+      "label": "Independent guide set, knockout fitness",
+      "min_biological_replicates": 2,
+      "min_independent_perturbations": 2,
+      "negative_means": "A negative result here is stronger than one independent guide failing, because two or more perturbations of the same target agreed on not reproducing it.",
+      "notes": "",
+      "published_example": null,
+      "question": "reproduces",
+      "requires_distinct_constructs": true,
+      "requires_independent_perturbation": true,
+      "threshold_owner": "laboratory",
+      "validation_types": [
+        "independent_guide_set"
+      ],
+      "version": 1
+    },
+    "organoid_growth_arrayed.v1": {
+      "assay_class": "organoid_growth",
+      "control_criteria": [
+        "empty_vector_control"
+      ],
+      "definition_sha256": "dc5bb68f1685cd485e80840fbc8612d92d03efcfc4dea563cefc478f4d55f5e2",
+      "direction": "depleted",
+      "effect_metric": "relative_organoid_area",
+      "effect_threshold": null,
+      "endpoint_id": "organoid_growth_arrayed",
+      "key": "organoid_growth_arrayed.v1",
+      "label": "Arrayed organoid growth",
+      "min_biological_replicates": 2,
+      "min_independent_perturbations": 2,
+      "negative_means": "A negative result here is about this organoid model. It does not transfer to the 2D line the screen was run in, or to another donor's organoid.",
+      "notes": "Modelled on the arrayed individual-gRNA growth assay in doi:10.1158/0008-5472.CAN-24-0775, where CDK2, PTK2 and PRKDC gRNAs reduced organoid area in ICSBCS002 and reduced it for only some guides in ICSBCS007. The 50%/p<0.05 figures in that paper are the screen's own hit criterion, which is why they are carried here as an example and not as this endpoint's default bar.",
+      "published_example": {
+        "doi": "10.1158/0008-5472.CAN-24-0775",
+        "pmid": "39891928",
+        "quoted": true,
+        "screen_hit_criterion": "a reduction of at least 50% (log2 fold change < -1) and a p value < 0.05",
+        "what": "Kinome-focused CRISPR-Cas9 screens in African-ancestry patient-derived breast cancer organoids"
+      },
+      "question": "cross_model",
+      "requires_distinct_constructs": false,
+      "requires_independent_perturbation": true,
+      "threshold_owner": "laboratory",
+      "validation_types": [
+        "organoid"
+      ],
+      "version": 1
+    },
+    "orthogonal_crispri.v1": {
+      "assay_class": "ko_fitness",
+      "control_criteria": [
+        "non_targeting_control",
+        "knockdown_confirmed"
+      ],
+      "definition_sha256": "a0edddd0b57766d1eb7c465c6e17ad5d9bca7a87e46e5bb7727e6e964b5d9d5b",
+      "direction": "depleted",
+      "effect_metric": "log2_fold_change",
+      "effect_threshold": null,
+      "endpoint_id": "orthogonal_crispri",
+      "key": "orthogonal_crispri.v1",
+      "label": "CRISPRi knockdown of the same target",
+      "min_biological_replicates": 2,
+      "min_independent_perturbations": 2,
+      "negative_means": "CRISPRi reduces transcript rather than cutting DNA. A disagreement with knockout can mean the knockout phenotype was a cutting artefact, or that partial knockdown was not enough. It does not by itself decide which.",
+      "notes": "",
+      "published_example": null,
+      "question": "target_specific",
+      "requires_distinct_constructs": false,
+      "requires_independent_perturbation": true,
+      "threshold_owner": "laboratory",
+      "validation_types": [
+        "crispri"
+      ],
+      "version": 1
+    },
+    "orthogonal_genetic_other.v1": {
+      "assay_class": "other",
+      "control_criteria": [],
+      "definition_sha256": "4719c72f8952a13576b99f557312ca77a3662fb15492897a2a6ea90005e73d66",
+      "direction": "either",
+      "effect_metric": "log2_fold_change",
+      "effect_threshold": null,
+      "endpoint_id": "orthogonal_genetic_other",
+      "key": "orthogonal_genetic_other.v1",
+      "label": "Other orthogonal genetic assay",
+      "min_biological_replicates": 2,
+      "min_independent_perturbations": 1,
+      "negative_means": "The direction is not prespecified for this catch-all endpoint, so it is the weakest of the orthogonal endpoints and is reported separately from CRISPRi and rescue.",
+      "notes": "A named endpoint is always preferable. This exists so an unusual assay can be recorded with its criteria rather than dropped.",
+      "published_example": null,
+      "question": "target_specific",
+      "requires_distinct_constructs": false,
+      "requires_independent_perturbation": true,
+      "threshold_owner": "laboratory",
+      "validation_types": [
+        "orthogonal_genetic",
+        "crispra"
+      ],
+      "version": 1
+    },
+    "pharmacologic_inhibition.v1": {
+      "assay_class": "other",
+      "control_criteria": [
+        "vehicle_control"
+      ],
+      "definition_sha256": "4bc60103d12c8249a009182c63906cb039b9b13716bbadf58b1b8490749ceae9",
+      "direction": "depleted",
+      "effect_metric": "viability_relative_to_vehicle",
+      "effect_threshold": null,
+      "endpoint_id": "pharmacologic_inhibition",
+      "key": "pharmacologic_inhibition.v1",
+      "label": "Selective small-molecule inhibition",
+      "min_biological_replicates": 2,
+      "min_independent_perturbations": 1,
+      "negative_means": "This is the endpoint most often misread. A compound that does not recapitulate a genetic phenotype may be a poor compound, dosed below its effective range, or aimed at a target that partial inhibition does not touch the way a knockout does. It is not evidence that the screen hit was false. In doi:10.1158/0008-5472.CAN-24-0775 the PRKDC inhibitors LTURM34 and AZD7648 showed no potent activity at the tested concentrations while the individual gRNAs did reduce growth, and of two PTK2 inhibitors one had no effect on either line while the other produced a partial response in one.",
+      "notes": "Records the compound and concentration in the measurement, because a pharmacologic outcome without them cannot be interpreted or reused.",
+      "published_example": {
+        "doi": "10.1158/0008-5472.CAN-24-0775",
+        "pmid": "39891928",
+        "quoted": true,
+        "screen_hit_criterion": "a reduction of at least 50% (log2 fold change < -1) and a p value < 0.05",
+        "what": "Kinome-focused CRISPR-Cas9 screens in African-ancestry patient-derived breast cancer organoids"
+      },
+      "question": "pharmacologic",
+      "requires_distinct_constructs": false,
+      "requires_independent_perturbation": true,
+      "threshold_owner": "laboratory",
+      "validation_types": [
+        "small_molecule"
+      ],
+      "version": 1
+    },
+    "rescue_complementation.v1": {
+      "assay_class": "ko_fitness",
+      "control_criteria": [
+        "empty_vector_control",
+        "expression_confirmed"
+      ],
+      "definition_sha256": "db5c483da4c3a06c083403cb3de53d0202e68b680295e3a1074ceeb938f98af2",
+      "direction": "enriched",
+      "effect_metric": "rescue_log2_fold_change",
+      "effect_threshold": null,
+      "endpoint_id": "rescue_complementation",
+      "key": "rescue_complementation.v1",
+      "label": "Rescue by complementation",
+      "min_biological_replicates": 2,
+      "min_independent_perturbations": 1,
+      "negative_means": "A rescue that does not restore the phenotype can mean the phenotype was off-target, or that the construct was not expressed or not functional.",
+      "notes": "The direction is reversed on purpose: a rescue validates by restoring growth, so the prespecified effect is enriched.",
+      "published_example": null,
+      "question": "target_specific",
+      "requires_distinct_constructs": false,
+      "requires_independent_perturbation": false,
+      "threshold_owner": "laboratory",
+      "validation_types": [
+        "rescue"
+      ],
+      "version": 1
+    }
+  },
+  "generated_by": "scripts/validation/export_endpoints.py",
+  "question_label": {
+    "cross_model": "Reproduction in another model or context",
+    "pharmacologic": "Pharmacologic recapitulation with a selective compound",
+    "reproduces": "Independent genetic reproduction in the same model",
+    "target_specific": "Target specificity under an orthogonal perturbation"
+  },
+  "question_sentence": {
+    "cross_model": "estimated probability of reproducing the phenotype in another model or biological context",
+    "pharmacologic": "estimated probability of recapitulating the phenotype pharmacologically with a selective inhibitor",
+    "reproduces": "estimated probability of reproducing the phenotype with an independent perturbation in the same model",
+    "target_specific": "estimated probability that the effect survives an orthogonal perturbation of the same target"
+  },
+  "questions": [
+    "reproduces",
+    "target_specific",
+    "cross_model",
+    "pharmacologic"
+  ],
+  "registry_sha256": "a0f2cbed6ec27fb6b0cd67ac36ab59f4cd1b0d8729aaf1a4d760b928804bf07f",
+  "schema": "splicr.endpoint-registry-export.v1",
+  "type_question": {
+    "another_model": "cross_model",
+    "crispra": "target_specific",
+    "crispri": "target_specific",
+    "in_vivo": "cross_model",
+    "independent_guide": "reproduces",
+    "independent_guide_set": "reproduces",
+    "organoid": "cross_model",
+    "orthogonal_genetic": "target_specific",
+    "other": null,
+    "rescue": "target_specific",
+    "small_molecule": "pharmacologic"
+  },
+  "validation_type_label": {
+    "another_model": "Another cellular model",
+    "crispra": "CRISPRa",
+    "crispri": "CRISPRi",
+    "in_vivo": "In vivo",
+    "independent_guide": "Independent CRISPR guide",
+    "independent_guide_set": "Independent guide set",
+    "organoid": "Organoid",
+    "orthogonal_genetic": "Orthogonal genetic assay",
+    "other": "Other",
+    "rescue": "Rescue experiment",
+    "small_molecule": "Small-molecule inhibition"
+  },
+  "validation_types": [
+    "independent_guide",
+    "independent_guide_set",
+    "crispri",
+    "crispra",
+    "rescue",
+    "orthogonal_genetic",
+    "small_molecule",
+    "another_model",
+    "organoid",
+    "in_vivo",
+    "other"
+  ]
+}

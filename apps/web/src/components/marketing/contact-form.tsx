@@ -165,7 +165,7 @@ export function ContactForm() {
         />
       </div>
       <button type="submit" className="btn btn-cyan" disabled={state.kind === "sending"}>
-        {state.kind === "sending" ? "Sending" : "Request a demo"}
+        {state.kind === "sending" ? "Sending" : "Request access"}
         {state.kind !== "sending" && <ArrowRight className="w-4 h-4" />}
       </button>
     </form>

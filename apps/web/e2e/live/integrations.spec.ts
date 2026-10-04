@@ -105,8 +105,10 @@ test.describe("the accession request reaches the deployed engine", () => {
 
     const panel = page.getByRole("region", { name: "Analyse a public accession" });
     await expect(panel).toContainText(accession, { timeout: 60_000 });
-    await expect(panel).toContainText("Queued");
 
+    // The web action now starts the deployed sweep itself. Calling it here is
+    // still harmless, and keeps the live test useful when a staging deployment
+    // deliberately has web-side Modal autostart disabled.
     await sweepNow();
 
     await expect(async () => {

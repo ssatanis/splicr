@@ -16,10 +16,14 @@ export function RoleLegend({ callerRole }: { callerRole: OrgRole | null }) {
     <Card title="What each role can do">
       <ul className="space-y-3">
         {ORG_ROLES.map((role) => (
-          <li key={role} className="flex gap-3">
+          <li key={role} className="flex items-start gap-3">
+            {/* self-start, or the pill stretches to the height of the sentence
+                beside it and reads as an oval. The fixed width keeps the four
+                sentences on one left edge, and it has to hold the longest
+                label rather than the shortest. */}
             <span
               className={cn(
-                "mt-0.5 inline-flex w-16 shrink-0 justify-center rounded-full px-2 py-0.5 text-[11px]",
+                "mt-0.5 inline-flex w-[5.5rem] shrink-0 justify-center self-start whitespace-nowrap rounded-full px-2 py-0.5 text-[11px]",
                 ROLE_CHIP[role],
               )}
             >

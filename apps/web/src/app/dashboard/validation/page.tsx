@@ -9,10 +9,12 @@ import { redirect } from "next/navigation";
 
 import { Card, PageHeader } from "@/components/dashboard/ui";
 import { TruthLoopView } from "@/components/dashboard/truth-loop/view";
+import { ValidationLadder } from "@/components/dashboard/validation/ladder";
 import { WorkspaceReadNotice } from "@/components/dashboard/workspace-records";
 import { getCurrentContext } from "@/lib/data/org";
 import { deleteOutcome, logOutcome, updateOutcome } from "@/lib/data/outcome-actions";
 import { getOutcomeView } from "@/lib/data/outcomes";
+import { getLadderView } from "@/lib/data/validation-network";
 import {
   OUTCOME_PAGE_SIZE,
   outcomeHref,
@@ -43,7 +45,18 @@ export default async function ValidationPage(props: PageProps<"/dashboard/valida
   const filters = parseOutcomeFilters(search);
   const prefill = readPrefill(search);
 
-  const view = await getOutcomeView(filters);
+  // `?gene=PRKDC` opens that candidate's validation ladder beside the table.
+  // Read here rather than in a client component because the ladder is a server
+  // read of the workspace's own records, and the gene comes from the address so
+  // the view is linkable: a researcher answering a question from their PI has
+  // to be able to send the answer back.
+  const gene = single(search.gene);
+  const [view, ladder] = await Promise.all([
+    getOutcomeView(filters),
+    GENE_SYMBOL.test(gene)
+      ? getLadderView(gene, { screenId: filters.screen })
+      : Promise.resolve(null),
+  ]);
   if (view.status !== "ready") {
     return (
       <div className="flex flex-col gap-4">
@@ -60,6 +73,11 @@ export default async function ValidationPage(props: PageProps<"/dashboard/valida
 
   return (
     <>
+      {ladder !== null && ladder.status === "ready" && (
+        <div className="grid grid-cols-12 content-start gap-4">
+          <ValidationLadder view={ladder} span={12} />
+        </div>
+      )}
       {!view.canWrite && (
         <Card title="Read-only role">
           <p className="text-sm text-body">

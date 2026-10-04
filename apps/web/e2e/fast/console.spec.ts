@@ -39,7 +39,7 @@ test("there is no public signup form, signed in or out", async ({ page, browser 
 
 test("the overview greets the researcher and offers the one obvious action", async ({ page }) => {
   await page.goto("/dashboard");
-  await expect(page.getByRole("link", { name: "New screen" }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: "New analysis" }).first()).toBeVisible();
   await expect(page.getByText(/^(Good morning|Good afternoon|Good evening)/)).toBeVisible();
 });
 
@@ -51,15 +51,18 @@ test("the screens list shows the fixture screen and links to it", async ({ page 
   await expect(page.getByRole("region", { name: "Screen summary" })).toBeVisible();
 });
 
-test("new screen offers the accession path and refuses what it cannot resolve", async ({ page }) => {
+test("new analysis separates private upload from published studies", async ({ page }) => {
   await page.goto("/dashboard/new");
+  await expect(page.getByRole("heading", { name: "New analysis" })).toBeVisible();
+  await expect(page.getByRole("radio", { name: /My experiment/ })).toHaveAttribute("aria-checked", "true");
+  await expect(page.locator('input[type="file"]')).toHaveCount(1);
+
+  await page.getByRole("radio", { name: /Published study/ }).click();
   const field = page.getByLabel("Accession", { exact: true });
   await field.fill("SRR11086081");
   // A run accession is not a study, so the control refuses it before the server does.
   await expect(page.getByText(/not a shape SplicR can resolve/)).toBeVisible();
   await expect(page.getByRole("button", { name: "Queue the analysis" })).toBeDisabled();
-  // And there is no file input, because nothing would consume the job.
-  await expect(page.locator('input[type="file"]')).toHaveCount(0);
 });
 
 test("the planner is three steps and the plan updates as the design changes", async ({ page }) => {

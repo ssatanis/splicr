@@ -10,6 +10,7 @@ import {
 } from "@/lib/data/types";
 
 import { FieldGrid, ReadOnlyField, SelectField, TextField } from "./fields";
+import { LabLogoField } from "./logo-field";
 import { PanelForm } from "./panel";
 
 export interface LabPanelProps {
@@ -40,90 +41,93 @@ export function LabPanel({
   const branding = settings.branding;
 
   return (
-    <PanelForm
-      panelKey="lab"
-      title="Lab"
-      description="The workspace every screen, run and API key belongs to."
-      action={updateOrganization}
-      canEdit={canEdit}
-      lockedReason={lockedReason}
-      saveLabel="Save lab details"
-      onDirtyChange={onDirtyChange}
-    >
-      <FieldGrid>
-        <TextField
-          name="name"
-          label="Lab display name"
-          defaultValue={org?.name ?? ""}
-          placeholder="Franklin Lab"
-          maxLength={120}
-          required
-          hint="Shown in the sidebar, on the screens list and wherever the workspace is named."
-        />
-        <TextField
-          name="branding.institution"
-          label="Institution"
-          defaultValue={branding.institution}
-          placeholder="King's College London"
-          maxLength={160}
-          hint="The university, company or centre the lab sits in."
-        />
-        <TextField
-          name="location"
-          label="Location"
-          defaultValue={org?.location ?? ""}
-          placeholder="City, region"
-          maxLength={160}
-        />
-        <TextField
-          name="time_zone"
-          label="Lab time zone"
-          defaultValue={org?.time_zone ?? ""}
-          placeholder="America/New_York"
-          maxLength={80}
-          hint="Used for laboratory timestamps when a researcher has no personal override."
-        />
-        <TextField
-          name="logo_url"
-          label="Lab logo URL"
-          type="url"
-          defaultValue={org?.logo_url ?? ""}
-          placeholder="https://lab.example/logo.svg"
-          maxLength={2048}
-          hint="Optional HTTPS asset for reports and shared workspace identity."
-        />
-        <TextField
-          name="branding.contact_email"
-          label="Contact email"
-          type="email"
-          defaultValue={branding.contact_email}
-          placeholder="screens@lab.example"
-          maxLength={200}
-          hint="Printed on reports so a reader can reach the lab. Leave it empty to keep it off the page. This is not a login, and it receives nothing on its own."
-        />
-        <SelectField
-          name="kind"
-          label="Organization kind"
-          defaultValue={org?.kind ?? "academic"}
-          options={kindOptions}
-          hint="Used for the Atlas comparisons a new screen is offered, and for nothing else."
-        />
-        <TextField
-          name="branding.display_name"
-          label="Name on reports"
-          defaultValue={branding.display_name}
-          placeholder="Leave empty to use the lab display name"
-          maxLength={120}
-          hint="Some labs publish under a longer name than the one they use day to day."
-        />
-        <ReadOnlyField
-          label="Workspace slug"
-          value={org?.slug ?? "unknown"}
-          hint="Fixed when the workspace was created. It appears in links, and it is the phrase the delete confirmation asks you to type."
-        />
-        <ReadOnlyField label="Plan" value={org ? PLAN_LABEL[org.plan] : "Free"} />
-        <ReadOnlyField label="Created" value={createdLabel} />
-      </FieldGrid>
-    </PanelForm>
+    <div className="space-y-4">
+      {/* Outside the form on purpose: see `LabLogoField`. It saves itself the
+          moment a file is chosen, which is also why it sits above the fields
+          rather than inside the group they share a Save button with. */}
+      <LabLogoField
+        orgName={org?.name ?? "Your lab"}
+        logoUrl={org?.logo_url ?? null}
+        canEdit={canEdit}
+        lockedReason={lockedReason}
+      />
+
+      <PanelForm
+        panelKey="lab"
+        title="Lab"
+        description="The workspace every screen, run and API key belongs to."
+        action={updateOrganization}
+        canEdit={canEdit}
+        lockedReason={lockedReason}
+        saveLabel="Save lab details"
+        onDirtyChange={onDirtyChange}
+      >
+        <FieldGrid>
+          <TextField
+            name="name"
+            label="Lab display name"
+            defaultValue={org?.name ?? ""}
+            placeholder="Franklin Lab"
+            maxLength={120}
+            required
+            hint="Shown in the sidebar, on the screens list and wherever the workspace is named."
+          />
+          <TextField
+            name="branding.institution"
+            label="Institution"
+            defaultValue={branding.institution}
+            placeholder="King's College London"
+            maxLength={160}
+            hint="The university, company or centre the lab sits in."
+          />
+          <TextField
+            name="location"
+            label="Location"
+            defaultValue={org?.location ?? ""}
+            placeholder="City, region"
+            maxLength={160}
+          />
+          <TextField
+            name="time_zone"
+            label="Lab time zone"
+            defaultValue={org?.time_zone ?? ""}
+            placeholder="America/New_York"
+            maxLength={80}
+            hint="Used for laboratory timestamps when a researcher has no personal override."
+          />
+          <TextField
+            name="branding.contact_email"
+            label="Contact email"
+            type="email"
+            defaultValue={branding.contact_email}
+            placeholder="screens@lab.example"
+            maxLength={200}
+            hint="Printed on reports so a reader can reach the lab. Leave it empty to keep it off the page. This is not a login, and it receives nothing on its own."
+          />
+          <SelectField
+            name="kind"
+            label="Organization kind"
+            defaultValue={org?.kind ?? "academic"}
+            options={kindOptions}
+            hint="Used for the Atlas comparisons a new screen is offered, and for nothing else."
+          />
+          <TextField
+            name="branding.display_name"
+            label="Name on reports"
+            defaultValue={branding.display_name}
+            placeholder="Leave empty to use the lab display name"
+            maxLength={120}
+            hint="Some labs publish under a longer name than the one they use day to day."
+          />
+          <ReadOnlyField
+            label="Workspace slug"
+            value={org?.slug ?? "unknown"}
+            hint="Fixed when the workspace was created. It appears in links, and it is the phrase the delete confirmation asks you to type."
+          />
+          <ReadOnlyField label="Plan" value={org ? PLAN_LABEL[org.plan] : "Free"} />
+          <ReadOnlyField label="Created" value={createdLabel} />
+        </FieldGrid>
+      </PanelForm>
+    </div>
   );
 }

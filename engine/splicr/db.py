@@ -365,6 +365,84 @@ def write_hits(
     return len(hit_rows)
 
 
+def write_validation_predictions(conn: "psycopg.Connection", ctx: RunContext,
+                                 scored: dict) -> int:
+    """
+    Store the score stage's per-candidate, per-question estimates.
+
+    Both branches are rows. An available estimate carries its probability, its
+    interval and the cohort that licensed it; an unavailable one carries the
+    reason and no probability at all, and the table's own check constraint
+    refuses anything in between. A refusal has to be a row rather than an
+    absence, because a gene with no row and a gene the gate declined look
+    identical to a reader otherwise, and only one of them has been considered.
+
+    Re-running a comparison replaces its predictions. A prediction is a
+    statement about one run's evidence under one model version, so keeping the
+    previous run's alongside would leave two answers to one question with
+    nothing saying which is current. The frozen copy that must survive a
+    re-analysis lives in the round's receipt, which this never touches.
+    """
+    candidates = scored.get("candidates") or []
+    if not candidates:
+        return 0
+
+    conn.execute(
+        "delete from public.validation_predictions where comparison_id = %s",
+        (ctx.comparison_id,))
+
+    rows: list[tuple] = []
+    for candidate in candidates:
+        gene = candidate.get("gene")
+        for question, estimate in (candidate.get("questions") or {}).items():
+            available = bool(estimate.get("available"))
+            coverage = estimate.get("coverage") or {}
+            matched = coverage.get("matched") or {}
+            rows.append((
+                str(uuid.uuid4()), ctx.org_id, ctx.screen_id, ctx.run_id,
+                ctx.comparison_id, gene, question, available,
+                estimate.get("probability") if available else None,
+                estimate.get("lower") if available else None,
+                estimate.get("upper") if available else None,
+                estimate.get("bounded") or "none",
+                coverage.get("n_decided") if available else None,
+                coverage.get("n_labs") if available else None,
+                coverage.get("n_screens") if available else None,
+                coverage.get("stratum_key") or (coverage.get("stratum") or {}).get("assay_class"),
+                coverage.get("matched_key") if available else None,
+                _pg_text_array(coverage.get("relaxed") if available else None),
+                coverage.get("cohort_sentence") if available else None,
+                None if available else (estimate.get("reason") or "unavailable"),
+                estimate.get("sentence") if available else (estimate.get("because") or ""),
+                json.dumps(estimate.get("contributions")) if available else None,
+                _pg_text_array(estimate.get("missing_channels")),
+                estimate.get("model_version"),
+            ))
+
+    with conn.cursor().copy(
+        "copy public.validation_predictions "
+        "(id, org_id, screen_id, run_id, comparison_id, gene_symbol, question, "
+        " available, probability, lower, upper, bounded, cohort_n_decided, "
+        " cohort_n_labs, cohort_n_screens, cohort_stratum, cohort_matched, "
+        " cohort_relaxed, cohort_sentence, unavailable_reason, because, "
+        " contributions, missing_channels, model_version) from stdin"
+    ) as copy:
+        for row in rows:
+            copy.write_row(row)
+    return len(rows)
+
+
+def _pg_text_array(values) -> str:
+    """A text list as a Postgres array literal. Absent and empty are both '{}'."""
+    if not values:
+        return "{}"
+    escaped = []
+    for value in values:
+        text = str(value).replace("\\", "\\\\").replace('"', '\\"')
+        escaped.append(f'"{text}"')
+    return "{" + ",".join(escaped) + "}"
+
+
 def _pg_float_array(values: list[float] | None) -> str | None:
     """Render a float list as a Postgres array literal for COPY."""
     if not values:

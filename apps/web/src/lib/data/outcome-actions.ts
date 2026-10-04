@@ -35,11 +35,14 @@ import {
 } from "@/lib/data/types";
 import type { OutcomeRow } from "@/lib/outcomes/model";
 import {
+  measurementFromValues,
   parseOutcomeDraft,
   type OutcomeDraft,
   type OutcomeFormField,
+  type OutcomeFormValues,
 } from "@/lib/outcomes/schema";
 import { createClient } from "@/lib/supabase/server";
+import { decideEndpoint, defaultEndpoint } from "@/lib/validation/endpoint";
 
 import { OUTCOME_COLUMNS, likePattern, toOutcomeRow, type OutcomeDbRow } from "./outcomes";
 
@@ -94,6 +97,96 @@ interface HitRow {
   model_version: string | null;
 }
 
+/**
+ * The validation fields an insert or an update writes, scored on the server.
+ *
+ * The endpoint decision is computed here and not taken from the client, for the
+ * same reason `candidate_decisions.evidence` is written server side: a verdict
+ * the browser can set is a verdict somebody can set to whatever they want. The
+ * scorer is the one the engine's own decision matrix pins
+ * (apps/web/tests/endpoint-decisions.test.mjs), so the server's verdict and the
+ * engine's agree by construction.
+ *
+ * The decision never overwrites `result`. Where the lab's label and the
+ * measurement disagree, both are stored and the Truth Loop shows the
+ * disagreement, because a console that silently corrected a scientist's own
+ * label would be asserting something nobody measured.
+ */
+function validationFields(value: OutcomeFormValues) {
+  const measurement = measurementFromValues(value);
+  const endpoint = defaultEndpoint(value.validationType);
+  const decision = endpoint
+    ? decideEndpoint(endpoint, { ...measurement, result: value.result }, {
+        // The laboratory's own bar is agreed at round creation. Outside a round
+        // there is none, so an endpoint whose threshold belongs to the lab
+        // returns `insufficient_record` and says which criterion is missing -
+        // which is the correct state for an outcome logged without a
+        // prespecified bar.
+        laboratoryThreshold: null,
+      })
+    : null;
+  return {
+    validation_type: value.validationType,
+    endpoint_id: endpoint?.endpoint_id ?? null,
+    endpoint_version: endpoint?.version ?? null,
+    measurement,
+    lab_id: value.labId,
+    endpoint_decision: decision?.decision ?? null,
+    decision_because: decision?.because ?? null,
+    //  Deliberately not here: round_id and arm. Which round an outcome belongs
+    //  to was fixed when that round was frozen, and an edit to what the assay
+    //  found must not move it to a different prediction.
+  };
+}
+
+/**
+ * The round and arm this outcome belongs to, if the gene is in a frozen one.
+ *
+ * A researcher recording a result does not know, and should not have to know,
+ * which round a gene came from. The round froze that list; the outcome attaches
+ * itself. Without this the round's results page sees nothing and a prospective
+ * design collects nothing, which is the whole point of having drawn the set.
+ *
+ * Only a frozen or revealed round claims an outcome. A draft has committed to
+ * nothing, so an outcome recorded while it is still being edited belongs to no
+ * round. Where two rounds on one screen both drew the gene, the most recently
+ * frozen one takes it, because that is the prediction still being tested.
+ */
+async function roundForGene(
+  client: Awaited<ReturnType<typeof createClient>>,
+  orgId: string,
+  screenId: string,
+  gene: string,
+): Promise<{ roundId: string; arm: string } | null> {
+  try {
+    const rounds = await client
+      .from("validation_rounds")
+      .select("id, frozen_at")
+      .eq("org_id", orgId)
+      .eq("screen_id", screenId)
+      .in("state", ["frozen", "revealed"])
+      .order("frozen_at", { ascending: false })
+      .limit(20);
+    if (rounds.error || !rounds.data?.length) return null;
+    const ids = (rounds.data as { id: string }[]).map((r) => r.id);
+    const slots = await client
+      .from("validation_slots")
+      .select("round_id, arm, gene_symbol")
+      .in("round_id", ids)
+      .ilike("gene_symbol", likePattern(gene).slice(1, -1));
+    if (slots.error || !slots.data?.length) return null;
+    const order = new Map(ids.map((id, index) => [id, index]));
+    const best = (slots.data as { round_id: string; arm: string }[])
+      .slice()
+      .sort((a, b) => (order.get(a.round_id) ?? 99) - (order.get(b.round_id) ?? 99))[0];
+    return { roundId: best.round_id, arm: best.arm };
+  } catch (error) {
+    // A failure here costs the outcome its round, not the outcome itself.
+    console.error("[data/outcome-actions] round lookup failed", error);
+    return null;
+  }
+}
+
 export async function logOutcome(draft: OutcomeDraft): Promise<OutcomeActionResult> {
   const auth = await authorize("member");
   if (!auth.ok) return auth;
@@ -139,6 +232,8 @@ export async function logOutcome(draft: OutcomeDraft): Promise<OutcomeActionResu
       hit = ((hitResult.data ?? []) as HitRow[])[0] ?? null;
     }
 
+    const round = await roundForGene(client, orgId, screen.id, value.gene);
+
     const insert = await client
       .from("validation_outcomes")
       .insert({
@@ -146,9 +241,12 @@ export async function logOutcome(draft: OutcomeDraft): Promise<OutcomeActionResu
         screen_id: screen.id,
         hit_id: hit?.id ?? null,
         gene_symbol: hit?.gene_symbol ?? value.gene,
+        round_id: round?.roundId ?? null,
+        arm: round?.arm ?? "unassigned",
         predicted: hit?.chance_real ?? null,
         model_version: hit?.model_version ?? null,
         result: value.result,
+        ...validationFields(value),
         assay: value.assay,
         n_guides: value.nGuides,
         effect_size: value.effectSize,
@@ -166,9 +264,11 @@ export async function logOutcome(draft: OutcomeDraft): Promise<OutcomeActionResu
     return {
       ok: true,
       outcome: { ...outcome, screenName: outcome.screenName ?? screen.name },
-      note: hit
-        ? "Linked to the hit recorded for this gene in the screen's current run."
-        : "Saved without a link: this screen's current run has no recorded hit for that gene.",
+      note: round
+        ? "Counted towards a frozen validation round for this screen."
+        : hit
+          ? "Linked to the hit recorded for this gene in the screen's current run."
+          : "Saved without a link: this screen's current run has no recorded hit for that gene.",
     };
   } catch (error) {
     return failure("logOutcome", error);
@@ -192,6 +292,7 @@ export async function updateOutcome(id: string, draft: OutcomeDraft): Promise<Ou
       .from("validation_outcomes")
       .update({
         result: value.result,
+        ...validationFields(value),
         assay: value.assay,
         n_guides: value.nGuides,
         effect_size: value.effectSize,

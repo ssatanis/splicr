@@ -419,10 +419,11 @@ export async function updateOrganization(formData: FormData): Promise<ActionResu
     update.kind = parsed.data;
   }
 
-  for (const [field, max] of [
-    ["location", 160],
-    ["logo_url", 2048],
-  ] as const) {
+  // `logo_url` is deliberately not here. It names a file this application
+  // stores, so it is written only by `uploadLabLogo` and `removeLabLogo`,
+  // which keep the column and the object in step. A second writer would let
+  // the column point somewhere else while the object stayed behind.
+  for (const [field, max] of [["location", 160]] as const) {
     const value = lastValue(formData, field);
     if (value === null) continue;
     if (value.length > max) return actionFailed(`${field.replaceAll("_", " ")} is too long.`);
@@ -464,6 +465,161 @@ export async function updateOrganization(formData: FormData): Promise<ActionResu
 }
 
 // ---------------------------------------------------------------------------
+// The lab logo
+// ---------------------------------------------------------------------------
+
+const LOGO_BUCKET = "lab-logos";
+
+/**
+ * The formats a lab logo may be in, and the magic bytes that prove it.
+ *
+ * The bucket is world readable, so the declared content type is not evidence:
+ * anything can claim to be a PNG. SVG is absent on purpose, because an SVG is
+ * a script container and a logo is a raster job. `storage.buckets` carries the
+ * same three types, so a file that gets past this check still meets a second
+ * refusal in the database.
+ */
+const LOGO_FORMATS: { type: string; extension: string; magic: (bytes: Uint8Array) => boolean }[] = [
+  {
+    type: "image/png",
+    extension: "png",
+    magic: (b) =>
+      b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47 &&
+      b[4] === 0x0d && b[5] === 0x0a && b[6] === 0x1a && b[7] === 0x0a,
+  },
+  {
+    type: "image/jpeg",
+    extension: "jpg",
+    magic: (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff,
+  },
+  {
+    type: "image/webp",
+    extension: "webp",
+    magic: (b) =>
+      b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 &&
+      b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50,
+  },
+];
+
+/** Matches `storage.buckets.file_size_limit` for this bucket. */
+const LOGO_MAX_BYTES = 2 * 1024 * 1024;
+
+type StorageClient = Awaited<ReturnType<typeof createClient>>;
+
+/**
+ * Drop every stored logo for this lab except `keep`.
+ *
+ * Uploading writes a new object rather than overwriting the old one, so that a
+ * reader holding the previous URL never sees a half-written file and so a
+ * cached copy is never the wrong image under the right name. The old object
+ * has to go somewhere, and it goes here. A failure is logged and swallowed:
+ * the lab's logo is already correct at that point, and an orphaned 40 KB file
+ * is not worth failing a save over.
+ */
+async function pruneLogos(
+  supabase: StorageClient,
+  orgId: string,
+  keep: string | null,
+): Promise<void> {
+  const { data, error } = await supabase.storage.from(LOGO_BUCKET).list(orgId, { limit: 100 });
+  if (error) {
+    console.error(`[data/actions] pruneLogos list: ${error.message}`);
+    return;
+  }
+  const stale = (data ?? [])
+    .map((entry) => `${orgId}/${entry.name}`)
+    .filter((path) => path !== keep);
+  if (stale.length === 0) return;
+  const { error: removeError } = await supabase.storage.from(LOGO_BUCKET).remove(stale);
+  if (removeError) console.error(`[data/actions] pruneLogos remove: ${removeError.message}`);
+}
+
+/**
+ * Put the lab's own logo on the workspace.
+ *
+ * Admins and owners only, re-checked here and again by the storage policy,
+ * which reads the organization id out of the object path. The object is
+ * written first and the column second, because a column pointing at nothing is
+ * a broken image on every report while an object nothing points at is
+ * invisible; if the column write fails the object is removed again.
+ */
+export async function uploadLabLogo(formData: FormData): Promise<ActionResult> {
+  const auth = await authorize("admin");
+  if (!auth.ok) return auth;
+  const { org } = auth.caller;
+
+  const file = formData.get("logo");
+  if (!(file instanceof File) || file.size === 0) {
+    return actionFailed("Choose an image file to upload.");
+  }
+  if (file.size > LOGO_MAX_BYTES) {
+    return actionFailed("That image is larger than 2 MB. Export it smaller and try again.");
+  }
+
+  const head = new Uint8Array(await file.slice(0, 16).arrayBuffer());
+  const format = LOGO_FORMATS.find((candidate) => candidate.magic(head));
+  if (!format || format.type !== file.type) {
+    return actionFailed("A lab logo has to be a PNG, JPEG or WebP image.");
+  }
+
+  const supabase = await createClient();
+  const path = `${org.id}/logo-${Date.now().toString(36)}-${randomBytes(4).toString("hex")}.${format.extension}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(LOGO_BUCKET)
+    .upload(path, file, { contentType: format.type, cacheControl: "3600", upsert: false });
+  if (uploadError) {
+    console.error(`[data/actions] uploadLabLogo: ${uploadError.message}`);
+    return actionFailed("The logo could not be stored. Try again.");
+  }
+
+  const publicUrl = supabase.storage.from(LOGO_BUCKET).getPublicUrl(path).data.publicUrl;
+  if (!publicUrl) {
+    await supabase.storage.from(LOGO_BUCKET).remove([path]);
+    return actionFailed("The logo was stored but has no address. Try again.");
+  }
+
+  const { data, error } = await supabase
+    .from("organizations")
+    .update({ logo_url: publicUrl })
+    .eq("id", org.id)
+    .select("id");
+
+  if (error || rowCount(data) === 0) {
+    await supabase.storage.from(LOGO_BUCKET).remove([path]);
+    if (error) return dbFailure("uploadLabLogo", error, "The logo could not be saved.");
+    return actionFailed("The logo could not be saved. Your role may have changed.");
+  }
+
+  await pruneLogos(supabase, org.id, path);
+  revalidateWorkspace();
+  return { ok: true };
+}
+
+/** Take the logo off the workspace and delete the file behind it. */
+export async function removeLabLogo(): Promise<ActionResult> {
+  const auth = await authorize("admin");
+  if (!auth.ok) return auth;
+  const { org } = auth.caller;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("organizations")
+    .update({ logo_url: null })
+    .eq("id", org.id)
+    .select("id");
+
+  if (error) return dbFailure("removeLabLogo", error, "The logo could not be removed.");
+  if (rowCount(data) === 0) {
+    return actionFailed("The logo could not be removed. Your role may have changed.");
+  }
+
+  await pruneLogos(supabase, org.id, null);
+  revalidateWorkspace();
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
 // Members and invites
 // ---------------------------------------------------------------------------
 
@@ -491,7 +647,7 @@ export async function inviteMember(
   if (!parsedEmail.success) return actionFailed(firstIssue(parsedEmail.error));
 
   const parsedRole = roleSchema.safeParse(role);
-  if (!parsedRole.success) return actionFailed("Pick one of owner, admin, member or viewer.");
+  if (!parsedRole.success) return actionFailed("Pick one of owner, admin, researcher or viewer.");
 
   if (ROLE_RANK[parsedRole.data] > ROLE_RANK[callerRole]) {
     return actionFailed(
@@ -711,7 +867,7 @@ export async function changeMemberRole(userId: string, role: OrgRole): Promise<A
   if (!parsedUser.success) return actionFailed("That member id is not valid.");
 
   const parsedRole = roleSchema.safeParse(role);
-  if (!parsedRole.success) return actionFailed("Pick one of owner, admin, member or viewer.");
+  if (!parsedRole.success) return actionFailed("Pick one of owner, admin, researcher or viewer.");
 
   const target = await getOrgRole(org.id, parsedUser.data);
   if (!target) return actionFailed("That person is not a member of this workspace.");

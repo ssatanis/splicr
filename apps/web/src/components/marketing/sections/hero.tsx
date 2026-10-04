@@ -60,7 +60,7 @@ export function Hero() {
           className="mt-10 md:mt-12 flex flex-wrap items-center justify-center gap-3"
         >
           <LinkButton href="/contact" tone="teal" size="lg" icon="none">
-            Request a Demo
+            Request access
           </LinkButton>
           <LinkButton href="/technology" tone="ghost" size="lg" icon="none">
             How it works

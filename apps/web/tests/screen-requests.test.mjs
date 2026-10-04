@@ -91,17 +91,33 @@ test("every status has copy, and no status is left to a fallback", () => {
 // The action's boundaries
 // ---------------------------------------------------------------------------
 
-function actions({ context = member, role = "member", insert = { error: null } } = {}) {
+function actions({
+  context = member,
+  role = "member",
+  insert = { data: { id: "req-new" }, error: null },
+  existing = { data: { id: "req-existing" }, error: null },
+  status = { data: { status: "planning" }, error: null },
+  kickResult = { started: true },
+  kickError = null,
+} = {}) {
   const writes = [];
-  const client = {
+  const adminWrites = [];
+  const kicks = [];
+  const makeClient = (isAdmin = false) => ({
     from(table) {
-      const query = { table, values: null, filters: [] };
-      writes.push(query);
+      const query = { table, values: null, update: null, filters: [] };
+      (isAdmin ? adminWrites : writes).push(query);
       const chain = new Proxy({}, {
         get(_, method) {
-          if (method === "then") return (resolve) => resolve(insert);
+          if (method === "then") return (resolve) => {
+            if (query.update) return resolve({ error: null });
+            if (query.values) return resolve(insert);
+            if (query.filters.some(([key]) => key === "id")) return resolve(status);
+            return resolve(existing);
+          };
           return (...args) => {
             if (method === "insert") query.values = args[0];
+            else if (method === "update") query.update = args[0];
             else if (method === "eq") query.filters.push([args[0], args[1]]);
             return chain;
           };
@@ -109,16 +125,26 @@ function actions({ context = member, role = "member", insert = { error: null } }
       });
       return chain;
     },
-  };
+  });
+  const client = makeClient();
   const mod = loadTs("lib/data/request-actions.ts", {
     mocks: {
       "server-only": {},
       "next/cache": { revalidatePath: () => {} },
+      "@/lib/ingest/modal": {
+        kickPublicIngestQueue: async () => {
+          kicks.push("sweep");
+          if (kickError) throw kickError;
+          return kickResult;
+        },
+      },
+      "@/lib/supabase/admin": { createAdminClient: () => makeClient(true) },
       "@/lib/supabase/server": { createClient: async () => client },
       "./org": { getCurrentContext: async () => context, getOrgRole: async () => role },
     },
+    globals: { setTimeout: (fn) => { fn(); return 0; } },
   });
-  return { ...mod, writes };
+  return { ...mod, writes, adminWrites, kicks };
 }
 
 function form(fields) {
@@ -131,6 +157,7 @@ test("an accession the engine cannot resolve is refused before anything is writt
   assert.equal(result.ok, false);
   assert.match(result.error, /SRA/);
   assert.equal(app.writes.length, 0, "nothing may be queued for an accession that cannot be planned");
+  assert.equal(app.kicks.length, 0);
 });
 
 test("an empty accession asks for one rather than queueing a blank", async () => {
@@ -138,6 +165,7 @@ test("an empty accession asks for one rather than queueing a blank", async () =>
   const result = await app.requestScreenAnalysis(form({ accession: "   " }));
   assert.equal(result.ok, false);
   assert.equal(app.writes.length, 0);
+  assert.equal(app.kicks.length, 0);
 });
 
 test("a viewer is told why, not silently ignored", async () => {
@@ -146,6 +174,7 @@ test("a viewer is told why, not silently ignored", async () => {
   assert.equal(result.ok, false);
   assert.match(result.error, /administrator/i);
   assert.equal(app.writes.length, 0);
+  assert.equal(app.kicks.length, 0);
 });
 
 test("a signed-out caller writes nothing", async () => {
@@ -153,36 +182,63 @@ test("a signed-out caller writes nothing", async () => {
   const result = await app.requestScreenAnalysis(form({ accession: "GSE145743" }));
   assert.equal(result.ok, false);
   assert.equal(app.writes.length, 0);
+  assert.equal(app.kicks.length, 0);
 });
 
-test("the request carries the session's organization and member, normalised", async () => {
+test("the request carries the session's organization and member, normalised, then starts a sweep", async () => {
   const app = actions();
   const result = await app.requestScreenAnalysis(form({ accession: " gse145743 " }));
   assert.equal(result.ok, true);
-  assert.equal(app.writes.length, 1);
-  assert.deepEqual(app.writes[0].values, {
+  const inserts = app.writes.filter((write) => write.values);
+  assert.equal(inserts.length, 1);
+  assert.deepEqual(inserts[0].values, {
     org_id: orgId,
     requested_by: userId,
     accession: "GSE145743",
   });
   // The organization is never taken from the caller, so there is no field for
   // a forged POST to set.
-  assert.ok(!("status" in app.writes[0].values));
+  assert.ok(!("status" in inserts[0].values));
+  assert.deepEqual(app.kicks, ["sweep"]);
 });
 
 test("asking twice for the same accession is the same ask, not an error", async () => {
-  const app = actions({ insert: { error: { code: "23505", message: "duplicate key" } } });
+  const app = actions({ insert: { data: null, error: { code: "23505", message: "duplicate key" } } });
   const result = await app.requestScreenAnalysis(form({ accession: "GSE145743" }));
   assert.equal(result.ok, true);
+  assert.deepEqual(app.kicks, ["sweep"]);
+});
+
+test("a recorded request still succeeds if the immediate sweep kick fails", async () => {
+  const app = actions({ kickError: new Error("modal unavailable") });
+  const result = await app.requestScreenAnalysis(form({ accession: "GSE145743" }));
+  assert.equal(result.ok, true);
+  assert.deepEqual(app.kicks, ["sweep"]);
+  assert.match(app.adminWrites[0].update.detail, /could not start/);
+});
+
+test("a recorded request says so when Modal credentials are missing", async () => {
+  const app = actions({ kickResult: { started: false, reason: "not_configured" } });
+  const result = await app.requestScreenAnalysis(form({ accession: "GSE145743" }));
+  assert.equal(result.ok, true);
+  assert.match(app.adminWrites[0].update.detail, /missing Modal credentials/);
+});
+
+test("a kicked request is annotated if it remains queued after the wait", async () => {
+  const app = actions({ status: { data: { status: "queued" }, error: null } });
+  const result = await app.requestScreenAnalysis(form({ accession: "GSE145743" }));
+  assert.equal(result.ok, true);
+  assert.match(app.adminWrites[0].update.detail, /not reported its first status/);
 });
 
 test("a write failure says nothing was queued", async () => {
-  const app = actions({ insert: { error: { code: "08006", message: "connection reset" } } });
+  const app = actions({ insert: { data: null, error: { code: "08006", message: "connection reset" } } });
   const result = await app.requestScreenAnalysis(form({ accession: "GSE145743" }));
   assert.equal(result.ok, false);
   assert.match(result.error, /Nothing was queued/);
   // And never the database's own message, which can carry row values.
   assert.ok(!result.error.includes("connection reset"));
+  assert.equal(app.kicks.length, 0);
 });
 
 test("withdrawing is scoped to this workspace and to a request still queued", async () => {
@@ -196,11 +252,11 @@ test("withdrawing is scoped to this workspace and to a request still queued", as
 // The page's claims
 // ---------------------------------------------------------------------------
 
-test("the page does not offer a browser upload it cannot honour", () => {
+test("the page offers a real private-upload path and separates public studies", () => {
   const source = fs.readFileSync(srcPath("app/dashboard/new/page.tsx"), "utf8");
-  // No drop zone, no file input: nothing consumes a job written from a browser,
-  // so a researcher who dropped a FASTQ here would wait for a run that never
-  // starts.
-  assert.ok(!/type="file"|Drop files|drag/i.test(source));
-  assert.match(source, /no browser upload yet/);
+  assert.match(source, /UploadFlow/);
+  assert.match(source, /My experiment/);
+  assert.match(source, /Published study/);
+  assert.match(source, /lands in workspace storage, records a manifest/);
+  assert.doesNotMatch(source, /there is no browser upload yet|cannot accept a file/i);
 });

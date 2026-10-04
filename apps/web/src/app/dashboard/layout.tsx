@@ -11,6 +11,7 @@ async function resolveUser(): Promise<ShellUser> {
     name: profile?.full_name ?? user?.email?.split("@")[0] ?? "Researcher",
     email: user?.email ?? "",
     org: org?.name ?? "Workspace pending",
+    orgLogo: org?.logo_url ?? null,
     demo: false,
   };
 }

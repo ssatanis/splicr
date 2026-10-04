@@ -35,7 +35,7 @@ export interface ScreenRequest {
 export const REQUEST_COPY: Record<ScreenRequestStatus, { label: string; body: string }> = {
   queued: {
     label: "Queued",
-    body: "Recorded. The ingest engine picks requests up on its next sweep and reports back here.",
+    body: "Recorded. SplicR starts the ingest engine now when this deployment is configured; otherwise the scheduled sweep picks it up.",
   },
   planning: {
     label: "Working out the design",

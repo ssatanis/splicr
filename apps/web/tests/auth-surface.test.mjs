@@ -116,7 +116,8 @@ test("new-user invitation codes pass through password setup before onboarding", 
   assert.match(verifier, /purpose === "invite"/);
   assert.match(verifier, /reset-password\?next=/);
   assert.match(verifier, /dashboard\/onboarding/);
-  assert.match(verifier, /type:\s*EmailOtpType/);
+  assert.match(verifier, /Record<CodePurpose,\s*EmailOtpType\[\]>/);
+  assert.match(verifier, /invite:\s*\["invite",\s*"email"\]/);
 });
 
 test("errors are written for a researcher, not copied from the client", () => {
@@ -150,7 +151,8 @@ test("every emailed code is verified on a first-party SplicR screen", () => {
   const verifier = read("apps/web/src/components/auth/verify-code-form.tsx");
   const page = read("apps/web/src/app/(auth)/verify/page.tsx");
   assert.match(verifier, /auth\.verifyOtp\(/);
-  assert.match(verifier, /purpose === "magiclink" \? "email" : purpose/);
+  assert.match(verifier, /invite:\s*\["invite",\s*"email"\]/);
+  assert.match(verifier, /verifiedType !== "email"/);
   assert.match(verifier, /safeNext\(/, "the destination is validated");
   assert.match(page, /PublicVerifyCodeForm/);
 });

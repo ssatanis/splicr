@@ -32,7 +32,7 @@ export function CtaSection() {
                 Discuss a blinded evaluation
               </LinkButton>
               <LinkButton href="/contact" tone="white" icon="none">
-                Request a Demo
+                Talk to SplicR
               </LinkButton>
             </div>
           </div>

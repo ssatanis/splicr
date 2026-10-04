@@ -72,7 +72,7 @@ const COMMANDS: Item[] = [
   { id: "cmd:connect", group: "Go to", title: "Connect", href: "/dashboard/connect", icon: Cable, keywords: "api keys rest endpoint token" },
   { id: "cmd:settings", group: "Go to", title: "Settings", href: "/dashboard/settings", icon: Settings, keywords: "workspace lab preferences defaults qc" },
   { id: "cmd:members", group: "Go to", title: "Lab members", href: "/dashboard/settings/members", icon: Users, keywords: "people roles invite team permissions" },
-  { id: "act:upload", group: "Actions", title: "Start a new run", subtitle: "Upload FASTQ or a count table", href: "/dashboard/new", icon: UploadCloud, keywords: "new analyse analyze fastq counts import" },
+  { id: "act:upload", group: "Actions", title: "New analysis", subtitle: "Upload your screen or add a published study", href: "/dashboard/new", icon: UploadCloud, keywords: "new analyse analyze fastq counts import accession published" },
   { id: "act:key", group: "Actions", title: "Create an API key", subtitle: "Read this workspace over HTTP", href: "/dashboard/connect", icon: Cable, keywords: "token bearer secret" },
 ];
 
@@ -336,7 +336,7 @@ function PaletteBody({ onOpenChange }: { onOpenChange: (open: boolean) => void }
                 aria-controls={listId}
                 aria-autocomplete="list"
                 aria-activedescendant={items[activeIndex] ? `${listId}-${activeIndex}` : undefined}
-                className="flex-1 bg-transparent outline-none py-3.5 text-sm text-ink
+                className="palette-input flex-1 bg-transparent outline-none py-3.5 text-sm text-ink
                            placeholder:text-muted"
               />
               {loading && <Loader2 className="w-4 h-4 text-muted animate-spin shrink-0" />}

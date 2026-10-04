@@ -34,6 +34,7 @@ from .config import SETTINGS, VECTOR_ANCHORS, CountConfig
 from .references import Library
 
 BASES = ("A", "C", "G", "T")
+SEQUENCE_COLUMNS = {"sequence", "seq", "spacer", "protospacer", "guide_sequence", "sgrna_sequence"}
 
 
 # ---------------------------------------------------------------------------
@@ -382,7 +383,8 @@ def count_table_samples(path: Path) -> list[str]:
 
 
 def _count_header(header: list[str], path: Path) -> list[str]:
-    samples = [h.strip() for h in header[2:]]
+    start = 3 if len(header) > 2 and header[2].strip().lower() in SEQUENCE_COLUMNS else 2
+    samples = [h.strip() for h in header[start:]]
     if not samples or any(not s for s in samples):
         raise ValueError(f"{path.name}: expected sgRNA, Gene and nonempty sample columns")
     if len(set(samples)) != len(samples):
@@ -404,6 +406,7 @@ def read_count_table(path: Path, library: Library | None = None) -> CountMatrix:
     reader = csv.reader(text_lines, delimiter=delim)
     header = next(reader)
     samples = _count_header(header, path)
+    sequence_index = 2 if len(header) > 2 and header[2].strip().lower() in SEQUENCE_COLUMNS else None
 
     guide_ids: list[str] = []
     genes: list[str | None] = []
@@ -416,6 +419,8 @@ def read_count_table(path: Path, library: Library | None = None) -> CountMatrix:
         if len(f) != len(header):
             raise ValueError(f"{where}: expected {len(header)} columns, found {len(f)}")
         guide_id = f[0].strip()
+        if library is None and sequence_index is not None:
+            guide_id = f[sequence_index].strip().upper()
         if not guide_id or guide_id in seen:
             raise ValueError(f"{where}: empty or duplicate guide identifier {guide_id!r}")
         seen.add(guide_id)
@@ -423,7 +428,8 @@ def read_count_table(path: Path, library: Library | None = None) -> CountMatrix:
         gene = f[1].strip()
         genes.append(None if gene.upper() in ("CONTROL", "NA", "") else gene)
         row = []
-        for sample, v in zip(samples, f[2:]):
+        values = f[3:] if sequence_index is not None else f[2:]
+        for sample, v in zip(samples, values):
             try:
                 value = Decimal(v.strip())
                 if not value.is_finite() or value < 0 or value != value.to_integral_value():

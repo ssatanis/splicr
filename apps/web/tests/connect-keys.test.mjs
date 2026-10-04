@@ -98,12 +98,14 @@ test("keys are unpredictable: two hundred are all different", async () => {
   assert.equal(keys.size, 200);
 });
 
-test("only an admin or owner can mint or revoke, and a member is told which role is needed", async () => {
-  for (const role of ["viewer", "member"]) {
+test("only an admin or owner can mint or revoke, and a researcher is told which role is needed", async () => {
+  // The refusal names roles the way the console does, so `member` is reported
+  // as "researcher". The database enum is unchanged either way.
+  for (const [role, label] of [["viewer", "viewer"], ["member", "researcher"]]) {
     const app = harness({ role });
     const created = await app.createApiKey("Sync", ["hits:read"]);
     assert.equal(created.ok, false);
-    assert.match(created.error, new RegExp(`need the admin role.*Your role is ${role}`, "i"));
+    assert.match(created.error, new RegExp(`need the admin role.*Your role is ${label}`, "i"));
     const revoked = await app.revokeApiKey(KEY_ID);
     assert.equal(revoked.ok, false);
     assert.equal(app.queries.length, 0, `${role} touched nothing`);

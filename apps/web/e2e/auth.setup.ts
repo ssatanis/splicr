@@ -41,7 +41,7 @@ setup("seed the fixture workspace and sign in", async ({ page, context }) => {
   // The console, not the sign-in page: a redirect back to /login means the
   // exchange failed and every later test would be asserting against a stranger.
   await expect(page).toHaveURL(/\/dashboard/, { timeout: 60_000 });
-  await expect(page.getByRole("link", { name: "New screen" }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: "New analysis" }).first()).toBeVisible();
 
   await context.storageState({ path: STATE });
 });

@@ -14,6 +14,18 @@ import { safeNext } from "@/lib/supabase/redirect";
 
 export type CodePurpose = "signup" | "invite" | "magiclink" | "recovery" | "email_change";
 
+const OTP_TYPES: Record<CodePurpose, EmailOtpType[]> = {
+  signup: ["signup"],
+  invite: ["invite", "email"],
+  magiclink: ["email"],
+  recovery: ["recovery"],
+  email_change: ["email_change"],
+};
+
+function primaryOtpType(purpose: CodePurpose): EmailOtpType {
+  return OTP_TYPES[purpose][0] ?? "email";
+}
+
 const COPY: Record<CodePurpose, { eyebrow: string; heading: string; description: string }> = {
   signup: {
     eyebrow: "Email verification",
@@ -42,8 +54,12 @@ const COPY: Record<CodePurpose, { eyebrow: string; heading: string; description:
   },
 };
 
-export function codeDestination(purpose: CodePurpose, requested: string): string {
-  if (purpose === "invite") {
+export function codeDestination(
+  purpose: CodePurpose,
+  requested: string,
+  verifiedType: EmailOtpType = primaryOtpType(purpose),
+): string {
+  if (purpose === "invite" && verifiedType !== "email") {
     return `/reset-password?next=${encodeURIComponent("/dashboard/onboarding")}`;
   }
   if (purpose === "recovery") {
@@ -87,16 +103,25 @@ export function VerifyCodeForm({
     }
 
     setBusy(true);
-    const type: EmailOtpType = purpose === "magiclink" ? "email" : purpose;
-    const { error } = await createClient().auth.verifyOtp({
-      email: normalizedEmail,
-      token: normalizedToken,
-      type,
-    });
+    const client = createClient();
+    let verifiedType: EmailOtpType | null = null;
+    let problemError: unknown = null;
+    for (const type of OTP_TYPES[purpose]) {
+      const { error } = await client.auth.verifyOtp({
+        email: normalizedEmail,
+        token: normalizedToken,
+        type,
+      });
+      if (!error) {
+        verifiedType = type;
+        break;
+      }
+      problemError = error;
+    }
     setBusy(false);
-    if (error) return setProblem(authProblem(error));
+    if (!verifiedType) return setProblem(authProblem(problemError));
 
-    router.replace(codeDestination(purpose, requested));
+    router.replace(codeDestination(purpose, requested, verifiedType));
     router.refresh();
   }
 

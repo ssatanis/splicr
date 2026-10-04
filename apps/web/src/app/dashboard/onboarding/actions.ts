@@ -18,11 +18,13 @@ const profileSchema = z.object({
   time_zone: z.string().trim().refine(isValidTimeZone, "Choose a valid IANA time zone."),
 });
 
+// No logo_url. The logo is a file this application stores, uploaded by
+// `uploadLabLogo`, which keeps the column and the stored object in step. A
+// second writer here would let one change without the other.
 const labSchema = z.object({
   name: z.string().trim().min(1).max(120),
   location: z.string().trim().max(160),
   time_zone: z.string().trim().refine(isValidTimeZone, "Choose a valid IANA time zone."),
-  logo_url: z.union([z.literal(""), z.url().max(2048)]),
 });
 
 function value(form: FormData, key: string): string {
@@ -90,7 +92,6 @@ export async function saveLaboratoryIdentity(form: FormData) {
       name: value(form, "name"),
       location: value(form, "location"),
       time_zone: value(form, "time_zone"),
-      logo_url: value(form, "logo_url"),
     });
     if (!parsed.success) fail(2, parsed.error.issues[0]?.message ?? "Check the laboratory fields.");
     const { error } = await supabase
@@ -98,7 +99,6 @@ export async function saveLaboratoryIdentity(form: FormData) {
       .update({
         ...parsed.data,
         location: parsed.data.location || null,
-        logo_url: parsed.data.logo_url || null,
       })
       .eq("id", org.id);
     if (error) fail(2, "Laboratory identity could not be saved. Try again.");

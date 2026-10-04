@@ -9,6 +9,7 @@
 export const SETTINGS_PANELS = [
   { key: "profile", label: "Profile" },
   { key: "lab", label: "Lab" },
+  { key: "usage", label: "People and usage" },
   { key: "analysis", label: "Analysis defaults" },
   { key: "qc", label: "QC thresholds" },
   { key: "retention", label: "Data retention" },
