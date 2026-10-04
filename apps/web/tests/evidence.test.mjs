@@ -31,6 +31,15 @@ function load(relative, overrides = {}) {
     if (name === "@/components/marketing/nav") return { MarketingNav: () => null };
     if (name === "@/components/ui/reveal") return { Reveal: ({ children }) => children };
     if (name === "next/link") return function TestLink({ children, ...props }) { return React.createElement("a", props, children); };
+    // Any other "@/..." resolves to the real source file, so importing a new
+    // component into a tested page does not need a line added here. The stubs
+    // above are checked first and still win.
+    if (name.startsWith("@/")) {
+      const base = path.join("apps/web/src", name.slice(2));
+      for (const ext of [".tsx", ".ts"]) {
+        if (fs.existsSync(path.join(root, base + ext))) return load(base + ext);
+      }
+    }
     return native(name);
   };
   vm.runInNewContext(output, { exports, require: adapter, URL, ...overrides.globals });
@@ -114,24 +123,74 @@ test("evidence page renders exact measurements, uncertainty and downloadable sou
   assert.doesNotMatch(html, /Chance real|calibrated confidence for every/);
 });
 
-test("contact action prepares an encoded email draft without claiming delivery", () => {
-  let opened = false;
-  const fakeWindow = { location: { href: "" } };
-  const data = new Map([["name", "A & B"], ["company", "Lab"], ["email", "a@example.test"], ["message", "q=1 & #2"]]);
-  const fakeReact = { useState(initial) { return [initial, () => { opened = true; }]; } };
-  const { ContactForm } = load("apps/web/src/components/marketing/contact-form.tsx", {
-    react: fakeReact, globals: { window: fakeWindow, FormData: class { get(k) { return data.get(k); } } },
+/**
+ * The form posts to /api/demo-request and sends a real email, so unlike the
+ * mailto draft it replaced it *can* claim delivery. The guarantee that still has
+ * to hold is that it only claims it when the request actually succeeded: a failed
+ * send must surface the failure, never a confirmation.
+ */
+function contactForm({ ok, payload = {}, thrown = null }) {
+  const slots = [];
+  let cursor = 0;
+  const fakeReact = {
+    useState(initial) {
+      const i = cursor++;
+      if (slots.length <= i) slots.push(initial);
+      return [slots[i], (next) => { slots[i] = next; }];
+    },
+  };
+  const fields = new Map([["name", "Ada Lovelace"], ["company", "Lab"],
+                          ["email", "a@example.test"], ["message", "q=1 & #2"], ["website", ""]]);
+  const calls = [];
+  const globals = {
+    FormData: class { get(k) { return fields.get(k); } },
+    fetch: async (url, init) => {
+      calls.push({ url, init });
+      if (thrown) throw thrown;
+      return { ok, json: async () => payload };
+    },
+  };
+  const { ContactForm } = load("apps/web/src/components/marketing/contact-form.tsx",
+    { react: fakeReact, globals });
+  const render = () => { cursor = 0; return ContactForm(); };
+  return { render, calls, slots };
+}
+
+test("contact form posts the request and confirms only on success", async () => {
+  const { render, calls, slots } = contactForm({ ok: true });
+  let prevented = false, reset = false;
+  await render().props.onSubmit({
+    preventDefault() { prevented = true; },
+    currentTarget: { reset() { reset = true; } },
   });
-  const form = ContactForm();
-  let prevented = false;
-  form.props.onSubmit({ preventDefault() { prevented = true; }, currentTarget: {} });
-  assert.ok(prevented && opened);
-  const url = new URL(fakeWindow.location.href);
-  assert.equal(url.protocol, "mailto:");
-  assert.equal(url.searchParams.get("subject"), "SplicR: Blinded evaluation");
-  assert.ok(url.searchParams.get("body").includes("q=1 & #2"));
-  const html = renderToStaticMarkup(form);
-  assert.match(html, /Nothing is submitted/);
-  assert.match(html, /Open email draft/);
-  assert.doesNotMatch(html, /Request received/);
+  assert.ok(prevented, "the native form submission must be prevented");
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].url, "/api/demo-request");
+  assert.equal(calls[0].init.method, "POST");
+  const sent = JSON.parse(calls[0].init.body);
+  assert.equal(sent.email, "a@example.test");
+  assert.equal(sent.message, "q=1 & #2");
+  assert.equal(sent.topic, "Blinded evaluation");
+  assert.ok(reset, "a successful send must clear the form");
+  assert.equal(slots.at(-1).kind, "sent");
+  const html = renderToStaticMarkup(render());
+  assert.match(html, /Thanks, Ada/);
+  assert.match(html, /confirmation is on its way/);
+});
+
+test("contact form shows a failed send as an error, never as a confirmation", async () => {
+  for (const scenario of [
+    { ok: false, payload: { error: "Rate limited" }, expect: /Rate limited/ },
+    { ok: false, payload: {}, expect: /Something went wrong/ },
+    { thrown: new Error("offline"), ok: false, expect: /could not reach the server/i },
+  ]) {
+    const { render, slots } = contactForm(scenario);
+    await render().props.onSubmit({ preventDefault() {}, currentTarget: { reset() {} } });
+    assert.equal(slots.at(-1).kind, "error", JSON.stringify(scenario.payload ?? {}));
+    const html = renderToStaticMarkup(render());
+    assert.match(html, scenario.expect);
+    assert.match(html, /role="alert"/);
+    // The confirmation copy must not appear on any failure path.
+    assert.doesNotMatch(html, /Thanks, Ada|confirmation is on its way|Request received/);
+  }
 });

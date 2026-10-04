@@ -84,8 +84,9 @@ workspace sessions. Enabling or deploying the console is a separate step.
 
 The homepage, Technology and Evidence pages read a shared snapshot generated
 from measured research artifacts. The homepage hit row is the actual processed
-CHD1L audit, including its nonsignificant result and QC limitation. Contact opens
-an email draft; it does not falsely confirm delivery.
+CHD1L audit, including its nonsignificant result, its six per-guide fold changes
+and the QC limitation. Contact posts to `/api/demo-request` and sends through
+Resend; it confirms only once the send succeeded, and shows a failure as one.
 
 ```bash
 npm run evidence:generate  # update public downloads from research artifacts

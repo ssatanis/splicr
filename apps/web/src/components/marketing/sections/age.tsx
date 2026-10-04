@@ -1,6 +1,8 @@
 import { SideCoil } from "@/components/three";
 import { LinkButton } from "@/components/ui/bits";
+import { Cite } from "@/components/ui/cite";
 import { Reveal } from "@/components/ui/reveal";
+import { replicationCite } from "@/lib/content";
 
 export function AgeSection() {
   return (
@@ -18,12 +20,12 @@ export function AgeSection() {
             <div className="max-w-md space-y-5 text-body leading-relaxed">
               <Reveal delay={0.1}>
                 <p>
-                  A screen can return hundreds of candidates. Effect size, guide support and technical artifacts all matter when choosing follow-up experiments.
+                  Across 124 held-out screen pairs, nine of its top ten reproduced in an independent screen, against seven for the screen&apos;s own effect size.
                 </p>
               </Reveal>
               <Reveal delay={0.2}>
-                <p>
-                  SplicR gets nine of its top ten calls right, across 124 independent screens. Effect size alone gets seven.
+                <p className="text-sm text-muted">
+                  <Cite cite={replicationCite} prefix="Measured on" />
                 </p>
               </Reveal>
               <Reveal delay={0.3}>

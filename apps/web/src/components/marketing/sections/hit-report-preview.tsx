@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { GuideChart } from "@/components/dashboard/evidence/guide-chart";
 import { Reveal } from "@/components/ui/reveal";
 import evidence from "../../../../public/evidence/summary.json";
 
@@ -12,8 +13,8 @@ export function HitReportPreview() {
         <Reveal>
           <div className="eyebrow">Measured analysis</div>
           <h2 className="mt-4 display text-ink text-3xl md:text-4xl">A result you can inspect, including its limits.</h2>
-          <p className="mt-6 text-body leading-relaxed">This CHD1L row comes from the actual GSE145743 processed-count audit. It was not significant under the corrected q &lt; 0.1 rule. No probability of successful validation has been assigned.</p>
-          <p className="mt-4 text-body leading-relaxed">The earlier raw-read analysis used a different input and reported a different rank. It is retained in the research history and is not interchangeable with this result.</p>
+          <p className="mt-6 text-body leading-relaxed">The CHD1L row from the actual GSE145743 audit. It is not significant under the corrected q &lt; 0.1 rule, and the screen failed QC — so you get the fold change, each caller&apos;s FDR and what all six guides did, rather than a rank you cannot check.</p>
+          <p className="mt-4 text-body leading-relaxed">No probability of validation is assigned, because none is calibrated. An earlier raw-read analysis used a different input and reported a different rank; the two are not interchangeable.</p>
         </Reveal>
         <Reveal delay={0.1} className="min-w-0">
           <article className="rounded-3xl border border-line bg-white p-6 shadow-card">
@@ -25,6 +26,16 @@ export function HitReportPreview() {
               <div><dt className="text-muted">Two-family adjusted FDR</dt><dd className="mt-1 tabular-nums">{hit.fdr.toFixed(3)}</dd></div>
               <div><dt className="text-muted">DrugZ FDR, unpaired</dt><dd className="mt-1 tabular-nums">{hit.drugz_fdr}</dd></div>
             </dl>
+            {/* The gene-level number averages these six. The average is what hides
+                the guide running the other way, so the spread is shown, not summarised. */}
+            <div className="mt-6 border-t border-line pt-5">
+              <div className="text-muted text-sm">What the guides did</div>
+              <GuideChart
+                className="mt-3"
+                values={hit.guide_lfcs}
+                goodGuides={hit.n_good_guides}
+              />
+            </div>
             <p className="mt-6 rounded-xl bg-orange-50 p-4 text-sm text-ink">QC failed under the current dropout/depth criteria. Those criteria are not universal assay-quality standards. This single case does not establish validation precision.</p>
             <Link href="/evidence#postscreen" className="mt-5 inline-block text-orange-600 underline underline-offset-4">Inspect methods, source and audit</Link>
           </article>
