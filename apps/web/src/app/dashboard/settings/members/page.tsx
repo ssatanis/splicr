@@ -24,6 +24,7 @@ import {
   type MemberView,
   type MembersPermissions,
 } from "@/components/dashboard/members/shared";
+import { StartLab } from "@/components/dashboard/start-lab";
 import { Card, Empty, PageHeader } from "@/components/dashboard/ui";
 import {
   getCurrentContext,
@@ -74,12 +75,13 @@ export default async function MembersPage({
     return (
       <div className="space-y-5">
         <Header />
+        <StartLab className="max-w-xl" />
         <Card>
           <Empty
-            title="You are not in a workspace yet"
-            body="A workspace holds the screens, runs and validation outcomes your lab shares. Create one, or open the invite link somebody sent you."
+            title="Or join one that already exists"
+            body="If somebody has already set your lab up, ask them for an invite link. Opening it adds you to their workspace instead of creating a second one."
             action={
-              <Link href="/dashboard/settings" className="btn btn-teal btn-sm">
+              <Link href="/dashboard/settings" className="btn btn-ghost btn-sm">
                 Workspace settings
               </Link>
             }

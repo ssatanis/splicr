@@ -1,7 +1,7 @@
 # Data model
 
 This describes migration definitions, not a verified live deployment. The
-repository currently contains 15 migration files; `supabase/migrations` is the
+repository currently contains 20 migration files; `supabase/migrations` is the
 source of truth. `npm run db:status` reads the configured database state.
 Schema columns do not establish that a feature is implemented or populated.
 
@@ -15,6 +15,16 @@ auth.users ──▶ profiles
 
 Every user gets a profile and a personal organization on sign-up, created by a
 trigger on `auth.users`. Everything else hangs off an organization.
+
+Creating one afterwards goes through `public.create_organization(name, kind)`,
+not through two inserts from the client. A caller may insert the organization,
+because that policy only asks that `created_by` is their own id, but may not
+insert their own first `org_members` row: "admins manage membership" requires an
+admin role in the organization they are joining. Split across two statements a
+failure leaves an organization with no members, which nobody can read,
+administer or delete. The function does both above RLS and makes the caller the
+owner. Its privileged body lives in `rpc_internal` with a `security invoker`
+wrapper in `public`, which is the pattern migration 0017 established.
 
 Roles are ordered: `owner` > `admin` > `member` > `viewer`. Policies ask
 `private.has_org_role(org_id, 'member')` rather than comparing strings, so

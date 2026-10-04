@@ -54,6 +54,7 @@ import type {
   RunRow,
 } from "@/components/dashboard/overview/types";
 import { MODALITY_SHORT } from "@/components/dashboard/settings/meta";
+import { StartLab } from "@/components/dashboard/start-lab";
 import { PageHeader } from "@/components/dashboard/ui";
 import { getCurrentContext, getWorkspaceStats } from "@/lib/data/org";
 import {
@@ -72,18 +73,35 @@ import {
   type Screen,
   type Verdict,
 } from "@/lib/mock/data";
-import { formatDate, formatNumber } from "@/lib/utils";
+import { formatDate, formatNumber, labGreeting } from "@/lib/utils";
 
 export const metadata = { title: "Overview" };
 
 export default async function OverviewPage() {
-  const { org, isDemo } = await getCurrentContext();
+  const { user, org, isDemo } = await getCurrentContext();
 
   if (isDemo) {
     return <SampleOverview signedIn={false} />;
   }
-  if (org === null) {
+  // No session at all. Creating a lab needs an account to own it, so this stays
+  // a sign-in prompt and must not offer the form below.
+  if (user === null) {
     return <div className="space-y-4"><PageHeader dense title="Workspace unavailable" body="No active workspace could be resolved for this session." /><p className="text-sm text-muted">Sign in with an account that belongs to a workspace. If you already have one, reload to try again.</p></div>;
+  }
+  if (org === null) {
+    // Signed in, but in no workspace. This used to be a dead end; it is now the
+    // one place that can end, by making the workspace the rest of the console
+    // needs.
+    return (
+      <div className="space-y-4">
+        <PageHeader
+          dense
+          title="Start a lab"
+          body="You are signed in but not in a workspace yet. Create one to upload a screen, or open an invite link somebody sent you."
+        />
+        <StartLab className="max-w-xl" />
+      </div>
+    );
   }
 
   const [stats, recent, headline, loggedOutcomes] = await Promise.all([
@@ -296,7 +314,7 @@ function WorkspaceOverview({
 
   return (
     <Frame
-      title={orgName}
+      title={labGreeting(orgName)}
       sample={false}
       meta={
         stats.screens === 0

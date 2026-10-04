@@ -367,6 +367,55 @@ function readSettingsPatch(
 }
 
 /**
+ * Start a lab, with the caller as its owner.
+ *
+ * This is the one workspace action that cannot go through `authorize()`: that
+ * helper refuses a caller with no organization, which is exactly who is calling
+ * here. The checks it would have done are still done, minus the membership one.
+ *
+ * The work happens in `public.create_organization`, not in two statements from
+ * here, because a caller may insert the organization but not their own first
+ * `org_members` row: that policy wants an admin role in the organization they
+ * are joining. Split across two round trips a failure leaves an orphan
+ * organization nobody can read or delete. See 20261004000100.
+ */
+export async function createOrganization(
+  formData: FormData,
+): Promise<ActionResultWith<{ orgId: string }>> {
+  const context = await getCurrentContext();
+  if (context.isDemo) return actionFailed(DEMO_REFUSAL);
+  if (!context.user) return actionFailed(SESSION_ENDED);
+
+  const parsedName = orgNameSchema.safeParse(lastValue(formData, "name") ?? "");
+  if (!parsedName.success) return actionFailed(firstIssue(parsedName.error));
+
+  const rawKind = lastValue(formData, "kind");
+  const parsedKind = orgKindSchema.safeParse(
+    rawKind === null || rawKind === "" ? "academic" : rawKind,
+  );
+  if (!parsedKind.success) return actionFailed(`"${rawKind}" is not a workspace kind.`);
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("create_organization", {
+    p_name: parsedName.data,
+    p_kind: parsedKind.data,
+  });
+
+  if (error) return dbFailure("createOrganization", error, "The lab could not be created.");
+
+  // The function returns the organizations row; PostgREST may deliver a single
+  // composite or a one-element array depending on the client version, so read
+  // both rather than trusting one shape.
+  const row = (Array.isArray(data) ? data[0] : data) as { id?: unknown } | null;
+  if (typeof row?.id !== "string") {
+    return actionFailed("The lab was created but could not be read back. Reload to continue.");
+  }
+
+  revalidateWorkspace();
+  return { ok: true, orgId: row.id };
+}
+
+/**
  * Update the workspace: `name`, `kind`, and the settings document.
  *
  * Admins and owners only. Fields that are not submitted keep their stored

@@ -37,3 +37,25 @@ export function initials(name: string) {
     .join("")
     .toUpperCase();
 }
+
+/**
+ * How a workspace is greeted on the overview.
+ *
+ * Most workspaces are named for the group that runs them, and most of those
+ * names already carry the word: "Franklin Lab" greeted as "Franklin Lab Lab"
+ * reads like a bug. So the noun is only appended when the name does not already
+ * end in one of its own.
+ *
+ * The signup trigger also creates personal workspaces called "<name>'s
+ * workspace", which must not become a lab either; "workspace" is in the list for
+ * that reason rather than because anyone types it.
+ */
+const WORKSPACE_NOUN = /\b(lab|labs|laboratory|laboratories|group|centre|center|institute|institution|consortium|core|facility|unit|workspace|team|collective|foundation|society|network)\s*$/i;
+
+export function labGreeting(name: string): string {
+  const trimmed = name.trim();
+  if (!trimmed) return "Welcome back";
+  return WORKSPACE_NOUN.test(trimmed)
+    ? `Welcome to ${trimmed}`
+    : `Welcome to ${trimmed} Lab`;
+}

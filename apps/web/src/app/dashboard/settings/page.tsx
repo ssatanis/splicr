@@ -4,6 +4,7 @@ import { DEFAULT_PANEL, isPanelKey } from "@/components/dashboard/settings/panel
 import { SettingsWorkspace } from "@/components/dashboard/settings/settings-workspace";
 import { PageHeader } from "@/components/dashboard/ui";
 import { listLibraries } from "@/lib/data/libraries";
+import { StartLab } from "@/components/dashboard/start-lab";
 import { getCurrentContext, getOrgSettings, getWorkspaceStats } from "@/lib/data/org";
 import {
   DEFAULT_WORKSPACE_SETTINGS,
@@ -116,14 +117,19 @@ export default async function SettingsPage(props: PageProps<"/dashboard/settings
       )}
 
       {!isDemo && org === null && (
-        <p className="mb-5 flex items-start gap-2.5 rounded-2xl border border-line bg-white px-4 py-3 text-sm text-body">
-          <Info className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" strokeWidth={1.8} />
-          <span>
-            You are signed in but not in a workspace yet. Your profile is still yours to edit. The
-            workspace panels below show the defaults a new workspace starts with, and cannot be
-            saved until you belong to one.
-          </span>
-        </p>
+        <div className="mb-5 space-y-4">
+          <p className="flex items-start gap-2.5 rounded-2xl border border-line bg-white px-4 py-3 text-sm text-body">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" strokeWidth={1.8} />
+            <span>
+              You are signed in but not in a workspace yet. Your profile is still yours to edit. The
+              workspace panels below show the defaults a new workspace starts with, and cannot be
+              saved until you belong to one.
+            </span>
+          </p>
+          {/* Creating a lab needs an account to own it, so a signed-out
+              visitor gets the notice above and not the form. */}
+          {signedIn && <StartLab className="max-w-xl" />}
+        </div>
       )}
 
       <SettingsWorkspace
