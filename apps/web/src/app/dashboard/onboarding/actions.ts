@@ -5,7 +5,7 @@
  *
  * TWO RULES THIS FILE EXISTS TO KEEP
  *
- * 1 · Going back never loses anything. Every step's Back control submits the
+ * 1 - Going back never loses anything. Every step's Back control submits the
  *     same form its Continue control does, so whatever is on screen is written
  *     before the page moves. Back is lenient where Continue is strict: a
  *     half-typed ORCID stops Continue, because the next step would inherit it,
@@ -13,7 +13,7 @@
  *     are still thinking about is the opposite of helpful. What does not parse
  *     on the way back is left as it was rather than written wrong.
  *
- * 2 · `profiles.onboarding_step` is the furthest step reached, not the step
+ * 2 - `profiles.onboarding_step` is the furthest step reached, not the step
  *     being looked at. It only ever increases. It used to be assigned the step
  *     after whichever form was submitted, so a researcher on step four who went
  *     back to correct their name was pushed to step two and had to walk the
@@ -65,8 +65,50 @@ function fail(step: number, message: string): never {
 async function caller() {
   const context = await getCurrentContext();
   if (!context.user) fail(1, "Your session ended. Sign in again.");
-  if (!context.org) fail(1, "Your invitation is not attached to a laboratory workspace.");
+  if (!context.org) fail(2, "You are not in a laboratory yet. Create one, or ask whoever invited you to add you to theirs.");
   return { user: context.user, org: context.org, reached: context.profile?.onboarding_step ?? 1 };
+}
+
+/**
+ * Whether to offer the create-a-laboratory control at all.
+ *
+ * The answer lives in the access allowlist, which the browser must not be able
+ * to read, so it comes back as one boolean from a security-definer function.
+ */
+export async function mayCreateLaboratory(): Promise<boolean> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("may_create_workspace");
+  if (error) {
+    console.error(`[onboarding] may_create_workspace: ${error.message}`);
+    return false;
+  }
+  return data === true;
+}
+
+/**
+ * Make a laboratory for a researcher who has none.
+ *
+ * Every check that matters is in `public.create_own_workspace`: it refuses
+ * anyone already in a laboratory and anyone whose access grant did not
+ * authorize one. This passes the name through and reports what it said.
+ */
+export async function createLaboratory(form: FormData) {
+  const context = await getCurrentContext();
+  if (!context.user) fail(1, "Your session ended. Sign in again.");
+
+  const name = value(form, "name");
+  if (name.length < 2) fail(2, "Give the laboratory a name.");
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("create_own_workspace", { p_name: name.slice(0, 120) });
+  if (error) {
+    // The function raises sentences written for a researcher; the Postgres
+    // prefix in front of them is not.
+    fail(2, error.message.replace(/^.*?:\s*/, "") || "The laboratory could not be created.");
+  }
+
+  revalidatePath("/dashboard", "layout");
+  redirect("/dashboard/onboarding?step=2");
 }
 
 /**
@@ -89,7 +131,7 @@ async function reach(userId: string, step: number, reached: number, complete = f
 }
 
 // ---------------------------------------------------------------------------
-// Step 1 · the researcher
+// Step 1 - the researcher
 // ---------------------------------------------------------------------------
 
 export async function saveResearcherProfile(form: FormData) {
@@ -121,7 +163,7 @@ export async function saveResearcherProfile(form: FormData) {
 }
 
 // ---------------------------------------------------------------------------
-// Step 2 · the laboratory
+// Step 2 - the laboratory
 // ---------------------------------------------------------------------------
 
 export async function saveLaboratoryIdentity(form: FormData) {
@@ -159,7 +201,7 @@ export async function saveLaboratoryIdentity(form: FormData) {
 }
 
 // ---------------------------------------------------------------------------
-// Step 3 · the team. Nothing to save; it is a review of who is already here.
+// Step 3 - the team. Nothing to save; it is a review of who is already here.
 // ---------------------------------------------------------------------------
 
 export async function continueFromTeam(form: FormData) {
@@ -171,7 +213,7 @@ export async function continueFromTeam(form: FormData) {
 }
 
 // ---------------------------------------------------------------------------
-// Step 4 · the defaults, and the end
+// Step 4 - the defaults, and the end
 // ---------------------------------------------------------------------------
 
 export async function completeOnboarding(form: FormData) {

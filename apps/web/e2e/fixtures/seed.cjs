@@ -160,17 +160,20 @@ async function seed() {
     const comparisonId = randomUUID();
 
     await db.query(
-      `insert into public.screens (id, org_id, name, modality, cell_line, phenotype, status, taxid,
+      //  created_by matters: the usage panel attributes each screen to the
+      //  person who started it, so a fixture screen with no author shows the
+      //  researcher as having run nothing.
+      `insert into public.screens (id, org_id, created_by, name, modality, cell_line, phenotype, status, taxid,
                                    description, tags, visibility)
-       values ($1, $2, $3, 'knockout', 'HeLa', 'synthetic fixture phenotype', 'complete', 9606,
+       values ($1, $2, $3, $4, 'knockout', 'HeLa', 'synthetic fixture phenotype', 'complete', 9606,
                'Synthetic values for end-to-end tests. Not an experiment, not evidence, and never to reach the Atlas.',
                array['fixture', 'e2e', 'synthetic'], 'private')`,
-      [screenId, orgId, FIXTURE.screenName],
+      [screenId, orgId, userId, FIXTURE.screenName],
     );
     await db.query(
-      `insert into public.runs (id, org_id, screen_id, status, engine_version, created_at, finished_at)
-       values ($1, $2, $3, 'complete', $4, now(), now())`,
-      [runId, orgId, screenId, FIXTURE.engineVersion],
+      `insert into public.runs (id, org_id, screen_id, triggered_by, status, engine_version, created_at, finished_at)
+       values ($1, $2, $3, $4, 'complete', $5, now(), now())`,
+      [runId, orgId, screenId, userId, FIXTURE.engineVersion],
     );
     await db.query(`update public.screens set current_run_id = $1 where id = $2`, [runId, screenId]);
     await db.query(
