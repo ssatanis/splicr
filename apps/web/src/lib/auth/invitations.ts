@@ -1,36 +1,302 @@
 import "server-only";
 
+import { sendAuthCode } from "@/lib/email/auth-codes";
+import { emailConfigured } from "@/lib/email/send";
 import { site } from "@/lib/site";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { OrgRole } from "@/lib/data/types";
 
-export type InviteDelivery =
-  | { state: "sent" | "existing_user"; error: null }
-  | { state: "failed"; error: string };
-
-function alreadyRegistered(error: { code?: string; message?: string; status?: number }): boolean {
-  const text = `${error.code ?? ""} ${error.message ?? ""}`.toLowerCase();
-  return error.status === 422 && /already|registered|exists/.test(text);
-}
-
 /**
- * Create an Auth identity for a new researcher, or attach an existing account
- * and send it a one-time sign-in code. No invitation path sends a token link.
+ * Getting a one-time code into an invited researcher's inbox.
+ *
+ * The product is invitation only, so this path is the whole front door: if it
+ * fails, the person cannot reach the laboratory at all. It used to ask Supabase
+ * Auth to compose and send the message, which meant the send happened inside
+ * the authentication service, under that service's own per-hour email
+ * allowance, through whichever SMTP sender the project was configured with. A
+ * refusal anywhere in there came back as one opaque error, nothing was queued,
+ * and the members page could only say "delivery failed".
+ *
+ * Now SplicR does both halves itself:
+ *
+ *  1. `auth.admin.generateLink()` mints the six-digit code and sends nothing.
+ *     For an address with no account it is an `invite`, which creates the
+ *     identity; `private.handle_new_user()` then reads the access allowlist and
+ *     puts the new member straight into the inviting laboratory, so the code in
+ *     the message is all they need. For an address that already has an account
+ *     it is a `magiclink`, and the membership row is written here first.
+ *  2. `@/lib/email/auth-codes` posts the message through the product's own
+ *     sender and reports the provider's message id, or the reason it refused.
+ *
+ * `inviteUserByEmail` remains as the fallback for a deployment with no mail
+ * credentials of its own — a local stack, or a preview — so nothing regresses
+ * where Supabase's own sender is the only one there is.
+ *
+ * Every path resolves. Nothing here throws at a Server Action.
  */
-export async function deliverWorkspaceInvite(input: {
+
+export type InviteDelivery = {
+  /**
+   * `sent` — an identity was created and its invitation code is on its way.
+   * `existing_user` — the account already existed, is now a member, and has a
+   * sign-in code on its way. `failed` — nothing reached the inbox.
+   */
+  state: "sent" | "existing_user" | "failed";
+  /** The reason, for the members page and for `org_invites.delivery_error`. */
+  error: string | null;
+  /** The provider's id for the message, which is the proof that it went out. */
+  messageId: string | null;
+  /**
+   * True once an Auth identity exists for this address because of this call.
+   *
+   * It matters on failure: the identity and its membership survive a message
+   * that did not go out, so the caller must not roll the authorization back to
+   * `pending` and must expect the retry to take the existing-account path.
+   */
+  identityCreated: boolean;
+  /** Which sender carried it, for the server log. */
+  channel: "splicr" | "supabase" | null;
+};
+
+export interface WorkspaceInvite {
   email: string;
   orgName: string;
   orgId: string;
   role: OrgRole;
   invitedBy: string;
   fullName?: string;
-}): Promise<InviteDelivery> {
-  const admin = createAdminClient();
-  if (!admin) {
-    return { state: "failed", error: "Trusted Supabase invitation delivery is not configured." };
+}
+
+type Admin = NonNullable<ReturnType<typeof createAdminClient>>;
+
+/** `org_invites.delivery_error` holds 500 characters, and a column constraint
+ *  that rejects a row would lose the reason it was trying to record. */
+const CEILING = 480;
+const trim = (text: string) => (text.length > CEILING ? `${text.slice(0, CEILING - 1)}…` : text);
+
+const failed = (error: string, identityCreated = false): InviteDelivery => ({
+  state: "failed",
+  error: trim(error),
+  messageId: null,
+  identityCreated,
+  channel: null,
+});
+
+/**
+ * Is this "that address already has an account"?
+ *
+ * Getting this wrong is expensive in one direction only. Read as a refusal, it
+ * strands a colleague who has used SplicR before on a dead invitation; read as
+ * an existing account when it was something else, the next step looks the
+ * address up in `profiles`, finds nothing, and says so. So the named error codes
+ * are trusted outright, and the wording is accepted on any of the statuses
+ * GoTrue has used for it rather than on 422 alone.
+ */
+function alreadyRegistered(error: { code?: string; message?: string; status?: number }): boolean {
+  const code = (error.code ?? "").toLowerCase();
+  if (code === "email_exists" || code === "user_already_exists") return true;
+  const text = `${code} ${error.message ?? ""}`.toLowerCase();
+  if (![400, 409, 422].includes(error.status ?? 0)) return false;
+  return /already (been )?(registered|exists)|already a registered|(email|user).{0,12}exists/.test(text);
+}
+
+/** Whatever Auth said, as one line worth storing. */
+function authReason(error: { code?: string; message?: string; status?: number } | null): string {
+  if (!error) return "The authentication service refused the request.";
+  const code = error.code ? `${error.code}: ` : "";
+  return `${code}${error.message ?? "the authentication service refused the request"}`;
+}
+
+function siteBase(): string {
+  return (process.env.NEXT_PUBLIC_SITE_URL?.trim() || site.url).replace(/\/$/, "");
+}
+
+/**
+ * Put an address that already has an account into the workspace.
+ *
+ * This runs before the sign-in code is minted, so a code that does arrive always
+ * opens a laboratory the person is actually a member of. Returns a sentence on
+ * failure and null on success.
+ */
+async function attachExistingAccount(admin: Admin, input: WorkspaceInvite): Promise<string | null> {
+  const profile = await admin.from("profiles").select("id").ilike("email", input.email).maybeSingle();
+  if (profile.error || !profile.data) {
+    console.error(`[auth/invitations] existing profile lookup failed for ${input.email}`);
+    return "That address has an account the workspace directory cannot find.";
   }
 
-  const base = (process.env.NEXT_PUBLIC_SITE_URL?.trim() || site.url).replace(/\/$/, "");
+  const membership = await admin.from("org_members").upsert(
+    {
+      org_id: input.orgId,
+      user_id: profile.data.id,
+      role: input.role,
+      invited_by: input.invitedBy,
+    },
+    { onConflict: "org_id,user_id" },
+  );
+  if (membership.error) {
+    console.error(`[auth/invitations] membership assignment failed: ${membership.error.message}`);
+    return `The workspace membership could not be written: ${membership.error.message}`;
+  }
+
+  await admin
+    .from("splicr_access_allowlist")
+    .update({
+      status: "active",
+      consumed_at: new Date().toISOString(),
+      accepted_at: new Date().toISOString(),
+      expires_at: null,
+    })
+    .eq("org_id", input.orgId)
+    .ilike("email", input.email);
+
+  return null;
+}
+
+/**
+ * Create an Auth identity for a new researcher, or attach an existing account,
+ * and email it a one-time code. No invitation path sends a token-bearing link.
+ */
+export async function deliverWorkspaceInvite(input: WorkspaceInvite): Promise<InviteDelivery> {
+  const admin = createAdminClient();
+  if (!admin) {
+    return failed("Trusted Supabase invitation delivery is not configured.");
+  }
+
+  // The strategy is chosen before anything is minted. `generateLink` creates the
+  // identity as a side effect, which would make a later fall back to
+  // `inviteUserByEmail` fail on an address that now exists.
+  if (!emailConfigured()) return viaSupabaseSender(admin, input);
+
+  const base = siteBase();
+  const metadata = {
+    organization_name: input.orgName,
+    ...(input.fullName ? { full_name: input.fullName } : {}),
+  };
+
+  let kind: "invite" | "magiclink" = "invite";
+  let link = await admin.auth.admin.generateLink({
+    type: "invite",
+    email: input.email,
+    options: { redirectTo: `${base}/verify?flow=invite`, data: metadata },
+  });
+
+  if (link.error && alreadyRegistered(link.error)) {
+    kind = "magiclink";
+    const problem = await attachExistingAccount(admin, input);
+    if (problem) return failed(problem);
+    link = await admin.auth.admin.generateLink({
+      type: "magiclink",
+      email: input.email,
+      options: { redirectTo: `${base}/verify?flow=magiclink`, data: metadata },
+    });
+  }
+
+  const identityCreated = kind === "invite" && !link.error;
+
+  if (link.error) {
+    console.error(`[auth/invitations] generateLink ${kind}: ${authReason(link.error)}`);
+    return failed(`The one-time code could not be issued. ${authReason(link.error)}`);
+  }
+
+  const token = link.data?.properties?.email_otp ?? "";
+  if (!/^\d{4,10}$/.test(token)) {
+    console.error(`[auth/invitations] generateLink ${kind} returned no usable code`);
+    return failed("The authentication service issued no one-time code.", identityCreated);
+  }
+
+  const message = await sendAuthCode({
+    to: input.email,
+    key: kind === "invite" ? "invite" : "magic_link",
+    values: { token, email: input.email, orgName: input.orgName },
+  });
+
+  if (message.error) {
+    return failed(`The code could not be emailed. ${message.error}`, identityCreated);
+  }
+
+  console.info(
+    `[auth/invitations] ${kind} code delivered to ${input.email} for ${input.orgId} (${message.id ?? "no id"})`,
+  );
+
+  return {
+    state: kind === "invite" ? "sent" : "existing_user",
+    error: null,
+    messageId: message.id,
+    identityCreated,
+    channel: "splicr",
+  };
+}
+
+/**
+ * Invite an address that is known not to have an account yet.
+ *
+ * The executive console prepares a personalized authorization — the
+ * researcher's name, institution and the laboratory it is creating for them —
+ * and refuses any address that already has a SplicR account, so there is no
+ * existing-member branch to take here. What it needs is the same reliable
+ * delivery: mint the code, send it from the product's own sender, and say
+ * precisely what went wrong when it cannot.
+ */
+export async function deliverNewIdentityInvite(input: {
+  email: string;
+  orgName: string;
+  /** Written to `auth.users.user_metadata`, which onboarding reads back. */
+  metadata: Record<string, string | undefined>;
+}): Promise<InviteDelivery> {
+  const admin = createAdminClient();
+  if (!admin) return failed("Trusted Supabase invitation delivery is not configured.");
+
+  const base = siteBase();
+  const options = { redirectTo: `${base}/verify?flow=invite`, data: input.metadata };
+
+  if (!emailConfigured()) {
+    const { error } = await admin.auth.admin.inviteUserByEmail(input.email, options);
+    if (error) {
+      console.error(`[auth/invitations] executive invite failed: ${authReason(error)}`);
+      return failed(`The invitation could not be delivered. ${authReason(error)}`);
+    }
+    return { state: "sent", error: null, messageId: null, identityCreated: true, channel: "supabase" };
+  }
+
+  const link = await admin.auth.admin.generateLink({ type: "invite", email: input.email, options });
+  if (link.error) {
+    console.error(`[auth/invitations] executive generateLink: ${authReason(link.error)}`);
+    return failed(`The one-time code could not be issued. ${authReason(link.error)}`);
+  }
+
+  const token = link.data?.properties?.email_otp ?? "";
+  if (!/^\d{4,10}$/.test(token)) {
+    return failed("The authentication service issued no one-time code.", true);
+  }
+
+  const message = await sendAuthCode({
+    to: input.email,
+    key: "invite",
+    values: { token, email: input.email, orgName: input.orgName },
+  });
+  if (message.error) {
+    return failed(`The code could not be emailed. ${message.error}`, true);
+  }
+
+  return {
+    state: "sent",
+    error: null,
+    messageId: message.id,
+    identityCreated: true,
+    channel: "splicr",
+  };
+}
+
+/**
+ * The fallback: let Supabase compose and send.
+ *
+ * Reached only where the deployment has no sender of its own, which is a local
+ * stack or a preview. It is the path this module used for every invitation
+ * before, kept intact so those environments keep working.
+ */
+async function viaSupabaseSender(admin: Admin, input: WorkspaceInvite): Promise<InviteDelivery> {
+  const base = siteBase();
   const { error } = await admin.auth.admin.inviteUserByEmail(input.email, {
     redirectTo: `${base}/verify?flow=invite`,
     data: {
@@ -39,28 +305,17 @@ export async function deliverWorkspaceInvite(input: {
     },
   });
 
-  if (!error) return { state: "sent", error: null };
+  if (!error) {
+    return { state: "sent", error: null, messageId: null, identityCreated: true, channel: "supabase" };
+  }
+
   if (!alreadyRegistered(error)) {
-    console.error(`[auth/invitations] auth invite failed: ${error.code ?? ""} ${error.message}`);
-    return { state: "failed", error: "The account invitation could not be delivered." };
+    console.error(`[auth/invitations] auth invite failed: ${authReason(error)}`);
+    return failed(`The account invitation could not be delivered. ${authReason(error)}`);
   }
 
-  const profile = await admin.from("profiles").select("id").ilike("email", input.email).maybeSingle();
-  if (profile.error || !profile.data) {
-    console.error(`[auth/invitations] existing profile lookup failed for ${input.email}`);
-    return { state: "failed", error: "The workspace invitation could not be delivered." };
-  }
-
-  const membership = await admin.from("org_members").upsert({
-    org_id: input.orgId,
-    user_id: profile.data.id,
-    role: input.role,
-    invited_by: input.invitedBy,
-  }, { onConflict: "org_id,user_id" });
-  if (membership.error) {
-    console.error(`[auth/invitations] membership assignment failed: ${membership.error.message}`);
-    return { state: "failed", error: "The workspace invitation could not be completed." };
-  }
+  const problem = await attachExistingAccount(admin, input);
+  if (problem) return failed(problem);
 
   const code = await admin.auth.signInWithOtp({
     email: input.email,
@@ -68,15 +323,16 @@ export async function deliverWorkspaceInvite(input: {
   });
   if (code.error) {
     console.error(`[auth/invitations] existing-account code failed: ${code.error.message}`);
-    return { state: "failed", error: "The workspace was added, but its sign-in code could not be delivered." };
+    return failed(
+      `The workspace was added, but its sign-in code could not be delivered. ${code.error.message}`,
+    );
   }
 
-  await admin.from("splicr_access_allowlist").update({
-    status: "active",
-    consumed_at: new Date().toISOString(),
-    accepted_at: new Date().toISOString(),
-    expires_at: null,
-  }).eq("org_id", input.orgId).ilike("email", input.email);
-
-  return { state: "existing_user", error: null };
+  return {
+    state: "existing_user",
+    error: null,
+    messageId: null,
+    identityCreated: false,
+    channel: "supabase",
+  };
 }

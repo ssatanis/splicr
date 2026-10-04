@@ -38,11 +38,19 @@ test("personalized invitations are server-authorized and land in code verificati
   const source = read("apps/web/src/app/executive/actions.ts");
   assert.match(source, /getExecutiveIdentity\(\)/);
   assert.match(source, /createAdminClient\(\)/);
-  assert.match(source, /inviteUserByEmail/);
-  assert.match(source, /\/verify\?flow=invite/);
   for (const field of ["full_name", "institution", "preferred_title", "professional_role", "lab_location", "time_zone", "prepared_by_email"]) {
     assert.ok(source.includes(field), field);
   }
+
+  // Delivery is not written twice. The executive console hands the prepared
+  // invitation to the same module the lab members page uses, so a code issued
+  // here reaches an inbox by the route that reports why when it does not.
+  assert.match(source, /deliverNewIdentityInvite\(/);
+  assert.ok(!/inviteUserByEmail|generateLink/.test(source), "delivery is not reimplemented here");
+  assert.match(source, /delivery\.state === "failed"/);
+
+  const delivery = read("apps/web/src/lib/auth/invitations.ts");
+  assert.match(delivery, /\/verify\?flow=invite/);
 });
 
 test("the database trigger copies prepared values into editable onboarding data", () => {

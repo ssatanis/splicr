@@ -67,10 +67,35 @@ number here would drift the moment Auth's OTP expiry is changed. Each message
 says the code works once, which stays true. If the product needs to show a real
 expiry, it has to come from the verification page, not from the email.
 
-**No plain-text part.** Supabase Auth sends the template as the HTML body and has
-no field for a text alternative. Every message is readable with styles stripped,
-which is the available mitigation. A text/plain part would need delivery to move
-to a Send Email hook, where SplicR builds the whole message.
+**No plain-text part when Supabase sends.** Supabase Auth posts the template as
+the HTML body and has no field for a text alternative. Every message is readable
+with styles stripped, which is the available mitigation on that path. Invitations
+and workspace sign-in codes do not take that path in production: see below.
+
+## Who actually sends the invitation
+
+Two senders use these six templates, and only one of them is Supabase.
+
+A **workspace invitation** — from the lab members page, or from the executive
+console — is composed and posted by SplicR. `apps/web/src/lib/auth/invitations.ts`
+mints the one-time code with `auth.admin.generateLink()`, which returns the six
+digits and sends nothing, and `apps/web/src/lib/email/auth-codes.ts` substitutes
+`{{ .Token }}`, `{{ .Email }}` and `{{ .Data.organization_name }}` into the same
+template below and posts it through Resend, with a text/plain alternative the
+Supabase path cannot carry. The point is accountability: the send either returns
+a provider message id or a sentence saying why not, and that sentence is what the
+members page shows and what `org_invites.delivery_error` keeps. It also takes the
+invitation out of Supabase Auth's hourly email allowance, which is what a lab
+administrator was previously meeting as a bare "delivery failed".
+
+**Everything else** — password reset, email change, reauthentication, and
+invitations on a deployment with no `RESEND_API_KEY` — is still rendered and sent
+by Supabase Auth from the copies pasted into the dashboard. So the dashboard
+copies have to stay current with this directory either way.
+
+`{{ .Data.organization_name }}` is in the invite template for both senders:
+Supabase substitutes it from `auth.users.user_metadata`, which every invitation
+path sets, and SplicR substitutes the workspace name directly.
 
 ## Before production
 

@@ -22,11 +22,32 @@ interface CreatedInvite {
   email: string;
   expiresLabel: string;
   deliveryState: string;
+  /** Present only when the message did not go out. */
+  deliveryError: string | null;
 }
 
 interface PanelNote {
   tone: "ok" | "err";
   text: string;
+}
+
+/**
+ * What actually happened, in one sentence.
+ *
+ * The three outcomes are genuinely different and a lab administrator acts on
+ * each one differently, so none of them is folded into "invite sent": a brand
+ * new researcher gets an invitation code and has an account to finish, an
+ * address that already had a SplicR account is a member from this moment and
+ * only needs to sign in, and a failure needs a retry.
+ */
+function createdHeadline(created: CreatedInvite): string {
+  if (created.deliveryState === "failed") {
+    return `${created.email} is authorized for this workspace, but the code could not be emailed. Retry from the pending invitation below.`;
+  }
+  if (created.deliveryState === "existing_user") {
+    return `${created.email} already had a SplicR account and is now a member. A sign-in code is on its way.`;
+  }
+  return `An invitation code was emailed to ${created.email}. ${created.expiresLabel}.`;
 }
 
 export function InvitePanel({
@@ -69,6 +90,7 @@ export function InvitePanel({
         email: address,
         expiresLabel: expiryLabel(result.expiresAt),
         deliveryState: result.deliveryState,
+        deliveryError: result.deliveryError,
       });
       setEmail("");
     });
@@ -150,20 +172,34 @@ export function InvitePanel({
             )}
             Create invite
           </button>
-          <span className="text-xs text-muted">The invitation code is good for 14 days.</span>
+          {/* Two different clocks, and conflating them is what makes an
+              invitation look broken: the emailed code is single use and expires
+              within the hour, while the invitation itself stands for 14 days
+              and can be sent again from the list below. */}
+          <span className="text-xs text-muted">
+            They get a one-time code by email. The invitation stands for 14 days.
+          </span>
         </div>
 
         {formNote && <ActionNote tone={formNote.tone}>{formNote.text}</ActionNote>}
       </form>
 
       {created && (
-        <div className="mt-4 rounded-2xl border border-cyan-100 bg-cyan-50 p-3">
+        <div
+          className={cn(
+            "mt-4 rounded-2xl border p-3",
+            created.deliveryState === "failed"
+              ? "border-red-100 bg-red-50"
+              : "border-cyan-100 bg-cyan-50",
+          )}
+        >
           <div className="flex items-start justify-between gap-2">
-            <p className="min-w-0 text-sm text-ink">
-              {created.deliveryState === "failed"
-                ? `Access for ${created.email} is authorized, but delivery failed. Retry from the pending invitation below.`
-                : `The invitation for ${created.email} was sent. ${created.expiresLabel}.`}
-            </p>
+            <div className="min-w-0 space-y-1">
+              <p className="text-sm text-ink">{createdHeadline(created)}</p>
+              {created.deliveryError && (
+                <p className="text-xs leading-snug text-red-700">{created.deliveryError}</p>
+              )}
+            </div>
             <button
               type="button"
               aria-label="Dismiss the invitation status"
@@ -217,17 +253,42 @@ export function InvitePanel({
                       )}
                       <span className="text-[11px] text-muted">{invite.expiresLabel}</span>
                     </div>
+                    {/*
+                      The reason, not just the fact. "Delivery failed" on its
+                      own leaves an administrator with nothing to do but guess;
+                      the sentence the sender gave back says whether to retry,
+                      to correct the address, or to tell somebody the mail
+                      credentials are wrong.
+                    */}
+                    {invite.deliveryState === "failed" && invite.deliveryError && (
+                      <p className="mt-1.5 text-[11px] leading-snug text-red-700">
+                        {invite.deliveryError}
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex shrink-0 items-center gap-1.5">
-                    {invite.deliveryState === "failed" && !invite.expired && (
+                    {/*
+                      Offered on every open invitation, not only on a failed
+                      one. The code inside the message is single use and short
+                      lived while the invitation itself stands for fourteen
+                      days, so "it expired" and "I deleted it" are the ordinary
+                      reasons to press this, and both used to need the invite
+                      revoked and reissued.
+                    */}
+                    {!invite.expired && (
                       <button
                         type="button"
                         disabled={busy}
                         onClick={() => retry(invite)}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-line-strong bg-white px-2.5 py-1.5 text-xs text-ink hover:border-navy"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-line-strong bg-white px-2.5 py-1.5 text-xs whitespace-nowrap text-ink transition-colors hover:border-navy disabled:cursor-not-allowed disabled:opacity-55"
                       >
-                        <RefreshCw className="h-3 w-3" /> Retry
+                        {actingId === invite.id && busy ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-3 w-3" />
+                        )}
+                        {invite.deliveryState === "failed" ? "Retry" : "Send again"}
                       </button>
                     )}
                     <button

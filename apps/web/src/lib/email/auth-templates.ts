@@ -221,6 +221,10 @@ export type AuthEmail = {
 const TOKEN_VAR = "{{ .Token }}";
 const EMAIL_VAR = "{{ .Email }}";
 const NEW_EMAIL_VAR = "{{ .NewEmail }}";
+/** The laboratory the invitation was issued for. Supabase substitutes it from
+ *  `auth.users.user_metadata`, which every invitation path sets; when SplicR
+ *  sends the message itself it substitutes the workspace name directly. */
+const ORG_VAR = "{{ .Data.organization_name }}";
 
 /** Public signup is disabled, so this template exists as defence in depth: if a
  *  confirmation is ever issued, administratively or by mistake, it is branded
@@ -254,7 +258,7 @@ const invite: AuthEmail = {
   file: "invite-user.html",
   subject: `Your ${site.name} invitation code`,
   preheader: INVITE_PREHEADER,
-  variables: [TOKEN_VAR, EMAIL_VAR],
+  variables: [TOKEN_VAR, EMAIL_VAR, ORG_VAR],
   html: shell({
     preheader: INVITE_PREHEADER,
     inner: `${masthead("Invitation")}
@@ -267,7 +271,10 @@ const invite: AuthEmail = {
         "Choose a password",
         "Complete your laboratory profile",
       ])}
-      ${facts([["Invitation issued to", EMAIL_VAR]])}
+      ${facts([
+        ["Laboratory", ORG_VAR],
+        ["Invitation issued to", EMAIL_VAR],
+      ])}
       ${code(TOKEN_VAR)}
       ${verificationRoute("invite")}
       ${footer(
@@ -389,6 +396,7 @@ export const PREVIEW_VALUES: Record<string, string> = {
   [TOKEN_VAR]: "418902",
   [EMAIL_VAR]: "researcher@example.edu",
   [NEW_EMAIL_VAR]: "new.address@example.edu",
+  [ORG_VAR]: "Example Lab",
 };
 
 /** Substitutes the preview values so a template can be looked at in a browser. */

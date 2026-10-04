@@ -638,7 +638,16 @@ const uuidSchema = z.uuid("That record id is not valid.");
 export async function inviteMember(
   email: string,
   role: OrgRole,
-): Promise<ActionResultWith<{ token: string; inviteId: string; expiresAt: string; deliveryState: string }>> {
+): Promise<
+  ActionResultWith<{
+    token: string;
+    inviteId: string;
+    expiresAt: string;
+    deliveryState: string;
+    /** Why the message did not go out, or null when it did. */
+    deliveryError: string | null;
+  }>
+> {
   const auth = await authorize("admin");
   if (!auth.ok) return auth;
   const { org, user, role: callerRole } = auth.caller;
@@ -711,6 +720,15 @@ export async function inviteMember(
     invited_by: user.id,
   });
   if (allowError) {
+    // One address holds one account-level authorization, enforced by a unique
+    // index on lower(email) across every workspace. Row Level Security stops an
+    // admin of this lab from clearing another lab's row, so say which wall was
+    // hit rather than reporting a generic failure the caller cannot act on.
+    if (allowError.code === "23505") {
+      return actionFailed(
+        `${address} is already authorized for another SplicR workspace. It has to join from there, or that invitation has to be withdrawn first.`,
+      );
+    }
     return dbFailure("inviteMember allowlist", allowError, "Access could not be authorized for that address.");
   }
 
@@ -734,26 +752,12 @@ export async function inviteMember(
     role: parsedRole.data,
     invitedBy: user.id,
   });
-  const now = new Date().toISOString();
-  const { error: deliveryError } = await supabase
-    .from("org_invites")
-    .update({
-      delivery_state: delivery.state,
-      delivered_at: delivery.state === "failed" ? null : now,
-      delivery_error: delivery.error,
-      ...(delivery.state === "existing_user" ? { accepted_at: now } : {}),
-    })
-    .eq("id", row.id)
-    .eq("org_id", org.id);
-  if (deliveryError) console.error(`[data/actions] invite delivery state: ${deliveryError.message}`);
-  await supabase
-    .from("splicr_access_allowlist")
-    .update({
-      status: delivery.state === "failed" ? "pending" : delivery.state === "existing_user" ? "active" : "invited",
-      invited_at: delivery.state === "failed" ? null : now,
-    })
-    .eq("org_id", org.id)
-    .eq("email", address);
+  await recordDelivery(supabase, {
+    orgId: org.id,
+    inviteId: row.id,
+    email: address,
+    delivery,
+  });
 
   revalidateWorkspace();
   return {
@@ -762,7 +766,59 @@ export async function inviteMember(
     inviteId: row.id,
     expiresAt: row.expires_at,
     deliveryState: delivery.state,
+    deliveryError: delivery.error,
   };
+}
+
+/**
+ * Write down what happened to one invitation's message.
+ *
+ * Both the first attempt and every retry land here, so the invite row and the
+ * account-level authorization cannot drift apart, and the reason a send failed
+ * is kept where the members page can read it back.
+ *
+ * The authorization is only rolled back to `pending` when nothing was created.
+ * Once `deliverWorkspaceInvite` has minted an identity the database trigger has
+ * already consumed that row and put the person in the laboratory; calling it
+ * pending again would describe a state that no longer exists, and would make the
+ * next sign-in look unauthorized.
+ */
+async function recordDelivery(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  input: {
+    orgId: string;
+    inviteId: string;
+    email: string;
+    delivery: Awaited<ReturnType<typeof deliverWorkspaceInvite>>;
+  },
+): Promise<void> {
+  const { delivery } = input;
+  const now = new Date().toISOString();
+  const landed = delivery.state !== "failed";
+  const authorized = landed || delivery.identityCreated;
+
+  const { error } = await supabase
+    .from("org_invites")
+    .update({
+      delivery_state: delivery.state,
+      delivered_at: landed ? now : null,
+      delivery_error: delivery.error,
+      ...(delivery.state === "existing_user" ? { accepted_at: now } : {}),
+    })
+    .eq("id", input.inviteId)
+    .eq("org_id", input.orgId);
+  if (error) console.error(`[data/actions] invite delivery state: ${error.message}`);
+
+  const { error: allowError } = await supabase
+    .from("splicr_access_allowlist")
+    .update({
+      status:
+        delivery.state === "existing_user" ? "active" : authorized ? "invited" : "pending",
+      invited_at: authorized ? now : null,
+    })
+    .eq("org_id", input.orgId)
+    .eq("email", input.email);
+  if (allowError) console.error(`[data/actions] invite authorization state: ${allowError.message}`);
 }
 
 /** Retry delivery without issuing a second token or a second database invite. */
@@ -790,26 +846,16 @@ export async function retryInvite(inviteId: string): Promise<ActionResult> {
     role: data.role,
     invitedBy: user.id,
   });
-  await supabase
-    .from("org_invites")
-    .update({
-      delivery_state: delivery.state,
-      delivered_at: delivery.state === "failed" ? null : new Date().toISOString(),
-      delivery_error: delivery.error,
-      ...(delivery.state === "existing_user" ? { accepted_at: new Date().toISOString() } : {}),
-    })
-    .eq("id", parsed.data)
-    .eq("org_id", org.id);
-  await supabase
-    .from("splicr_access_allowlist")
-    .update({
-      status: delivery.state === "failed" ? "pending" : delivery.state === "existing_user" ? "active" : "invited",
-      invited_at: delivery.state === "failed" ? null : new Date().toISOString(),
-    })
-    .eq("org_id", org.id)
-    .eq("email", data.email);
+  await recordDelivery(supabase, {
+    orgId: org.id,
+    inviteId: parsed.data,
+    email: data.email,
+    delivery,
+  });
   revalidateWorkspace();
-  return delivery.state === "failed" ? actionFailed(delivery.error) : { ok: true };
+  return delivery.state === "failed"
+    ? actionFailed(delivery.error ?? "The invitation could not be delivered.")
+    : { ok: true };
 }
 
 /** Withdraw a pending invite. Admins and owners only. */

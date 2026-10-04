@@ -28,7 +28,16 @@ export class EmailNotConfigured extends Error {
   }
 }
 
-function client() {
+/**
+ * True when this deployment can send its own mail.
+ *
+ * Callers that have a second delivery route check this *before* doing anything
+ * irreversible, rather than discovering the missing key from a thrown error
+ * half way through. `@/lib/auth/invitations` chooses its whole strategy on it.
+ */
+export const emailConfigured = () => Boolean(process.env.RESEND_API_KEY?.trim());
+
+export function resendClient() {
   const key = process.env.RESEND_API_KEY?.trim();
   if (!key) throw new EmailNotConfigured();
   return new Resend(key);
@@ -48,7 +57,7 @@ export type SendOutcome = {
  * the requester think nothing happened.
  */
 export async function sendDemoRequest(request: DemoRequest): Promise<SendOutcome> {
-  const resend = client();
+  const resend = resendClient();
   const sender = from();
   const errors: string[] = [];
 

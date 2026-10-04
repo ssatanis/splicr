@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { deliverNewIdentityInvite } from "@/lib/auth/invitations";
 import {
   clearExecutiveVerification,
   executiveByEmail,
@@ -161,9 +162,10 @@ export async function sendExecutiveInvitation(input: ExecutiveInviteInput): Prom
     : await admin.from("splicr_access_allowlist").insert(authorization);
   if (write.error) return { ok: false, error: "Invitation authorization could not be saved." };
 
-  const { error } = await admin.auth.admin.inviteUserByEmail(values.email, {
-    redirectTo: `${site.url}/verify?flow=invite`,
-    data: {
+  const delivery = await deliverNewIdentityInvite({
+    email: values.email,
+    orgName: values.labName,
+    metadata: {
       full_name: values.fullName,
       organization_name: values.labName,
       institution: values.institution,
@@ -172,9 +174,11 @@ export async function sendExecutiveInvitation(input: ExecutiveInviteInput): Prom
       time_zone: values.timeZone || undefined,
     },
   });
-  if (error) {
-    console.error(`[executive/invite] ${error.code ?? ""} ${error.message}`);
-    return { ok: false, error: "The invitation was prepared, but its email could not be delivered." };
+  if (delivery.state === "failed") {
+    return {
+      ok: false,
+      error: `The invitation was prepared, but its email could not be delivered. ${delivery.error ?? ""}`.trim(),
+    };
   }
 
   await admin
