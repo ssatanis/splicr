@@ -27,6 +27,7 @@ import { Card, Empty, PageHeader } from "@/components/dashboard/ui";
 import {
   getCurrentContext,
   listInvites,
+  listMemberAccess,
   listMembers,
   type OrgInvite,
   type OrgMember,
@@ -85,12 +86,15 @@ export default async function MembersPage({
 
   // Invites are readable by admins and owners only, so there is no point asking
   // for them as a member or a viewer. Row Level Security would return nothing.
-  const [memberRows, inviteRows] = await Promise.all([
+  const [memberRows, inviteRows, access] = await Promise.all([
     listMembers(org.id),
     canManage ? listInvites(org.id) : Promise.resolve([]),
+    // Who has actually arrived. Admins only, because that is who the answer is
+    // for and who can act on it.
+    canManage ? listMemberAccess(org.id) : Promise.resolve(new Map<string, boolean>()),
   ]);
 
-  const members = toMemberViews(memberRows, user.id);
+  const members = toMemberViews(memberRows, user.id, access);
   const invites = toInviteViews(inviteRows);
 
   return (
@@ -116,7 +120,11 @@ export default async function MembersPage({
  * Row mappers. These read the clock, which a component may not do during
  * render, so the labels are built here and handed down as finished strings.
  */
-function toMemberViews(rows: OrgMember[], selfId: string): MemberView[] {
+function toMemberViews(
+  rows: OrgMember[],
+  selfId: string,
+  access: Map<string, boolean>,
+): MemberView[] {
   return rows.map((member) => ({
     id: member.id,
     name: member.name,
@@ -124,6 +132,9 @@ function toMemberViews(rows: OrgMember[], selfId: string): MemberView[] {
     role: member.role,
     joinedLabel: formatDate(member.joined_at),
     isSelf: member.id === selfId,
+    // Absent from the map means the question was not asked, not that the answer
+    // is no. A viewer never sees this column at all.
+    signedIn: access.has(member.id) ? (access.get(member.id) ?? false) : null,
   }));
 }
 

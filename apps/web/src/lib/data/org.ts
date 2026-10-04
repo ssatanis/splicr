@@ -214,6 +214,7 @@ function anonymousContext(): WorkspaceContext {
     profile: null,
     org: null,
     role: null,
+    workspaces: [],
   };
 }
 
@@ -292,7 +293,15 @@ export const getCurrentContext = cache(async (): Promise<WorkspaceContext> => {
     const roleValue = preferred?.role;
     const role = isOrgRole(roleValue) ? roleValue : null;
 
-    return { user, profile, org, role: org ? role : null };
+    // Built from the memberships already read above rather than from a second
+    // query. The rail only shows the menu when there is more than one.
+    const workspaces = memberships.flatMap((row) => {
+      const each = toOrganization(asRow<OrganizationRow>(row.organizations));
+      if (!each || !isOrgRole(row.role)) return [];
+      return [{ id: each.id, name: each.name, role: row.role }];
+    });
+
+    return { user, profile, org, role: org ? role : null, workspaces };
   } catch (error) {
     noteFailure("getCurrentContext", error);
     return anonymousContext();
@@ -475,6 +484,42 @@ export async function listInvites(orgId: string): Promise<OrgInvite[]> {
   } catch (error) {
     noteFailure("listInvites", error);
     return [];
+  }
+}
+
+/**
+ * Which members of a workspace have ever signed in.
+ *
+ * An invitation creates the identity and the membership the moment the code is
+ * minted, so from then on an invited researcher is indistinguishable from a
+ * colleague of six months — except in `auth.users`, which no browser-facing
+ * role may read. `public.org_member_access` answers that one question for the
+ * admins of one workspace.
+ *
+ * A failed read returns an empty map rather than throwing, and the members page
+ * then simply does not mark anybody. Saying nothing is correct; guessing that
+ * everybody has signed in, or that nobody has, is not.
+ */
+export async function listMemberAccess(orgId: string): Promise<Map<string, boolean>> {
+  const signedIn = new Map<string, boolean>();
+  if (!isQueryableOrgId(orgId)) return signedIn;
+
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("org_member_access", { p_org: orgId });
+    if (error) {
+      noteFailure("listMemberAccess", error);
+      return signedIn;
+    }
+    if (data === null || typeof data !== "object") return signedIn;
+    for (const [userId, value] of Object.entries(data as Record<string, unknown>)) {
+      const row = (value ?? {}) as { last_sign_in_at?: unknown };
+      signedIn.set(userId, typeof row.last_sign_in_at === "string" && row.last_sign_in_at !== "");
+    }
+    return signedIn;
+  } catch (error) {
+    noteFailure("listMemberAccess", error);
+    return signedIn;
   }
 }
 

@@ -214,11 +214,28 @@ export interface WorkspaceStats {
 }
 
 /** Everything a dashboard page needs to know about who is asking. */
+/** One laboratory the caller belongs to, for the rail's workspace menu. */
+export interface WorkspaceOption {
+  id: string;
+  name: string;
+  role: OrgRole;
+}
+
 export interface WorkspaceContext {
   user: SessionUser | null;
   profile: Profile | null;
+  /** The laboratory this request is about: the profile's default when that
+   *  membership still exists, otherwise the oldest one. */
   org: Organization | null;
   role: OrgRole | null;
+  /**
+   * Every laboratory the caller belongs to, oldest first.
+   *
+   * Read in the same query that resolves `org`, because a researcher in two
+   * laboratories needs a way back to the other one and the memberships are
+   * already in hand. Empty for anyone signed out.
+   */
+  workspaces: WorkspaceOption[];
 }
 
 /** All workspace pages hang off this layout, so revalidating it is enough. */

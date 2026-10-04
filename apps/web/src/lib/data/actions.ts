@@ -821,6 +821,47 @@ async function recordDelivery(
   if (allowError) console.error(`[data/actions] invite authorization state: ${allowError.message}`);
 }
 
+/**
+ * Make another of the caller's laboratories the one the console opens.
+ *
+ * It exists because an invitation moves this field. When somebody who already
+ * has a SplicR account is invited to a second laboratory, accepting puts them
+ * in it and makes it the one they land in, which is what the invitation says
+ * will happen. Without a way back that would be a one-way door, and the
+ * researcher's own laboratory would be unreachable from the console.
+ *
+ * `default_org_id` is the single source of this preference, the same column
+ * `public.accept_org_invite()` and `private.handle_new_user()` write, so there
+ * is no second notion of "current workspace" to fall out of step with. The
+ * membership is re-read here before the write, and the profiles policy lets a
+ * caller update only their own row, so an id from a tampered request cannot
+ * move somebody into a laboratory they are not in.
+ */
+export async function switchWorkspace(orgId: string): Promise<ActionResult> {
+  const context = await getCurrentContext();
+  if (!context.user) return actionFailed(SESSION_ENDED);
+
+  const parsed = uuidSchema.safeParse(orgId);
+  if (!parsed.success) return actionFailed("That workspace id is not valid.");
+  if (context.org?.id === parsed.data) return { ok: true };
+
+  const role = await getOrgRole(parsed.data, context.user.id);
+  if (!role) return actionFailed("You are not a member of that workspace.");
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({ default_org_id: parsed.data })
+    .eq("id", context.user.id)
+    .select("id");
+
+  if (error) return dbFailure("switchWorkspace", error, "The workspace could not be switched.");
+  if (rowCount(data) === 0) return actionFailed("The workspace could not be switched.");
+
+  revalidateWorkspace();
+  return { ok: true };
+}
+
 /** Retry delivery without issuing a second token or a second database invite. */
 export async function retryInvite(inviteId: string): Promise<ActionResult> {
   const auth = await authorize("admin");
@@ -856,6 +897,50 @@ export async function retryInvite(inviteId: string): Promise<ActionResult> {
   return delivery.state === "failed"
     ? actionFailed(delivery.error ?? "The invitation could not be delivered.")
     : { ok: true };
+}
+
+/**
+ * Send a fresh sign-in code to somebody who is already a member.
+ *
+ * This is the recourse that was missing. An invitation creates the identity the
+ * moment the code is minted, which marks the invitation accepted and takes it
+ * out of the pending list, while the code itself expires within the hour. An
+ * invited researcher who did not open their mail in time was therefore a member
+ * of the laboratory with no way in and no button for an administrator to press.
+ *
+ * It goes through `deliverWorkspaceInvite`, which takes its existing-account
+ * branch: the membership is confirmed, this laboratory is made the one the code
+ * opens, and a magic-link code is minted and posted. One delivery path, so a
+ * first invitation and a later code cannot behave differently.
+ */
+export async function sendMemberSignInCode(userId: string): Promise<ActionResult> {
+  const auth = await authorize("admin");
+  if (!auth.ok) return auth;
+  const { org, user } = auth.caller;
+
+  const parsed = uuidSchema.safeParse(userId);
+  if (!parsed.success) return actionFailed("That member id is not valid.");
+
+  // Read the member through the caller's own session, so Row Level Security
+  // confirms they share this workspace before any code is minted.
+  const members = await listMembers(org.id);
+  const member = members.find((row) => row.id === parsed.data);
+  if (!member) return actionFailed("That person is not a member of this workspace.");
+  if (!member.email) return actionFailed("That member has no email address on record.");
+
+  const delivery = await deliverWorkspaceInvite({
+    email: member.email,
+    orgName: org.name,
+    orgId: org.id,
+    role: member.role,
+    invitedBy: user.id,
+  });
+
+  revalidateWorkspace();
+  if (delivery.state === "failed") {
+    return actionFailed(delivery.error ?? "The sign-in code could not be sent.");
+  }
+  return { ok: true };
 }
 
 /** Withdraw a pending invite. Admins and owners only. */

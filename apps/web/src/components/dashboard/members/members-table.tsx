@@ -11,12 +11,12 @@
  * again on the statement itself. This file is the courtesy, not the boundary.
  */
 
-import { Loader2, Trash2, UserPlus } from "lucide-react";
+import { Loader2, Mail, Trash2, UserPlus } from "lucide-react";
 import { Fragment, useState, useTransition } from "react";
 
 import { Empty } from "@/components/dashboard/ui";
 import { Reveal } from "@/components/ui/reveal";
-import { changeMemberRole, removeMember } from "@/lib/data/actions";
+import { changeMemberRole, removeMember, sendMemberSignInCode } from "@/lib/data/actions";
 import { ROLE_LABEL, type OrgRole } from "@/lib/data/types";
 import { cn, initials } from "@/lib/utils";
 
@@ -66,6 +66,32 @@ export function MembersTable({
               memberId: member.id,
               tone: "ok",
               text: `${member.name} is now ${ROLE_LABEL[next].toLowerCase()}.`,
+            }
+          : { memberId: member.id, tone: "err", text: result.error },
+      );
+    });
+  }
+
+  /**
+   * Send somebody who has not arrived yet a fresh code.
+   *
+   * The invitation created their membership when its code was minted, and that
+   * code expires within the hour. Without this an invited researcher who missed
+   * it was a member of the laboratory with no way into it: the invitation had
+   * already left the pending list, so there was nothing left to retry.
+   */
+  function sendCode(member: MemberView) {
+    setNote(null);
+    setActingId(member.id);
+    startTransition(async () => {
+      const result = await sendMemberSignInCode(member.id);
+      setActingId(null);
+      setNote(
+        result.ok
+          ? {
+              memberId: member.id,
+              tone: "ok",
+              text: `A sign-in code is on its way to ${member.email}. It opens ${orgName}.`,
             }
           : { memberId: member.id, tone: "err", text: result.error },
       );
@@ -151,13 +177,23 @@ export function MembersTable({
                         </span>
                         <div className="min-w-0">
                           <div className="flex min-w-0 items-center gap-1.5">
-                            <span className="min-w-0 truncate text-ink">{member.name}</span>
+                            <span className="min-w-0 truncate text-ink">
+                              {member.name}
+                            </span>
                             {member.isSelf && (
                               <span className="shrink-0 rounded-md bg-mist-soft px-1.5 py-0.5 text-[10px] text-muted">
                                 You
                               </span>
                             )}
                           </div>
+                          {/* Only ever drawn for a definite "no". `null` means
+                              the question could not be asked, and a guess here
+                              would label a colleague of six months as absent. */}
+                          {member.signedIn === false && (
+                            <div className="text-[11px] text-orange-700">
+                              Has not signed in yet
+                            </div>
+                          )}
                           <div className="truncate text-xs text-muted md:hidden">
                             {member.email}
                           </div>
@@ -200,35 +236,60 @@ export function MembersTable({
                     </td>
 
                     <td className="text-right">
-                      {canRemove ? (
-                        <Locked reason={removeLock}>
-                          <button
-                            type="button"
-                            disabled={busy || removeLock !== null}
-                            aria-label={
-                              member.isSelf
-                                ? `Leave ${orgName}`
-                                : `Remove ${member.name} from ${orgName}`
-                            }
-                            onClick={() => {
-                              setNote(null);
-                              setConfirmId(member.id);
-                            }}
-                            className={cn(
-                              "inline-flex items-center gap-1.5 rounded-full border border-line-strong bg-white px-2.5 py-1.5 text-xs whitespace-nowrap text-ink transition-colors sm:px-3",
-                              busy || removeLock !== null
-                                ? "cursor-not-allowed opacity-55"
-                                : "hover:border-red-200 hover:bg-red-50 hover:text-red-700",
-                            )}
-                          >
-                            <Trash2 className="h-3 w-3 shrink-0" />
-                            {/* The label is the first thing to go on a phone. */}
-                            <span className="hidden sm:inline">
-                              {member.isSelf ? "Leave" : "Remove"}
-                            </span>
-                          </button>
-                        </Locked>
-                      ) : null}
+                      {/* One row where there is width for it, stacked where
+                          there is not, rather than two controls colliding. */}
+                      <div className="flex flex-wrap items-center justify-end gap-1.5">
+                        {perms.canManage &&
+                          member.signedIn === false &&
+                          !member.isSelf && (
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => sendCode(member)}
+                              aria-label={`Send ${member.name} a sign-in code for ${orgName}`}
+                              className="btn btn-ghost btn-sm"
+                            >
+                              {acting ? (
+                                <Loader2
+                                  className="h-3.5 w-3.5 animate-spin"
+                                  aria-hidden="true"
+                                />
+                              ) : (
+                                <Mail className="h-3.5 w-3.5" aria-hidden="true" />
+                              )}
+                              Send a code
+                            </button>
+                          )}
+                        {canRemove ? (
+                          <Locked reason={removeLock}>
+                            <button
+                              type="button"
+                              disabled={busy || removeLock !== null}
+                              aria-label={
+                                member.isSelf
+                                  ? `Leave ${orgName}`
+                                  : `Remove ${member.name} from ${orgName}`
+                              }
+                              onClick={() => {
+                                setNote(null);
+                                setConfirmId(member.id);
+                              }}
+                              className={cn(
+                                "inline-flex items-center gap-1.5 rounded-full border border-line-strong bg-white px-2.5 py-1.5 text-xs whitespace-nowrap text-ink transition-colors sm:px-3",
+                                busy || removeLock !== null
+                                  ? "cursor-not-allowed opacity-55"
+                                  : "hover:border-red-200 hover:bg-red-50 hover:text-red-700",
+                              )}
+                            >
+                              <Trash2 className="h-3 w-3 shrink-0" />
+                              {/* The label is the first thing to go on a phone. */}
+                              <span className="hidden sm:inline">
+                                {member.isSelf ? "Leave" : "Remove"}
+                              </span>
+                            </button>
+                          </Locked>
+                        ) : null}
+                      </div>
                     </td>
                   </tr>
 

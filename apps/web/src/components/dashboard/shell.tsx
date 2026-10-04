@@ -23,6 +23,8 @@ import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore }
 
 import { Logo, LogoGlyph } from "@/components/brand/logo";
 import { CommandPalette, useCommandPalette } from "@/components/dashboard/command-palette";
+import { WorkspaceMenu } from "@/components/dashboard/workspace-menu";
+import type { WorkspaceOption } from "@/lib/data/types";
 import { cn, initials } from "@/lib/utils";
 
 /**
@@ -90,8 +92,12 @@ export type ShellUser = {
   name: string;
   email: string;
   org: string;
+  /** The id of the laboratory this session is in, for the workspace menu. */
+  orgId: string | null;
   /** The lab's uploaded logo, or null while it has not set one. */
   orgLogo: string | null;
+  /** Every laboratory this researcher belongs to. One entry means no menu. */
+  workspaces: WorkspaceOption[];
   demo: boolean;
 };
 
@@ -492,6 +498,9 @@ function Sidebar({
             )}
           </div>
         </RailTip>
+        {/* Only rendered for somebody in more than one laboratory, which is what
+            an invitation can make of a researcher who already had one. */}
+        <WorkspaceMenu current={user.orgId} workspaces={user.workspaces} collapsed={collapsed} />
         <form action="/auth/signout" method="post" className="mt-1">
           <RailTip label="Sign out" when={collapsed}>
             <button

@@ -62,7 +62,7 @@ const otp = (email_otp = "418902") => ({
  * `generate` is consulted in call order, so a test can say "the invite attempt
  * is refused, the magic link attempt succeeds" without a stateful double.
  */
-function makeAdmin({ generate = [otp()], profile = { id: INVITED }, membershipError = null, inviteByEmail = { error: null }, otpSend = { error: null } } = {}) {
+function makeAdmin({ generate = [otp()], profile = { id: INVITED }, membershipError = null, profileUpdateError = null, inviteByEmail = { error: null }, otpSend = { error: null } } = {}) {
   const calls = { generate: [], tables: [], inviteByEmail: [], signInWithOtp: [] };
   let generated = 0;
 
@@ -77,7 +77,9 @@ function makeAdmin({ generate = [otp()], profile = { id: INVITED }, membershipEr
             return (resolve, reject) => {
               const answer =
                 name === "profiles"
-                  ? { data: profile, error: profile ? null : { message: "no row" } }
+                  ? record.op === "update"
+                    ? { data: null, error: profileUpdateError }
+                    : { data: profile, error: profile ? null : { message: "no row" } }
                   : name === "org_members"
                     ? { data: null, error: membershipError }
                     : { data: null, error: null };
@@ -221,6 +223,46 @@ test("an existing account is made a member before its sign-in code is issued", a
   assert.equal(sent[0].values.token, "204517");
 });
 
+test("the laboratory that invited them is the one the code opens", async () => {
+  const admin = makeAdmin({ generate: [{ data: null, error: EXISTS }, otp("204517")] });
+  const { module } = loadInvitations({ admin });
+  const result = await module.deliverWorkspaceInvite(INVITE);
+  assert.equal(result.state, "existing_user");
+
+  // Measured before this was written: an address invited to one laboratory was
+  // made a member of it, signed in, and landed in the workspace its profile
+  // already pointed at, with the inviting laboratory nowhere on screen. The
+  // membership alone does not honour the invitation.
+  const landing = admin.calls.tables.find(
+    (call) => call.table === "profiles" && call.op === "update",
+  );
+  assert.ok(landing, "the default workspace is written");
+  assert.deepEqual(landing.payload, { default_org_id: ORG });
+  assert.deepEqual(
+    landing.filters.find((filter) => filter[0] === "eq"),
+    ["eq", "id", INVITED],
+    "and only on that researcher's own row",
+  );
+
+  // Still after the membership, so the profile never points at a laboratory the
+  // person is not yet in.
+  const membershipAt = admin.calls.tables.findIndex((call) => call.table === "org_members");
+  assert.ok(membershipAt < admin.calls.tables.indexOf(landing));
+});
+
+test("a default workspace that cannot be written is reported, not sent anyway", async () => {
+  const admin = makeAdmin({
+    generate: [{ data: null, error: EXISTS }, otp("204517")],
+    profileUpdateError: { message: "profiles is read only" },
+  });
+  const { module, sent } = loadInvitations({ admin });
+  const result = await module.deliverWorkspaceInvite(INVITE);
+  assert.equal(result.state, "failed");
+  assert.match(result.error, /could not be made the one that opens/);
+  assert.match(result.error, /profiles is read only/, "the reason survives");
+  assert.equal(sent.length, 0, "no code goes out for a workspace it would not open");
+});
+
 test("an address that already has an account is recognised however Auth phrases it", async () => {
   const phrasings = [
     { status: 422, code: "email_exists", message: "A user with this email address has already been registered" },
@@ -297,11 +339,17 @@ test("a mint that returns no six-digit code is a failure, not an empty email", a
   assert.equal(sent.length, 0);
 });
 
-test("a deployment with no trusted credentials says so instead of pretending", async () => {
+test("a deployment with no trusted credentials names the variable it is missing", async () => {
   const { module } = loadInvitations({ admin: null });
   const result = await module.deliverWorkspaceInvite(INVITE);
   assert.equal(result.state, "failed");
-  assert.match(result.error, /not configured/i);
+  // This is the state every local invitation was actually in on 4 Oct 2026, and
+  // "not configured" left a lab administrator with nothing to act on. The
+  // sentence has to name the variable and say that nothing was attempted, so
+  // the panel sends whoever reads it to the one place that fixes it.
+  assert.match(result.error, /SUPABASE_SECRET_KEY/);
+  assert.match(result.error, /no message was attempted/i);
+  assert.equal(result.identityCreated, false, "nothing was created either");
 });
 
 test("the stored reason fits the column that has to hold it", async () => {
@@ -455,4 +503,221 @@ test("the members page shows the reason, not only the fact", () => {
   // lived, the invitation is not.
   assert.match(panel, /\{!invite\.expired && \(/);
   assert.match(panel, /"Retry" : "Send again"/);
+});
+
+// ---------------------------------------------------------------------------
+// The way back
+// ---------------------------------------------------------------------------
+
+/**
+ * Being invited to a second laboratory makes that one the workspace the console
+ * opens. These hold the door open behind it: a researcher in two laboratories
+ * can return to the other, and nobody can be moved into one they are not in.
+ */
+function loadSwitch({
+  role = "member",
+  context,
+  updateError = null,
+  rows = [{ id: INVITED }],
+  members = [],
+  delivery = { state: "existing_user", error: null },
+} = {}) {
+  const delivered = [];
+  const queries = [];
+  const client = {
+    from(table) {
+      const record = { table, op: "select", payload: null, filters: [] };
+      queries.push(record);
+      const chain = new Proxy(
+        {},
+        {
+          get(_, method) {
+            if (method === "then") {
+              return (resolve) => resolve({ data: updateError ? null : rows, error: updateError });
+            }
+            return (...args) => {
+              if (method === "update") {
+                record.op = method;
+                record.payload = args[0];
+              } else if (method !== "select") record.filters.push([method, ...args]);
+              return chain;
+            };
+          },
+        },
+      );
+      return chain;
+    },
+  };
+  const actions = loadTs("lib/data/actions.ts", {
+    mocks: {
+      "server-only": {},
+      "next/cache": { revalidatePath() {} },
+      "./org": {
+        getCurrentContext: async () =>
+          context ?? {
+            isDemo: false,
+            user: { id: INVITED, email: "a@b.c" },
+            org: { id: ORG, name: "Satan Lab", slug: "satan" },
+            role: "owner",
+            workspaces: [],
+          },
+        getOrgRole: async () => role,
+        countOrgOwners: async () => 2,
+        getOrgSettings: async () => ({}),
+        listMembers: async () => members,
+      },
+      "@/lib/supabase/server": { createClient: async () => client },
+      "@/lib/auth/invitations": {
+        deliverWorkspaceInvite: async (input) => {
+          delivered.push(input);
+          return delivery;
+        },
+      },
+    },
+  });
+  return { module: actions, queries, delivered };
+}
+
+const OTHER = "00000000-0000-4000-8000-0000000000bb";
+
+test("switching workspace writes only the caller's own default", async () => {
+  const { module, queries } = loadSwitch();
+  const result = await module.switchWorkspace(OTHER);
+  assert.equal(result.ok, true);
+  const update = queries.find((query) => query.op === "update");
+  assert.equal(update.table, "profiles");
+  assert.deepEqual(update.payload, { default_org_id: OTHER });
+  assert.deepEqual(
+    update.filters.find((filter) => filter[0] === "eq"),
+    ["eq", "id", INVITED],
+  );
+});
+
+test("a workspace the caller is not in is refused before anything is written", async () => {
+  const { module, queries } = loadSwitch({ role: null });
+  const result = await module.switchWorkspace(OTHER);
+  assert.equal(result.ok, false);
+  assert.match(result.error, /not a member of that workspace/i);
+  assert.equal(queries.length, 0, "the database was not touched");
+});
+
+test("switching to the workspace already open is a no-op, and an id that is not one is refused", async () => {
+  const same = loadSwitch();
+  assert.equal((await same.module.switchWorkspace(ORG)).ok, true);
+  assert.equal(same.queries.length, 0, "nothing is rewritten");
+
+  const bogus = loadSwitch();
+  const result = await bogus.module.switchWorkspace("../../etc/passwd");
+  assert.equal(result.ok, false);
+  assert.match(result.error, /not valid/i);
+  assert.equal(bogus.queries.length, 0);
+});
+
+test("a signed-out caller cannot switch anything", async () => {
+  const { module, queries } = loadSwitch({ context: { isDemo: false, user: null, org: null, role: null, workspaces: [] } });
+  assert.equal((await module.switchWorkspace(OTHER)).ok, false);
+  assert.equal(queries.length, 0);
+});
+
+test("the rail offers the menu only to somebody with somewhere to go", () => {
+  const menu = read("src/components/dashboard/workspace-menu.tsx");
+  assert.match(menu, /if \(workspaces\.length < 2\) return null;/);
+  // The rail sits at the bottom of the viewport, so the menu opens upwards.
+  assert.match(menu, /bottom-full/);
+  const shell = read("src/components/dashboard/shell.tsx");
+  assert.match(shell, /<WorkspaceMenu current=\{user\.orgId\} workspaces=\{user\.workspaces\}/);
+});
+
+// ---------------------------------------------------------------------------
+// A code for somebody who never arrived
+// ---------------------------------------------------------------------------
+
+/**
+ * The gap these close: an invitation creates the identity and the membership
+ * the moment its code is minted, which marks the invitation accepted and takes
+ * it out of the pending list, while the code itself expires within the hour.
+ * The member was then in the laboratory with no way in and no button to press.
+ */
+const STRANDED = {
+  id: INVITED,
+  name: "Rosalind Franklin",
+  email: "rf@lab.example",
+  role: "member",
+  joined_at: "2026-10-04T00:00:00Z",
+};
+
+test("an admin can send a fresh sign-in code to a member who never arrived", async () => {
+  const { module: actions, delivered } = loadSwitch({ role: "admin", members: [STRANDED] });
+  const result = await actions.sendMemberSignInCode(INVITED);
+  assert.equal(result.ok, true);
+  assert.equal(delivered.length, 1);
+  // Through the one delivery path, so a first invitation and a later code
+  // cannot behave differently, and the code opens this laboratory.
+  assert.equal(delivered[0].email, STRANDED.email);
+  assert.equal(delivered[0].orgId, ORG);
+  assert.equal(delivered[0].role, "member");
+});
+
+test("a researcher cannot send anybody a sign-in code", async () => {
+  for (const role of ["viewer", "member"]) {
+    const { module: actions, delivered } = loadSwitch({ role, members: [STRANDED] });
+    const result = await actions.sendMemberSignInCode(INVITED);
+    assert.equal(result.ok, false, role);
+    assert.match(result.error, /need the admin role/i);
+    assert.equal(delivered.length, 0, "and nothing was minted");
+  }
+});
+
+test("a code cannot be sent to somebody outside the workspace", async () => {
+  const { module: actions, delivered } = loadSwitch({ role: "admin", members: [] });
+  const result = await actions.sendMemberSignInCode(INVITED);
+  assert.equal(result.ok, false);
+  assert.match(result.error, /not a member of this workspace/i);
+  assert.equal(delivered.length, 0);
+
+  const bogus = loadSwitch({ role: "admin", members: [STRANDED] });
+  assert.equal((await bogus.module.sendMemberSignInCode("not-a-uuid")).ok, false);
+  assert.equal(bogus.delivered.length, 0);
+});
+
+test("a refused send is reported with the reason the sender gave", async () => {
+  const { module: actions } = loadSwitch({
+    role: "admin",
+    members: [STRANDED],
+    delivery: { state: "failed", error: "the provider refused the address" },
+  });
+  const result = await actions.sendMemberSignInCode(INVITED);
+  assert.equal(result.ok, false);
+  assert.equal(result.error, "the provider refused the address");
+});
+
+test("the table marks only a definite absence, and offers the code only then", () => {
+  const table = read("src/components/dashboard/members/members-table.tsx");
+  // `signedIn` is boolean | null: null means an admin could not ask, and a
+  // guess there would label a colleague of six months as absent.
+  // Whitespace-insensitive: these pin the condition, not the formatter.
+  const flat = table.replace(/\s+/g, " ");
+  assert.match(flat, /member\.signedIn === false && \( <div[^>]*> Has not signed in yet/);
+  assert.match(
+    flat,
+    /perms\.canManage && member\.signedIn === false && !member\.isSelf/,
+    "the button is for an admin, about somebody else, who has not arrived",
+  );
+  const shared = read("src/components/dashboard/members/shared.ts");
+  assert.match(shared, /signedIn: boolean \| null;/);
+});
+
+test("who has signed in is readable by an admin of that workspace and nobody else", () => {
+  const migration = readFileSync(
+    path.join(root, "../../supabase/migrations/20261004000200_member_sign_in_state.sql"),
+    "utf8",
+  );
+  assert.match(migration, /security definer/);
+  assert.match(
+    migration,
+    /if p_org is null or not private\.has_org_role\(p_org, 'admin'\) then\s*\n\s*raise exception/,
+  );
+  assert.match(migration, /revoke all on function public\.org_member_access\(uuid\) from public, anon;/);
+  // Only the one column the question needs leaves auth.users.
+  assert.ok(!/encrypted_password|phone|raw_user_meta_data/.test(migration));
 });

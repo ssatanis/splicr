@@ -62,8 +62,15 @@ export interface AuthCodeMessage {
 const esc = (value: string) =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-const verifyLine = (flow: string) =>
-  `Open ${new URL(site.url).hostname}/verify?flow=${flow} and enter the code above.`;
+/**
+ * Where to type the code, worded exactly as the HTML part words it.
+ *
+ * The canonical host is `www.splicr.org`: `splicr.org` answers a 308 to it.
+ * Both resolve, so neither line was broken, but one message naming two hosts
+ * is the kind of detail a reader notices and a mail filter scores. The HTML
+ * template in `./auth-templates` says `www.splicr.org`, so this says the same.
+ */
+const verifyLine = (flow: string) => `Open www.splicr.org/verify?flow=${flow} and enter the code above.`;
 
 /**
  * The text/plain alternative.

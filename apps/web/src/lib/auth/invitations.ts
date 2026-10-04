@@ -47,11 +47,18 @@ export type InviteDelivery = {
   /** The provider's id for the message, which is the proof that it went out. */
   messageId: string | null;
   /**
-   * True once an Auth identity exists for this address because of this call.
+   * True once an Auth identity exists for this address and its authorization
+   * has been consumed.
    *
    * It matters on failure: the identity and its membership survive a message
    * that did not go out, so the caller must not roll the authorization back to
-   * `pending` and must expect the retry to take the existing-account path.
+   * `pending`, which would describe a state that no longer exists and make the
+   * next sign-in look unauthorized.
+   *
+   * It is not "this call created it". `generateLink` with `invite` succeeds for
+   * an address that already has an unconfirmed identity, which is the ordinary
+   * case when an administrator sends a second code to somebody who never
+   * arrived. The flag is about what is true afterwards, not about who did it.
    */
   identityCreated: boolean;
   /** Which sender carried it, for the server log. */
@@ -68,6 +75,20 @@ export interface WorkspaceInvite {
 }
 
 type Admin = NonNullable<ReturnType<typeof createAdminClient>>;
+
+/**
+ * What a missing trusted client actually means, said so it can be acted on.
+ *
+ * `createAdminClient()` returns null when `SUPABASE_SECRET_KEY` is absent, and
+ * every invitation then fails before a single network call. Naming the variable
+ * is the difference between a lab administrator reading a dead end and an
+ * engineer reading an instruction. This is not hypothetical: every invitation
+ * sent from a local console failed this way, because `apps/web/.env.local` was
+ * missing the key while the repository root `.env`, which Next.js never reads,
+ * had it.
+ */
+const NOT_CONFIGURED =
+  "SplicR cannot reach the authentication service: SUPABASE_SECRET_KEY is not set on this deployment. No message was attempted.";
 
 /** `org_invites.delivery_error` holds 500 characters, and a column constraint
  *  that rejects a row would lose the reason it was trying to record. */
@@ -139,6 +160,24 @@ async function attachExistingAccount(admin: Admin, input: WorkspaceInvite): Prom
     return `The workspace membership could not be written: ${membership.error.message}`;
   }
 
+  // The laboratory that invited them becomes the one the code opens.
+  //
+  // Without this the invitation is only half honoured: the membership row
+  // exists, and the researcher signs in to whichever workspace their profile
+  // already pointed at, with the inviting laboratory nowhere on screen. It was
+  // measured: an address invited to "SplicR Operations" signed in and landed in
+  // "Satan Lab". `public.accept_org_invite()` has always done this for the
+  // token path, so this is the same decision taken in the same place, not a new
+  // one. The rail's workspace menu is how somebody goes back.
+  const landing = await admin
+    .from("profiles")
+    .update({ default_org_id: input.orgId })
+    .eq("id", profile.data.id);
+  if (landing.error) {
+    console.error(`[auth/invitations] default workspace not set: ${landing.error.message}`);
+    return `The workspace was added but could not be made the one that opens: ${landing.error.message}`;
+  }
+
   await admin
     .from("splicr_access_allowlist")
     .update({
@@ -160,7 +199,7 @@ async function attachExistingAccount(admin: Admin, input: WorkspaceInvite): Prom
 export async function deliverWorkspaceInvite(input: WorkspaceInvite): Promise<InviteDelivery> {
   const admin = createAdminClient();
   if (!admin) {
-    return failed("Trusted Supabase invitation delivery is not configured.");
+    return failed(NOT_CONFIGURED);
   }
 
   // The strategy is chosen before anything is minted. `generateLink` creates the
@@ -245,7 +284,7 @@ export async function deliverNewIdentityInvite(input: {
   metadata: Record<string, string | undefined>;
 }): Promise<InviteDelivery> {
   const admin = createAdminClient();
-  if (!admin) return failed("Trusted Supabase invitation delivery is not configured.");
+  if (!admin) return failed(NOT_CONFIGURED);
 
   const base = siteBase();
   const options = { redirectTo: `${base}/verify?flow=invite`, data: input.metadata };

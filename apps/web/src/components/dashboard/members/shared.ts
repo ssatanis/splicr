@@ -25,6 +25,15 @@ export interface MemberView {
   joinedLabel: string;
   /** True for the signed-in viewer's own row. */
   isSelf: boolean;
+  /**
+   * Whether this person has ever signed in.
+   *
+   * An invitation creates the membership when the code is minted, so a row can
+   * exist for somebody who has never arrived. `null` means the question could
+   * not be asked: only an admin may, and only through
+   * `public.org_member_access`. Null is never drawn as either answer.
+   */
+  signedIn: boolean | null;
 }
 
 /** One pending invite, with its expiry already put into words. */

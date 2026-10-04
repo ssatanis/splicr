@@ -6,12 +6,14 @@ import { getCurrentContext } from "@/lib/data/org";
 export const metadata = { title: "Dashboard" };
 
 async function resolveUser(): Promise<ShellUser> {
-  const { user, profile, org } = await getCurrentContext();
+  const { user, profile, org, workspaces } = await getCurrentContext();
   return {
     name: profile?.full_name ?? user?.email?.split("@")[0] ?? "Researcher",
     email: user?.email ?? "",
     org: org?.name ?? "Workspace pending",
+    orgId: org?.id ?? null,
     orgLogo: org?.logo_url ?? null,
+    workspaces,
     demo: false,
   };
 }
