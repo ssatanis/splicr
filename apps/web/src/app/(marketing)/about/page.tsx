@@ -76,17 +76,21 @@ export default function AboutPage() {
               <h1 className="font-serif text-white leading-[0.95] tracking-[-0.02em] text-[clamp(2.4rem,6vw,4.4rem)]">
                 Started by researchers
                 <br />
-                at Cornell University
+                at Cornell and Harvard
               </h1>
             </Reveal>
             <Reveal delay={0.1}>
               <p className="mt-6 text-lg text-white/90 leading-relaxed lg:max-w-lg lg:mx-auto">
                 <FounderLink href="https://www.linkedin.com/in/sahajsatani/">
                   Sahaj Satani
-                </FounderLink>{" "}
-                and{" "}
+                </FounderLink>
+                ,{" "}
                 <FounderLink href="https://ishaansamantray.com/">
                   Ishaan Samantray
+                </FounderLink>{" "}
+                and{" "}
+                <FounderLink href="https://www.linkedin.com/in/zarianaqvi/">
+                  Zaria Naqvi
                 </FounderLink>{" "}
                 are building tools to make CRISPR screen evidence easier to inspect and test.
               </p>

@@ -9,6 +9,9 @@ export const site = {
     "CRISPR screen analysis and prediction research with traceable evidence, measured benchmarks and explicit uncertainty.",
   email: "team@splicr.org",
   url: "https://splicr.org",
+  /** Where a lab books time with us. Used by the contact page's embedded
+      calendar and by the plain link beside it, so both move together. */
+  calendly: "https://calendly.com/is455-cornell/30min",
   /** The company's public location, used by the footer, the legal pages and
       every transactional email. Where SplicR started is history, not an address:
       that belongs to the About page and is written there, not sourced from here. */
