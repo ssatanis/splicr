@@ -241,7 +241,7 @@ def test_mle_matching_coefficient_not_first_fdr(monkeypatch, tmp_path):
 
 
 def test_requested_mle_runs_and_merges(monkeypatch, matrix, library, tmp_path):
-    monkeypatch.setattr(hits, "run_mageck_rra", lambda *a: ({"A": GeneResult("A")}, []))
+    monkeypatch.setattr(hits, "run_mageck_rra", lambda *a, **kw: ({"A": GeneResult("A")}, []))
     seen = []
     def mle(*args, **kwargs):
         seen.append(kwargs)
@@ -250,7 +250,7 @@ def test_requested_mle_runs_and_merges(monkeypatch, matrix, library, tmp_path):
     result = hits.call_hits(matrix, library, ["D21"], ["T0"], tmp_path,
                             run_mle=True, run_bagel=False,
                             mle_design_matrix=tmp_path / "design", mle_coefficient="drug")
-    assert seen == [{"coefficient": "drug"}]
+    assert seen == [{"coefficient": "drug", "permutation_round": 10, "norm_method": "median", "control_sgrna": None, "random_seed": 0}]
     assert result.genes["A"].mle_beta == -2
     assert "mageck_mle" in result.methods
 
@@ -258,7 +258,7 @@ def test_requested_mle_runs_and_merges(monkeypatch, matrix, library, tmp_path):
 @pytest.mark.parametrize("declared", [False, True])
 def test_inversion_guard_requires_declared_fitness_contrast(monkeypatch, matrix, library, tmp_path, declared):
     genes = {f"E{i}": GeneResult(f"E{i}", fdr=0.001, direction="enriched") for i in range(100)}
-    monkeypatch.setattr(hits, "run_mageck_rra", lambda *a: (genes, []))
+    monkeypatch.setattr(hits, "run_mageck_rra", lambda *a, **kw: (genes, []))
     monkeypatch.setattr(hits, "essentials", lambda taxid: set(genes))
     if declared:
         with pytest.raises(hits.InvertedContrastError):
@@ -299,6 +299,27 @@ def test_pipeline_reports_actual_failed_stage(monkeypatch, tmp_path):
     assert result.stages[-1].status == "failed"
 
 
+def test_fastq_samples_detect_their_own_orientation(monkeypatch, tmp_path):
+    from splicr.count import revcomp
+    library = Library("mixed", "Mixed read directions", [Guide("g1", "ACGATCGTAGCTAGGTCATG", "A"), Guide("g2", "TGCAGATCCGTAGCATGACG", "A")])
+    read = "TTGTGGAAAGGACGAAACACCG" + library.guides[0].sequence + "GTTTTAGAGCTAGAAATAGCAAG"
+    files = {}
+    for label, sequence in [("control", read), ("treated", revcomp(read))]:
+        path = tmp_path / f"{label}.fastq"
+        path.write_text("".join(f"@read{i}\n{sequence}\n+\n{'I' * len(sequence)}\n" for i in range(12)))
+        files[label] = path
+    monkeypatch.setattr(pipeline, "load_library", lambda *args: library)
+    monkeypatch.setattr(pipeline, "call_hits", lambda *args, **kwargs: HitTable({"A": GeneResult("A", lfc=0, fdr=1)}, ["mageck_rra"], "test", ["treated"], ["control"]))
+    monkeypatch.setattr(pipeline, "flag_artifacts", lambda *args, **kwargs: {})
+    monkeypatch.setattr(pipeline, "atlas_context", lambda *args, **kwargs: AtlasResult(available=False, reason="test fixture"))
+    result = pipeline.run_pipeline(pipeline.ScreenInput("mixed read directions", fastqs=files, library_slug="mixed", treatment=["treated"], control=["control"], hit_callers=["mageck_rra"]), tmp_path / "out", verbose=False)
+    assert result.ok, result.error
+    assert [sample.mapped for sample in result.matrix.per_sample] == [12, 12]
+    assert [sample.location.reverse_complement for sample in result.matrix.per_sample] == [False, True]
+    count = next(stage for stage in result.stages if stage.stage == "count")
+    assert count.metrics["sample_locations"]["treated"]["reverse_complement"] is True
+
+
 @pytest.mark.parametrize("modality,phenotype,expected", [
     ("knockout", "fitness", True), ("activation", "fitness", False),
     ("knockout", "reporter", False), ("knockout", None, False),
@@ -335,3 +356,25 @@ def test_pipeline_context_and_portable_evidence_report(monkeypatch, tmp_path, ma
     if not expected:
         assert report["qc"]["nnmd"] is None
         assert "not applicable" in report["qc"]["nnmd_reason"]
+
+def test_drugz_integer_cli_options_match_the_pinned_tool(monkeypatch,tmp_path):
+    (tmp_path / 'drugz.py').touch()
+    (tmp_path / 'drugz.txt').write_text('GENE\tnormZ\tfdr_supp\tfdr_synth\nA\t-3\t1\t0.02\n')
+    monkeypatch.setattr(hits,'DRUGZ_DIR',tmp_path)
+    commands=[]
+    monkeypatch.setattr(hits,'_run',lambda command,*args:commands.append(command))
+    hits.run_drugz(tmp_path/'counts',['T'],['C'],tmp_path,pseudocount=5.0,half_window_size=20)
+    assert commands[0][commands[0].index('-p')+1]=='5'
+    assert commands[0][commands[0].index('--half_window_size')+1]=='20'
+    with pytest.raises(ToolError,match='Invalid DrugZ'):
+        hits.run_drugz(tmp_path/'counts',['T'],['C'],tmp_path,pseudocount=5.5)
+
+def test_explicitly_requested_method_failure_is_not_completed(monkeypatch,matrix,library,tmp_path):
+    from splicr import pipeline
+    path=matrix.to_mageck_tsv(tmp_path/'counts.tsv')
+    monkeypatch.setattr(pipeline,'load_library',lambda _:library)
+    monkeypatch.setattr(pipeline,'call_hits',lambda *args,**kwargs:HitTable({'A':GeneResult('A')},['mageck_rra'], 'test',['D21'],['T0'],warnings=['DrugZ did not run']))
+    result=pipeline.run_pipeline(pipeline.ScreenInput('test',count_table=path,library_slug='test',treatment=['D21'],control=['T0'],hit_callers=['mageck_rra','drugz'],run_drugz=True),tmp_path/'out',verbose=False)
+    assert not result.ok
+    assert result.failed_at=='hits'
+    assert 'Requested methods did not complete: drugz' in result.error

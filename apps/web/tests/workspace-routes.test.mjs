@@ -100,6 +100,7 @@ function routeHarness(route, context = workspace, result = { status: "ready", ro
     if (name === "react/jsx-runtime") return jsxRuntime;
     if (name === "react") return React;
     if (name === "next/link") return { default: ({ children, href }) => React.createElement("a", { href }, children) };
+    if (name === "@/lib/supabase/server") return { createClient: async () => { throw new Error("A missing member role must not read drafts"); } };
     if (name === "@/lib/data/org") return {
       getCurrentContext: async () => context,
       getOrgSettings: async () => ({

@@ -1,0 +1,95 @@
+{
+  "screen": {
+    "id": "01a10d8b-2c99-7636-95e4-94047fd1f66c",
+    "name": "GSE145743 HeLa olaparib, raw GeCKOv2 A",
+    "current_run_id": "01a10d8f-24e6-79ae-adc3-6e579da1526b"
+  },
+  "run": {
+    "id": "01a10d8f-24e6-79ae-adc3-6e579da1526b",
+    "status": "complete",
+    "settings": {
+      "source": null,
+      "profile": "pooled_abundance",
+      "manifest": [
+        {
+          "kind": "fastq",
+          "name": "SRR11144453_libA_DMSO_rep1.fastq.gz",
+          "bytes": 279026701,
+          "sha256": "34a3fb1fd5cd5e7d5828a4ce84f3e889abd19c1d3a52c20ebbcb61328ec63e2e",
+          "storage_key": "r2://splicr/01a0f985-0517-75cd-b999-3d8291c0b020/01a10d8b-2c99-7636-95e4-94047fd1f66c/SRR11144453_libA_DMSO_rep1.fastq.gz"
+        },
+        {
+          "kind": "fastq",
+          "name": "SRR11144451_libA_olaparib_rep1.fastq.gz",
+          "bytes": 152325251,
+          "sha256": "516b0a330284957bc8628f555c31c3b196b599da0f517858df14d77cb9da6334",
+          "storage_key": "r2://splicr/01a0f985-0517-75cd-b999-3d8291c0b020/01a10d8b-2c99-7636-95e4-94047fd1f66c/SRR11144451_libA_olaparib_rep1.fastq.gz"
+        },
+        {
+          "kind": "fastq",
+          "name": "SRR11144450_libA_DMSO_rep2.fastq.gz",
+          "bytes": 625914860,
+          "sha256": "a2798ae4fd93cc687f01575f3c3053c3afe57273803625022cc284c5574fd3d3",
+          "storage_key": "r2://splicr/01a0f985-0517-75cd-b999-3d8291c0b020/01a10d8b-2c99-7636-95e4-94047fd1f66c/SRR11144450_libA_DMSO_rep2.fastq.gz"
+        },
+        {
+          "kind": "fastq",
+          "name": "SRR11144452_libA_olaparib_rep2.fastq.gz",
+          "bytes": 206528330,
+          "sha256": "aabec8e13c4e88826c95fee6bfa9ec14e8a9db8ae04563af1529ef9b1dbe42ff",
+          "storage_key": "r2://splicr/01a0f985-0517-75cd-b999-3d8291c0b020/01a10d8b-2c99-7636-95e4-94047fd1f66c/SRR11144452_libA_olaparib_rep2.fastq.gz"
+        }
+      ],
+      "mle_design": null,
+      "model_type": "other",
+      "hit_callers": [
+        "mageck_rra",
+        "drugz"
+      ],
+      "drugz_paired": false,
+      "plan_version": "guide-abundance-v2",
+      "cn_correction": false,
+      "drugz_options": {
+        "pseudocount": 5,
+        "half_window_size": 500
+      },
+      "fdr_threshold": 0.05,
+      "guide_aliases": {},
+      "normalization": "median",
+      "organism_taxid": 9606,
+      "sample_factors": {
+        "SRR11144450_libA_DMSO_rep2": {},
+        "SRR11144453_libA_DMSO_rep1": {},
+        "SRR11144451_libA_olaparib_rep1": {},
+        "SRR11144452_libA_olaparib_rep2": {}
+      },
+      "library_snapshot": {
+        "id": "01a0e226-ad93-7007-891f-4c97e2dc5d9d",
+        "cas": "SpCas9",
+        "name": "GeCKOv2 Set A",
+        "taxid": 9606,
+        "n_genes": 20915,
+        "modality": "knockout",
+        "n_guides": 65383
+      },
+      "review_confirmed": true
+    }
+  },
+  "hit_stage": {
+    "metrics": {
+      "methods": [
+        "mageck_rra",
+        "drugz"
+      ],
+      "warnings": [
+        "BAGEL2 and the essential-direction inversion guard were not applied: this contrast is not a declared loss-of-function fitness endpoint against a library reference."
+      ],
+      "fdr_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
+      "fdr_threshold": 0.05,
+      "n_significant": 5,
+      "normalization": "median",
+      "essentiality_contrast": false
+    }
+  },
+  "drugz_rows": 20569
+}

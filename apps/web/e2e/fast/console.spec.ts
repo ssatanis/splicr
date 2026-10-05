@@ -55,7 +55,7 @@ test("new analysis separates private upload from published studies", async ({ pa
   await page.goto("/dashboard/new");
   await expect(page.getByRole("heading", { name: "New analysis" })).toBeVisible();
   await expect(page.getByRole("radio", { name: /My experiment/ })).toHaveAttribute("aria-checked", "true");
-  await expect(page.locator('input[type="file"]')).toHaveCount(1);
+  await expect(page.locator('input[type="file"]:not([webkitdirectory])')).toHaveCount(1);
 
   await page.getByRole("radio", { name: /Published study/ }).click();
   const field = page.getByLabel("Accession", { exact: true });

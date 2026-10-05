@@ -383,6 +383,7 @@ export interface LadderRung {
   nNotMet: number;
   nInconclusive: number;
   nPending: number;
+  nUnscored?: number;
   /** The gate's answer for this rung's question, or null for the primary rung. */
   estimateAvailable: boolean;
   estimateBecause: string | null;
@@ -411,6 +412,7 @@ interface LadderDbRow {
   n_not_met: number | string | null;
   n_inconclusive: number | string | null;
   n_pending: number | string | null;
+  n_unscored?: number | string | null;
 }
 
 /**
@@ -434,7 +436,7 @@ export async function getLadderView(
     const client = await createClient();
     let query = client
       .from("validation_ladder")
-      .select("gene_symbol, rung_key, state, n_outcomes, n_met, n_not_met, n_inconclusive, n_pending")
+      .select("gene_symbol, rung_key, state, n_outcomes, n_met, n_not_met, n_inconclusive, n_pending, n_unscored")
       .eq("org_id", context.org.id)
       .ilike("gene_symbol", symbol);
     if (options.screenId) query = query.eq("screen_id", options.screenId);
@@ -457,6 +459,7 @@ export async function getLadderView(
       existing.n_inconclusive =
         (integer(existing.n_inconclusive) ?? 0) + (integer(row.n_inconclusive) ?? 0);
       existing.n_pending = (integer(existing.n_pending) ?? 0) + (integer(row.n_pending) ?? 0);
+      existing.n_unscored = (integer(existing.n_unscored) ?? 0) + (integer(row.n_unscored) ?? 0);
     }
 
     // The gate, per question. Read once here rather than per rung, because two
@@ -466,10 +469,25 @@ export async function getLadderView(
     // its receipts, and pulling them would cost four queries to render one
     // panel.
     const availability = await headAvailability(client);
+    let primarySignificant = options.primarySignificant ?? null;
+    if (options.primarySignificant === undefined && options.screenId) {
+      const screen = await client.from("screens").select("current_run_id").eq("org_id", context.org.id).eq("id", options.screenId).maybeSingle();
+      if (screen.error) throw screen.error;
+      if (screen.data?.current_run_id) {
+        const [hit, run] = await Promise.all([
+          client.from("hits").select("fdr").eq("run_id", screen.data.current_run_id).ilike("gene_symbol", symbol).maybeSingle(),
+          client.from("runs").select("settings").eq("id", screen.data.current_run_id).maybeSingle(),
+        ]);
+        if (hit.error) throw hit.error;
+        if (run.error) throw run.error;
+        const threshold = Number(run.data?.settings?.fdr_threshold ?? 0.1);
+        if (hit.data?.fdr !== null && hit.data?.fdr !== undefined && Number.isFinite(threshold)) primarySignificant = Number(hit.data.fdr) < threshold;
+      }
+    }
 
     const rungs: LadderRung[] = RUNGS.map((spec) => {
       if (spec.key === "primary") {
-        const significant = options.primarySignificant ?? null;
+        const significant = primarySignificant;
         return {
           key: spec.key,
           label: spec.label,
@@ -500,6 +518,7 @@ export async function getLadderView(
         pending: integer(row?.n_pending) ?? 0,
       };
       const head = spec.question ? availability.get(spec.question) : undefined;
+      const unscored = integer(row?.n_unscored) ?? 0;
       const headAvailable = head?.available ?? false;
       return {
         key: spec.key,
@@ -507,12 +526,15 @@ export async function getLadderView(
         gloss: spec.gloss,
         question: spec.question,
         state: rungState(counts),
-        because: rungBecause(counts),
+        because: unscored === (integer(row?.n_outcomes) ?? 0) && unscored > 0
+          ? "Reported bench evidence is retained. The prespecified endpoint could not score these records because required criteria were not recorded."
+          : rungBecause(counts) + (unscored > 0 ? ` ${unscored} reported outcomes lack the criteria needed for endpoint scoring.` : ""),
         nOutcomes: integer(row?.n_outcomes) ?? 0,
         nMet: counts.met,
         nNotMet: counts.notMet,
         nInconclusive: counts.inconclusive,
         nPending: counts.pending,
+        nUnscored: unscored,
         estimateAvailable: headAvailable,
         estimateBecause:
           spec.question && !headAvailable

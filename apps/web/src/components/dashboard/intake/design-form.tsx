@@ -27,6 +27,8 @@ import {
 import { MODALITY_LABEL } from "@/components/dashboard/settings/meta";
 import { ROLE_HINT, ROLE_LABEL, type IntakeSample, type SampleRole } from "@/lib/intake/shape";
 import { cn } from "@/lib/utils";
+import { MleDesignEditor } from "./mle-design";
+import { MODEL_TYPES, type ModelType } from "@/lib/validation/model";
 
 export interface LibraryChoice {
   id: string;
@@ -42,10 +44,19 @@ export interface DetectedLibrary {
 }
 
 export interface AnalysisSettings {
+  profile?: import("@/lib/intake/analysis-plan").Profile;
+  organism_taxid?: number;
+  modality?: Modality;
+  fitness_assay?: boolean;
+  mle_design?: import("@/lib/intake/analysis-plan").MleDesign;
+  drugz_options?: import("@/lib/intake/analysis-plan").DrugzOptions;
   normalization: Normalization;
   hit_callers: HitCaller[];
   fdr_threshold: number;
   cn_correction: boolean;
+  drugz_paired?: boolean;
+  guide_aliases?: Record<string, string>;
+  model_type?: ModelType;
 }
 
 const ROLES: readonly SampleRole[] = ["plasmid", "reference", "control", "treatment"];
@@ -107,7 +118,7 @@ export function DesignForm({
   };
 
   const treated = samples.filter((s) => s.role === "treatment").length;
-  const controls = samples.length - treated;
+  const controls = samples.filter((sample) => sample.included !== false && sample.role !== "treatment").length;
 
   return (
     <div className="space-y-5">
@@ -131,13 +142,17 @@ export function DesignForm({
               <tr>
                 <th scope="col">Sample</th>
                 <th scope="col">Arm</th>
+                <th scope="col">Use</th>
                 <th scope="col" className="num-col">Replicate</th>
               </tr>
             </thead>
             <tbody>
               {samples.map((sample, index) => (
                 <tr key={sample.label}>
-                  <td className="max-w-[1px] truncate" title={sample.label}>{sample.label}</td>
+                  <td className="max-w-[1px] truncate" title={sample.label}>{sample.label}
+                    {sample.file_ids && <span className="block text-[10px] text-muted">{sample.file_ids.length} read files merged</span>}
+                    {Boolean(sample.read1_file_ids?.length && sample.read2_file_ids?.length) && <select aria-label={`Guide read for ${sample.label}`} value={sample.file_ids?.[0] === sample.read2_file_ids?.[0] ? "R2" : "R1"} disabled={disabled} className="mt-1 h-6 rounded border border-line text-[11px]" onChange={(event) => { const file_ids = event.target.value === "R1" ? sample.read1_file_ids! : sample.read2_file_ids!; setSample(index, { file_ids, file_id: file_ids[0] }); }}><option value="R1">Count R1</option><option value="R2">Count R2</option></select>}
+                  </td>
                   <td>
                     <select
                       value={sample.role}
@@ -155,6 +170,7 @@ export function DesignForm({
                       ))}
                     </select>
                   </td>
+                  <td><input type="checkbox" aria-label={`Use ${sample.label} in this comparison`} checked={sample.included !== false} disabled={disabled} onChange={(event) => setSample(index, { included: event.target.checked })}/></td>
                   <td className="num-col">
                     <input
                       type="number"
@@ -211,7 +227,7 @@ export function DesignForm({
             className={FIELD}
           >
             {MODALITIES.map((item) => (
-              <option key={item} value={item}>{MODALITY_LABEL[item]}</option>
+              <option key={item} value={item} disabled={!["knockout", "crispri", "crispra"].includes(item)}>{MODALITY_LABEL[item]}</option>
             ))}
           </select>
         </Field>
@@ -219,6 +235,7 @@ export function DesignForm({
         <div className="sm:col-span-2">
           <Field label="Guide library">
             <select
+              aria-label="Guide library"
               value={libraryId ?? ""}
               disabled={disabled}
               onChange={(event) => onChange({ libraryId: event.target.value || null })}
@@ -226,7 +243,7 @@ export function DesignForm({
             >
               <option value="">Let the engine identify it from the guides</option>
               {libraries.map((library) => (
-                <option key={library.id} value={library.id}>
+                <option key={library.id} value={library.id} disabled={library.n_guides < 1}>
                   {library.name}, {library.n_guides.toLocaleString()} guides
                 </option>
               ))}
@@ -267,6 +284,7 @@ export function DesignForm({
 
         {advanced && (
           <div id={advancedId} className="mt-3 grid grid-cols-1 gap-3 rounded-lg bg-mist-soft/60 p-3 sm:grid-cols-2">
+            <Field label="Model type"><select aria-label="Analysis model type" value={settings.model_type ?? "other"} disabled={disabled} onChange={(event) => onChange({ settings: { ...settings, model_type: event.target.value as ModelType } })} className={FIELD}>{MODEL_TYPES.map((type) => <option key={type} value={type}>{type.replaceAll("_", " ")}</option>)}</select></Field>
             <Field label="Normalization" hint="How counts are put on a common scale before the contrast.">
               <select
                 value={settings.normalization}
@@ -308,7 +326,7 @@ export function DesignForm({
                     <input
                       type="checkbox"
                       checked={settings.hit_callers.includes(caller)}
-                      disabled={disabled}
+                      disabled={disabled || caller === "chronos" || caller === "mageck_rra"}
                       onChange={(event) =>
                         onChange({
                           settings: {
@@ -321,7 +339,7 @@ export function DesignForm({
                       }
                       className="h-3.5 w-3.5 accent-cyan-600"
                     />
-                    {HIT_CALLER_LABEL[caller]}
+                    {HIT_CALLER_LABEL[caller]}{caller === "chronos" ? " (requires pDNA batch metadata)" : ""}
                   </label>
                 ))}
               </div>
@@ -330,8 +348,8 @@ export function DesignForm({
             <label className="inline-flex items-start gap-2 text-[12px] text-body sm:col-span-2">
               <input
                 type="checkbox"
-                checked={settings.cn_correction}
-                disabled={disabled}
+                checked={false}
+                disabled={true}
                 onChange={(event) =>
                   onChange({ settings: { ...settings, cn_correction: event.target.checked } })
                 }
@@ -341,14 +359,15 @@ export function DesignForm({
                 Correct for copy number
                 <span className="mt-0.5 flex items-start gap-1 text-[11px] leading-snug text-muted">
                   <Info className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
-                  Amplified regions take more cuts, which looks like depletion. This takes that out before
-                  hits are called.
+                  Requires a matched copy-number profile. Not available for this upload workflow.
                 </span>
               </span>
             </label>
           </div>
         )}
       </section>
+      {settings.hit_callers.includes("mageck_mle") && <MleDesignEditor table={{ fileId: "", name, sheet: "Samples", model: cellLine, rows: 0, preview: [], warnings: [], samples: samples.filter((sample) => sample.included !== false) }} comparison={{ id: "primary", table: 0, name: name || "Primary comparison", model: cellLine, phenotype, enabled: true, drug: settings.hit_callers.includes("drugz"), treatment: samples.filter((sample) => sample.included !== false && sample.role === "treatment").map((sample) => sample.label), control: samples.filter((sample) => sample.included !== false && sample.role !== "treatment").map((sample) => sample.label), mle_design: settings.mle_design }} disabled={disabled} onChange={(mle_design) => onChange({ settings: { ...settings, mle_design } })}/>}
+      {settings.hit_callers.includes("drugz") && <details className="rounded-lg border border-line p-3"><summary className="cursor-pointer text-[12px] text-ink">DrugZ settings</summary><div className="mt-3 grid gap-3 sm:grid-cols-2"><Field label="DrugZ pseudocount"><input aria-label="DrugZ pseudocount" className={FIELD} type="number" step={1} min={1} max={1000} value={settings.drugz_options?.pseudocount ?? 5} disabled={disabled} onChange={(event) => onChange({ settings: { ...settings, drugz_options: { pseudocount: Number(event.target.value), half_window_size: settings.drugz_options?.half_window_size ?? 500 } } })}/></Field><Field label="DrugZ smoothing half-window"><input aria-label="DrugZ smoothing half-window" className={FIELD} type="number" min={2} max={10000} value={settings.drugz_options?.half_window_size ?? 500} disabled={disabled} onChange={(event) => onChange({ settings: { ...settings, drugz_options: { pseudocount: settings.drugz_options?.pseudocount ?? 5, half_window_size: Number(event.target.value) } } })}/></Field><label className="flex items-center gap-2 text-[12px] text-ink"><input aria-label="Paired DrugZ" type="checkbox" disabled={disabled} checked={Boolean(settings.drugz_paired)} onChange={(event) => onChange({ settings: { ...settings, drugz_paired: event.target.checked } })}/>Paired biological replicates</label></div></details>}
     </div>
   );
 }

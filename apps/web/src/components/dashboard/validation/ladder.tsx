@@ -73,9 +73,9 @@ function Rung({ rung, last }: { rung: LadderRung; last: boolean }) {
           <span className="text-[12.5px] font-medium text-ink">{rung.label}</span>
           <span
             className={cn("text-[11px] font-medium", style.className)}
-            title={RUNG_STATE_GLOSS[rung.state]}
+            title={rung.nUnscored ? "Includes reported bench evidence that the endpoint could not score." : RUNG_STATE_GLOSS[rung.state]}
           >
-            {RUNG_STATE_LABEL[rung.state]}
+            {rung.nUnscored ? "Reported " : ""}{RUNG_STATE_LABEL[rung.state]}
           </span>
           {counts.length > 0 && (
             <span className="text-[11px] text-muted">{counts.join(", ")}</span>

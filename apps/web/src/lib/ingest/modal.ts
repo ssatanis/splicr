@@ -41,3 +41,15 @@ export async function kickPublicIngestQueue(): Promise<IngestKickResult> {
     client.close();
   }
 }
+
+/** Private uploads start independently of archive discovery. The SQL lease prevents duplicate work. */
+export async function kickPrivateScreenQueue(count = 1): Promise<IngestKickResult> {
+  if (process.env.SPLICR_INGEST_AUTOSTART === "0") return { started: false, reason: "disabled" };
+  if (!modalConfigured()) return { started: false, reason: "not_configured" };
+  const client = new ModalClient();
+  try {
+    const worker = await client.functions.fromName(APP_NAME, "process_private_screen", { environment: process.env.MODAL_ENVIRONMENT?.trim() || undefined });
+    await Promise.all(Array.from({ length: Math.min(64, Math.max(1, count)) }, () => worker.spawn([])));
+    return { started: true };
+  } finally { client.close(); }
+}

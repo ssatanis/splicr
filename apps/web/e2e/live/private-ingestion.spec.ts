@@ -89,7 +89,7 @@ test.describe("private experiment intake", () => {
     await cleanup(screenName);
     try {
       await page.goto("/dashboard/new");
-      await page.setInputFiles("input[type='file']", {
+      await page.setInputFiles("input[type='file']:not([webkitdirectory])", {
         name: uploadName,
         mimeType: "text/tab-separated-values",
         buffer,

@@ -1,0 +1,70 @@
+{
+  "SRR11144450_libA_DMSO_rep2.fastq.gz": {
+    "guide_length": 20,
+    "anchor": null,
+    "anchor_name": null,
+    "offsets": [
+      23,
+      22,
+      24,
+      21,
+      20,
+      25
+    ],
+    "search_window": 40,
+    "reverse_complement": false,
+    "probe_anchor": "GACGAAACACCG",
+    "probe_anchor_name": "u6_tail"
+  },
+  "SRR11144451_libA_olaparib_rep1.fastq.gz": {
+    "guide_length": 20,
+    "anchor": null,
+    "anchor_name": null,
+    "offsets": [
+      23,
+      22,
+      24,
+      21,
+      29,
+      25
+    ],
+    "search_window": 40,
+    "reverse_complement": false,
+    "probe_anchor": "GACGAAACACCG",
+    "probe_anchor_name": "u6_tail"
+  },
+  "SRR11144452_libA_olaparib_rep2.fastq.gz": {
+    "guide_length": 20,
+    "anchor": null,
+    "anchor_name": null,
+    "offsets": [
+      23,
+      22,
+      24,
+      21,
+      20,
+      28
+    ],
+    "search_window": 40,
+    "reverse_complement": false,
+    "probe_anchor": "GACGAAACACCG",
+    "probe_anchor_name": "u6_tail"
+  },
+  "SRR11144453_libA_DMSO_rep1.fastq.gz": {
+    "guide_length": 20,
+    "anchor": null,
+    "anchor_name": null,
+    "offsets": [
+      23,
+      22,
+      24,
+      21,
+      27,
+      20
+    ],
+    "search_window": 40,
+    "reverse_complement": false,
+    "probe_anchor": "GACGAAACACCG",
+    "probe_anchor_name": "u6_tail"
+  }
+}

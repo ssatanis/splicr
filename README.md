@@ -25,7 +25,9 @@ statistics, QC and artifact evidence. The intended Hit Report has three parts:
 The Atlas imports public BioGRID ORCS screen summaries and retains their original
 authors' hit calls. It is not a uniform raw-read reanalysis of every public screen.
 The post-screen pipeline currently skips calibrated scoring because no validation
-confidence model is fitted. Browser upload is not connected. The console's Atlas
+confidence model is fitted. Browser uploads accept multiple files and optional
+dropped folders, inspect stored inputs, and queue private analyses after design
+review. The console's Atlas
 explorer, Screen Planner, Hit Report export, Truth Loop outcome entry and Connect
 keys are implemented (see `docs/11-console-modules.md`), and the console stays
 closed to the public. Authenticated workspace pages read actual records;
@@ -81,6 +83,33 @@ Open http://localhost:3000. The current proxy configuration disables public
 console and authentication routes. Explicit demo code is retained for review;
 sample pages and exports identify their data and are isolated from real
 workspace sessions. Enabling or deploying the console is a separate step.
+
+### Private browser uploads
+
+Private uploads use signed R2 URLs; the bucket must allow the exact browser origin
+and expose `ETag` for multipart uploads. After setting the R2 credentials, preview
+and apply the required CORS origins (existing policies are preserved):
+
+```bash
+node scripts/data/configure-r2-cors.mjs --origin=https://splicr.org --origin=https://www.splicr.org
+node scripts/data/configure-r2-cors.mjs --apply --origin=https://splicr.org --origin=https://www.splicr.org
+```
+
+The script also includes `NEXT_PUBLIC_SITE_URL`. For a different development port
+or deployment URL, add its exact `--origin`. No public bucket access is required.
+
+The upload picker accepts any file type, up to 64 nonempty files and 50 GB per
+file. ZIP bundles up to 64 MB are unpacked with a 128 MB expansion limit; larger
+or unreadable archives remain attached. Count tables, spreadsheet worksheets,
+JSON tables, sample metadata, guide libraries and FASTQ are reviewed for analysis.
+Supporting PDF, Word, PowerPoint, OpenDocument and text files receive text previews;
+images receive metadata inspection. Scans, encrypted documents and unrecognized
+binary formats are retained with an explicit limitation rather than claimed as
+fully understood. Document inspection reads up to 16 MB and 100 PDF pages, and
+shows a 6,000-character preview. The original source files remain in private storage.
+
+Browser regression tests: `apps/web/e2e/fast/uploads-ui.spec.ts` and
+`apps/web/e2e/fast/intake.spec.ts`.
 
 ## Website evidence and checks
 

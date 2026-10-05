@@ -1,0 +1,7 @@
+name,status,qc,genes,guide_effects,disagreement,completed_stages,splicr_significant,mageck_depletion_significant,mageck_enrichment_significant,drugz_significant,mle_significant
+Essentiality ICSBCS002,complete,fail,489,3044,489,9,29,33,0,0,38
+Gefitinib ICSBCS002,complete,fail,489,3044,489,9,0,0,0,3,8
+Trametinib ICSBCS002,complete,fail,489,3044,489,9,0,0,0,0,5
+Essentiality ICSBCS007,complete,warn,489,3044,489,9,38,37,3,0,34
+Gefitinib ICSBCS007,complete,warn,489,3044,489,9,3,0,4,5,7
+Trametinib ICSBCS007,complete,warn,489,3044,489,9,5,2,3,6,9

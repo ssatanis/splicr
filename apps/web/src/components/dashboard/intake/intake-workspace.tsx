@@ -11,7 +11,7 @@
  * workspace. The choice is made first, in one control, and each side says where
  * its result goes.
  */
-import { FlaskConical, Globe } from "lucide-react";
+import { Check, FlaskConical, Globe } from "lucide-react";
 import { useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -22,13 +22,13 @@ const CHOICES: { key: Mode; label: string; hint: string; icon: typeof FlaskConic
   {
     key: "own",
     label: "My experiment",
-    hint: "Your reads or counts. Stays private to this workspace.",
+    hint: "Upload files for a private workspace analysis.",
     icon: FlaskConical,
   },
   {
     key: "published",
     label: "Published study",
-    hint: "SplicR reanalyses the deposit. Result is shared evidence.",
+    hint: "Reanalyse a public deposit and share the evidence.",
     icon: Globe,
   },
 ];
@@ -58,31 +58,33 @@ export function IntakeWorkspace({
               aria-checked={active}
               onClick={() => setMode(choice.key)}
               className={cn(
-                "flex items-start gap-2.5 rounded-xl border px-3 py-2.5 text-left outline-none transition-colors duration-[var(--dur-2)] focus-visible:ring-2 focus-visible:ring-cyan-500 motion-reduce:transition-none",
+                "flex items-center gap-3 rounded-xl border px-4 py-4 text-left outline-none transition-colors duration-[var(--dur-2)] focus-visible:ring-2 focus-visible:ring-cyan-500 motion-reduce:transition-none",
                 active
-                  ? "border-cyan-500 bg-cyan-50/60"
+                  ? "border-navy/40 bg-navy-tint shadow-sm"
                   : "border-line bg-white hover:border-line-strong hover:bg-mist-soft/50",
               )}
             >
               <span
                 className={cn(
-                  "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md",
-                  active ? "bg-cyan-500 text-white" : "bg-mist-soft text-muted",
+                  "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+                  active ? "bg-navy text-white" : "bg-mist-soft text-muted",
                 )}
                 aria-hidden="true"
               >
-                <Icon className="h-3.5 w-3.5" />
+                <Icon className="h-4 w-4" />
               </span>
-              <span className="min-w-0">
-                <span className="block text-[13px] font-medium text-ink">{choice.label}</span>
-                <span className="block text-[11.5px] leading-snug text-muted">{choice.hint}</span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-medium text-ink">{choice.label}</span>
+                <span className="mt-0.5 block text-[12px] leading-snug text-muted">{choice.hint}</span>
               </span>
+              {active && <Check className="h-4 w-4 shrink-0 text-navy" aria-hidden="true"/>}
             </button>
           );
         })}
       </div>
 
-      <div>{mode === "own" ? own : published}</div>
+      <div hidden={mode !== "own"}>{own}</div>
+      <div hidden={mode !== "published"}>{published}</div>
     </div>
   );
 }

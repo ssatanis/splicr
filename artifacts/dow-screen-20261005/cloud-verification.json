@@ -1,0 +1,2801 @@
+{
+  "verified_at": "2026-10-05T18:08:32.663Z",
+  "experiment_id": "01a10d34-432f-720a-8e5d-3cd9dc266907",
+  "screens": [
+    {
+      "id": "01a10d34-67dc-755d-827a-f83c50cffa2c",
+      "name": "Essentiality ICSBCS002",
+      "cell_line": "ICSBCS002",
+      "status": "complete",
+      "qc": "fail",
+      "current_run_id": "01a10d34-67e8-7c05-826f-cb8295584c83",
+      "settings": {
+        "source": {
+          "sheet": "ICSBCS002 gRNA raw count",
+          "fileId": "01a10d34-47b2-774f-9d33-d4b458c96059"
+        },
+        "model_type": "organoid",
+        "hit_callers": [
+          "mageck_rra",
+          "mageck_mle"
+        ],
+        "drugz_paired": false,
+        "cn_correction": false,
+        "experiment_id": "01a10d34-432f-720a-8e5d-3cd9dc266907",
+        "fdr_threshold": 0.05,
+        "guide_aliases": {
+          "PRL9_e3.1": "RPL9_e3.1",
+          "PRL9_e3.2": "RPL9_e3.2",
+          "PRL9_e4.1": "RPL9_e4.1",
+          "PRL9_e4.2": "RPL9_e4.2"
+        },
+        "normalization": "median"
+      },
+      "started_at": "2026-10-05T17:55:05.807Z",
+      "finished_at": "2026-10-05T17:58:20.403Z",
+      "genes": "489",
+      "splicr_significant": "29",
+      "mageck_depletion_significant": "33",
+      "mageck_enrichment_significant": "0",
+      "drugz_significant": "0",
+      "mle_significant": "38",
+      "guide_effects": "3044",
+      "disagreement": "489",
+      "completed_stages": "9"
+    },
+    {
+      "id": "01a10d34-67f1-7c7a-a952-d37fac497830",
+      "name": "Gefitinib ICSBCS002",
+      "cell_line": "ICSBCS002",
+      "status": "complete",
+      "qc": "fail",
+      "current_run_id": "01a10d34-67f3-77ea-8134-fbcb8b744ee1",
+      "settings": {
+        "source": {
+          "sheet": "ICSBCS002 gRNA raw count",
+          "fileId": "01a10d34-47b2-774f-9d33-d4b458c96059"
+        },
+        "model_type": "organoid",
+        "hit_callers": [
+          "mageck_rra",
+          "mageck_mle",
+          "drugz"
+        ],
+        "cn_correction": false,
+        "experiment_id": "01a10d34-432f-720a-8e5d-3cd9dc266907",
+        "fdr_threshold": 0.05,
+        "guide_aliases": {
+          "PRL9_e3.1": "RPL9_e3.1",
+          "PRL9_e3.2": "RPL9_e3.2",
+          "PRL9_e4.1": "RPL9_e4.1",
+          "PRL9_e4.2": "RPL9_e4.2"
+        },
+        "normalization": "median"
+      },
+      "started_at": "2026-10-05T17:55:06.195Z",
+      "finished_at": "2026-10-05T17:58:27.550Z",
+      "genes": "489",
+      "splicr_significant": "0",
+      "mageck_depletion_significant": "0",
+      "mageck_enrichment_significant": "0",
+      "drugz_significant": "3",
+      "mle_significant": "8",
+      "guide_effects": "3044",
+      "disagreement": "489",
+      "completed_stages": "9"
+    },
+    {
+      "id": "01a10d34-67f8-7487-abde-8fbb613f8599",
+      "name": "Trametinib ICSBCS002",
+      "cell_line": "ICSBCS002",
+      "status": "complete",
+      "qc": "fail",
+      "current_run_id": "01a10d34-67fa-7619-af71-fe7998666be5",
+      "settings": {
+        "source": {
+          "sheet": "ICSBCS002 gRNA raw count",
+          "fileId": "01a10d34-47b2-774f-9d33-d4b458c96059"
+        },
+        "model_type": "organoid",
+        "hit_callers": [
+          "mageck_rra",
+          "mageck_mle",
+          "drugz"
+        ],
+        "cn_correction": false,
+        "experiment_id": "01a10d34-432f-720a-8e5d-3cd9dc266907",
+        "fdr_threshold": 0.05,
+        "guide_aliases": {
+          "PRL9_e3.1": "RPL9_e3.1",
+          "PRL9_e3.2": "RPL9_e3.2",
+          "PRL9_e4.1": "RPL9_e4.1",
+          "PRL9_e4.2": "RPL9_e4.2"
+        },
+        "normalization": "median"
+      },
+      "started_at": "2026-10-05T17:55:06.280Z",
+      "finished_at": "2026-10-05T17:58:09.243Z",
+      "genes": "489",
+      "splicr_significant": "0",
+      "mageck_depletion_significant": "0",
+      "mageck_enrichment_significant": "0",
+      "drugz_significant": "0",
+      "mle_significant": "5",
+      "guide_effects": "3044",
+      "disagreement": "489",
+      "completed_stages": "9"
+    },
+    {
+      "id": "01a10d34-67fe-7777-a617-7781206b392a",
+      "name": "Essentiality ICSBCS007",
+      "cell_line": "ICSBCS007",
+      "status": "complete",
+      "qc": "warn",
+      "current_run_id": "01a10d34-6800-7e71-95a3-0152d782da82",
+      "settings": {
+        "source": {
+          "sheet": "ICSBCS007 gRNA raw count",
+          "fileId": "01a10d34-47b2-774f-9d33-d4b458c96059"
+        },
+        "model_type": "organoid",
+        "hit_callers": [
+          "mageck_rra",
+          "mageck_mle"
+        ],
+        "drugz_paired": false,
+        "cn_correction": false,
+        "experiment_id": "01a10d34-432f-720a-8e5d-3cd9dc266907",
+        "fdr_threshold": 0.05,
+        "guide_aliases": {
+          "PRL9_e3.1": "RPL9_e3.1",
+          "PRL9_e3.2": "RPL9_e3.2",
+          "PRL9_e4.1": "RPL9_e4.1",
+          "PRL9_e4.2": "RPL9_e4.2"
+        },
+        "normalization": "median"
+      },
+      "started_at": "2026-10-05T17:55:06.266Z",
+      "finished_at": "2026-10-05T17:57:55.040Z",
+      "genes": "489",
+      "splicr_significant": "38",
+      "mageck_depletion_significant": "37",
+      "mageck_enrichment_significant": "3",
+      "drugz_significant": "0",
+      "mle_significant": "34",
+      "guide_effects": "3044",
+      "disagreement": "489",
+      "completed_stages": "9"
+    },
+    {
+      "id": "01a10d34-6804-7f2a-87cb-a68ffb5e3002",
+      "name": "Gefitinib ICSBCS007",
+      "cell_line": "ICSBCS007",
+      "status": "complete",
+      "qc": "warn",
+      "current_run_id": "01a10d34-6806-734c-a3f4-3f39cf0afb15",
+      "settings": {
+        "source": {
+          "sheet": "ICSBCS007 gRNA raw count",
+          "fileId": "01a10d34-47b2-774f-9d33-d4b458c96059"
+        },
+        "model_type": "organoid",
+        "hit_callers": [
+          "mageck_rra",
+          "mageck_mle",
+          "drugz"
+        ],
+        "cn_correction": false,
+        "experiment_id": "01a10d34-432f-720a-8e5d-3cd9dc266907",
+        "fdr_threshold": 0.05,
+        "guide_aliases": {
+          "PRL9_e3.1": "RPL9_e3.1",
+          "PRL9_e3.2": "RPL9_e3.2",
+          "PRL9_e4.1": "RPL9_e4.1",
+          "PRL9_e4.2": "RPL9_e4.2"
+        },
+        "normalization": "median"
+      },
+      "started_at": "2026-10-05T17:55:09.638Z",
+      "finished_at": "2026-10-05T17:59:12.392Z",
+      "genes": "489",
+      "splicr_significant": "3",
+      "mageck_depletion_significant": "0",
+      "mageck_enrichment_significant": "4",
+      "drugz_significant": "5",
+      "mle_significant": "7",
+      "guide_effects": "3044",
+      "disagreement": "489",
+      "completed_stages": "9"
+    },
+    {
+      "id": "01a10d34-6809-753d-85b3-be6b018a8e81",
+      "name": "Trametinib ICSBCS007",
+      "cell_line": "ICSBCS007",
+      "status": "complete",
+      "qc": "warn",
+      "current_run_id": "01a10d34-680d-74c3-bf06-501045a6d9d8",
+      "settings": {
+        "source": {
+          "sheet": "ICSBCS007 gRNA raw count",
+          "fileId": "01a10d34-47b2-774f-9d33-d4b458c96059"
+        },
+        "model_type": "organoid",
+        "hit_callers": [
+          "mageck_rra",
+          "mageck_mle",
+          "drugz"
+        ],
+        "cn_correction": false,
+        "experiment_id": "01a10d34-432f-720a-8e5d-3cd9dc266907",
+        "fdr_threshold": 0.05,
+        "guide_aliases": {
+          "PRL9_e3.1": "RPL9_e3.1",
+          "PRL9_e3.2": "RPL9_e3.2",
+          "PRL9_e4.1": "RPL9_e4.1",
+          "PRL9_e4.2": "RPL9_e4.2"
+        },
+        "normalization": "median"
+      },
+      "started_at": "2026-10-05T17:55:14.601Z",
+      "finished_at": "2026-10-05T17:59:38.337Z",
+      "genes": "489",
+      "splicr_significant": "5",
+      "mageck_depletion_significant": "2",
+      "mageck_enrichment_significant": "3",
+      "drugz_significant": "6",
+      "mle_significant": "9",
+      "guide_effects": "3044",
+      "disagreement": "489",
+      "completed_stages": "9"
+    }
+  ],
+  "reference_genes": [
+    {
+      "name": "Essentiality ICSBCS002",
+      "gene_symbol": "AKT2",
+      "lfc": 0.073938,
+      "fdr": 1,
+      "depleted_fdr": 0.999767,
+      "enriched_fdr": 0.999995,
+      "drugz_fdr": null,
+      "norm_z": null,
+      "mle_beta": -0.20156,
+      "mle_fdr": 0.837
+    },
+    {
+      "name": "Essentiality ICSBCS002",
+      "gene_symbol": "ERBB2",
+      "lfc": 1.2833,
+      "fdr": 0.673914,
+      "depleted_fdr": 0.999767,
+      "enriched_fdr": 0.336957,
+      "drugz_fdr": null,
+      "norm_z": null,
+      "mle_beta": 1.0068,
+      "mle_fdr": 0.28387
+    },
+    {
+      "name": "Essentiality ICSBCS002",
+      "gene_symbol": "FGFR1",
+      "lfc": 0.69398,
+      "fdr": 1,
+      "depleted_fdr": 0.999767,
+      "enriched_fdr": 0.956505,
+      "drugz_fdr": null,
+      "norm_z": null,
+      "mle_beta": 0.45751,
+      "mle_fdr": 0.93798
+    },
+    {
+      "name": "Essentiality ICSBCS002",
+      "gene_symbol": "LIMK2",
+      "lfc": -0.11378,
+      "fdr": 1,
+      "depleted_fdr": 0.999767,
+      "enriched_fdr": 0.97458,
+      "drugz_fdr": null,
+      "norm_z": null,
+      "mle_beta": 0.36955,
+      "mle_fdr": 0.9434
+    },
+    {
+      "name": "Essentiality ICSBCS002",
+      "gene_symbol": "PCNA",
+      "lfc": -5.2513,
+      "fdr": 0.046032,
+      "depleted_fdr": 0.023016,
+      "enriched_fdr": 0.999995,
+      "drugz_fdr": null,
+      "norm_z": null,
+      "mle_beta": -1.1935,
+      "mle_fdr": 0.17358
+    },
+    {
+      "name": "Essentiality ICSBCS002",
+      "gene_symbol": "POLR2A",
+      "lfc": -2.9215,
+      "fdr": 0.023666,
+      "depleted_fdr": 0.011833,
+      "enriched_fdr": 0.999995,
+      "drugz_fdr": null,
+      "norm_z": null,
+      "mle_beta": -1.3275,
+      "mle_fdr": 0.008
+    },
+    {
+      "name": "Essentiality ICSBCS002",
+      "gene_symbol": "PRKCG",
+      "lfc": 0.17915,
+      "fdr": 1,
+      "depleted_fdr": 0.999767,
+      "enriched_fdr": 0.999995,
+      "drugz_fdr": null,
+      "norm_z": null,
+      "mle_beta": 0.30428,
+      "mle_fdr": 0.97327
+    },
+    {
+      "name": "Essentiality ICSBCS002",
+      "gene_symbol": "RAF1",
+      "lfc": 0.87801,
+      "fdr": 1,
+      "depleted_fdr": 0.999767,
+      "enriched_fdr": 0.664813,
+      "drugz_fdr": null,
+      "norm_z": null,
+      "mle_beta": 0.60721,
+      "mle_fdr": 0.80538
+    },
+    {
+      "name": "Essentiality ICSBCS002",
+      "gene_symbol": "RPA3",
+      "lfc": -5.888,
+      "fdr": 0.009362,
+      "depleted_fdr": 0.004681,
+      "enriched_fdr": 0.999995,
+      "drugz_fdr": null,
+      "norm_z": null,
+      "mle_beta": -2.6594,
+      "mle_fdr": 0.008
+    },
+    {
+      "name": "Essentiality ICSBCS007",
+      "gene_symbol": "AKT2",
+      "lfc": 0.021511,
+      "fdr": 1,
+      "depleted_fdr": 0.999995,
+      "enriched_fdr": 0.999995,
+      "drugz_fdr": null,
+      "norm_z": null,
+      "mle_beta": 0.066663,
+      "mle_fdr": 0.91278
+    },
+    {
+      "name": "Essentiality ICSBCS007",
+      "gene_symbol": "ERBB2",
+      "lfc": -0.73482,
+      "fdr": 0.122132,
+      "depleted_fdr": 0.061066,
+      "enriched_fdr": 0.797007,
+      "drugz_fdr": null,
+      "norm_z": null,
+      "mle_beta": -0.33421,
+      "mle_fdr": 0.58523
+    },
+    {
+      "name": "Essentiality ICSBCS007",
+      "gene_symbol": "FGFR1",
+      "lfc": -0.023662,
+      "fdr": 1,
+      "depleted_fdr": 0.999995,
+      "enriched_fdr": 0.975465,
+      "drugz_fdr": null,
+      "norm_z": null,
+      "mle_beta": -0.075942,
+      "mle_fdr": 0.91278
+    },
+    {
+      "name": "Essentiality ICSBCS007",
+      "gene_symbol": "LIMK2",
+      "lfc": 0.40742,
+      "fdr": 1,
+      "depleted_fdr": 0.999995,
+      "enriched_fdr": 0.797007,
+      "drugz_fdr": null,
+      "norm_z": null,
+      "mle_beta": 0.28285,
+      "mle_fdr": 0.39059
+    },
+    {
+      "name": "Essentiality ICSBCS007",
+      "gene_symbol": "PCNA",
+      "lfc": -2.2884,
+      "fdr": 0.01439,
+      "depleted_fdr": 0.007195,
+      "enriched_fdr": 0.999995,
+      "drugz_fdr": null,
+      "norm_z": null,
+      "mle_beta": -1.6177,
+      "mle_fdr": 0
+    },
+    {
+      "name": "Essentiality ICSBCS007",
+      "gene_symbol": "POLR2A",
+      "lfc": -2.3575,
+      "fdr": 0.00257,
+      "depleted_fdr": 0.001285,
+      "enriched_fdr": 0.999995,
+      "drugz_fdr": null,
+      "norm_z": null,
+      "mle_beta": -1.4547,
+      "mle_fdr": 0.0068966
+    },
+    {
+      "name": "Essentiality ICSBCS007",
+      "gene_symbol": "PRKCG",
+      "lfc": -0.022815,
+      "fdr": 1,
+      "depleted_fdr": 0.999995,
+      "enriched_fdr": 0.999995,
+      "drugz_fdr": null,
+      "norm_z": null,
+      "mle_beta": 0.034173,
+      "mle_fdr": 0.9493
+    },
+    {
+      "name": "Essentiality ICSBCS007",
+      "gene_symbol": "RAF1",
+      "lfc": 0.27017,
+      "fdr": 1,
+      "depleted_fdr": 0.999995,
+      "enriched_fdr": 0.797007,
+      "drugz_fdr": null,
+      "norm_z": null,
+      "mle_beta": 0.1829,
+      "mle_fdr": 0.70378
+    },
+    {
+      "name": "Essentiality ICSBCS007",
+      "gene_symbol": "RPA3",
+      "lfc": -2.4026,
+      "fdr": 0.018132,
+      "depleted_fdr": 0.009066,
+      "enriched_fdr": 0.999995,
+      "drugz_fdr": null,
+      "norm_z": null,
+      "mle_beta": -1.1894,
+      "mle_fdr": 0.064865
+    },
+    {
+      "name": "Gefitinib ICSBCS002",
+      "gene_symbol": "AKT2",
+      "lfc": -1.6895,
+      "fdr": 0.373786,
+      "depleted_fdr": 0.186893,
+      "enriched_fdr": 0.999946,
+      "drugz_fdr": 0.325,
+      "norm_z": -2.79,
+      "mle_beta": -1.1915,
+      "mle_fdr": 0.08
+    },
+    {
+      "name": "Gefitinib ICSBCS002",
+      "gene_symbol": "ERBB2",
+      "lfc": -1.6759,
+      "fdr": 0.467638,
+      "depleted_fdr": 0.233819,
+      "enriched_fdr": 0.999946,
+      "drugz_fdr": 0.0128,
+      "norm_z": -4.05,
+      "mle_beta": -1.2595,
+      "mle_fdr": 0.025
+    },
+    {
+      "name": "Gefitinib ICSBCS002",
+      "gene_symbol": "FGFR1",
+      "lfc": -1.2072,
+      "fdr": 1,
+      "depleted_fdr": 0.802554,
+      "enriched_fdr": 0.994,
+      "drugz_fdr": 0.268,
+      "norm_z": -2.94,
+      "mle_beta": -0.94466,
+      "mle_fdr": 0.18333
+    },
+    {
+      "name": "Gefitinib ICSBCS002",
+      "gene_symbol": "LIMK2",
+      "lfc": -0.18975,
+      "fdr": 1,
+      "depleted_fdr": 0.970866,
+      "enriched_fdr": 0.995876,
+      "drugz_fdr": 0.959,
+      "norm_z": -0.71,
+      "mle_beta": -0.23025,
+      "mle_fdr": 0.97012
+    },
+    {
+      "name": "Gefitinib ICSBCS002",
+      "gene_symbol": "PCNA",
+      "lfc": 0.13496,
+      "fdr": 0.467638,
+      "depleted_fdr": 0.233819,
+      "enriched_fdr": 0.979849,
+      "drugz_fdr": 0.325,
+      "norm_z": -2.69,
+      "mle_beta": -0.87381,
+      "mle_fdr": 0.64167
+    },
+    {
+      "name": "Gefitinib ICSBCS002",
+      "gene_symbol": "POLR2A",
+      "lfc": -1.5659,
+      "fdr": 0.637136,
+      "depleted_fdr": 0.318568,
+      "enriched_fdr": 0.995876,
+      "drugz_fdr": 0.333,
+      "norm_z": -2.55,
+      "mle_beta": -0.94362,
+      "mle_fdr": 0.090909
+    },
+    {
+      "name": "Gefitinib ICSBCS002",
+      "gene_symbol": "PRKCG",
+      "lfc": -0.41418,
+      "fdr": 1,
+      "depleted_fdr": 0.970866,
+      "enriched_fdr": 0.979849,
+      "drugz_fdr": 0.959,
+      "norm_z": -0.71,
+      "mle_beta": -0.092574,
+      "mle_fdr": 0.99104
+    },
+    {
+      "name": "Gefitinib ICSBCS002",
+      "gene_symbol": "RAF1",
+      "lfc": -0.69576,
+      "fdr": 1,
+      "depleted_fdr": 0.970866,
+      "enriched_fdr": 0.995876,
+      "drugz_fdr": 0.959,
+      "norm_z": -1.44,
+      "mle_beta": -0.46827,
+      "mle_fdr": 0.84835
+    },
+    {
+      "name": "Gefitinib ICSBCS002",
+      "gene_symbol": "RPA3",
+      "lfc": -0.76586,
+      "fdr": 1,
+      "depleted_fdr": 0.856073,
+      "enriched_fdr": 0.918356,
+      "drugz_fdr": 0.954,
+      "norm_z": 0.13,
+      "mle_beta": 0.15583,
+      "mle_fdr": 0.98969
+    },
+    {
+      "name": "Gefitinib ICSBCS007",
+      "gene_symbol": "AKT2",
+      "lfc": -0.56881,
+      "fdr": 1,
+      "depleted_fdr": 0.714663,
+      "enriched_fdr": 0.999391,
+      "drugz_fdr": 0.922,
+      "norm_z": -2.21,
+      "mle_beta": -0.30323,
+      "mle_fdr": 0.35455
+    },
+    {
+      "name": "Gefitinib ICSBCS007",
+      "gene_symbol": "ERBB2",
+      "lfc": -0.33933,
+      "fdr": 1,
+      "depleted_fdr": 0.977133,
+      "enriched_fdr": 0.999391,
+      "drugz_fdr": 0.922,
+      "norm_z": -1.26,
+      "mle_beta": -0.2372,
+      "mle_fdr": 0.56842
+    },
+    {
+      "name": "Gefitinib ICSBCS007",
+      "gene_symbol": "FGFR1",
+      "lfc": -0.59637,
+      "fdr": 1,
+      "depleted_fdr": 0.714663,
+      "enriched_fdr": 0.999391,
+      "drugz_fdr": 0.922,
+      "norm_z": -0.85,
+      "mle_beta": -0.14624,
+      "mle_fdr": 0.80973
+    },
+    {
+      "name": "Gefitinib ICSBCS007",
+      "gene_symbol": "LIMK2",
+      "lfc": -0.63713,
+      "fdr": 0.820388,
+      "depleted_fdr": 0.410194,
+      "enriched_fdr": 0.999391,
+      "drugz_fdr": 0.226,
+      "norm_z": -3.11,
+      "mle_beta": -0.41652,
+      "mle_fdr": 0.08
+    },
+    {
+      "name": "Gefitinib ICSBCS007",
+      "gene_symbol": "PCNA",
+      "lfc": 0.49764,
+      "fdr": 0.820388,
+      "depleted_fdr": 0.410194,
+      "enriched_fdr": 0.972912,
+      "drugz_fdr": 0.95,
+      "norm_z": 0.55,
+      "mle_beta": 0.21119,
+      "mle_fdr": 0.79619
+    },
+    {
+      "name": "Gefitinib ICSBCS007",
+      "gene_symbol": "POLR2A",
+      "lfc": 0.27938,
+      "fdr": 1,
+      "depleted_fdr": 0.977133,
+      "enriched_fdr": 0.972912,
+      "drugz_fdr": 0.0129,
+      "norm_z": 3.65,
+      "mle_beta": 0.27893,
+      "mle_fdr": 0.34
+    },
+    {
+      "name": "Gefitinib ICSBCS007",
+      "gene_symbol": "PRKCG",
+      "lfc": 0.2756,
+      "fdr": 1,
+      "depleted_fdr": 0.999995,
+      "enriched_fdr": 0.972912,
+      "drugz_fdr": 0.95,
+      "norm_z": 0.63,
+      "mle_beta": 0.12949,
+      "mle_fdr": 0.80973
+    },
+    {
+      "name": "Gefitinib ICSBCS007",
+      "gene_symbol": "RAF1",
+      "lfc": -0.047228,
+      "fdr": 1,
+      "depleted_fdr": 0.954314,
+      "enriched_fdr": 0.999391,
+      "drugz_fdr": 0.922,
+      "norm_z": -0.2,
+      "mle_beta": -0.033028,
+      "mle_fdr": 0.9726
+    },
+    {
+      "name": "Gefitinib ICSBCS007",
+      "gene_symbol": "RPA3",
+      "lfc": -0.86802,
+      "fdr": 0.97047,
+      "depleted_fdr": 0.485235,
+      "enriched_fdr": 0.999391,
+      "drugz_fdr": 0.19,
+      "norm_z": -3.36,
+      "mle_beta": -0.81497,
+      "mle_fdr": 0
+    },
+    {
+      "name": "Trametinib ICSBCS002",
+      "gene_symbol": "AKT2",
+      "lfc": -0.29449,
+      "fdr": 1,
+      "depleted_fdr": 0.991746,
+      "enriched_fdr": 0.99652,
+      "drugz_fdr": 0.962,
+      "norm_z": -0.88,
+      "mle_beta": -0.21089,
+      "mle_fdr": 0.88125
+    },
+    {
+      "name": "Trametinib ICSBCS002",
+      "gene_symbol": "ERBB2",
+      "lfc": -0.20081,
+      "fdr": 1,
+      "depleted_fdr": 0.991746,
+      "enriched_fdr": 0.992891,
+      "drugz_fdr": 0.944,
+      "norm_z": 0.05,
+      "mle_beta": -0.016688,
+      "mle_fdr": 0.992
+    },
+    {
+      "name": "Trametinib ICSBCS002",
+      "gene_symbol": "FGFR1",
+      "lfc": 0.49077,
+      "fdr": 1,
+      "depleted_fdr": 0.991746,
+      "enriched_fdr": 0.92564,
+      "drugz_fdr": 0.916,
+      "norm_z": 1.56,
+      "mle_beta": 0.35591,
+      "mle_fdr": 0.7443
+    },
+    {
+      "name": "Trametinib ICSBCS002",
+      "gene_symbol": "LIMK2",
+      "lfc": -0.22717,
+      "fdr": 1,
+      "depleted_fdr": 0.991746,
+      "enriched_fdr": 0.992891,
+      "drugz_fdr": 0.975,
+      "norm_z": -0.64,
+      "mle_beta": -0.26996,
+      "mle_fdr": 0.81373
+    },
+    {
+      "name": "Trametinib ICSBCS002",
+      "gene_symbol": "PCNA",
+      "lfc": -1.1815,
+      "fdr": 1,
+      "depleted_fdr": 0.900577,
+      "enriched_fdr": 0.99652,
+      "drugz_fdr": 0.799,
+      "norm_z": -1.88,
+      "mle_beta": -0.7252,
+      "mle_fdr": 0.27692
+    },
+    {
+      "name": "Trametinib ICSBCS002",
+      "gene_symbol": "POLR2A",
+      "lfc": -0.7249,
+      "fdr": 1,
+      "depleted_fdr": 0.900577,
+      "enriched_fdr": 0.992891,
+      "drugz_fdr": 0.799,
+      "norm_z": -1.96,
+      "mle_beta": -0.69737,
+      "mle_fdr": 0.04
+    },
+    {
+      "name": "Trametinib ICSBCS002",
+      "gene_symbol": "PRKCG",
+      "lfc": -1.107,
+      "fdr": 0.39459,
+      "depleted_fdr": 0.197295,
+      "enriched_fdr": 0.999272,
+      "drugz_fdr": 0.211,
+      "norm_z": -3.3,
+      "mle_beta": -0.83022,
+      "mle_fdr": 0.04
+    },
+    {
+      "name": "Trametinib ICSBCS002",
+      "gene_symbol": "RAF1",
+      "lfc": -0.37647,
+      "fdr": 1,
+      "depleted_fdr": 0.991746,
+      "enriched_fdr": 0.997015,
+      "drugz_fdr": 0.799,
+      "norm_z": -1.75,
+      "mle_beta": -0.31107,
+      "mle_fdr": 0.7443
+    },
+    {
+      "name": "Trametinib ICSBCS002",
+      "gene_symbol": "RPA3",
+      "lfc": -1.5543,
+      "fdr": 1,
+      "depleted_fdr": 0.584345,
+      "enriched_fdr": 0.878876,
+      "drugz_fdr": 0.975,
+      "norm_z": -0.49,
+      "mle_beta": -0.42859,
+      "mle_fdr": 0.7443
+    },
+    {
+      "name": "Trametinib ICSBCS007",
+      "gene_symbol": "AKT2",
+      "lfc": -0.075142,
+      "fdr": 1,
+      "depleted_fdr": 0.982376,
+      "enriched_fdr": 0.999995,
+      "drugz_fdr": 0.933,
+      "norm_z": -1.03,
+      "mle_beta": -0.14831,
+      "mle_fdr": 0.87077
+    },
+    {
+      "name": "Trametinib ICSBCS007",
+      "gene_symbol": "ERBB2",
+      "lfc": 0.046115,
+      "fdr": 1,
+      "depleted_fdr": 0.982376,
+      "enriched_fdr": 0.98587,
+      "drugz_fdr": 0.933,
+      "norm_z": -1.36,
+      "mle_beta": -0.20631,
+      "mle_fdr": 0.65833
+    },
+    {
+      "name": "Trametinib ICSBCS007",
+      "gene_symbol": "FGFR1",
+      "lfc": -0.61016,
+      "fdr": 1,
+      "depleted_fdr": 0.895752,
+      "enriched_fdr": 0.990029,
+      "drugz_fdr": 0.933,
+      "norm_z": -1.77,
+      "mle_beta": -0.29903,
+      "mle_fdr": 0.50476
+    },
+    {
+      "name": "Trametinib ICSBCS007",
+      "gene_symbol": "LIMK2",
+      "lfc": -0.46611,
+      "fdr": 1,
+      "depleted_fdr": 0.982376,
+      "enriched_fdr": 0.98587,
+      "drugz_fdr": 0.933,
+      "norm_z": -1.69,
+      "mle_beta": -0.21537,
+      "mle_fdr": 0.64615
+    },
+    {
+      "name": "Trametinib ICSBCS007",
+      "gene_symbol": "PCNA",
+      "lfc": -0.238,
+      "fdr": 1,
+      "depleted_fdr": 0.982376,
+      "enriched_fdr": 0.98587,
+      "drugz_fdr": 0.948,
+      "norm_z": 0.45,
+      "mle_beta": 0.046675,
+      "mle_fdr": 0.99673
+    },
+    {
+      "name": "Trametinib ICSBCS007",
+      "gene_symbol": "POLR2A",
+      "lfc": 0.69867,
+      "fdr": 0.597694,
+      "depleted_fdr": 0.982376,
+      "enriched_fdr": 0.298847,
+      "drugz_fdr": 0.0568,
+      "norm_z": 3.2,
+      "mle_beta": 0.56519,
+      "mle_fdr": 0.022222
+    },
+    {
+      "name": "Trametinib ICSBCS007",
+      "gene_symbol": "PRKCG",
+      "lfc": 0.2678,
+      "fdr": 1,
+      "depleted_fdr": 0.982376,
+      "enriched_fdr": 0.976997,
+      "drugz_fdr": 0.948,
+      "norm_z": 0.69,
+      "mle_beta": 0.13314,
+      "mle_fdr": 0.89231
+    },
+    {
+      "name": "Trametinib ICSBCS007",
+      "gene_symbol": "RAF1",
+      "lfc": -0.6141,
+      "fdr": 0.014564,
+      "depleted_fdr": 0.007282,
+      "enriched_fdr": 0.999995,
+      "drugz_fdr": 0.00301,
+      "norm_z": -4.37,
+      "mle_beta": -0.51244,
+      "mle_fdr": 0
+    },
+    {
+      "name": "Trametinib ICSBCS007",
+      "gene_symbol": "RPA3",
+      "lfc": 0.17687,
+      "fdr": 0.426376,
+      "depleted_fdr": 0.213188,
+      "enriched_fdr": 0.98587,
+      "drugz_fdr": 0.933,
+      "norm_z": -1.16,
+      "mle_beta": -0.20262,
+      "mle_fdr": 0.84545
+    }
+  ],
+  "stages": [
+    {
+      "name": "Essentiality ICSBCS002",
+      "stage": "ingest",
+      "status": "done",
+      "metrics": {
+        "notes": [],
+        "roles": {
+          "D4_rep1": "reference",
+          "D4_rep2": "reference",
+          "D39_DMSO_rep1": "treatment",
+          "D39_DMSO_rep2": "treatment"
+        },
+        "control": [
+          "D4_rep1",
+          "D4_rep2"
+        ],
+        "treatment": [
+          "D39_DMSO_rep1",
+          "D39_DMSO_rep2"
+        ]
+      }
+    },
+    {
+      "name": "Essentiality ICSBCS002",
+      "stage": "detect",
+      "status": "done",
+      "metrics": {
+        "library": "custom-01a10d34-432f-720a-8e5d-3cd9dc266907",
+        "n_guides": 3051
+      }
+    },
+    {
+      "name": "Essentiality ICSBCS002",
+      "stage": "count",
+      "status": "done",
+      "metrics": {
+        "n_guides": 3044,
+        "n_samples": 4
+      }
+    },
+    {
+      "name": "Essentiality ICSBCS002",
+      "stage": "qc",
+      "status": "done",
+      "metrics": {
+        "nnmd": null,
+        "auroc": 1,
+        "notes": [
+          "NNMD could not be computed: only 16 essential and 5 nonessential reference genes were measured in this screen, too few to compute NNMD."
+        ],
+        "samples": [
+          {
+            "gini": 0.046,
+            "role": "reference",
+            "label": "D4_rep1",
+            "notes": [
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+            ],
+            "verdict": "pass",
+            "count_sum": 3473390,
+            "skew_ratio": 3.94,
+            "total_reads": null,
+            "zero_guides": 0,
+            "mapped_reads": 3473390,
+            "mapping_rate": null,
+            "zero_fraction": 0,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 1141.1,
+            "represented_fraction": 1,
+            "mapping_rate_available": false
+          },
+          {
+            "gini": 0.0484,
+            "role": "reference",
+            "label": "D4_rep2",
+            "notes": [
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+            ],
+            "verdict": "pass",
+            "count_sum": 3556078,
+            "skew_ratio": 4.23,
+            "total_reads": null,
+            "zero_guides": 0,
+            "mapped_reads": 3556078,
+            "mapping_rate": null,
+            "zero_fraction": 0,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 1168.2,
+            "represented_fraction": 1,
+            "mapping_rate_available": false
+          },
+          {
+            "gini": 0.1971,
+            "role": "treatment",
+            "label": "D39_DMSO_rep1",
+            "notes": [
+              "8.4% of guides have no reads. Above 5% this exceeds the guide-loss threshold. Review baseline coverage, negative controls and replicate agreement to distinguish biological depletion from technical dropout. Missing guide measurements cannot be recovered by downstream correction.",
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+              "Skew ratio 183.1 above 10 (90th/10th percentile guide count)."
+            ],
+            "verdict": "fail",
+            "count_sum": 3482564,
+            "skew_ratio": 183.12,
+            "total_reads": null,
+            "zero_guides": 255,
+            "mapped_reads": 3482564,
+            "mapping_rate": null,
+            "zero_fraction": 0.08377,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 1144.1,
+            "represented_fraction": 1,
+            "mapping_rate_available": false
+          },
+          {
+            "gini": 0.1791,
+            "role": "treatment",
+            "label": "D39_DMSO_rep2",
+            "notes": [
+              "6.6% of guides have no reads. Above 5% this exceeds the guide-loss threshold. Review baseline coverage, negative controls and replicate agreement to distinguish biological depletion from technical dropout. Missing guide measurements cannot be recovered by downstream correction.",
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+              "Skew ratio 62.6 above 10 (90th/10th percentile guide count)."
+            ],
+            "verdict": "fail",
+            "count_sum": 2379699,
+            "skew_ratio": 62.56,
+            "total_reads": null,
+            "zero_guides": 201,
+            "mapped_reads": 2379699,
+            "mapping_rate": null,
+            "zero_fraction": 0.06603,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 781.8,
+            "represented_fraction": 1,
+            "mapping_rate_available": false
+          }
+        ],
+        "verdict": "fail",
+        "nnmd_by_arm": {
+          "D39_DMSO_rep1": null,
+          "D39_DMSO_rep2": null
+        },
+        "nnmd_reason": "only 16 essential and 5 nonessential reference genes were measured in this screen, too few to compute NNMD",
+        "bottlenecked": [],
+        "suspect_arms": [],
+        "nnmd_contrast": "D39_DMSO_rep1+D39_DMSO_rep2 vs T0",
+        "n_essential_found": 16,
+        "n_nonessential_found": 5,
+        "replicate_correlations": [
+          {
+            "a": "D4_rep1",
+            "b": "D4_rep2",
+            "r": 0.8388,
+            "role": "reference",
+            "r_lfc": null
+          },
+          {
+            "a": "D39_DMSO_rep1",
+            "b": "D39_DMSO_rep2",
+            "r": 0.4393,
+            "role": "treatment",
+            "r_lfc": 0.353
+          }
+        ]
+      }
+    },
+    {
+      "name": "Essentiality ICSBCS002",
+      "stage": "hits",
+      "status": "done",
+      "metrics": {
+        "methods": [
+          "mageck_rra",
+          "mageck_mle"
+        ],
+        "warnings": [],
+        "fdr_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
+        "fdr_threshold": 0.05,
+        "n_significant": 29,
+        "normalization": "median",
+        "essentiality_contrast": true
+      }
+    },
+    {
+      "name": "Essentiality ICSBCS002",
+      "stage": "artifacts",
+      "status": "done",
+      "metrics": {
+        "all_genes": {
+          "single_guide": 108,
+          "frequent_hitter": 44
+        },
+        "on_called_hits": {
+          "frequent_hitter": 23
+        }
+      }
+    },
+    {
+      "name": "Essentiality ICSBCS002",
+      "stage": "atlas",
+      "status": "done",
+      "metrics": {
+        "reason": null,
+        "release": "2.0.18",
+        "available": true,
+        "n_screens": 1952,
+        "n_comparable": 0,
+        "leakage_policy": "publication",
+        "n_frequent_hitters": 42,
+        "min_screens_to_judge": 10,
+        "n_background_screens": 1167,
+        "n_genes_not_in_atlas": 0,
+        "n_genes_with_context": 489,
+        "comparable_screen_ids": [],
+        "n_genes_resolved_by_alias": 8,
+        "n_screens_excluded_for_leakage": 378,
+        "n_genes_too_few_screens_to_judge": 2
+      }
+    },
+    {
+      "name": "Essentiality ICSBCS002",
+      "stage": "score",
+      "status": "skipped",
+      "metrics": {
+        "cohort": {
+          "fitted": false,
+          "source": "no cohort file at /data/validation/outcomes.json; the network is unfitted and every estimate is refused with a reason",
+          "n_heads": 0,
+          "problem": null,
+          "n_outcomes": 0,
+          "cohort_path": "/data/validation/outcomes.json",
+          "cohort_sha256": null
+        },
+        "context": {
+          "modality": "knockout",
+          "treatment": null,
+          "model_type": "organoid",
+          "assay_class": "ko_fitness",
+          "phenotype_family": "fitness"
+        },
+        "n_called": 29,
+        "n_declined": 29,
+        "by_question": {
+          "reproduces": {
+            "reasons": {
+              "head_not_fitted": 29
+            },
+            "declined": 29,
+            "estimated": 0
+          },
+          "cross_model": {
+            "reasons": {
+              "head_not_fitted": 29
+            },
+            "declined": 29,
+            "estimated": 0
+          },
+          "pharmacologic": {
+            "reasons": {
+              "head_not_fitted": 29
+            },
+            "declined": 29,
+            "estimated": 0
+          },
+          "target_specific": {
+            "reasons": {
+              "head_not_fitted": 29
+            },
+            "declined": 29,
+            "estimated": 0
+          }
+        },
+        "n_estimated": 0
+      }
+    },
+    {
+      "name": "Essentiality ICSBCS002",
+      "stage": "report",
+      "status": "done",
+      "metrics": {}
+    },
+    {
+      "name": "Essentiality ICSBCS007",
+      "stage": "ingest",
+      "status": "done",
+      "metrics": {
+        "notes": [],
+        "roles": {
+          "D3_Rep_1": "reference",
+          "D3_Rep_2": "reference",
+          "D3_Rep_3": "reference",
+          "D31_DMSO_1": "treatment",
+          "D31_DMSO_2": "treatment",
+          "D31_DMSO_3": "treatment"
+        },
+        "control": [
+          "D3_Rep_1",
+          "D3_Rep_2",
+          "D3_Rep_3"
+        ],
+        "treatment": [
+          "D31_DMSO_1",
+          "D31_DMSO_2",
+          "D31_DMSO_3"
+        ]
+      }
+    },
+    {
+      "name": "Essentiality ICSBCS007",
+      "stage": "detect",
+      "status": "done",
+      "metrics": {
+        "library": "custom-01a10d34-432f-720a-8e5d-3cd9dc266907",
+        "n_guides": 3051
+      }
+    },
+    {
+      "name": "Essentiality ICSBCS007",
+      "stage": "count",
+      "status": "done",
+      "metrics": {
+        "n_guides": 3044,
+        "n_samples": 6
+      }
+    },
+    {
+      "name": "Essentiality ICSBCS007",
+      "stage": "qc",
+      "status": "done",
+      "metrics": {
+        "nnmd": null,
+        "auroc": 1,
+        "notes": [
+          "NNMD could not be computed: only 16 essential and 5 nonessential reference genes were measured in this screen, too few to compute NNMD."
+        ],
+        "samples": [
+          {
+            "gini": 0.042,
+            "role": "reference",
+            "label": "D3_Rep_1",
+            "notes": [
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+            ],
+            "verdict": "pass",
+            "count_sum": 5235334,
+            "skew_ratio": 3.7,
+            "total_reads": null,
+            "zero_guides": 0,
+            "mapped_reads": 5235334,
+            "mapping_rate": null,
+            "zero_fraction": 0,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 1719.9,
+            "represented_fraction": 1,
+            "mapping_rate_available": false
+          },
+          {
+            "gini": 0.0441,
+            "role": "reference",
+            "label": "D3_Rep_2",
+            "notes": [
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+            ],
+            "verdict": "pass",
+            "count_sum": 5928897,
+            "skew_ratio": 4.07,
+            "total_reads": null,
+            "zero_guides": 0,
+            "mapped_reads": 5928897,
+            "mapping_rate": null,
+            "zero_fraction": 0,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 1947.7,
+            "represented_fraction": 1,
+            "mapping_rate_available": false
+          },
+          {
+            "gini": 0.041,
+            "role": "reference",
+            "label": "D3_Rep_3",
+            "notes": [
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+            ],
+            "verdict": "pass",
+            "count_sum": 5120429,
+            "skew_ratio": 3.57,
+            "total_reads": null,
+            "zero_guides": 0,
+            "mapped_reads": 5120429,
+            "mapping_rate": null,
+            "zero_fraction": 0,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 1682.1,
+            "represented_fraction": 1,
+            "mapping_rate_available": false
+          },
+          {
+            "gini": 0.0846,
+            "role": "treatment",
+            "label": "D31_DMSO_1",
+            "notes": [
+              "1.2% of guides have no reads.",
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+              "Skew ratio 10.0 above 10 (90th/10th percentile guide count)."
+            ],
+            "verdict": "warn",
+            "count_sum": 4949820,
+            "skew_ratio": 10.01,
+            "total_reads": null,
+            "zero_guides": 37,
+            "mapped_reads": 4949820,
+            "mapping_rate": null,
+            "zero_fraction": 0.01216,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 1626.1,
+            "represented_fraction": 1,
+            "mapping_rate_available": false
+          },
+          {
+            "gini": 0.0839,
+            "role": "treatment",
+            "label": "D31_DMSO_2",
+            "notes": [
+              "1.9% of guides have no reads.",
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+            ],
+            "verdict": "warn",
+            "count_sum": 5285598,
+            "skew_ratio": 8.71,
+            "total_reads": null,
+            "zero_guides": 57,
+            "mapped_reads": 5285598,
+            "mapping_rate": null,
+            "zero_fraction": 0.01873,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 1736.4,
+            "represented_fraction": 1,
+            "mapping_rate_available": false
+          },
+          {
+            "gini": 0.0726,
+            "role": "treatment",
+            "label": "D31_DMSO_3",
+            "notes": [
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+            ],
+            "verdict": "pass",
+            "count_sum": 5015200,
+            "skew_ratio": 7.86,
+            "total_reads": null,
+            "zero_guides": 22,
+            "mapped_reads": 5015200,
+            "mapping_rate": null,
+            "zero_fraction": 0.00723,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 1647.6,
+            "represented_fraction": 1,
+            "mapping_rate_available": false
+          }
+        ],
+        "verdict": "warn",
+        "nnmd_by_arm": {
+          "D31_DMSO_1": null,
+          "D31_DMSO_2": null,
+          "D31_DMSO_3": null
+        },
+        "nnmd_reason": "only 16 essential and 5 nonessential reference genes were measured in this screen, too few to compute NNMD",
+        "bottlenecked": [],
+        "suspect_arms": [],
+        "nnmd_contrast": "D31_DMSO_1+D31_DMSO_2+D31_DMSO_3 vs T0",
+        "n_essential_found": 16,
+        "n_nonessential_found": 5,
+        "replicate_correlations": [
+          {
+            "a": "D3_Rep_1",
+            "b": "D3_Rep_2",
+            "r": 0.8086,
+            "role": "reference",
+            "r_lfc": null
+          },
+          {
+            "a": "D3_Rep_1",
+            "b": "D3_Rep_3",
+            "r": 0.8881,
+            "role": "reference",
+            "r_lfc": null
+          },
+          {
+            "a": "D3_Rep_2",
+            "b": "D3_Rep_3",
+            "r": 0.8425,
+            "role": "reference",
+            "r_lfc": null
+          },
+          {
+            "a": "D31_DMSO_1",
+            "b": "D31_DMSO_2",
+            "r": 0.6196,
+            "role": "treatment",
+            "r_lfc": 0.4929
+          },
+          {
+            "a": "D31_DMSO_1",
+            "b": "D31_DMSO_3",
+            "r": 0.7207,
+            "role": "treatment",
+            "r_lfc": 0.6064
+          },
+          {
+            "a": "D31_DMSO_2",
+            "b": "D31_DMSO_3",
+            "r": 0.6726,
+            "role": "treatment",
+            "r_lfc": 0.5481
+          }
+        ]
+      }
+    },
+    {
+      "name": "Essentiality ICSBCS007",
+      "stage": "hits",
+      "status": "done",
+      "metrics": {
+        "methods": [
+          "mageck_rra",
+          "mageck_mle"
+        ],
+        "warnings": [],
+        "fdr_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
+        "fdr_threshold": 0.05,
+        "n_significant": 38,
+        "normalization": "median",
+        "essentiality_contrast": true
+      }
+    },
+    {
+      "name": "Essentiality ICSBCS007",
+      "stage": "artifacts",
+      "status": "done",
+      "metrics": {
+        "all_genes": {
+          "single_guide": 120,
+          "frequent_hitter": 44
+        },
+        "on_called_hits": {
+          "frequent_hitter": 27
+        }
+      }
+    },
+    {
+      "name": "Essentiality ICSBCS007",
+      "stage": "atlas",
+      "status": "done",
+      "metrics": {
+        "reason": null,
+        "release": "2.0.18",
+        "available": true,
+        "n_screens": 1952,
+        "n_comparable": 0,
+        "leakage_policy": "publication",
+        "n_frequent_hitters": 42,
+        "min_screens_to_judge": 10,
+        "n_background_screens": 1167,
+        "n_genes_not_in_atlas": 0,
+        "n_genes_with_context": 489,
+        "comparable_screen_ids": [],
+        "n_genes_resolved_by_alias": 8,
+        "n_screens_excluded_for_leakage": 378,
+        "n_genes_too_few_screens_to_judge": 2
+      }
+    },
+    {
+      "name": "Essentiality ICSBCS007",
+      "stage": "score",
+      "status": "skipped",
+      "metrics": {
+        "cohort": {
+          "fitted": false,
+          "source": "no cohort file at /data/validation/outcomes.json; the network is unfitted and every estimate is refused with a reason",
+          "n_heads": 0,
+          "problem": null,
+          "n_outcomes": 0,
+          "cohort_path": "/data/validation/outcomes.json",
+          "cohort_sha256": null
+        },
+        "context": {
+          "modality": "knockout",
+          "treatment": null,
+          "model_type": "organoid",
+          "assay_class": "ko_fitness",
+          "phenotype_family": "fitness"
+        },
+        "n_called": 38,
+        "n_declined": 38,
+        "by_question": {
+          "reproduces": {
+            "reasons": {
+              "head_not_fitted": 38
+            },
+            "declined": 38,
+            "estimated": 0
+          },
+          "cross_model": {
+            "reasons": {
+              "head_not_fitted": 38
+            },
+            "declined": 38,
+            "estimated": 0
+          },
+          "pharmacologic": {
+            "reasons": {
+              "head_not_fitted": 38
+            },
+            "declined": 38,
+            "estimated": 0
+          },
+          "target_specific": {
+            "reasons": {
+              "head_not_fitted": 38
+            },
+            "declined": 38,
+            "estimated": 0
+          }
+        },
+        "n_estimated": 0
+      }
+    },
+    {
+      "name": "Essentiality ICSBCS007",
+      "stage": "report",
+      "status": "done",
+      "metrics": {}
+    },
+    {
+      "name": "Gefitinib ICSBCS002",
+      "stage": "ingest",
+      "status": "done",
+      "metrics": {
+        "notes": [],
+        "roles": {
+          "D39_GEF_rep1": "treatment",
+          "D39_GEF_rep2": "treatment",
+          "D39_DMSO_rep1": "control",
+          "D39_DMSO_rep2": "control"
+        },
+        "control": [
+          "D39_DMSO_rep1",
+          "D39_DMSO_rep2"
+        ],
+        "treatment": [
+          "D39_GEF_rep1",
+          "D39_GEF_rep2"
+        ]
+      }
+    },
+    {
+      "name": "Gefitinib ICSBCS002",
+      "stage": "detect",
+      "status": "done",
+      "metrics": {
+        "library": "custom-01a10d34-432f-720a-8e5d-3cd9dc266907",
+        "n_guides": 3051
+      }
+    },
+    {
+      "name": "Gefitinib ICSBCS002",
+      "stage": "count",
+      "status": "done",
+      "metrics": {
+        "n_guides": 3044,
+        "n_samples": 4
+      }
+    },
+    {
+      "name": "Gefitinib ICSBCS002",
+      "stage": "qc",
+      "status": "done",
+      "metrics": {
+        "nnmd": null,
+        "auroc": null,
+        "notes": [
+          "NNMD/AUROC not assessed: essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay.",
+          "Replicates D39_DMSO_rep1 and D39_DMSO_rep2 correlate at r=0.44 on log counts. This screen has no library reference, so replicate agreement cannot be measured on fold change, which is the sensitive version of this check.",
+          "Replicates D39_GEF_rep1 and D39_GEF_rep2 correlate at r=0.44 on log counts. This screen has no library reference, so replicate agreement cannot be measured on fold change, which is the sensitive version of this check."
+        ],
+        "samples": [
+          {
+            "gini": 0.1793,
+            "role": "control",
+            "label": "D39_DMSO_rep1",
+            "notes": [
+              "6.3% of guides have no reads. Above 5% this exceeds the guide-loss threshold. Review baseline coverage, negative controls and replicate agreement to distinguish biological depletion from technical dropout. Missing guide measurements cannot be recovered by downstream correction.",
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+              "Skew ratio 76.5 above 10 (90th/10th percentile guide count)."
+            ],
+            "verdict": "fail",
+            "count_sum": 3482564,
+            "skew_ratio": 76.54,
+            "total_reads": null,
+            "zero_guides": 189,
+            "mapped_reads": 3482564,
+            "mapping_rate": null,
+            "zero_fraction": 0.06347,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 1169.4,
+            "represented_fraction": 0.9783,
+            "mapping_rate_available": false
+          },
+          {
+            "gini": 0.1609,
+            "role": "control",
+            "label": "D39_DMSO_rep2",
+            "notes": [
+              "4.5% of guides have no reads.",
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+              "Skew ratio 43.8 above 10 (90th/10th percentile guide count)."
+            ],
+            "verdict": "warn",
+            "count_sum": 2379699,
+            "skew_ratio": 43.84,
+            "total_reads": null,
+            "zero_guides": 135,
+            "mapped_reads": 2379699,
+            "mapping_rate": null,
+            "zero_fraction": 0.04533,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 799.1,
+            "represented_fraction": 0.9783,
+            "mapping_rate_available": false
+          },
+          {
+            "gini": 0.2108,
+            "role": "treatment",
+            "label": "D39_GEF_rep1",
+            "notes": [
+              "10.8% of guides have no reads. Above 5% this exceeds the guide-loss threshold. Review baseline coverage, negative controls and replicate agreement to distinguish biological depletion from technical dropout. Missing guide measurements cannot be recovered by downstream correction.",
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+            ],
+            "verdict": "fail",
+            "count_sum": 3106350,
+            "skew_ratio": null,
+            "total_reads": null,
+            "zero_guides": 323,
+            "mapped_reads": 3106350,
+            "mapping_rate": null,
+            "zero_fraction": 0.10846,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 1043.1,
+            "represented_fraction": 0.9783,
+            "mapping_rate_available": false
+          },
+          {
+            "gini": 0.1425,
+            "role": "treatment",
+            "label": "D39_GEF_rep2",
+            "notes": [
+              "3.0% of guides have no reads.",
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+              "Skew ratio 34.3 above 10 (90th/10th percentile guide count)."
+            ],
+            "verdict": "warn",
+            "count_sum": 3028230,
+            "skew_ratio": 34.3,
+            "total_reads": null,
+            "zero_guides": 88,
+            "mapped_reads": 3028230,
+            "mapping_rate": null,
+            "zero_fraction": 0.02955,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 1016.9,
+            "represented_fraction": 0.9783,
+            "mapping_rate_available": false
+          }
+        ],
+        "verdict": "fail",
+        "nnmd_by_arm": {},
+        "nnmd_reason": "essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay",
+        "bottlenecked": [],
+        "suspect_arms": [],
+        "nnmd_contrast": "none available",
+        "n_essential_found": 0,
+        "n_nonessential_found": 0,
+        "replicate_correlations": [
+          {
+            "a": "D39_DMSO_rep1",
+            "b": "D39_DMSO_rep2",
+            "r": 0.4393,
+            "role": "control",
+            "r_lfc": null
+          },
+          {
+            "a": "D39_GEF_rep1",
+            "b": "D39_GEF_rep2",
+            "r": 0.4363,
+            "role": "treatment",
+            "r_lfc": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "Gefitinib ICSBCS002",
+      "stage": "hits",
+      "status": "done",
+      "metrics": {
+        "methods": [
+          "mageck_rra",
+          "mageck_mle",
+          "drugz"
+        ],
+        "warnings": [
+          "BAGEL2 and the essential-direction inversion guard were not applied: this contrast is not a declared loss-of-function fitness endpoint against a library reference."
+        ],
+        "fdr_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
+        "fdr_threshold": 0.05,
+        "n_significant": 0,
+        "normalization": "median",
+        "essentiality_contrast": false
+      }
+    },
+    {
+      "name": "Gefitinib ICSBCS002",
+      "stage": "artifacts",
+      "status": "done",
+      "metrics": {
+        "all_genes": {
+          "single_guide": 170,
+          "frequent_hitter": 44
+        },
+        "on_called_hits": {}
+      }
+    },
+    {
+      "name": "Gefitinib ICSBCS002",
+      "stage": "atlas",
+      "status": "done",
+      "metrics": {
+        "reason": null,
+        "release": "2.0.18",
+        "available": true,
+        "n_screens": 1952,
+        "n_comparable": 0,
+        "leakage_policy": "publication",
+        "n_frequent_hitters": 42,
+        "min_screens_to_judge": 10,
+        "n_background_screens": 1167,
+        "n_genes_not_in_atlas": 0,
+        "n_genes_with_context": 489,
+        "comparable_screen_ids": [],
+        "n_genes_resolved_by_alias": 8,
+        "n_screens_excluded_for_leakage": 378,
+        "n_genes_too_few_screens_to_judge": 2
+      }
+    },
+    {
+      "name": "Gefitinib ICSBCS002",
+      "stage": "score",
+      "status": "skipped",
+      "metrics": {
+        "cohort": {
+          "fitted": false,
+          "source": "no cohort file at /data/validation/outcomes.json; the network is unfitted and every estimate is refused with a reason",
+          "n_heads": 0,
+          "problem": null,
+          "n_outcomes": 0,
+          "cohort_path": "/data/validation/outcomes.json",
+          "cohort_sha256": null
+        },
+        "context": {
+          "modality": "knockout",
+          "treatment": "Gefitinib ICSBCS002",
+          "model_type": "organoid",
+          "assay_class": "drug_modifier",
+          "phenotype_family": "drug_resistance"
+        },
+        "n_called": 0,
+        "n_declined": 0,
+        "by_question": {
+          "reproduces": {
+            "reasons": {},
+            "declined": 0,
+            "estimated": 0
+          },
+          "cross_model": {
+            "reasons": {},
+            "declined": 0,
+            "estimated": 0
+          },
+          "pharmacologic": {
+            "reasons": {},
+            "declined": 0,
+            "estimated": 0
+          },
+          "target_specific": {
+            "reasons": {},
+            "declined": 0,
+            "estimated": 0
+          }
+        },
+        "n_estimated": 0
+      }
+    },
+    {
+      "name": "Gefitinib ICSBCS002",
+      "stage": "report",
+      "status": "done",
+      "metrics": {}
+    },
+    {
+      "name": "Gefitinib ICSBCS007",
+      "stage": "ingest",
+      "status": "done",
+      "metrics": {
+        "notes": [],
+        "roles": {
+          "D31_GEF_1": "treatment",
+          "D31_GEF_2": "treatment",
+          "D31_GEF_3": "treatment",
+          "D31_DMSO_1": "control",
+          "D31_DMSO_2": "control",
+          "D31_DMSO_3": "control"
+        },
+        "control": [
+          "D31_DMSO_1",
+          "D31_DMSO_2",
+          "D31_DMSO_3"
+        ],
+        "treatment": [
+          "D31_GEF_1",
+          "D31_GEF_2",
+          "D31_GEF_3"
+        ]
+      }
+    },
+    {
+      "name": "Gefitinib ICSBCS007",
+      "stage": "detect",
+      "status": "done",
+      "metrics": {
+        "library": "custom-01a10d34-432f-720a-8e5d-3cd9dc266907",
+        "n_guides": 3051
+      }
+    },
+    {
+      "name": "Gefitinib ICSBCS007",
+      "stage": "count",
+      "status": "done",
+      "metrics": {
+        "n_guides": 3044,
+        "n_samples": 6
+      }
+    },
+    {
+      "name": "Gefitinib ICSBCS007",
+      "stage": "qc",
+      "status": "done",
+      "metrics": {
+        "nnmd": null,
+        "auroc": null,
+        "notes": [
+          "NNMD/AUROC not assessed: essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay."
+        ],
+        "samples": [
+          {
+            "gini": 0.0843,
+            "role": "control",
+            "label": "D31_DMSO_1",
+            "notes": [
+              "1.2% of guides have no reads.",
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+            ],
+            "verdict": "warn",
+            "count_sum": 4949820,
+            "skew_ratio": 9.96,
+            "total_reads": null,
+            "zero_guides": 36,
+            "mapped_reads": 4949820,
+            "mapping_rate": null,
+            "zero_fraction": 0.01183,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 1626.6,
+            "represented_fraction": 0.9997,
+            "mapping_rate_available": false
+          },
+          {
+            "gini": 0.0836,
+            "role": "control",
+            "label": "D31_DMSO_2",
+            "notes": [
+              "1.8% of guides have no reads.",
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+            ],
+            "verdict": "warn",
+            "count_sum": 5285598,
+            "skew_ratio": 8.7,
+            "total_reads": null,
+            "zero_guides": 56,
+            "mapped_reads": 5285598,
+            "mapping_rate": null,
+            "zero_fraction": 0.0184,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 1737,
+            "represented_fraction": 0.9997,
+            "mapping_rate_available": false
+          },
+          {
+            "gini": 0.0723,
+            "role": "control",
+            "label": "D31_DMSO_3",
+            "notes": [
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+            ],
+            "verdict": "pass",
+            "count_sum": 5015200,
+            "skew_ratio": 7.85,
+            "total_reads": null,
+            "zero_guides": 21,
+            "mapped_reads": 5015200,
+            "mapping_rate": null,
+            "zero_fraction": 0.0069,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 1648.1,
+            "represented_fraction": 0.9997,
+            "mapping_rate_available": false
+          },
+          {
+            "gini": 0.0772,
+            "role": "treatment",
+            "label": "D31_GEF_1",
+            "notes": [
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+            ],
+            "verdict": "pass",
+            "count_sum": 4515464,
+            "skew_ratio": 9.27,
+            "total_reads": null,
+            "zero_guides": 12,
+            "mapped_reads": 4515464,
+            "mapping_rate": null,
+            "zero_fraction": 0.00394,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 1483.9,
+            "represented_fraction": 0.9997,
+            "mapping_rate_available": false
+          },
+          {
+            "gini": 0.0759,
+            "role": "treatment",
+            "label": "D31_GEF_2",
+            "notes": [
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+            ],
+            "verdict": "pass",
+            "count_sum": 5378005,
+            "skew_ratio": 9.2,
+            "total_reads": null,
+            "zero_guides": 25,
+            "mapped_reads": 5378005,
+            "mapping_rate": null,
+            "zero_fraction": 0.00822,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 1767.3,
+            "represented_fraction": 0.9997,
+            "mapping_rate_available": false
+          },
+          {
+            "gini": 0.0685,
+            "role": "treatment",
+            "label": "D31_GEF_3",
+            "notes": [
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+            ],
+            "verdict": "pass",
+            "count_sum": 5301202,
+            "skew_ratio": 7.74,
+            "total_reads": null,
+            "zero_guides": 8,
+            "mapped_reads": 5301202,
+            "mapping_rate": null,
+            "zero_fraction": 0.00263,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 1742.1,
+            "represented_fraction": 0.9997,
+            "mapping_rate_available": false
+          }
+        ],
+        "verdict": "warn",
+        "nnmd_by_arm": {},
+        "nnmd_reason": "essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay",
+        "bottlenecked": [],
+        "suspect_arms": [],
+        "nnmd_contrast": "none available",
+        "n_essential_found": 0,
+        "n_nonessential_found": 0,
+        "replicate_correlations": [
+          {
+            "a": "D31_DMSO_1",
+            "b": "D31_DMSO_2",
+            "r": 0.6196,
+            "role": "control",
+            "r_lfc": null
+          },
+          {
+            "a": "D31_DMSO_1",
+            "b": "D31_DMSO_3",
+            "r": 0.7207,
+            "role": "control",
+            "r_lfc": null
+          },
+          {
+            "a": "D31_DMSO_2",
+            "b": "D31_DMSO_3",
+            "r": 0.6726,
+            "role": "control",
+            "r_lfc": null
+          },
+          {
+            "a": "D31_GEF_1",
+            "b": "D31_GEF_2",
+            "r": 0.6769,
+            "role": "treatment",
+            "r_lfc": null
+          },
+          {
+            "a": "D31_GEF_1",
+            "b": "D31_GEF_3",
+            "r": 0.7238,
+            "role": "treatment",
+            "r_lfc": null
+          },
+          {
+            "a": "D31_GEF_2",
+            "b": "D31_GEF_3",
+            "r": 0.7016,
+            "role": "treatment",
+            "r_lfc": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "Gefitinib ICSBCS007",
+      "stage": "hits",
+      "status": "done",
+      "metrics": {
+        "methods": [
+          "mageck_rra",
+          "mageck_mle",
+          "drugz"
+        ],
+        "warnings": [
+          "BAGEL2 and the essential-direction inversion guard were not applied: this contrast is not a declared loss-of-function fitness endpoint against a library reference."
+        ],
+        "fdr_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
+        "fdr_threshold": 0.05,
+        "n_significant": 3,
+        "normalization": "median",
+        "essentiality_contrast": false
+      }
+    },
+    {
+      "name": "Gefitinib ICSBCS007",
+      "stage": "artifacts",
+      "status": "done",
+      "metrics": {
+        "all_genes": {
+          "single_guide": 158,
+          "frequent_hitter": 44
+        },
+        "on_called_hits": {
+          "frequent_hitter": 2
+        }
+      }
+    },
+    {
+      "name": "Gefitinib ICSBCS007",
+      "stage": "atlas",
+      "status": "done",
+      "metrics": {
+        "reason": null,
+        "release": "2.0.18",
+        "available": true,
+        "n_screens": 1952,
+        "n_comparable": 0,
+        "leakage_policy": "publication",
+        "n_frequent_hitters": 42,
+        "min_screens_to_judge": 10,
+        "n_background_screens": 1167,
+        "n_genes_not_in_atlas": 0,
+        "n_genes_with_context": 489,
+        "comparable_screen_ids": [],
+        "n_genes_resolved_by_alias": 8,
+        "n_screens_excluded_for_leakage": 378,
+        "n_genes_too_few_screens_to_judge": 2
+      }
+    },
+    {
+      "name": "Gefitinib ICSBCS007",
+      "stage": "score",
+      "status": "skipped",
+      "metrics": {
+        "cohort": {
+          "fitted": false,
+          "source": "no cohort file at /data/validation/outcomes.json; the network is unfitted and every estimate is refused with a reason",
+          "n_heads": 0,
+          "problem": null,
+          "n_outcomes": 0,
+          "cohort_path": "/data/validation/outcomes.json",
+          "cohort_sha256": null
+        },
+        "context": {
+          "modality": "knockout",
+          "treatment": "Gefitinib ICSBCS007",
+          "model_type": "organoid",
+          "assay_class": "drug_modifier",
+          "phenotype_family": "drug_resistance"
+        },
+        "n_called": 3,
+        "n_declined": 3,
+        "by_question": {
+          "reproduces": {
+            "reasons": {
+              "head_not_fitted": 3
+            },
+            "declined": 3,
+            "estimated": 0
+          },
+          "cross_model": {
+            "reasons": {
+              "head_not_fitted": 3
+            },
+            "declined": 3,
+            "estimated": 0
+          },
+          "pharmacologic": {
+            "reasons": {
+              "head_not_fitted": 3
+            },
+            "declined": 3,
+            "estimated": 0
+          },
+          "target_specific": {
+            "reasons": {
+              "head_not_fitted": 3
+            },
+            "declined": 3,
+            "estimated": 0
+          }
+        },
+        "n_estimated": 0
+      }
+    },
+    {
+      "name": "Gefitinib ICSBCS007",
+      "stage": "report",
+      "status": "done",
+      "metrics": {}
+    },
+    {
+      "name": "Trametinib ICSBCS002",
+      "stage": "ingest",
+      "status": "done",
+      "metrics": {
+        "notes": [],
+        "roles": {
+          "D39_TRM_rep1": "treatment",
+          "D39_TRM_rep2": "treatment",
+          "D39_DMSO_rep1": "control",
+          "D39_DMSO_rep2": "control"
+        },
+        "control": [
+          "D39_DMSO_rep1",
+          "D39_DMSO_rep2"
+        ],
+        "treatment": [
+          "D39_TRM_rep1",
+          "D39_TRM_rep2"
+        ]
+      }
+    },
+    {
+      "name": "Trametinib ICSBCS002",
+      "stage": "detect",
+      "status": "done",
+      "metrics": {
+        "library": "custom-01a10d34-432f-720a-8e5d-3cd9dc266907",
+        "n_guides": 3051
+      }
+    },
+    {
+      "name": "Trametinib ICSBCS002",
+      "stage": "count",
+      "status": "done",
+      "metrics": {
+        "n_guides": 3044,
+        "n_samples": 4
+      }
+    },
+    {
+      "name": "Trametinib ICSBCS002",
+      "stage": "qc",
+      "status": "done",
+      "metrics": {
+        "nnmd": null,
+        "auroc": null,
+        "notes": [
+          "NNMD/AUROC not assessed: essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay.",
+          "Replicates D39_DMSO_rep1 and D39_DMSO_rep2 correlate at r=0.44 on log counts. This screen has no library reference, so replicate agreement cannot be measured on fold change, which is the sensitive version of this check.",
+          "Replicates D39_TRM_rep1 and D39_TRM_rep2 correlate at r=0.44 on log counts. This screen has no library reference, so replicate agreement cannot be measured on fold change, which is the sensitive version of this check."
+        ],
+        "samples": [
+          {
+            "gini": 0.1793,
+            "role": "control",
+            "label": "D39_DMSO_rep1",
+            "notes": [
+              "6.3% of guides have no reads. Above 5% this exceeds the guide-loss threshold. Review baseline coverage, negative controls and replicate agreement to distinguish biological depletion from technical dropout. Missing guide measurements cannot be recovered by downstream correction.",
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+              "Skew ratio 76.5 above 10 (90th/10th percentile guide count)."
+            ],
+            "verdict": "fail",
+            "count_sum": 3482564,
+            "skew_ratio": 76.54,
+            "total_reads": null,
+            "zero_guides": 189,
+            "mapped_reads": 3482564,
+            "mapping_rate": null,
+            "zero_fraction": 0.06347,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 1169.4,
+            "represented_fraction": 0.9783,
+            "mapping_rate_available": false
+          },
+          {
+            "gini": 0.1609,
+            "role": "control",
+            "label": "D39_DMSO_rep2",
+            "notes": [
+              "4.5% of guides have no reads.",
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+              "Skew ratio 43.8 above 10 (90th/10th percentile guide count)."
+            ],
+            "verdict": "warn",
+            "count_sum": 2379699,
+            "skew_ratio": 43.84,
+            "total_reads": null,
+            "zero_guides": 135,
+            "mapped_reads": 2379699,
+            "mapping_rate": null,
+            "zero_fraction": 0.04533,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 799.1,
+            "represented_fraction": 0.9783,
+            "mapping_rate_available": false
+          },
+          {
+            "gini": 0.173,
+            "role": "treatment",
+            "label": "D39_TRM_rep1",
+            "notes": [
+              "6.2% of guides have no reads. Above 5% this exceeds the guide-loss threshold. Review baseline coverage, negative controls and replicate agreement to distinguish biological depletion from technical dropout. Missing guide measurements cannot be recovered by downstream correction.",
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+              "Skew ratio 75.1 above 10 (90th/10th percentile guide count)."
+            ],
+            "verdict": "fail",
+            "count_sum": 3892837,
+            "skew_ratio": 75.08,
+            "total_reads": null,
+            "zero_guides": 185,
+            "mapped_reads": 3892837,
+            "mapping_rate": null,
+            "zero_fraction": 0.06212,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 1307.2,
+            "represented_fraction": 0.9783,
+            "mapping_rate_available": false
+          },
+          {
+            "gini": 0.1755,
+            "role": "treatment",
+            "label": "D39_TRM_rep2",
+            "notes": [
+              "6.5% of guides have no reads. Above 5% this exceeds the guide-loss threshold. Review baseline coverage, negative controls and replicate agreement to distinguish biological depletion from technical dropout. Missing guide measurements cannot be recovered by downstream correction.",
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+              "Skew ratio 59.7 above 10 (90th/10th percentile guide count)."
+            ],
+            "verdict": "fail",
+            "count_sum": 3067452,
+            "skew_ratio": 59.75,
+            "total_reads": null,
+            "zero_guides": 193,
+            "mapped_reads": 3067452,
+            "mapping_rate": null,
+            "zero_fraction": 0.06481,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 1030,
+            "represented_fraction": 0.9783,
+            "mapping_rate_available": false
+          }
+        ],
+        "verdict": "fail",
+        "nnmd_by_arm": {},
+        "nnmd_reason": "essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay",
+        "bottlenecked": [],
+        "suspect_arms": [],
+        "nnmd_contrast": "none available",
+        "n_essential_found": 0,
+        "n_nonessential_found": 0,
+        "replicate_correlations": [
+          {
+            "a": "D39_DMSO_rep1",
+            "b": "D39_DMSO_rep2",
+            "r": 0.4393,
+            "role": "control",
+            "r_lfc": null
+          },
+          {
+            "a": "D39_TRM_rep1",
+            "b": "D39_TRM_rep2",
+            "r": 0.4411,
+            "role": "treatment",
+            "r_lfc": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "Trametinib ICSBCS002",
+      "stage": "hits",
+      "status": "done",
+      "metrics": {
+        "methods": [
+          "mageck_rra",
+          "mageck_mle",
+          "drugz"
+        ],
+        "warnings": [
+          "BAGEL2 and the essential-direction inversion guard were not applied: this contrast is not a declared loss-of-function fitness endpoint against a library reference."
+        ],
+        "fdr_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
+        "fdr_threshold": 0.05,
+        "n_significant": 0,
+        "normalization": "median",
+        "essentiality_contrast": false
+      }
+    },
+    {
+      "name": "Trametinib ICSBCS002",
+      "stage": "artifacts",
+      "status": "done",
+      "metrics": {
+        "all_genes": {
+          "single_guide": 190,
+          "frequent_hitter": 44
+        },
+        "on_called_hits": {}
+      }
+    },
+    {
+      "name": "Trametinib ICSBCS002",
+      "stage": "atlas",
+      "status": "done",
+      "metrics": {
+        "reason": null,
+        "release": "2.0.18",
+        "available": true,
+        "n_screens": 1952,
+        "n_comparable": 0,
+        "leakage_policy": "publication",
+        "n_frequent_hitters": 42,
+        "min_screens_to_judge": 10,
+        "n_background_screens": 1167,
+        "n_genes_not_in_atlas": 0,
+        "n_genes_with_context": 489,
+        "comparable_screen_ids": [],
+        "n_genes_resolved_by_alias": 8,
+        "n_screens_excluded_for_leakage": 378,
+        "n_genes_too_few_screens_to_judge": 2
+      }
+    },
+    {
+      "name": "Trametinib ICSBCS002",
+      "stage": "score",
+      "status": "skipped",
+      "metrics": {
+        "cohort": {
+          "fitted": false,
+          "source": "no cohort file at /data/validation/outcomes.json; the network is unfitted and every estimate is refused with a reason",
+          "n_heads": 0,
+          "problem": null,
+          "n_outcomes": 0,
+          "cohort_path": "/data/validation/outcomes.json",
+          "cohort_sha256": null
+        },
+        "context": {
+          "modality": "knockout",
+          "treatment": "Trametinib ICSBCS002",
+          "model_type": "organoid",
+          "assay_class": "drug_modifier",
+          "phenotype_family": "drug_resistance"
+        },
+        "n_called": 0,
+        "n_declined": 0,
+        "by_question": {
+          "reproduces": {
+            "reasons": {},
+            "declined": 0,
+            "estimated": 0
+          },
+          "cross_model": {
+            "reasons": {},
+            "declined": 0,
+            "estimated": 0
+          },
+          "pharmacologic": {
+            "reasons": {},
+            "declined": 0,
+            "estimated": 0
+          },
+          "target_specific": {
+            "reasons": {},
+            "declined": 0,
+            "estimated": 0
+          }
+        },
+        "n_estimated": 0
+      }
+    },
+    {
+      "name": "Trametinib ICSBCS002",
+      "stage": "report",
+      "status": "done",
+      "metrics": {}
+    },
+    {
+      "name": "Trametinib ICSBCS007",
+      "stage": "ingest",
+      "status": "done",
+      "metrics": {
+        "notes": [],
+        "roles": {
+          "D31_TRM_1": "treatment",
+          "D31_TRM_2": "treatment",
+          "D31_TRM_3": "treatment",
+          "D31_DMSO_1": "control",
+          "D31_DMSO_2": "control",
+          "D31_DMSO_3": "control"
+        },
+        "control": [
+          "D31_DMSO_1",
+          "D31_DMSO_2",
+          "D31_DMSO_3"
+        ],
+        "treatment": [
+          "D31_TRM_1",
+          "D31_TRM_2",
+          "D31_TRM_3"
+        ]
+      }
+    },
+    {
+      "name": "Trametinib ICSBCS007",
+      "stage": "detect",
+      "status": "done",
+      "metrics": {
+        "library": "custom-01a10d34-432f-720a-8e5d-3cd9dc266907",
+        "n_guides": 3051
+      }
+    },
+    {
+      "name": "Trametinib ICSBCS007",
+      "stage": "count",
+      "status": "done",
+      "metrics": {
+        "n_guides": 3044,
+        "n_samples": 6
+      }
+    },
+    {
+      "name": "Trametinib ICSBCS007",
+      "stage": "qc",
+      "status": "done",
+      "metrics": {
+        "nnmd": null,
+        "auroc": null,
+        "notes": [
+          "NNMD/AUROC not assessed: essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay."
+        ],
+        "samples": [
+          {
+            "gini": 0.0843,
+            "role": "control",
+            "label": "D31_DMSO_1",
+            "notes": [
+              "1.2% of guides have no reads.",
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+            ],
+            "verdict": "warn",
+            "count_sum": 4949820,
+            "skew_ratio": 9.96,
+            "total_reads": null,
+            "zero_guides": 36,
+            "mapped_reads": 4949820,
+            "mapping_rate": null,
+            "zero_fraction": 0.01183,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 1626.6,
+            "represented_fraction": 0.9997,
+            "mapping_rate_available": false
+          },
+          {
+            "gini": 0.0836,
+            "role": "control",
+            "label": "D31_DMSO_2",
+            "notes": [
+              "1.8% of guides have no reads.",
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+            ],
+            "verdict": "warn",
+            "count_sum": 5285598,
+            "skew_ratio": 8.7,
+            "total_reads": null,
+            "zero_guides": 56,
+            "mapped_reads": 5285598,
+            "mapping_rate": null,
+            "zero_fraction": 0.0184,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 1737,
+            "represented_fraction": 0.9997,
+            "mapping_rate_available": false
+          },
+          {
+            "gini": 0.0723,
+            "role": "control",
+            "label": "D31_DMSO_3",
+            "notes": [
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+            ],
+            "verdict": "pass",
+            "count_sum": 5015200,
+            "skew_ratio": 7.85,
+            "total_reads": null,
+            "zero_guides": 21,
+            "mapped_reads": 5015200,
+            "mapping_rate": null,
+            "zero_fraction": 0.0069,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 1648.1,
+            "represented_fraction": 0.9997,
+            "mapping_rate_available": false
+          },
+          {
+            "gini": 0.0847,
+            "role": "treatment",
+            "label": "D31_TRM_1",
+            "notes": [
+              "1.1% of guides have no reads.",
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+              "Skew ratio 10.3 above 10 (90th/10th percentile guide count)."
+            ],
+            "verdict": "warn",
+            "count_sum": 5143821,
+            "skew_ratio": 10.3,
+            "total_reads": null,
+            "zero_guides": 33,
+            "mapped_reads": 5143821,
+            "mapping_rate": null,
+            "zero_fraction": 0.01084,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 1690.4,
+            "represented_fraction": 0.9997,
+            "mapping_rate_available": false
+          },
+          {
+            "gini": 0.067,
+            "role": "treatment",
+            "label": "D31_TRM_2",
+            "notes": [
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+            ],
+            "verdict": "pass",
+            "count_sum": 5011886,
+            "skew_ratio": 6.3,
+            "total_reads": null,
+            "zero_guides": 22,
+            "mapped_reads": 5011886,
+            "mapping_rate": null,
+            "zero_fraction": 0.00723,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 1647,
+            "represented_fraction": 0.9997,
+            "mapping_rate_available": false
+          },
+          {
+            "gini": 0.0658,
+            "role": "treatment",
+            "label": "D31_TRM_3",
+            "notes": [
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+            ],
+            "verdict": "pass",
+            "count_sum": 5628755,
+            "skew_ratio": 6.76,
+            "total_reads": null,
+            "zero_guides": 14,
+            "mapped_reads": 5628755,
+            "mapping_rate": null,
+            "zero_fraction": 0.0046,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 1849.7,
+            "represented_fraction": 0.9997,
+            "mapping_rate_available": false
+          }
+        ],
+        "verdict": "warn",
+        "nnmd_by_arm": {},
+        "nnmd_reason": "essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay",
+        "bottlenecked": [],
+        "suspect_arms": [],
+        "nnmd_contrast": "none available",
+        "n_essential_found": 0,
+        "n_nonessential_found": 0,
+        "replicate_correlations": [
+          {
+            "a": "D31_DMSO_1",
+            "b": "D31_DMSO_2",
+            "r": 0.6196,
+            "role": "control",
+            "r_lfc": null
+          },
+          {
+            "a": "D31_DMSO_1",
+            "b": "D31_DMSO_3",
+            "r": 0.7207,
+            "role": "control",
+            "r_lfc": null
+          },
+          {
+            "a": "D31_DMSO_2",
+            "b": "D31_DMSO_3",
+            "r": 0.6726,
+            "role": "control",
+            "r_lfc": null
+          },
+          {
+            "a": "D31_TRM_1",
+            "b": "D31_TRM_2",
+            "r": 0.689,
+            "role": "treatment",
+            "r_lfc": null
+          },
+          {
+            "a": "D31_TRM_1",
+            "b": "D31_TRM_3",
+            "r": 0.7031,
+            "role": "treatment",
+            "r_lfc": null
+          },
+          {
+            "a": "D31_TRM_2",
+            "b": "D31_TRM_3",
+            "r": 0.6981,
+            "role": "treatment",
+            "r_lfc": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "Trametinib ICSBCS007",
+      "stage": "hits",
+      "status": "done",
+      "metrics": {
+        "methods": [
+          "mageck_rra",
+          "mageck_mle",
+          "drugz"
+        ],
+        "warnings": [
+          "BAGEL2 and the essential-direction inversion guard were not applied: this contrast is not a declared loss-of-function fitness endpoint against a library reference."
+        ],
+        "fdr_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
+        "fdr_threshold": 0.05,
+        "n_significant": 5,
+        "normalization": "median",
+        "essentiality_contrast": false
+      }
+    },
+    {
+      "name": "Trametinib ICSBCS007",
+      "stage": "artifacts",
+      "status": "done",
+      "metrics": {
+        "all_genes": {
+          "single_guide": 155,
+          "frequent_hitter": 44
+        },
+        "on_called_hits": {
+          "frequent_hitter": 3
+        }
+      }
+    },
+    {
+      "name": "Trametinib ICSBCS007",
+      "stage": "atlas",
+      "status": "done",
+      "metrics": {
+        "reason": null,
+        "release": "2.0.18",
+        "available": true,
+        "n_screens": 1952,
+        "n_comparable": 0,
+        "leakage_policy": "publication",
+        "n_frequent_hitters": 42,
+        "min_screens_to_judge": 10,
+        "n_background_screens": 1167,
+        "n_genes_not_in_atlas": 0,
+        "n_genes_with_context": 489,
+        "comparable_screen_ids": [],
+        "n_genes_resolved_by_alias": 8,
+        "n_screens_excluded_for_leakage": 378,
+        "n_genes_too_few_screens_to_judge": 2
+      }
+    },
+    {
+      "name": "Trametinib ICSBCS007",
+      "stage": "score",
+      "status": "skipped",
+      "metrics": {
+        "cohort": {
+          "fitted": false,
+          "source": "no cohort file at /data/validation/outcomes.json; the network is unfitted and every estimate is refused with a reason",
+          "n_heads": 0,
+          "problem": null,
+          "n_outcomes": 0,
+          "cohort_path": "/data/validation/outcomes.json",
+          "cohort_sha256": null
+        },
+        "context": {
+          "modality": "knockout",
+          "treatment": "Trametinib ICSBCS007",
+          "model_type": "organoid",
+          "assay_class": "drug_modifier",
+          "phenotype_family": "drug_resistance"
+        },
+        "n_called": 5,
+        "n_declined": 5,
+        "by_question": {
+          "reproduces": {
+            "reasons": {
+              "head_not_fitted": 5
+            },
+            "declined": 5,
+            "estimated": 0
+          },
+          "cross_model": {
+            "reasons": {
+              "head_not_fitted": 5
+            },
+            "declined": 5,
+            "estimated": 0
+          },
+          "pharmacologic": {
+            "reasons": {
+              "head_not_fitted": 5
+            },
+            "declined": 5,
+            "estimated": 0
+          },
+          "target_specific": {
+            "reasons": {
+              "head_not_fitted": 5
+            },
+            "declined": 5,
+            "estimated": 0
+          }
+        },
+        "n_estimated": 0
+      }
+    },
+    {
+      "name": "Trametinib ICSBCS007",
+      "stage": "report",
+      "status": "done",
+      "metrics": {}
+    }
+  ],
+  "retrospective_evidence": [
+    {
+      "gene_symbol": "FGFR1",
+      "screen_id": "01a10d34-67f1-7c7a-a952-d37fac497830",
+      "result": "validated",
+      "validation_type": "independent_guide",
+      "endpoint_decision": "insufficient_record",
+      "decision_because": "Not scorable against this endpoint: whether the perturbation was independent, whether the constructs differed from the screen's, the number of independent perturbations, the number of biological replicates, the measured log2_fold_change, the negative control guides control, the positive control guides control was not recorded.",
+      "evidence_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11790258/#F5",
+      "notes": "Published retrospective evidence, CAN-24-0775 Figure 5B. The authors report increased gefitinib sensitivity following individual FGFR1 gRNAs in ICSBCS002. Recorded after freezing the six analysis runs. Construct independence and quantitative effect were not established from the source, so those fields remain unrecorded. This is not new prospective validation."
+    }
+  ]
+}

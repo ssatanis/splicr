@@ -177,15 +177,17 @@ export async function getGeneDisagreement(
   try {
     const client = await createClient();
     const owned = await client.from("screens")
-      .select("id").eq("id", screenId).eq("org_id", context.org.id).maybeSingle();
+      .select("id,current_run_id").eq("id", screenId).eq("org_id", context.org.id).maybeSingle();
     if (owned.error) throw owned.error;
     // The same answer whether the screen belongs to somebody else or does not
     // exist, so this cannot be used to discover another workspace's screen ids.
     if (!owned.data) return { status: "not_found" };
+    if (!owned.data.current_run_id) return { status: "not_analysed" };
 
     const found = await client.from("gene_disagreement")
       .select("report, created_at")
       .eq("screen_id", screenId)
+      .eq("run_id", owned.data.current_run_id)
       .eq("gene_symbol", symbol)
       .eq("schema_version", "1")
       .order("created_at", { ascending: false })
@@ -203,7 +205,7 @@ export async function getGeneDisagreement(
     // Distinguish "this gene has no report" from "this run stored none".
     const any = await client.from("gene_disagreement")
       .select("gene_symbol", { count: "exact", head: true })
-      .eq("screen_id", screenId);
+      .eq("screen_id", screenId).eq("run_id", owned.data.current_run_id);
     if (any.error) throw any.error;
     return (any.count ?? 0) > 0 ? { status: "no_report", gene: symbol } : { status: "not_analysed" };
   } catch (error) {

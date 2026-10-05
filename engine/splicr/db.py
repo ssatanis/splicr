@@ -222,10 +222,10 @@ def write_guide_counts(conn: "psycopg.Connection", ctx: RunContext,
     """
     Bulk-load the count matrix with COPY.
 
-    Guides with no reads in any sample are skipped: they are not part of the
-    experiment and storing tens of thousands of zeros per sample is pure
-    waste on a partly represented library.
+    Preserve observed zeros, including guides absent from both selected arms.
+    A zero count and an unrecorded guide are different pieces of evidence.
     """
+    conn.execute("delete from public.guide_counts where screen_id = %s and run_id = %s", (ctx.screen_id, ctx.run_id))
     written = 0
     with conn.cursor().copy(
         "copy public.guide_counts "
@@ -233,8 +233,6 @@ def write_guide_counts(conn: "psycopg.Connection", ctx: RunContext,
     ) as copy:
         for i, guide_id in enumerate(matrix.guide_ids):
             row = matrix.matrix[i]
-            if not any(row):
-                continue
             gene = matrix.genes[i]
             for j, label in enumerate(matrix.samples):
                 copy.write_row((ctx.screen_id, ctx.run_id, sample_ids[label],
@@ -322,8 +320,8 @@ def write_hits(
     """
     scores = scores or {}
 
-    # Re-running a comparison replaces its hits rather than accumulating them.
-    conn.execute("delete from public.hits where comparison_id = %s", (ctx.comparison_id,))
+    # Retrying the same run is idempotent. A new run preserves prior results.
+    conn.execute("delete from public.hits where run_id = %s and comparison_id = %s", (ctx.run_id, ctx.comparison_id,))
 
     hit_rows: list[tuple] = []
     flag_rows: list[tuple] = []
@@ -337,6 +335,7 @@ def write_hits(
             hit_id, ctx.run_id, ctx.screen_id, ctx.comparison_id, name, g.direction,
             g.n_guides, g.n_good_guides, g.lfc, g.rra_score, g.p_value, g.fdr,
             g.rank, g.bayes_factor, g.norm_z,
+            g.mle_beta, g.mle_fdr, g.drugz_fdr, g.depleted_fdr, g.enriched_fdr, g.depleted_p_value, g.enriched_p_value,
             _pg_float_array(g.guide_lfcs), g.max_guide_share,
             chance, novelty, classify(name, chance, novelty, gene_flags),
             reason, model_version,
@@ -349,7 +348,7 @@ def write_hits(
         "copy public.hits "
         "(id, run_id, screen_id, comparison_id, gene_symbol, direction, "
         " n_guides, n_good_guides, lfc, rra_score, p_value, fdr, stat_rank, "
-        " bayes_factor, norm_z, guide_lfcs, max_guide_share, "
+        " bayes_factor, norm_z, mle_beta, mle_fdr, drugz_fdr, depleted_fdr, enriched_fdr, depleted_p, enriched_p, guide_lfcs, max_guide_share, "
         " chance_real, novelty, verdict, reason, model_version) from stdin"
     ) as copy:
         for row in hit_rows:
@@ -388,8 +387,8 @@ def write_validation_predictions(conn: "psycopg.Connection", ctx: RunContext,
         return 0
 
     conn.execute(
-        "delete from public.validation_predictions where comparison_id = %s",
-        (ctx.comparison_id,))
+        "delete from public.validation_predictions where run_id = %s and comparison_id = %s",
+        (ctx.run_id, ctx.comparison_id,))
 
     rows: list[tuple] = []
     for candidate in candidates:
@@ -465,8 +464,8 @@ def write_guide_effects(conn: "psycopg.Connection", ctx: RunContext,
     residue without a transcript, or a curated claim without a feature, so a
     partially filled row cannot be persisted as if it were annotated.
     """
-    conn.execute("delete from public.guide_effects where comparison_id = %s",
-                 (ctx.comparison_id,))
+    conn.execute("delete from public.guide_effects where run_id = %s and comparison_id = %s",
+                 (ctx.run_id, ctx.comparison_id,))
     versions = json.dumps(reference_versions or {})
     written = 0
     with conn.cursor().copy(
@@ -501,8 +500,8 @@ def write_gene_disagreement(conn: "psycopg.Connection", ctx: RunContext, reports
     stored beside them, so the console renders a recorded value and never
     reimplements the statistics. Re-running a comparison replaces its rows.
     """
-    conn.execute("delete from public.gene_disagreement where comparison_id = %s",
-                 (ctx.comparison_id,))
+    conn.execute("delete from public.gene_disagreement where run_id = %s and comparison_id = %s",
+                 (ctx.run_id, ctx.comparison_id,))
     written = 0
     with conn.cursor().copy(
         "copy public.gene_disagreement "

@@ -19,7 +19,7 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { createClient } from "@supabase/supabase-js";
 import { expect, test } from "@playwright/test";
 
@@ -57,13 +57,18 @@ function splitUri(uri: string): { bucket: string; key: string } {
 
 async function removeTestScreens() {
   const supabase = admin();
-  const { data } = await supabase.from("screens").select("id").eq("name", SCREEN_NAME);
+  const { data } = await supabase.from("screens").select("id").eq("org_id", fixtureIds().orgId).eq("name", SCREEN_NAME);
   for (const row of data ?? []) {
     const id = (row as { id: string }).id;
-    await supabase.from("screens").delete().eq("id", id);
+    const { data: files } = await supabase.from("screen_files").select("storage_key").eq("screen_id", id);
+    for (const file of files ?? []) {
+      const stored = splitUri(file.storage_key);
+      await objectStore().send(new DeleteObjectCommand({ Bucket: stored.bucket, Key: stored.key }));
+    }
+    await supabase.from("screens").delete().eq("id", id).eq("org_id", fixtureIds().orgId);
   }
   // Drafts abandoned by an earlier failed run would otherwise accumulate.
-  await supabase.from("screens").delete().eq("name", "Untitled screen").eq("status", "draft");
+  await supabase.from("screens").delete().eq("org_id", fixtureIds().orgId).eq("name", "Untitled screen").eq("status", "draft");
 }
 
 test.afterEach(removeTestScreens);
@@ -79,7 +84,7 @@ test("a count table becomes a queued run", async ({ page }) => {
   // radio. Assert the choice exists rather than assuming which one is selected.
   await page.getByRole("radio", { name: /My experiment/ }).click();
 
-  await page.locator('input[type="file"]').setInputFiles(COUNTS);
+  await page.locator('input[type="file"]:not([webkitdirectory])').setInputFiles(COUNTS);
 
   const row = page.getByRole("listitem").filter({ hasText: "counts-brunello.tsv" });
   await expect(row).toBeVisible();
@@ -118,7 +123,14 @@ test("a count table becomes a queued run", async ({ page }) => {
   await page.getByRole("textbox", { name: "Screen name" }).fill(SCREEN_NAME);
   await page.getByRole("textbox", { name: "Cell line or model" }).fill("HAP1");
 
+  await page.getByLabel("Use T0 in this comparison").uncheck();
+  await page.getByRole("button", { name: /Pipeline settings/ }).click();
+  const bagel = page.getByRole("checkbox", { name: "BAGEL2", exact: true });
+  if (await bagel.isChecked()) await bagel.uncheck();
   await page.getByRole("button", { name: "Start the analysis" }).click();
+  await expect(page.getByRole("button", { name: "Run analysis" })).toBeDisabled();
+  await page.getByLabel("Confirm reviewed analysis plan").check();
+  await page.getByRole("button", { name: "Run analysis", exact: true }).click();
   await expect(page.getByText(/is (queued|analysing)/)).toBeVisible({ timeout: 60_000 });
 
   // --- what the database actually holds -----------------------------------
@@ -169,7 +181,7 @@ test("a count table becomes a queued run", async ({ page }) => {
     .from("samples")
     .select("label, role, replicate")
     .eq("screen_id", screen.id);
-  expect(samples).toHaveLength(5);
+  expect(samples).toHaveLength(4);
 
   const { data: comparisons } = await supabase
     .from("comparisons")
@@ -181,7 +193,7 @@ test("a count table becomes a queued run", async ({ page }) => {
   };
   expect(comparison.is_primary).toBe(true);
   expect(comparison.treatment_ids).toHaveLength(2);
-  expect(comparison.control_ids).toHaveLength(3);
+  expect(comparison.control_ids).toHaveLength(2);
 
   const { data: stages } = await supabase
     .from("run_stages")
@@ -197,21 +209,19 @@ test("a count table becomes a queued run", async ({ page }) => {
   expect((jobs![0] as { kind: string }).kind).toBe("pipeline");
 });
 
-test("a file SplicR cannot read is refused by name, not after the upload", async ({ page }) => {
+test("a supporting document is retained without becoming screen counts", async ({ page }) => {
   await page.goto("/dashboard/new");
   await page.getByRole("radio", { name: /My experiment/ }).click();
-
   const unreadable = path.join(process.cwd(), "e2e/fixtures/files/.tmp-notes.docx");
   fs.writeFileSync(unreadable, "not sequencing");
   try {
-    await page.locator('input[type="file"]').setInputFiles(unreadable);
-    await expect(page.getByRole("alert").filter({ hasText: "SplicR reads" })).toContainText(
-      "SplicR reads FASTQ and count tables",
-    );
-    await expect(page.getByText(".tmp-notes.docx", { exact: false }).first()).toBeVisible();
-    // Refused means nothing was created, not that it failed later.
-    const { data } = await admin().from("screens").select("id").eq("name", "Untitled screen").eq("status", "draft");
-    expect(data ?? []).toHaveLength(0);
+    await page.locator('input[type="file"]:not([webkitdirectory])').setInputFiles(unreadable);
+    const row = page.getByRole("listitem").filter({ hasText: ".tmp-notes.docx" });
+    await expect(row.getByText("Uploaded")).toBeVisible({ timeout: 60_000 });
+    await expect(row.getByText("Supporting file").first()).toBeVisible();
+    await page.getByRole("button", { name: "Describe the experiment" }).click();
+    await expect(page.getByText("No samples could be read from these files. A count table needs numeric sample columns.")).toBeVisible();
+    await page.getByRole("button", { name: "Discard", exact: true }).click();
   } finally {
     fs.rmSync(unreadable, { force: true });
   }

@@ -1,0 +1,679 @@
+{
+  "verified_at": "2026-10-05T19:52:36.466Z",
+  "screens": [
+    {
+      "id": "01a10d73-6b33-7dec-ade3-00acfdbbd63f",
+      "name": "olaparib / endpoint HeLa",
+      "status": "complete",
+      "qc": "warn",
+      "current_run_id": "01a10d8b-c3f1-7de4-b0c1-aa24036b936d",
+      "counts": {
+        "genes": "20524",
+        "splicr": "19",
+        "rra_depletion": "1",
+        "rra_enrichment": "24",
+        "drugz": "36",
+        "drugz_rows": "20432"
+      },
+      "stages": [
+        {
+          "stage": "ingest",
+          "status": "done",
+          "metrics": {
+            "notes": [],
+            "roles": {
+              "DMSO1": "control",
+              "DMSO2": "control",
+              "Olaparib1": "treatment",
+              "Olaparib2": "treatment"
+            },
+            "control": [
+              "DMSO1",
+              "DMSO2"
+            ],
+            "treatment": [
+              "Olaparib1",
+              "Olaparib2"
+            ]
+          }
+        },
+        {
+          "stage": "detect",
+          "status": "done",
+          "metrics": {
+            "library": "custom-01a10d72-b67f-7949-8e01-de04babba257-5191368a145fd618d94c21c32de7943c",
+            "n_guides": 123411
+          }
+        },
+        {
+          "stage": "count",
+          "status": "done",
+          "metrics": {
+            "n_guides": 123411,
+            "n_samples": 4
+          }
+        },
+        {
+          "stage": "qc",
+          "status": "done",
+          "metrics": {
+            "nnmd": null,
+            "auroc": null,
+            "notes": [
+              "NNMD/AUROC not assessed: essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay."
+            ],
+            "samples": [
+              {
+                "gini": 0.1896,
+                "role": "control",
+                "label": "DMSO1",
+                "notes": [
+                  "2.5% of guides have no reads.",
+                  "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+                  "Skew ratio 28.7 above 10 (90th/10th percentile guide count).",
+                  "85 mean reads per guide, below DepMap's 185 floor."
+                ],
+                "verdict": "warn",
+                "count_sum": 10000000,
+                "skew_ratio": 28.71,
+                "total_reads": null,
+                "zero_guides": 2926,
+                "mapped_reads": 10000000,
+                "mapping_rate": null,
+                "zero_fraction": 0.02479,
+                "mapping_source": "count_table",
+                "mean_reads_per_guide": 84.7,
+                "represented_fraction": 0.9565,
+                "mapping_rate_available": false
+              },
+              {
+                "gini": 0.1793,
+                "role": "control",
+                "label": "DMSO2",
+                "notes": [
+                  "1.9% of guides have no reads.",
+                  "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+                  "Skew ratio 24.9 above 10 (90th/10th percentile guide count).",
+                  "85 mean reads per guide, below DepMap's 185 floor."
+                ],
+                "verdict": "warn",
+                "count_sum": 10000000,
+                "skew_ratio": 24.88,
+                "total_reads": null,
+                "zero_guides": 2239,
+                "mapped_reads": 10000000,
+                "mapping_rate": null,
+                "zero_fraction": 0.01897,
+                "mapping_source": "count_table",
+                "mean_reads_per_guide": 84.7,
+                "represented_fraction": 0.9565,
+                "mapping_rate_available": false
+              },
+              {
+                "gini": 0.2125,
+                "role": "treatment",
+                "label": "Olaparib1",
+                "notes": [
+                  "4.1% of guides have no reads.",
+                  "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+                  "Skew ratio 41.4 above 10 (90th/10th percentile guide count).",
+                  "85 mean reads per guide, below DepMap's 185 floor."
+                ],
+                "verdict": "warn",
+                "count_sum": 10000000,
+                "skew_ratio": 41.4,
+                "total_reads": null,
+                "zero_guides": 4830,
+                "mapped_reads": 10000000,
+                "mapping_rate": null,
+                "zero_fraction": 0.04092,
+                "mapping_source": "count_table",
+                "mean_reads_per_guide": 84.7,
+                "represented_fraction": 0.9565,
+                "mapping_rate_available": false
+              },
+              {
+                "gini": 0.2131,
+                "role": "treatment",
+                "label": "Olaparib2",
+                "notes": [
+                  "4.5% of guides have no reads.",
+                  "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+                  "Skew ratio 41.2 above 10 (90th/10th percentile guide count).",
+                  "85 mean reads per guide, below DepMap's 185 floor."
+                ],
+                "verdict": "warn",
+                "count_sum": 10000000,
+                "skew_ratio": 41.2,
+                "total_reads": null,
+                "zero_guides": 5297,
+                "mapped_reads": 10000000,
+                "mapping_rate": null,
+                "zero_fraction": 0.04487,
+                "mapping_source": "count_table",
+                "mean_reads_per_guide": 84.7,
+                "represented_fraction": 0.9565,
+                "mapping_rate_available": false
+              }
+            ],
+            "verdict": "warn",
+            "nnmd_by_arm": {},
+            "nnmd_reason": "essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay",
+            "bottlenecked": [],
+            "suspect_arms": [],
+            "nnmd_contrast": "none available",
+            "n_essential_found": 0,
+            "n_nonessential_found": 0,
+            "replicate_correlations": [
+              {
+                "a": "DMSO1",
+                "b": "DMSO2",
+                "r": 0.9026,
+                "role": "control",
+                "r_lfc": null
+              },
+              {
+                "a": "Olaparib1",
+                "b": "Olaparib2",
+                "r": 0.8417,
+                "role": "treatment",
+                "r_lfc": null
+              }
+            ]
+          }
+        },
+        {
+          "stage": "hits",
+          "status": "done",
+          "metrics": {
+            "methods": [
+              "mageck_rra",
+              "drugz"
+            ],
+            "warnings": [
+              "BAGEL2 and the essential-direction inversion guard were not applied: this contrast is not a declared loss-of-function fitness endpoint against a library reference."
+            ],
+            "fdr_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
+            "fdr_threshold": 0.05,
+            "n_significant": 19,
+            "normalization": "median",
+            "essentiality_contrast": false
+          }
+        },
+        {
+          "stage": "artifacts",
+          "status": "done",
+          "metrics": {
+            "all_genes": {
+              "single_guide": 6847,
+              "frequent_hitter": 2002
+            },
+            "on_called_hits": {
+              "frequent_hitter": 10
+            }
+          }
+        },
+        {
+          "stage": "atlas",
+          "status": "done",
+          "metrics": {
+            "reason": null,
+            "release": "2.0.18",
+            "available": true,
+            "n_screens": 1952,
+            "n_comparable": 3,
+            "leakage_policy": "publication",
+            "n_frequent_hitters": 1937,
+            "min_screens_to_judge": 10,
+            "n_background_screens": 1167,
+            "n_genes_not_in_atlas": 974,
+            "n_genes_with_context": 19550,
+            "comparable_screen_ids": [
+              1455,
+              1843,
+              1348
+            ],
+            "n_genes_resolved_by_alias": 1407,
+            "n_screens_excluded_for_leakage": 378,
+            "n_genes_too_few_screens_to_judge": 9
+          }
+        },
+        {
+          "stage": "score",
+          "status": "skipped",
+          "metrics": {
+            "cohort": {
+              "fitted": false,
+              "source": "no cohort file at /data/validation/outcomes.json; the network is unfitted and every estimate is refused with a reason",
+              "n_heads": 0,
+              "problem": null,
+              "n_outcomes": 0,
+              "cohort_path": "/data/validation/outcomes.json",
+              "cohort_sha256": null
+            },
+            "context": {
+              "modality": "knockout",
+              "treatment": "olaparib / endpoint HeLa",
+              "model_type": "cancer_cell_line",
+              "assay_class": "drug_modifier",
+              "phenotype_family": "drug_resistance"
+            },
+            "n_called": 19,
+            "n_declined": 19,
+            "by_question": {
+              "reproduces": {
+                "reasons": {
+                  "head_not_fitted": 19
+                },
+                "declined": 19,
+                "estimated": 0
+              },
+              "cross_model": {
+                "reasons": {
+                  "head_not_fitted": 19
+                },
+                "declined": 19,
+                "estimated": 0
+              },
+              "pharmacologic": {
+                "reasons": {
+                  "head_not_fitted": 19
+                },
+                "declined": 19,
+                "estimated": 0
+              },
+              "target_specific": {
+                "reasons": {
+                  "head_not_fitted": 19
+                },
+                "declined": 19,
+                "estimated": 0
+              }
+            },
+            "n_estimated": 0
+          }
+        },
+        {
+          "stage": "report",
+          "status": "done",
+          "metrics": {}
+        }
+      ]
+    },
+    {
+      "id": "01a10d8b-2c99-7636-95e4-94047fd1f66c",
+      "name": "GSE145743 HeLa olaparib, raw GeCKOv2 A",
+      "status": "complete",
+      "qc": "fail",
+      "current_run_id": "01a10d9b-0fc4-77f5-be3e-e78c5ecffa47",
+      "counts": {
+        "genes": "20665",
+        "splicr": "5",
+        "rra_depletion": "0",
+        "rra_enrichment": "11",
+        "drugz": "19",
+        "drugz_rows": "20569"
+      },
+      "stages": [
+        {
+          "stage": "ingest",
+          "status": "done",
+          "metrics": {
+            "notes": [],
+            "roles": {
+              "SRR11144450_libA_DMSO_rep2": "control",
+              "SRR11144453_libA_DMSO_rep1": "control",
+              "SRR11144451_libA_olaparib_rep1": "treatment",
+              "SRR11144452_libA_olaparib_rep2": "treatment"
+            },
+            "control": [
+              "SRR11144453_libA_DMSO_rep1",
+              "SRR11144450_libA_DMSO_rep2"
+            ],
+            "treatment": [
+              "SRR11144451_libA_olaparib_rep1",
+              "SRR11144452_libA_olaparib_rep2"
+            ]
+          }
+        },
+        {
+          "stage": "detect",
+          "status": "done",
+          "metrics": {
+            "library": "geckov2-a",
+            "n_guides": 65383
+          }
+        },
+        {
+          "stage": "count",
+          "status": "done",
+          "metrics": {
+            "n_guides": 65383,
+            "n_samples": 4,
+            "sample_locations": {
+              "SRR11144450_libA_DMSO_rep2": {
+                "anchor": null,
+                "offsets": [
+                  23,
+                  22,
+                  24,
+                  21,
+                  20,
+                  25
+                ],
+                "anchor_name": null,
+                "guide_length": 20,
+                "probe_anchor": "GACGAAACACCG",
+                "search_window": 40,
+                "probe_anchor_name": "u6_tail",
+                "reverse_complement": false
+              },
+              "SRR11144453_libA_DMSO_rep1": {
+                "anchor": null,
+                "offsets": [
+                  23,
+                  22,
+                  24,
+                  21,
+                  27,
+                  20
+                ],
+                "anchor_name": null,
+                "guide_length": 20,
+                "probe_anchor": "GACGAAACACCG",
+                "search_window": 40,
+                "probe_anchor_name": "u6_tail",
+                "reverse_complement": false
+              },
+              "SRR11144451_libA_olaparib_rep1": {
+                "anchor": null,
+                "offsets": [
+                  23,
+                  22,
+                  24,
+                  21,
+                  29,
+                  25
+                ],
+                "anchor_name": null,
+                "guide_length": 20,
+                "probe_anchor": "GACGAAACACCG",
+                "search_window": 40,
+                "probe_anchor_name": "u6_tail",
+                "reverse_complement": false
+              },
+              "SRR11144452_libA_olaparib_rep2": {
+                "anchor": null,
+                "offsets": [
+                  23,
+                  22,
+                  24,
+                  21,
+                  20,
+                  28
+                ],
+                "anchor_name": null,
+                "guide_length": 20,
+                "probe_anchor": "GACGAAACACCG",
+                "search_window": 40,
+                "probe_anchor_name": "u6_tail",
+                "reverse_complement": false
+              }
+            }
+          }
+        },
+        {
+          "stage": "qc",
+          "status": "done",
+          "metrics": {
+            "nnmd": null,
+            "auroc": null,
+            "notes": [
+              "NNMD/AUROC not assessed: essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay.",
+              "Only 54% of SRR11144450_libA_DMSO_rep2 reads carry the vector anchor, against 90% across the other samples. The rest is not guide amplicon, so its effective depth is lower than its read count suggests."
+            ],
+            "samples": [
+              {
+                "gini": 0.1921,
+                "role": "control",
+                "label": "SRR11144453_libA_DMSO_rep1",
+                "notes": [
+                  "2.1% of guides have no reads.",
+                  "Skew ratio 29.8 above 10 (90th/10th percentile guide count).",
+                  "76 mean reads per guide, below DepMap's 185 floor."
+                ],
+                "verdict": "warn",
+                "count_sum": 4801210,
+                "skew_ratio": 29.83,
+                "total_reads": 5896213,
+                "zero_guides": 1364,
+                "mapped_reads": 4801210,
+                "mapping_rate": 0.8143,
+                "zero_fraction": 0.02146,
+                "mapping_source": "read_counting_summary",
+                "mean_reads_per_guide": 75.5,
+                "represented_fraction": 0.9721,
+                "mapping_rate_available": true
+              },
+              {
+                "gini": 0.2181,
+                "role": "treatment",
+                "label": "SRR11144451_libA_olaparib_rep1",
+                "notes": [
+                  "3.7% of guides have no reads.",
+                  "Skew ratio 40.5 above 10 (90th/10th percentile guide count).",
+                  "67 mean reads per guide, below DepMap's 185 floor."
+                ],
+                "verdict": "warn",
+                "count_sum": 4242866,
+                "skew_ratio": 40.5,
+                "total_reads": 4871170,
+                "zero_guides": 2366,
+                "mapped_reads": 4242866,
+                "mapping_rate": 0.871,
+                "zero_fraction": 0.03722,
+                "mapping_source": "read_counting_summary",
+                "mean_reads_per_guide": 66.8,
+                "represented_fraction": 0.9721,
+                "mapping_rate_available": true
+              },
+              {
+                "gini": 0.1707,
+                "role": "control",
+                "label": "SRR11144450_libA_DMSO_rep2",
+                "notes": [
+                  "1.5% of guides have no reads.",
+                  "Only 48.4% of reads mapped, below the 60% floor. Check the library call and the guide offset.",
+                  "Skew ratio 26.1 above 10 (90th/10th percentile guide count).",
+                  "111 mean reads per guide, below DepMap's 185 floor."
+                ],
+                "verdict": "fail",
+                "count_sum": 7081723,
+                "skew_ratio": 26.1,
+                "total_reads": 14638915,
+                "zero_guides": 947,
+                "mapped_reads": 7081723,
+                "mapping_rate": 0.4838,
+                "zero_fraction": 0.0149,
+                "mapping_source": "read_counting_summary",
+                "mean_reads_per_guide": 111.4,
+                "represented_fraction": 0.9721,
+                "mapping_rate_available": true
+              },
+              {
+                "gini": 0.1981,
+                "role": "treatment",
+                "label": "SRR11144452_libA_olaparib_rep2",
+                "notes": [
+                  "2.9% of guides have no reads.",
+                  "Skew ratio 40.8 above 10 (90th/10th percentile guide count).",
+                  "101 mean reads per guide, below DepMap's 185 floor."
+                ],
+                "verdict": "warn",
+                "count_sum": 6420721,
+                "skew_ratio": 40.83,
+                "total_reads": 7380260,
+                "zero_guides": 1851,
+                "mapped_reads": 6420721,
+                "mapping_rate": 0.87,
+                "zero_fraction": 0.02912,
+                "mapping_source": "read_counting_summary",
+                "mean_reads_per_guide": 101,
+                "represented_fraction": 0.9721,
+                "mapping_rate_available": true
+              }
+            ],
+            "verdict": "fail",
+            "nnmd_by_arm": {},
+            "nnmd_reason": "essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay",
+            "bottlenecked": [],
+            "suspect_arms": [],
+            "nnmd_contrast": "none available",
+            "n_essential_found": 0,
+            "n_nonessential_found": 0,
+            "replicate_correlations": [
+              {
+                "a": "SRR11144453_libA_DMSO_rep1",
+                "b": "SRR11144450_libA_DMSO_rep2",
+                "r": 0.9036,
+                "role": "control",
+                "r_lfc": null
+              },
+              {
+                "a": "SRR11144451_libA_olaparib_rep1",
+                "b": "SRR11144452_libA_olaparib_rep2",
+                "r": 0.8513,
+                "role": "treatment",
+                "r_lfc": null
+              }
+            ]
+          }
+        },
+        {
+          "stage": "hits",
+          "status": "done",
+          "metrics": {
+            "methods": [
+              "mageck_rra",
+              "drugz"
+            ],
+            "warnings": [
+              "BAGEL2 and the essential-direction inversion guard were not applied: this contrast is not a declared loss-of-function fitness endpoint against a library reference."
+            ],
+            "fdr_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
+            "fdr_threshold": 0.05,
+            "n_significant": 5,
+            "normalization": "median",
+            "essentiality_contrast": false
+          }
+        },
+        {
+          "stage": "artifacts",
+          "status": "done",
+          "metrics": {
+            "all_genes": {
+              "single_guide": 5882,
+              "frequent_hitter": 2003,
+              "multi_gene_guide": 862,
+              "promiscuous_guide": 2214
+            },
+            "on_called_hits": {
+              "frequent_hitter": 2,
+              "multi_gene_guide": 1,
+              "promiscuous_guide": 1
+            }
+          }
+        },
+        {
+          "stage": "atlas",
+          "status": "done",
+          "metrics": {
+            "reason": null,
+            "release": "2.0.18",
+            "available": true,
+            "n_screens": 1952,
+            "n_comparable": 3,
+            "leakage_policy": "publication",
+            "n_frequent_hitters": 1937,
+            "min_screens_to_judge": 10,
+            "n_background_screens": 1167,
+            "n_genes_not_in_atlas": 1020,
+            "n_genes_with_context": 19645,
+            "comparable_screen_ids": [
+              1455,
+              1843,
+              1348
+            ],
+            "n_genes_resolved_by_alias": 1444,
+            "n_screens_excluded_for_leakage": 378,
+            "n_genes_too_few_screens_to_judge": 9
+          }
+        },
+        {
+          "stage": "score",
+          "status": "skipped",
+          "metrics": {
+            "cohort": {
+              "fitted": false,
+              "source": "no cohort file at /data/validation/outcomes.json; the network is unfitted and every estimate is refused with a reason",
+              "n_heads": 0,
+              "problem": null,
+              "n_outcomes": 0,
+              "cohort_path": "/data/validation/outcomes.json",
+              "cohort_sha256": null
+            },
+            "context": {
+              "modality": "knockout",
+              "treatment": "GSE145743 HeLa olaparib, raw GeCKOv2 A",
+              "model_type": "other",
+              "assay_class": "drug_modifier",
+              "phenotype_family": "drug_resistance"
+            },
+            "n_called": 5,
+            "n_declined": 5,
+            "by_question": {
+              "reproduces": {
+                "reasons": {
+                  "head_not_fitted": 5
+                },
+                "declined": 5,
+                "estimated": 0
+              },
+              "cross_model": {
+                "reasons": {
+                  "head_not_fitted": 5
+                },
+                "declined": 5,
+                "estimated": 0
+              },
+              "pharmacologic": {
+                "reasons": {
+                  "head_not_fitted": 5
+                },
+                "declined": 5,
+                "estimated": 0
+              },
+              "target_specific": {
+                "reasons": {
+                  "head_not_fitted": 5
+                },
+                "declined": 5,
+                "estimated": 0
+              }
+            },
+            "n_estimated": 0
+          }
+        },
+        {
+          "stage": "report",
+          "status": "done",
+          "metrics": {}
+        }
+      ]
+    }
+  ],
+  "raw_repeat_statistics": {
+    "status": "unavailable",
+    "reason": "Before the preservation migration, reruns replaced previous database result rows. Hit-count agreement and exported current statistics are retained; no missing per-gene history is reconstructed."
+  }
+}

@@ -1,0 +1,368 @@
+{
+  "screens": [
+    {
+      "id": "01a10d34-67f8-7487-abde-8fbb613f8599",
+      "name": "Trametinib ICSBCS002",
+      "org_id": "01a0f985-0517-75cd-b999-3d8291c0b020",
+      "cell_line": "ICSBCS002",
+      "current_run_id": "01a10d34-67fa-7619-af71-fe7998666be5",
+      "source_ref": "01a10d34-432f-720a-8e5d-3cd9dc266907"
+    },
+    {
+      "id": "01a10d34-67dc-755d-827a-f83c50cffa2c",
+      "name": "Essentiality ICSBCS002",
+      "org_id": "01a0f985-0517-75cd-b999-3d8291c0b020",
+      "cell_line": "ICSBCS002",
+      "current_run_id": "01a10d34-67e8-7c05-826f-cb8295584c83",
+      "source_ref": "01a10d34-432f-720a-8e5d-3cd9dc266907"
+    },
+    {
+      "id": "01a10d34-67f1-7c7a-a952-d37fac497830",
+      "name": "Gefitinib ICSBCS002",
+      "org_id": "01a0f985-0517-75cd-b999-3d8291c0b020",
+      "cell_line": "ICSBCS002",
+      "current_run_id": "01a10d34-67f3-77ea-8134-fbcb8b744ee1",
+      "source_ref": "01a10d34-432f-720a-8e5d-3cd9dc266907"
+    },
+    {
+      "id": "01a10d34-67fe-7777-a617-7781206b392a",
+      "name": "Essentiality ICSBCS007",
+      "org_id": "01a0f985-0517-75cd-b999-3d8291c0b020",
+      "cell_line": "ICSBCS007",
+      "current_run_id": "01a10d34-6800-7e71-95a3-0152d782da82",
+      "source_ref": "01a10d34-432f-720a-8e5d-3cd9dc266907"
+    },
+    {
+      "id": "01a10d34-6804-7f2a-87cb-a68ffb5e3002",
+      "name": "Gefitinib ICSBCS007",
+      "org_id": "01a0f985-0517-75cd-b999-3d8291c0b020",
+      "cell_line": "ICSBCS007",
+      "current_run_id": "01a10d34-6806-734c-a3f4-3f39cf0afb15",
+      "source_ref": "01a10d34-432f-720a-8e5d-3cd9dc266907"
+    },
+    {
+      "id": "01a10d34-6809-753d-85b3-be6b018a8e81",
+      "name": "Trametinib ICSBCS007",
+      "org_id": "01a0f985-0517-75cd-b999-3d8291c0b020",
+      "cell_line": "ICSBCS007",
+      "current_run_id": "01a10d34-680d-74c3-bf06-501045a6d9d8",
+      "source_ref": "01a10d34-432f-720a-8e5d-3cd9dc266907"
+    }
+  ],
+  "runs": [
+    {
+      "id": "01a10d34-67e8-7c05-826f-cb8295584c83",
+      "settings": {
+        "source": {
+          "sheet": "ICSBCS002 gRNA raw count",
+          "fileId": "01a10d34-47b2-774f-9d33-d4b458c96059"
+        },
+        "model_type": "organoid",
+        "hit_callers": [
+          "mageck_rra",
+          "mageck_mle"
+        ],
+        "drugz_paired": false,
+        "cn_correction": false,
+        "experiment_id": "01a10d34-432f-720a-8e5d-3cd9dc266907",
+        "fdr_threshold": 0.05,
+        "guide_aliases": {
+          "PRL9_e3.1": "RPL9_e3.1",
+          "PRL9_e3.2": "RPL9_e3.2",
+          "PRL9_e4.1": "RPL9_e4.1",
+          "PRL9_e4.2": "RPL9_e4.2"
+        },
+        "normalization": "median"
+      },
+      "status": "queued"
+    },
+    {
+      "id": "01a10d34-67f3-77ea-8134-fbcb8b744ee1",
+      "settings": {
+        "source": {
+          "sheet": "ICSBCS002 gRNA raw count",
+          "fileId": "01a10d34-47b2-774f-9d33-d4b458c96059"
+        },
+        "model_type": "organoid",
+        "hit_callers": [
+          "mageck_rra",
+          "mageck_mle",
+          "drugz"
+        ],
+        "cn_correction": false,
+        "experiment_id": "01a10d34-432f-720a-8e5d-3cd9dc266907",
+        "fdr_threshold": 0.05,
+        "guide_aliases": {
+          "PRL9_e3.1": "RPL9_e3.1",
+          "PRL9_e3.2": "RPL9_e3.2",
+          "PRL9_e4.1": "RPL9_e4.1",
+          "PRL9_e4.2": "RPL9_e4.2"
+        },
+        "normalization": "median"
+      },
+      "status": "queued"
+    },
+    {
+      "id": "01a10d34-67fa-7619-af71-fe7998666be5",
+      "settings": {
+        "source": {
+          "sheet": "ICSBCS002 gRNA raw count",
+          "fileId": "01a10d34-47b2-774f-9d33-d4b458c96059"
+        },
+        "model_type": "organoid",
+        "hit_callers": [
+          "mageck_rra",
+          "mageck_mle",
+          "drugz"
+        ],
+        "cn_correction": false,
+        "experiment_id": "01a10d34-432f-720a-8e5d-3cd9dc266907",
+        "fdr_threshold": 0.05,
+        "guide_aliases": {
+          "PRL9_e3.1": "RPL9_e3.1",
+          "PRL9_e3.2": "RPL9_e3.2",
+          "PRL9_e4.1": "RPL9_e4.1",
+          "PRL9_e4.2": "RPL9_e4.2"
+        },
+        "normalization": "median"
+      },
+      "status": "queued"
+    },
+    {
+      "id": "01a10d34-6800-7e71-95a3-0152d782da82",
+      "settings": {
+        "source": {
+          "sheet": "ICSBCS007 gRNA raw count",
+          "fileId": "01a10d34-47b2-774f-9d33-d4b458c96059"
+        },
+        "model_type": "organoid",
+        "hit_callers": [
+          "mageck_rra",
+          "mageck_mle"
+        ],
+        "drugz_paired": false,
+        "cn_correction": false,
+        "experiment_id": "01a10d34-432f-720a-8e5d-3cd9dc266907",
+        "fdr_threshold": 0.05,
+        "guide_aliases": {
+          "PRL9_e3.1": "RPL9_e3.1",
+          "PRL9_e3.2": "RPL9_e3.2",
+          "PRL9_e4.1": "RPL9_e4.1",
+          "PRL9_e4.2": "RPL9_e4.2"
+        },
+        "normalization": "median"
+      },
+      "status": "queued"
+    },
+    {
+      "id": "01a10d34-6806-734c-a3f4-3f39cf0afb15",
+      "settings": {
+        "source": {
+          "sheet": "ICSBCS007 gRNA raw count",
+          "fileId": "01a10d34-47b2-774f-9d33-d4b458c96059"
+        },
+        "model_type": "organoid",
+        "hit_callers": [
+          "mageck_rra",
+          "mageck_mle",
+          "drugz"
+        ],
+        "cn_correction": false,
+        "experiment_id": "01a10d34-432f-720a-8e5d-3cd9dc266907",
+        "fdr_threshold": 0.05,
+        "guide_aliases": {
+          "PRL9_e3.1": "RPL9_e3.1",
+          "PRL9_e3.2": "RPL9_e3.2",
+          "PRL9_e4.1": "RPL9_e4.1",
+          "PRL9_e4.2": "RPL9_e4.2"
+        },
+        "normalization": "median"
+      },
+      "status": "queued"
+    },
+    {
+      "id": "01a10d34-680d-74c3-bf06-501045a6d9d8",
+      "settings": {
+        "source": {
+          "sheet": "ICSBCS007 gRNA raw count",
+          "fileId": "01a10d34-47b2-774f-9d33-d4b458c96059"
+        },
+        "model_type": "organoid",
+        "hit_callers": [
+          "mageck_rra",
+          "mageck_mle",
+          "drugz"
+        ],
+        "cn_correction": false,
+        "experiment_id": "01a10d34-432f-720a-8e5d-3cd9dc266907",
+        "fdr_threshold": 0.05,
+        "guide_aliases": {
+          "PRL9_e3.1": "RPL9_e3.1",
+          "PRL9_e3.2": "RPL9_e3.2",
+          "PRL9_e4.1": "RPL9_e4.1",
+          "PRL9_e4.2": "RPL9_e4.2"
+        },
+        "normalization": "median"
+      },
+      "status": "queued"
+    }
+  ],
+  "previousRuns": [
+    {
+      "id": "01a10d34-67e8-7c05-826f-cb8295584c83",
+      "settings": {
+        "source": {
+          "sheet": "ICSBCS002 gRNA raw count",
+          "fileId": "01a10d34-47b2-774f-9d33-d4b458c96059"
+        },
+        "model_type": "organoid",
+        "hit_callers": [
+          "mageck_rra",
+          "mageck_mle"
+        ],
+        "drugz_paired": false,
+        "cn_correction": false,
+        "experiment_id": "01a10d34-432f-720a-8e5d-3cd9dc266907",
+        "fdr_threshold": 0.05,
+        "guide_aliases": {
+          "PRL9_e3.1": "RPL9_e3.1",
+          "PRL9_e3.2": "RPL9_e3.2",
+          "PRL9_e4.1": "RPL9_e4.1",
+          "PRL9_e4.2": "RPL9_e4.2"
+        },
+        "normalization": "median"
+      },
+      "status": "queued"
+    },
+    {
+      "id": "01a10d34-67f3-77ea-8134-fbcb8b744ee1",
+      "settings": {
+        "source": {
+          "sheet": "ICSBCS002 gRNA raw count",
+          "fileId": "01a10d34-47b2-774f-9d33-d4b458c96059"
+        },
+        "model_type": "organoid",
+        "hit_callers": [
+          "mageck_rra",
+          "mageck_mle",
+          "drugz"
+        ],
+        "cn_correction": false,
+        "experiment_id": "01a10d34-432f-720a-8e5d-3cd9dc266907",
+        "fdr_threshold": 0.05,
+        "guide_aliases": {
+          "PRL9_e3.1": "RPL9_e3.1",
+          "PRL9_e3.2": "RPL9_e3.2",
+          "PRL9_e4.1": "RPL9_e4.1",
+          "PRL9_e4.2": "RPL9_e4.2"
+        },
+        "normalization": "median"
+      },
+      "status": "queued"
+    },
+    {
+      "id": "01a10d34-67fa-7619-af71-fe7998666be5",
+      "settings": {
+        "source": {
+          "sheet": "ICSBCS002 gRNA raw count",
+          "fileId": "01a10d34-47b2-774f-9d33-d4b458c96059"
+        },
+        "model_type": "organoid",
+        "hit_callers": [
+          "mageck_rra",
+          "mageck_mle",
+          "drugz"
+        ],
+        "cn_correction": false,
+        "experiment_id": "01a10d34-432f-720a-8e5d-3cd9dc266907",
+        "fdr_threshold": 0.05,
+        "guide_aliases": {
+          "PRL9_e3.1": "RPL9_e3.1",
+          "PRL9_e3.2": "RPL9_e3.2",
+          "PRL9_e4.1": "RPL9_e4.1",
+          "PRL9_e4.2": "RPL9_e4.2"
+        },
+        "normalization": "median"
+      },
+      "status": "queued"
+    },
+    {
+      "id": "01a10d34-6800-7e71-95a3-0152d782da82",
+      "settings": {
+        "source": {
+          "sheet": "ICSBCS007 gRNA raw count",
+          "fileId": "01a10d34-47b2-774f-9d33-d4b458c96059"
+        },
+        "model_type": "organoid",
+        "hit_callers": [
+          "mageck_rra",
+          "mageck_mle"
+        ],
+        "drugz_paired": false,
+        "cn_correction": false,
+        "experiment_id": "01a10d34-432f-720a-8e5d-3cd9dc266907",
+        "fdr_threshold": 0.05,
+        "guide_aliases": {
+          "PRL9_e3.1": "RPL9_e3.1",
+          "PRL9_e3.2": "RPL9_e3.2",
+          "PRL9_e4.1": "RPL9_e4.1",
+          "PRL9_e4.2": "RPL9_e4.2"
+        },
+        "normalization": "median"
+      },
+      "status": "queued"
+    },
+    {
+      "id": "01a10d34-6806-734c-a3f4-3f39cf0afb15",
+      "settings": {
+        "source": {
+          "sheet": "ICSBCS007 gRNA raw count",
+          "fileId": "01a10d34-47b2-774f-9d33-d4b458c96059"
+        },
+        "model_type": "organoid",
+        "hit_callers": [
+          "mageck_rra",
+          "mageck_mle",
+          "drugz"
+        ],
+        "cn_correction": false,
+        "experiment_id": "01a10d34-432f-720a-8e5d-3cd9dc266907",
+        "fdr_threshold": 0.05,
+        "guide_aliases": {
+          "PRL9_e3.1": "RPL9_e3.1",
+          "PRL9_e3.2": "RPL9_e3.2",
+          "PRL9_e4.1": "RPL9_e4.1",
+          "PRL9_e4.2": "RPL9_e4.2"
+        },
+        "normalization": "median"
+      },
+      "status": "queued"
+    },
+    {
+      "id": "01a10d34-680d-74c3-bf06-501045a6d9d8",
+      "settings": {
+        "source": {
+          "sheet": "ICSBCS007 gRNA raw count",
+          "fileId": "01a10d34-47b2-774f-9d33-d4b458c96059"
+        },
+        "model_type": "organoid",
+        "hit_callers": [
+          "mageck_rra",
+          "mageck_mle",
+          "drugz"
+        ],
+        "cn_correction": false,
+        "experiment_id": "01a10d34-432f-720a-8e5d-3cd9dc266907",
+        "fdr_threshold": 0.05,
+        "guide_aliases": {
+          "PRL9_e3.1": "RPL9_e3.1",
+          "PRL9_e3.2": "RPL9_e3.2",
+          "PRL9_e4.1": "RPL9_e4.1",
+          "PRL9_e4.2": "RPL9_e4.2"
+        },
+        "normalization": "median"
+      },
+      "status": "queued"
+    }
+  ]
+}

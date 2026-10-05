@@ -30,6 +30,7 @@ const schema = JSON.parse(fs.readFileSync(srcPath("lib/data/disagreement.schema.
 
 const screenId = "00000000-0000-4000-8000-000000000001";
 const orgId = "00000000-0000-4000-8000-000000000002";
+const runId = "00000000-0000-4000-8000-000000000003";
 const cmpId = "00000000-0000-4000-8000-0000000000cc";
 const workspace = { isDemo: false, user: { id: "user" }, org: { id: orgId }, role: "member" };
 
@@ -231,7 +232,7 @@ test("a malformed screen id or an empty symbol is refused before any read", asyn
 test("a gene symbol reaching the query is reduced to symbol characters", async () => {
   const app = harness({
     responses: {
-      screens: { data: { id: screenId }, error: null },
+      screens: { data: { id: screenId, current_run_id: runId }, error: null },
       gene_disagreement: { data: { report: report(), created_at: "2026-09-30T18:00:00Z" }, error: null },
     },
   });
@@ -240,21 +241,21 @@ test("a gene symbol reaching the query is reduced to symbol characters", async (
   const read = app.queries.find((q) => q.table === "gene_disagreement");
   assert.deepEqual(
     read.filters,
-    [["screen_id", screenId], ["gene_symbol", "PARP1ORX"], ["schema_version", "1"]],
+    [["screen_id", screenId], ["run_id", runId], ["gene_symbol", "PARP1ORX"], ["schema_version", "1"]],
   );
 });
 
 test("a run that stored no reports is not analysed; a gene that has none is missing one", async () => {
   const stored = { data: null, error: null, count: 0 };
   const none = harness({
-    responses: { screens: { data: { id: screenId }, error: null }, gene_disagreement: stored },
+    responses: { screens: { data: { id: screenId, current_run_id: runId }, error: null }, gene_disagreement: stored },
   });
   assert.equal((await none.getGeneDisagreement(screenId, "PARP1")).status, "not_analysed");
 
   // Same missing row, but the screen does hold reports for other genes.
   const some = harness({
     responses: {
-      screens: { data: { id: screenId }, error: null },
+      screens: { data: { id: screenId, current_run_id: runId }, error: null },
       gene_disagreement: { data: null, error: null, count: 1284 },
     },
   });
@@ -266,7 +267,7 @@ test("a run that stored no reports is not analysed; a gene that has none is miss
 test("a read failure is unavailable, never an empty report", async () => {
   const app = harness({
     responses: {
-      screens: { data: { id: screenId }, error: null },
+      screens: { data: { id: screenId, current_run_id: runId }, error: null },
       gene_disagreement: { data: null, error: { message: "connection reset" } },
     },
   });
@@ -276,7 +277,7 @@ test("a read failure is unavailable, never an empty report", async () => {
 test("a document that is not a report is unavailable rather than rendered", async () => {
   const app = harness({
     responses: {
-      screens: { data: { id: screenId }, error: null },
+      screens: { data: { id: screenId, current_run_id: runId }, error: null },
       gene_disagreement: { data: { report: { gene_symbol: "PARP1" }, created_at: null }, error: null },
     },
   });
@@ -286,7 +287,7 @@ test("a document that is not a report is unavailable rather than rendered", asyn
 test("a stored report is returned with the time it was recorded", async () => {
   const app = harness({
     responses: {
-      screens: { data: { id: screenId }, error: null },
+      screens: { data: { id: screenId, current_run_id: runId }, error: null },
       gene_disagreement: { data: { report: report(), created_at: "2026-09-30T18:00:00Z" }, error: null },
     },
   });

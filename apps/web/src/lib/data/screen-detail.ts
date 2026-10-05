@@ -27,6 +27,7 @@ export interface WorkspaceScreen {
   status: string;
   qc: string;
   current_run_id: string | null;
+  source_ref?: string | null;
   /** NCBI taxonomy id. The Atlas holds human screens only, so evidence is shown for 9606. */
   taxid: number | null;
 }
@@ -36,6 +37,7 @@ export interface WorkspaceRun {
   status: string;
   engine_version: string | null;
   image_digest: string | null;
+  settings?: { fdr_threshold?: number; [key: string]: unknown } | null;
   created_at: string;
   error: string | null;
 }
@@ -49,6 +51,12 @@ export interface WorkspaceHit {
   p_value: number | null;
   fdr: number | null;
   bayes_factor: number | null;
+  depleted_fdr?: number | null;
+  enriched_fdr?: number | null;
+  norm_z?: number | null;
+  drugz_fdr?: number | null;
+  mle_beta?: number | null;
+  mle_fdr?: number | null;
   n_guides: number | null;
   n_good_guides: number | null;
   guide_lfcs: number[] | null;
@@ -176,13 +184,13 @@ export async function getScreenDetail(
   try {
     const client = await createClient();
     const screenResult = await client.from("screens")
-      .select("id, name, description, cell_line, modality, phenotype, status, qc, current_run_id, taxid")
+      .select("id, name, description, cell_line, modality, phenotype, status, qc, current_run_id, taxid, source_ref")
       .eq("id", screenId).eq("org_id", context.org.id).maybeSingle();
     if (screenResult.error) throw screenResult.error;
     if (!screenResult.data) return { status: "not_found" };
     const screen = screenResult.data as WorkspaceScreen;
     let runQuery = client.from("runs")
-      .select("id, status, engine_version, image_digest, created_at, error")
+      .select("id, status, engine_version, image_digest, created_at, error, settings")
       .eq("screen_id", screenId).eq("org_id", context.org.id);
     if (screen.current_run_id) runQuery = runQuery.eq("id", screen.current_run_id);
     const runResult = await runQuery.order("created_at", { ascending: false }).limit(1).maybeSingle();
@@ -193,9 +201,10 @@ export async function getScreenDetail(
       if (screen.current_run_id) return { status: "unavailable" };
       return { status: "found", detail: { screen, run: null, qc: null, stages: [], comparisons: [], hits: [], total: 0, page, summary: EMPTY_SUMMARY } };
     }
+    const threshold = run.settings?.fdr_threshold ?? SIGNIFICANT_FDR;
     const flagJoin = query.flagged ? "hit_flags!inner(flag, severity, message)" : "hit_flags(flag, severity, message)";
     const columns =
-      `id, comparison_id, gene_symbol, direction, lfc, p_value, fdr, bayes_factor, n_guides, n_good_guides, guide_lfcs, chance_real, model_version, ${flagJoin}`;
+      `id, comparison_id, gene_symbol, direction, lfc, p_value, fdr, bayes_factor, depleted_fdr, enriched_fdr, norm_z, drugz_fdr, mle_beta, mle_fdr, n_guides, n_good_guides, guide_lfcs, chance_real, model_version, ${flagJoin}`;
 
     // Filters are added only when set, so the default view issues exactly the
     // statement it always did: this screen's rows for this run.
@@ -225,9 +234,9 @@ export async function getScreenDetail(
       hitsQuery,
       base("id").eq("direction", "depleted"),
       base("id").eq("direction", "enriched"),
-      base("id").lte("fdr", SIGNIFICANT_FDR),
+      base("id").lt("fdr", threshold),
       base("id, hit_flags!inner(flag)"),
-      base("id, hit_flags!inner(flag)").lte("fdr", SIGNIFICANT_FDR),
+      base("id, hit_flags!inner(flag)").lt("fdr", threshold),
       client.from("run_qc")
         .select("verdict, notes, nnmd, auroc, min_replicate_r, median_replicate_r, bottlenecked_samples, metrics")
         .eq("run_id", run.id).maybeSingle(),

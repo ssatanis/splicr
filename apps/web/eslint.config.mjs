@@ -15,6 +15,8 @@ const eslintConfig = defineConfig([
     // Copied out of the pinned pdbe-molstar package by scripts/copy-vendor.mjs.
     // It is a 6 MB minified third-party bundle, not source in this repository.
     "public/vendor/**",
+    "test-results/**",
+    "playwright-report/**",
   ]),
   {
     // The end-to-end suite is CommonJS: Playwright transpiles the specs that

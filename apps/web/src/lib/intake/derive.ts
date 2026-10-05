@@ -39,9 +39,10 @@ export function guessReplicate(label: string): number {
 export function sampleFromFileName(name: string): string {
   const base = (name.split("/").pop() ?? name)
     .replace(/\.(fastq|fq)(\.gz|\.bz2)?$/i, "")
-    .replace(/[._-](R?[12])(_001)?$/i, "")
+    .replace(/[._-](R[12])(_001)?$/i, "")
     .replace(/_S\d+_L\d{3}$/i, "");
-  return base || name;
+  const folder = name.includes("/") ? name.slice(0, name.lastIndexOf("/") + 1) : "";
+  return folder + (base || name);
 }
 
 export function deriveSamples(
@@ -57,16 +58,23 @@ export function deriveSamples(
     }));
   }
 
-  const byLabel = new Map<string, IntakeSample>();
+  const grouped = new Map<string, typeof fastqNames>();
   for (const file of fastqNames) {
     const label = sampleFromFileName(file.name);
-    if (byLabel.has(label)) continue;
-    byLabel.set(label, {
+    grouped.set(label, [...(grouped.get(label) ?? []), file]);
+  }
+  return [...grouped].map(([label, files]) => {
+    const read2 = files.filter((file) => /[._-]R2(?:_001)?\.(?:fastq|fq)(?:\.gz)?$/i.test(file.name));
+    const read1 = files.filter((file) => !read2.includes(file));
+    const chosen = read1.length ? read1 : read2;
+    return {
       label,
       role: guessRole(label),
       replicate: guessReplicate(label),
-      file_id: file.fileId,
-    });
-  }
-  return [...byLabel.values()];
+      file_id: chosen[0].fileId,
+      file_ids: chosen.map((file) => file.fileId),
+      read1_file_ids: read1.map((file) => file.fileId),
+      read2_file_ids: read2.map((file) => file.fileId),
+    };
+  });
 }

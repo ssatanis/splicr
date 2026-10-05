@@ -1,0 +1,7 @@
+Sample,Model,Condition,Role,Replicate,Timepoint
+DMSO1,HeLa,vehicle,control,1,endpoint
+DMSO2,HeLa,vehicle,control,2,endpoint
+Olaparib1,HeLa,olaparib,treatment,1,endpoint
+Olaparib2,HeLa,olaparib,treatment,2,endpoint
+input,HeLa,input,reference,1,baseline
+plasmid,HeLa,plasmid,plasmid,1,baseline

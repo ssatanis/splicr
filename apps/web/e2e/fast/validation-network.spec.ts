@@ -298,8 +298,8 @@ test("PRKDC climbs the ladder genetically and does not climb it pharmacologicall
     const text = (await ladder.innerText()).replace(/\s+/g, " ");
     // Genetic reproduction met; pharmacologic not met; the untested rungs are
     // "Not tested" and never styled or worded as failures.
-    expect(text).toMatch(/Guide reproducibility Met/);
-    expect(text).toMatch(/Pharmacologic evidence Not met/);
+    expect(text).toMatch(/Guide reproducibility Reported Met/);
+    expect(text).toMatch(/Pharmacologic evidence Reported Not met/);
     expect(text).toMatch(/Orthogonal genetic evidence Not tested/);
     expect(text).toMatch(/In vivo Not tested/);
     expect(text).toMatch(/not a negative result about this gene/);
@@ -342,9 +342,9 @@ test("two inhibitors that disagree leave the rung mixed, not failed", async ({ p
     await page.goto(`${TRUTH_LOOP}?gene=${symbol}`);
     const ladder = page.getByRole("region", { name: new RegExp(`Validation ladder: ${symbol}`, "i") });
     const text = (await ladder.innerText()).replace(/\s+/g, " ");
-    expect(text).toMatch(/Pharmacologic evidence Mixed/);
+    expect(text).toMatch(/Pharmacologic evidence Reported Mixed/);
     expect(text).toMatch(/1 met, 1 did not/);
-    expect(text).toMatch(/disagreement is information rather than noise/);
+    expect(text).toMatch(/required criteria were not recorded/);
     // A mixed rung is worth another replicate before a new rung is climbed.
     expect(text).toMatch(/Next: Pharmacologic evidence/);
   } finally {

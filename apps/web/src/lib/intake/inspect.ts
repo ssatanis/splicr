@@ -1,5 +1,7 @@
 import "server-only";
 
+import { CONTEXT_BYTES, inspectContext, type ContextContent } from "./context";
+
 /**
  * Reading the beginning of a file a researcher has just uploaded, on the server.
  *
@@ -16,6 +18,9 @@ import "server-only";
  * thousand guides, which is more than enough to fingerprint a library, and 1 MB
  * of a FASTQ is several thousand reads.
  */
+import { parseTables, type ParsedTable } from "./tables";
+import type { TableMapping } from "./mapping";
+
 import { gunzipSync, constants as zlibConstants } from "node:zlib";
 
 import { createClient } from "@/lib/supabase/server";
@@ -46,6 +51,7 @@ export interface CountTableShape {
   sequence_column: string | null;
   sample_columns: string[];
   rows_seen: number;
+  guide_ids?: string[];
   /** A handful of rows, so the researcher can confirm it read what they meant. */
   preview: string[][];
   libraries: LibraryCandidate[];
@@ -59,7 +65,12 @@ export interface FastqShape {
   first_read: string | null;
 }
 
-export type FileShape = CountTableShape | FastqShape;
+export interface TablesShape {
+  kind: "tables";
+  tables: Omit<ParsedTable, "guides">[];
+}
+export type ContextShape = ContextContent;
+export type FileShape = CountTableShape | FastqShape | TablesShape | ContextShape;
 
 export interface InspectFailure {
   ok: false;
@@ -143,7 +154,7 @@ function lines(text: string): string[] {
 // Count tables
 // ---------------------------------------------------------------------------
 
-const GUIDE_NAME = /^(sgrna|sg_?rna|guide|grna|id|name|sgid)$/i;
+const GUIDE_NAME = /^(sgrna|sg_?rna|guide|guide_id|grna|id|name|sgid)$/i;
 const GENE_NAME = /^(gene|gene_?symbol|symbol|target|target_?gene|genes)$/i;
 const SEQUENCE_NAME = /(seq|sequence|protospacer|spacer)/i;
 const DNA = /^[ACGTNacgtn]{15,40}$/;
@@ -309,14 +320,49 @@ function parseFastq(text: string): FastqShape | null {
  */
 export async function inspectStoredFile(
   key: string,
-  kind: "counts" | "fastq" | "library",
+  kind: "counts" | "fastq" | "library" | "context",
   compressed: boolean,
+  name = key,
+  mappings: Record<string, TableMapping> = {},
 ): Promise<InspectResult> {
-  const head = await headOfObject(key, kind === "fastq" ? FASTQ_HEAD_BYTES : TABLE_HEAD_BYTES);
+  if (kind === "context" && !/\.(csv|tsv|txt|xlsx?|xlsb|ods|json)(\.gz)?$/i.test(name) && !Object.keys(mappings).length) {
+    const size = await objectExists(key);
+    if (size === null) return { ok: false, error: "The uploaded file could not be read back from storage." };
+    const bytes = await headOfObject(key, Math.min(size, CONTEXT_BYTES));
+    if (!bytes) return { ok: false, error: "The supporting file could not be read back from storage." };
+    return { ok: true, ...await inspectContext(bytes, name, size <= CONTEXT_BYTES) };
+  }
+  const workbook = /\.(xlsx?|xlsb|ods)$/i.test(name);
+  const size = kind === "fastq" ? null : await objectExists(key);
+  if (workbook && (size === null || size > 64 * 1024 * 1024)) return { ok: false, error: "Workbook review supports up to 64 MB. Export large worksheets as CSV or TSV." };
+  const fullTable = size !== null && size <= 64 * 1024 * 1024 && kind !== "fastq";
+  const head = await headOfObject(key, fullTable ? size! : workbook ? size! : kind === "fastq" ? FASTQ_HEAD_BYTES : TABLE_HEAD_BYTES);
   if (head === null || head.length === 0) {
     return { ok: false, error: "The uploaded file could not be read back from storage." };
   }
 
+  if (workbook || fullTable) {
+    try {
+      const bytes = compressed ? gunzipSync(head, { maxOutputLength: 64 * 1024 * 1024 }) : head;
+      if (/\.txt(\.gz)?$/i.test(name) && !new TextDecoder().decode(bytes).match(/[,\t]/)) return { ok: true, ...await inspectContext(bytes, name.replace(/\.gz$/i, "")) };
+      if (/\.json(\.gz)?$/i.test(name)) {
+        const json: unknown = JSON.parse(new TextDecoder().decode(bytes));
+        if (!Array.isArray(json) && !(json && typeof json === "object" && "columns" in json && "data" in json)) return { ok: true, ...await inspectContext(bytes, name.replace(/\.gz$/i, "")) };
+      }
+      const tables = parseTables(bytes, name, mappings).map(({ guides, ...table }) => { void guides; return table; });
+      if (!workbook && tables.length === 1 && tables[0].kind === "counts" && !tables[0].mapping) {
+        const table = tables[0];
+        const text = new TextDecoder().decode(bytes);
+        const delimiter = text.includes("\t") ? "tab" : "comma";
+        const shape: CountTableShape = { kind: "counts", delimiter, columns: table.columns, guide_column: table.guide_column, gene_column: table.gene_column, sequence_column: table.sequence_column, sample_columns: table.sample_columns, rows_seen: table.rows_seen, guide_ids: table.guide_ids, preview: table.preview, libraries: [] };
+        shape.libraries = await detectLibrary(guideSequences(text, shape));
+        return { ok: true, ...shape };
+      }
+      return { ok: true, kind: "tables", tables };
+    } catch (error) {
+      return { ok: false, error: error instanceof Error ? error.message : "This workbook could not be read." };
+    }
+  }
   // The extension says gzip; the first two bytes decide.
   const gzipped = head.length > 1 && head[0] === 0x1f && head[1] === 0x8b;
   if (compressed && !gzipped) {
@@ -352,4 +398,15 @@ export async function inspectStoredFile(
 
   const libraries = await detectLibrary(guideSequences(text, shape));
   return { ok: true, ...shape, libraries };
+}
+
+export async function readLibraryTable(key: string, name: string, sheet: string, mappings: Record<string, TableMapping> = {}): Promise<ParsedTable> {
+  const size = await objectExists(key);
+  if (!size || size > 64 * 1024 * 1024) throw new Error("Custom library import supports up to 64 MB.");
+  const bytes = await headOfObject(key, size);
+  if (!bytes) throw new Error("The library could not be read back.");
+  const decoded = /\.gz$/i.test(name) ? gunzipSync(bytes, { maxOutputLength: 64 * 1024 * 1024 }) : bytes;
+  const table = parseTables(decoded, name, mappings).find((table) => table.sheet === sheet && table.kind === "library");
+  if (!table) throw new Error("Choose a table with guide IDs, gene symbols and sequences.");
+  return table;
 }

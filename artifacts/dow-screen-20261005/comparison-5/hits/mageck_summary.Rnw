@@ -1,0 +1,1063 @@
+% This is a template file for Sweave used in MAGeCK
+% Author: Wei Li, Shirley Liu lab
+% Do not modify lines beginning with "#__".
+\documentclass{article}
+
+\usepackage{amsmath}
+\usepackage{amscd}
+\usepackage[tableposition=top]{caption}
+\usepackage{ifthen}
+\usepackage{fullpage}
+\usepackage[utf8]{inputenc}
+
+\begin{document}
+\setkeys{Gin}{width=0.9\textwidth}
+
+\title{MAGeCK Comparison Report}
+\author{Wei Li}
+
+\maketitle
+
+
+\tableofcontents
+
+\section{Summary}
+
+%Function definition
+<<label=funcdef,include=FALSE,echo=FALSE>>=
+genreporttable<-function(comparisons,ngenes,direction,fdr1,fdr5,fdr25){
+  xtb=data.frame(Comparison=comparisons,Genes=ngenes,Selection=direction,FDR1=fdr1,FDR5=fdr5,FDR25=fdr25);
+  colnames(xtb)=c("Comparison","Genes","Selection","FDR1%","FDR5%","FDR25%");
+  return (xtb);
+}
+@
+
+The statistics of comparisons is as indicated in the following table. 
+
+<<label=tab1,echo=FALSE,results=tex>>=
+library(xtable)
+comparisons=c("D31_GEF_1,D31_GEF_2,D31_GEF_3_vs_D31_DMSO_1,D31_DMSO_2,D31_DMSO_3 neg.","D31_GEF_1,D31_GEF_2,D31_GEF_3_vs_D31_DMSO_1,D31_DMSO_2,D31_DMSO_3 pos.");
+ngenes=c(490,490);
+direction=c("negative","positive");
+fdr1=c(0,2);
+fdr5=c(0,4);
+fdr25=c(1,6);
+
+cptable=genreporttable(comparisons,ngenes,direction,fdr1,fdr5,fdr25);
+print(xtable(cptable, caption = "Summary of comparisons", label = "tab:one",
+    digits = c(0, 0, 0, 0, 0, 0, 0),
+    table.placement = "tbp",
+    caption.placement = "top"))
+@
+
+The meanings of the columns are as follows.
+
+\begin{itemize}
+\item \textbf{Comparison}: The label for comparisons;
+\item \textbf{Genes}: The number of genes in the library;
+\item \textbf{Selection}: The direction of selection, either positive selection or negative selection;
+\item \textbf{FDR1\%}: The number of genes with FDR $<$ 1\%;
+\item \textbf{FDR5\%}: The number of genes with FDR $<$ 5\%;
+\item \textbf{FDR25\%}: The number of genes with FDR $<$ 25\%;
+\end{itemize}
+
+The following figures show:
+
+\begin{itemize}
+\item Individual sgRNA read counts of selected genes in selected samples; 
+\item The distribution of RRA scores and p values of all genes; and
+\item The RRA scores and p values of selected genes.
+\end{itemize}
+
+
+\newpage\section{Comparison results of D31 GEF 1,D31 GEF 2,D31 GEF 3 vs D31 DMSO 1,D31 DMSO 2,D31 DMSO 3 neg.}
+
+The following figure shows the distribution of RRA score in the comparison D31 GEF 1,D31 GEF 2,D31 GEF 3 vs D31 DMSO 1,D31 DMSO 2,D31 DMSO 3 neg., and the RRA scores of 10 genes.
+
+<<echo=FALSE>>=
+gstable=read.table('mageck.gene_summary.txt',header=T)
+@
+%
+
+
+<<fig=TRUE,echo=FALSE,width=4.5,height=4.5>>=# 
+#
+# parameters
+# Do not modify the variables beginning with "__"
+
+# gstablename='__GENE_SUMMARY_FILE__'
+startindex=3
+# outputfile='__OUTPUT_FILE__'
+targetgenelist=c("MASTL","PRKCZ","CDK13","LIMK2","INSR","LATS1","NTRK1","PAK3","PCNA","CAMK2A")
+# samplelabel=sub('.\w+.\w+$','',colnames(gstable)[startindex]);
+samplelabel='D31_GEF_1,D31_GEF_2,D31_GEF_3_vs_D31_DMSO_1,D31_DMSO_2,D31_DMSO_3 neg.'
+
+
+# You need to write some codes in front of this code:
+# gstable=read.table(gstablename,header=T)
+# pdf(file=outputfile,width=6,height=6)
+
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+######
+# function definition
+
+plotrankedvalues<-function(val, tglist, ...){
+  
+  plot(val,log='y',ylim=c(max(val),min(val)),type='l',lwd=2, ...)
+  if(length(tglist)>0){
+    for(i in 1:length(tglist)){
+      targetgene=tglist[i];
+      tx=which(names(val)==targetgene);ty=val[targetgene];
+      points(tx,ty,col=colors[(i %% length(colors)) ],cex=2,pch=20)
+      # text(tx+50,ty,targetgene,col=colors[i])
+    }
+    legend('topright',tglist,pch=20,pt.cex = 2,cex=1,col=colors)
+  }
+}
+
+
+
+plotrandvalues<-function(val,targetgenelist, ...){
+  # choose the one with the best distance distribution
+  
+  mindiffvalue=0;
+  randval=val;
+  for(i in 1:20){
+    randval0=sample(val)
+    vindex=sort(which(names(randval0) %in% targetgenelist))
+    if(max(vindex)>0.9*length(val)){
+      # print('pass...')
+      next;
+    }
+    mindiffind=min(diff(vindex));
+    if (mindiffind > mindiffvalue){
+      mindiffvalue=mindiffind;
+      randval=randval0;
+      # print(paste('Diff: ',mindiffvalue))
+    }
+  }
+  plot(randval,log='y',ylim=c(max(randval),min(randval)),pch=20,col='grey', ...)
+  
+  if(length(targetgenelist)>0){
+    for(i in 1:length(targetgenelist)){
+      targetgene=targetgenelist[i];
+      tx=which(names(randval)==targetgene);ty=randval[targetgene];
+      points(tx,ty,col=colors[(i %% length(colors)) ],cex=2,pch=20)
+      text(tx+50,ty,targetgene,col=colors[i])
+    }
+  }
+  
+}
+
+
+
+
+# set.seed(1235)
+
+
+
+pvec=gstable[,startindex]
+names(pvec)=gstable[,'id']
+pvec=sort(pvec);
+
+plotrankedvalues(pvec,targetgenelist,xlab='Genes',ylab='RRA score',main=paste('Distribution of RRA scores in \n',samplelabel))
+
+# plotrandvalues(pvec,targetgenelist,xlab='Genes',ylab='RRA score',main=paste('Distribution of RRA scores in \n',samplelabel))
+
+
+pvec=gstable[,startindex+1]
+names(pvec)=gstable[,'id']
+pvec=sort(pvec);
+
+plotrankedvalues(pvec,targetgenelist,xlab='Genes',ylab='p value',main=paste('Distribution of p values in \n',samplelabel))
+
+# plotrandvalues(pvec,targetgenelist,xlab='Genes',ylab='p value',main=paste('Distribution of p values in \n',samplelabel))
+
+
+
+# you need to write after this code:
+# dev.off()
+
+
+
+
+@
+%%
+\clearpage
+\newpage
+The following figures show the distribution of sgRNA read counts (normalized) of selected genes in selected samples.
+%
+
+
+<<fig=TRUE,echo=FALSE,width=4.5,height=4.5>>=
+par(mfrow=c(2,2));
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(566.573005831934,325.58205899899247,580.3104119894418,131.80724072250078,591.6046336466161,387.2327142229994),c(547.1768128394895,444.40079892103853,1145.094123992544,427.5428144444143,2001.5035269165892,385.37548297972364),c(2263.229466539455,1956.299095881877,2193.1463730704654,1727.8932397235396,2186.7255383853894,2720.8437713990124),c(396.09067795097366,136.59477187888763,133.9177873821789,446.37242026191444,256.17770740460946,107.71941210999503),c(1510.8613488851572,1275.1963977460537,2068.932773179749,1127.5611013067714,1162.9362113115726,1439.3542135387268),c(20.41704525520483,306.8704464128435,65.01805619279699,0.0,0.0,301.80007703231365),c(1866.1179363257213,1042.2368210484988,1916.577029563792,521.6908435319149,363.9935051252545,1131.9824427765857),c(0.0,33.68090265506818,8.733768742316013,6.645743229705921,214.7100928966691,65.00309351465218),c(40.83409051040966,750.3356647045746,754.985786835762,128.4843691076478,102.28678245291961,574.8130697938528),c(1752.8033351593344,466.8547340244173,1336.26661757435,991.3233650978,850.5468486850883,1156.1264489391708),c(91.87670364842172,0.0,0.0,85.28703811455932,0.0,63.1458622713764),c(931.0172636373402,1289.2301071856655,825.8263555234364,763.1528475445633,972.1851845750468,493.09489508971865))
+targetgene="MASTL"
+collabel=c("D31_DMSO_1","D31_DMSO_2","D31_DMSO_3","D31_GEF_1","D31_GEF_2","D31_GEF_3")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(2919.6374714942904,3166.0048495764095,1559.4629298779814,3318.44111936649,1795.086956921508,2056.8836019279224),c(3614.837862434015,2647.693180940082,2557.0534040002995,3449.1407362173736,314.232367715726,1663.1505783534578),c(1726.2611763275684,1579.2601022709748,1616.7176360776086,642.4218455382392,1396.0763551006596,981.5467120712478),c(1265.8568058226995,1891.744032459663,2250.401079270093,1217.2786349078012,878.1919250237153,1722.5819781382827),c(1044.331864803727,1209.7057536945322,1124.7153302604734,1723.462744237069,996.1442507351901,1181.1990707233938),c(860.5784575068835,762.4982128855714,976.2412616411011,1503.045593785156,1887.237211383598,940.6876247191808))
+targetgene="PRKCZ"
+collabel=c("D31_DMSO_1","D31_DMSO_2","D31_DMSO_3","D31_GEF_1","D31_GEF_2","D31_GEF_3")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(1391.421634142209,445.336379550346,1062.6085303151149,1620.4537241766272,743.6525535090642,969.4747089899553),c(571.6772671457352,535.1521199638612,762.7491368289318,342.255776329855,917.8165344424139,637.0303164435913),c(270.525849631464,1226.5462050220665,1470.1844049565289,286.8745827489723,1767.4418805828814,1016.8341056934876),c(452.23755240278695,15.904870698226642,993.7087991257331,408.7132086269142,542.7649987817085,377.01794238498263),c(145.9818735747145,740.0442777821926,325.0902809639849,0.0,0.0,125.36310892111491),c(66.3553970794157,158.11312635295897,257.16096852374926,94.14802908750056,392.5600840085023,425.30595471015283))
+targetgene="CDK13"
+collabel=c("D31_DMSO_1","D31_DMSO_2","D31_DMSO_3","D31_GEF_1","D31_GEF_2","D31_GEF_3")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(3503.5649657931485,1583.9380054175122,4280.517102483993,1635.9604583792743,914.1305242639303,3512.0242810344935),c(2521.5050890177963,2264.105122924028,1879.7011170962353,1371.2383530626553,1843.0050892417948,1016.8341056934876),c(2458.2122487266615,873.8323077731579,2380.437191655687,1828.6870120407461,2118.5343500834433,1602.7905629469951),c(2814.4896884299856,815.8263087560961,587.1033432334654,1187.3727903741246,637.679760877661,1267.5603235357175),c(2397.981965223807,1358.4630737544167,1440.101423732996,931.5116760304467,1154.6426884099844,982.4753276928858),c(1638.4678817301874,1602.649618003661,1405.166348763732,1024.5520812463296,211.0240827181855,936.9731622326292))
+targetgene="LIMK2"
+collabel=c("D31_DMSO_1","D31_DMSO_2","D31_DMSO_3","D31_GEF_1","D31_GEF_2","D31_GEF_3")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+par(mfrow=c(1,1));
+@
+%
+
+
+<<fig=TRUE,echo=FALSE,width=4.5,height=4.5>>=
+par(mfrow=c(2,2));
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(2951.283891639858,888.8015978420771,2260.105266761555,1814.2879017097166,629.386237976073,1365.9935794293335),c(1224.0018630495294,2141.544060484752,796.7137930490496,404.28271314044355,1248.635947961316,654.6740132547112),c(2693.008269161517,2943.3366598012362,2789.953903795393,1980.4314824523647,3966.1469520483424,2193.390098308692),c(952.4551611553053,795.2435349113322,1397.4029987705621,546.0585687075032,349.2494644113201,907.2574623402168),c(879.9746504993282,464.047992136495,978.1820991393935,845.1170140442697,481.02432829210846,1119.9104396952932),c(974.9139109360306,118.81873992204609,924.8090679363512,1127.5611013067714,52.52564504339115,529.3109043335963))
+targetgene="INSR"
+collabel=c("D31_DMSO_1","D31_DMSO_2","D31_DMSO_3","D31_GEF_1","D31_GEF_2","D31_GEF_3")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(7791.144469386162,5232.7024597165655,2588.1068039729785,5775.150866614446,3240.0029468870753,2775.632093075648),c(3228.9557071106437,2933.0452728788546,2022.3526732207301,2715.8937332064866,1240.342425059728,3292.870994327952),c(1075.9782849492944,998.2645314710487,1292.59777386277,2199.7410090326603,1983.9949785687922,1768.0841435985392),c(1358.7543617338813,2236.9732846741117,2332.8866729475217,1599.4088706158918,1809.8309976354426,3057.931242053566),c(2989.055425361987,1022.5896278330424,2726.8766851008886,3242.0150722248723,1791.4009467430246,1754.1549092739708),c(3016.6184364565133,3092.0939798611207,683.1747993989416,1705.7407622911867,1115.0180789912858,1571.217631811307))
+targetgene="LATS1"
+collabel=c("D31_DMSO_1","D31_DMSO_2","D31_DMSO_3","D31_GEF_1","D31_GEF_2","D31_GEF_3")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(1339.3581687414367,1989.9799985369452,1654.5639672943114,1673.6196700142746,1107.6460586343187,1114.338745965466),c(4050.741778632638,1891.744032459663,3102.4287410204774,3176.6652637994307,1241.2639276043487,1827.515543383364),c(880.9955027620883,880.38137217831,882.1106429739174,1725.6779919803043,2341.5379658817005,987.1184058010753),c(1968.2031626017456,1873.9680005028215,2314.4487167137436,1261.5835897725076,1100.2740382773516,963.903015260128),c(595.1568691892207,333.066704033452,824.8559367742902,366.62350150544336,177.8499911118332,169.00804313809567),c(39.813238247649416,17.776031956841543,170.7936998497354,59.8116890673533,36.8601017848359,71.5034028661174))
+targetgene="NTRK1"
+collabel=c("D31_DMSO_1","D31_DMSO_2","D31_DMSO_3","D31_GEF_1","D31_GEF_2","D31_GEF_3")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(3414.7508189330074,3710.512775833345,3733.2009279655226,2355.915974930749,1725.974266074941,4032.977644773349),c(4379.456207241436,3531.816875635622,1945.6895920381785,2432.3420220723674,2855.736385780161,2583.408659396605),c(1660.9266315109128,2340.822734527239,1408.0776050111706,759.8299759297104,2253.0737215980944,2229.6061075525695),c(2989.055425361987,1076.8533043328744,1711.8186734939386,2508.7680692139857,745.495558598306,1277.7750953737343),c(1887.5558338436865,1066.5619174104925,1437.1901674855574,891.6372166522111,1168.465226579298,663.0315538494522),c(2560.2974750026856,1033.8165953847317,677.3522869040642,1323.610526583096,575.9390903880609,355.6597830873112))
+targetgene="PAK3"
+collabel=c("D31_DMSO_1","D31_DMSO_2","D31_DMSO_3","D31_GEF_1","D31_GEF_2","D31_GEF_3")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+par(mfrow=c(1,1));
+@
+%
+
+
+<<fig=TRUE,echo=FALSE,width=4.5,height=4.5>>=
+par(mfrow=c(2,2));
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(72.48051065597714,0.0,125.18401863986286,223.74002206676604,70.03419339118821,595.2426134698864),c(3056.431674704163,3162.2625270591793,1915.6066108146456,3654.0511524666395,4030.6521301718053,1473.7129915393286),c(278.69266773354593,0.0,265.8947372660653,110.76238716176536,0.0,0.0),c(528.8014721098051,461.2412502485726,359.05493718410276,769.7985907742693,1117.7825866251485,161.57911816499256))
+targetgene="PCNA"
+collabel=c("D31_DMSO_1","D31_DMSO_2","D31_DMSO_3","D31_GEF_1","D31_GEF_2","D31_GEF_3")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(3425.9801938233704,2840.422790577417,4268.8720774942385,2311.6110200660432,2559.012566412232,4504.714380565396),c(1243.398056041974,1422.0825565473233,1483.7702674445761,1373.4536008058906,850.5468486850883,767.9651190945336),c(1732.3862899041296,2305.270670613556,1274.1598176289917,972.4937592802999,3441.812004159052,731.7491098506559),c(1970.244867127266,1589.5514891933567,1302.3019613542322,1988.1848495536883,1455.052517956397,1825.6583121400884),c(2455.149691938381,2073.2466745453085,1105.306955277549,995.7538605842706,1308.5336133616743,1698.4379719756976),c(664.5748230569171,1085.2735299966414,659.8847494194322,663.4666990989746,1271.6735115768383,934.1873153677155))
+targetgene="CAMK2A"
+collabel=c("D31_DMSO_1","D31_DMSO_2","D31_DMSO_3","D31_GEF_1","D31_GEF_2","D31_GEF_3")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+par(mfrow=c(1,1));
+@
+
+\newpage\section{Comparison results of D31 GEF 1,D31 GEF 2,D31 GEF 3 vs D31 DMSO 1,D31 DMSO 2,D31 DMSO 3 pos.}
+
+The following figure shows the distribution of RRA score in the comparison D31 GEF 1,D31 GEF 2,D31 GEF 3 vs D31 DMSO 1,D31 DMSO 2,D31 DMSO 3 pos., and the RRA scores of 10 genes.
+
+<<echo=FALSE>>=
+gstable=read.table('mageck.gene_summary.txt',header=T)
+@
+%
+
+
+<<fig=TRUE,echo=FALSE,width=4.5,height=4.5>>=# 
+#
+# parameters
+# Do not modify the variables beginning with "__"
+
+# gstablename='__GENE_SUMMARY_FILE__'
+startindex=9
+# outputfile='__OUTPUT_FILE__'
+targetgenelist=c("STK11","CHEK1","CDK7","CSNK1A1","ATR","KSR2","POMK","BUB1","TTK","PKMYT1")
+# samplelabel=sub('.\w+.\w+$','',colnames(gstable)[startindex]);
+samplelabel='D31_GEF_1,D31_GEF_2,D31_GEF_3_vs_D31_DMSO_1,D31_DMSO_2,D31_DMSO_3 pos.'
+
+
+# You need to write some codes in front of this code:
+# gstable=read.table(gstablename,header=T)
+# pdf(file=outputfile,width=6,height=6)
+
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+######
+# function definition
+
+plotrankedvalues<-function(val, tglist, ...){
+  
+  plot(val,log='y',ylim=c(max(val),min(val)),type='l',lwd=2, ...)
+  if(length(tglist)>0){
+    for(i in 1:length(tglist)){
+      targetgene=tglist[i];
+      tx=which(names(val)==targetgene);ty=val[targetgene];
+      points(tx,ty,col=colors[(i %% length(colors)) ],cex=2,pch=20)
+      # text(tx+50,ty,targetgene,col=colors[i])
+    }
+    legend('topright',tglist,pch=20,pt.cex = 2,cex=1,col=colors)
+  }
+}
+
+
+
+plotrandvalues<-function(val,targetgenelist, ...){
+  # choose the one with the best distance distribution
+  
+  mindiffvalue=0;
+  randval=val;
+  for(i in 1:20){
+    randval0=sample(val)
+    vindex=sort(which(names(randval0) %in% targetgenelist))
+    if(max(vindex)>0.9*length(val)){
+      # print('pass...')
+      next;
+    }
+    mindiffind=min(diff(vindex));
+    if (mindiffind > mindiffvalue){
+      mindiffvalue=mindiffind;
+      randval=randval0;
+      # print(paste('Diff: ',mindiffvalue))
+    }
+  }
+  plot(randval,log='y',ylim=c(max(randval),min(randval)),pch=20,col='grey', ...)
+  
+  if(length(targetgenelist)>0){
+    for(i in 1:length(targetgenelist)){
+      targetgene=targetgenelist[i];
+      tx=which(names(randval)==targetgene);ty=randval[targetgene];
+      points(tx,ty,col=colors[(i %% length(colors)) ],cex=2,pch=20)
+      text(tx+50,ty,targetgene,col=colors[i])
+    }
+  }
+  
+}
+
+
+
+
+# set.seed(1235)
+
+
+
+pvec=gstable[,startindex]
+names(pvec)=gstable[,'id']
+pvec=sort(pvec);
+
+plotrankedvalues(pvec,targetgenelist,xlab='Genes',ylab='RRA score',main=paste('Distribution of RRA scores in \n',samplelabel))
+
+# plotrandvalues(pvec,targetgenelist,xlab='Genes',ylab='RRA score',main=paste('Distribution of RRA scores in \n',samplelabel))
+
+
+pvec=gstable[,startindex+1]
+names(pvec)=gstable[,'id']
+pvec=sort(pvec);
+
+plotrankedvalues(pvec,targetgenelist,xlab='Genes',ylab='p value',main=paste('Distribution of p values in \n',samplelabel))
+
+# plotrandvalues(pvec,targetgenelist,xlab='Genes',ylab='p value',main=paste('Distribution of p values in \n',samplelabel))
+
+
+
+# you need to write after this code:
+# dev.off()
+
+
+
+
+@
+%%
+\clearpage
+\newpage
+The following figures show the distribution of sgRNA read counts (normalized) of selected genes in selected samples.
+%
+
+
+<<fig=TRUE,echo=FALSE,width=4.5,height=4.5>>=
+par(mfrow=c(2,2));
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(1047.3944215920078,1459.5057817196214,1196.526317697294,3425.880634913403,4416.761696367961,2986.4278391874486),c(2992.117982150268,1454.827878573084,1005.3538241154878,3605.3157021154625,1760.069860225914,2562.0505000989338),c(1320.9828280117524,296.57905949046153,737.5182493511301,3130.1450611914893,2735.0195524348237,2634.482518586689),c(454.27925692830746,1165.7334641170821,203.787937320707,1026.767328989565,3321.0951708137145,2365.1839883117013),c(1040.248455752686,194.6007708959495,90.2489436705988,2666.0506589836923,504.9833944522518,904.4716154753031),c(481.84226802283393,985.1664026607444,536.6415682778617,821.856912740299,1577.6123563909764,1754.1549092739708))
+targetgene="STK11"
+collabel=c("D31_DMSO_1","D31_DMSO_2","D31_DMSO_3","D31_GEF_1","D31_GEF_2","D31_GEF_3")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(0.0,87.00899852559282,148.47406861937222,281.33646339088403,214.7100928966691,285.0849958428317),c(0.0,0.0,439.59969336323934,65.34980842544157,236.82615396757063,52.93109043335963),c(201.10789576376757,361.13412291267554,412.4279683871451,306.81181243809004,390.71707891926053,436.4493421698075),c(0.0,0.0,129.06569363644775,110.76238716176536,0.0,75.21786535266895),c(75.54306744425787,257.28467305954865,1220.7867864259495,315.6728034110313,727.0655077058881,1343.7068045100243),c(40.83409051040966,0.0,15.52669998633958,502.86123771441476,8.293522901588076,135.5778807591317))
+targetgene="CHEK1"
+collabel=c("D31_DMSO_1","D31_DMSO_2","D31_DMSO_3","D31_GEF_1","D31_GEF_2","D31_GEF_3")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(1.0208522627602414,139.40151376680998,37.84633121670272,208.2332878641189,93.07175700671064,320.3723894650714),c(518.5929494822027,605.3206671619199,94.1306186671837,1004.6148515572119,119.79533080071667,319.4437738434336),c(0.0,0.0,412.4279683871451,558.2424312952975,90.30724937284795,385.37548297972364),c(1203.5848177943246,0.0,0.0,716.6326449366219,164.02745294251974,91.00433092051304),c(163.33636204163864,2.8067418879223487,271.71724976094265,6.645743229705921,458.9082672212069,142.0781901105969),c(194.9827821872061,472.46821780026204,478.4164433290883,941.4802908750056,246.04117941377962,593.3853822266105))
+targetgene="CDK7"
+collabel=c("D31_DMSO_1","D31_DMSO_2","D31_DMSO_3","D31_GEF_1","D31_GEF_2","D31_GEF_3")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(1197.4597042177631,297.51464011976896,548.2865932676164,1653.682440325157,582.3896082004072,1543.3591631621703),c(0.0,215.1835447407134,83.45601242657524,399.85221765397296,271.8432506631647,89.14709967723726),c(4211.0155838859955,1648.4930688397262,3755.5205591958857,2318.256763295749,1718.6022457179738,3620.672308766126),c(106.1686353270651,0.0,0.0,171.68170010073632,128.08885370230473,10.214771838016771),c(0.0,24.325096361993687,205.72877481899943,22.152477432353074,632.1507456099356,468.9508889271336),c(1.0208522627602414,346.16483284375636,160.1190936091269,12.18386258779419,205.4950674504601,68.71755600120373))
+targetgene="CSNK1A1"
+collabel=c("D31_DMSO_1","D31_DMSO_2","D31_DMSO_3","D31_GEF_1","D31_GEF_2","D31_GEF_3")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+par(mfrow=c(1,1));
+@
+%
+
+
+<<fig=TRUE,echo=FALSE,width=4.5,height=4.5>>=
+par(mfrow=c(2,2));
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(676.8250502100401,719.4615039374287,951.9807929124455,1589.4402557713329,870.819904666748,1327.9203389421803),c(124.54397605674946,29.938580137838386,502.6769120577439,384.34548345132583,83.85673156050167,336.15885503291554),c(130.6690896333109,162.79102949949623,81.51517492828279,96.36327683073587,211.0240827181855,76.14648097430684),c(14.29193167864338,130.98128810304294,0.0,116.30050651985363,394.4030890977441,199.65235865214598),c(2.041704525520483,0.0,0.0,2.2152477432353073,214.7100928966691,122.57726205620125),c(3.062556788280724,163.72661012880369,84.42643117572146,69.78030391191218,158.49843767479436,19.500928054395654))
+targetgene="ATR"
+collabel=c("D31_DMSO_1","D31_DMSO_2","D31_DMSO_3","D31_GEF_1","D31_GEF_2","D31_GEF_3")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(1942.6818560327395,2137.801737967522,2329.0049979509367,2328.225378140308,3061.2314532306214,2867.565039617799),c(2369.3981018665204,2070.4399326573857,4313.511339954965,3183.3110070291364,1842.083586697174,3408.0193314110497),c(995.3309561912354,2709.441502474374,1879.7011170962353,1052.242678036771,2545.1900282429187,2496.1187909626437),c(352.1940306522833,830.7955988250152,292.0960434930133,728.8165075244161,1097.509530643489,547.883216766354),c(1159.6881704956343,645.5506342221402,992.7383803765869,1675.8349177575099,757.4750916783777,1730.0109031113857),c(1083.124250788616,1812.2196789685297,932.572417929521,804.1349307944165,809.0792341771479,1487.642225863897))
+targetgene="KSR2"
+collabel=c("D31_DMSO_1","D31_DMSO_2","D31_DMSO_3","D31_GEF_1","D31_GEF_2","D31_GEF_3")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(3018.660140982034,2086.3448033556124,2166.9450668435175,3158.9432818535483,2835.4633297985015,2107.0288454963684),c(3198.3301392278363,3831.202677014006,4506.624671035063,3251.983687069431,5570.482882233325,5967.28398464507),c(2386.7525903334445,1791.636905123766,1663.2977360366274,2535.351042132809,2618.9102318125906,2070.812836252491),c(1618.0508364749826,1117.0832713930947,2932.6054599198883,1014.5834664017707,2896.2824977434807,2125.601157929126))
+targetgene="POMK"
+collabel=c("D31_DMSO_1","D31_DMSO_2","D31_DMSO_3","D31_GEF_1","D31_GEF_2","D31_GEF_3")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(2946.1796303260567,2672.9538579313835,2884.084522462577,3821.302357080905,4053.6896937873275,2767.274552480907),c(3106.453435579415,985.1664026607444,2344.5316979372765,2286.135671018837,3669.4231326804133,2299.2522791754113),c(449.17499561450626,722.2682458253511,479.3868620782345,420.8970712147084,338.19143387586934,285.0849958428317),c(253.1713611645399,565.0907001016996,302.7706497336218,582.6101564708858,281.0582761093737,328.72993005981243),c(65.33454481665545,703.556633239202,188.2612373343674,387.6683550661788,1199.7963130964085,724.3201848775528),c(6.125113576561448,721.3326651960436,0.0,143.99110331029496,596.2121463697206,175.50835248956088))
+targetgene="BUB1"
+collabel=c("D31_DMSO_1","D31_DMSO_2","D31_DMSO_3","D31_GEF_1","D31_GEF_2","D31_GEF_3")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+par(mfrow=c(1,1));
+@
+%
+
+
+<<fig=TRUE,echo=FALSE,width=4.5,height=4.5>>=
+par(mfrow=c(2,2));
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(463.46692729314964,334.0022846627595,413.3983871362913,722.1707642947101,868.0553970328854,370.5176330335174),c(44.917499561450626,306.8704464128435,164.97118735485805,14.399110331029497,91.22875191746884,335.23023941127764),c(542.0725515256883,90.75132104282261,1023.791780349266,354.4396389176492,476.416815569004,906.3288467185789),c(0.0,0.0,85.3968499248677,287.9822066205899,2.764507633862692,325.0154675732609),c(1851.826004647078,1676.5604877189496,1006.324242864634,2173.1580361138363,838.5673156050167,1007.5479494771088),c(240.92113401141697,1117.0832713930947,873.3768742316014,466.30964995103216,305.01734226951703,1438.425597917089))
+targetgene="TTK"
+collabel=c("D31_DMSO_1","D31_DMSO_2","D31_DMSO_3","D31_GEF_1","D31_GEF_2","D31_GEF_3")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+# parameters
+# Do not modify the variables beginning with "__"
+targetmat=list(c(23.479602043485553,0.0,103.83480615864593,23.260101303970725,167.71346312100334,114.21972146146025),c(95.9601126994627,0.0,29.112562474386714,0.0,737.202035696718,58.50278416318696),c(6.125113576561448,0.0,16.497118735485802,0.0,398.08909927622767,316.65792697851987),c(138.83590773539282,335.8734459213744,259.1018060220417,149.52922266838323,284.7442862878573,895.1854592589243),c(0.0,0.0,0.0,0.0,0.0,97.50464027197826),c(0.0,51.45693461190972,117.42066864669307,140.66823169544202,0.0,82.64679032577206))
+targetgene="PKMYT1"
+collabel=c("D31_DMSO_1","D31_DMSO_2","D31_DMSO_3","D31_GEF_1","D31_GEF_2","D31_GEF_3")
+
+# set up color using RColorBrewer
+#library(RColorBrewer)
+#colors <- brewer.pal(length(targetgenelist), "Set1")
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+## code
+
+targetmatvec=unlist(targetmat)+1
+yrange=range(targetmatvec[targetmatvec>0]);
+# yrange[1]=1; # set the minimum value to 1
+for(i in 1:length(targetmat)){
+  vali=targetmat[[i]]+1;
+  if(i==1){
+    plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+    axis(1,at=1:length(vali),labels=(collabel),las=2)
+    # lines(0:100,rep(1,101),col='black');
+  }else{
+    lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+  }
+}
+
+
+
+par(mfrow=c(1,1));
+@
+%__INDIVIDUAL_PAGE__
+
+
+
+
+
+
+
+
+
+\end{document}
+

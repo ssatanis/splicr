@@ -30,6 +30,12 @@ export interface ReportHitRow {
   p_value: number | null;
   fdr: number | null;
   bayes_factor: number | null;
+  depleted_fdr?: number | null;
+  enriched_fdr?: number | null;
+  norm_z?: number | null;
+  drugz_fdr?: number | null;
+  mle_beta?: number | null;
+  mle_fdr?: number | null;
   n_guides: number | null;
   n_good_guides: number | null;
   cn_corrected: boolean | null;
@@ -60,7 +66,7 @@ export type ScreenReportResult =
   | { status: "unavailable" };
 
 const HIT_COLUMNS =
-  "id, comparison_id, gene_symbol, direction, lfc, p_value, fdr, bayes_factor, n_guides, n_good_guides, cn_corrected, chance_real, novelty, verdict, reason, model_version, atlas_hit_count, atlas_screen_count, atlas_hit_rate, hit_flags(flag, severity, message)";
+  "id, comparison_id, gene_symbol, direction, lfc, p_value, fdr, bayes_factor, depleted_fdr, enriched_fdr, norm_z, drugz_fdr, mle_beta, mle_fdr, n_guides, n_good_guides, cn_corrected, chance_real, novelty, verdict, reason, model_version, atlas_hit_count, atlas_screen_count, atlas_hit_rate, hit_flags(flag, severity, message)";
 
 export async function getScreenReportData(screenId: string): Promise<ScreenReportResult> {
   if (!isUuid(screenId)) return { status: "not_found" };
@@ -82,7 +88,7 @@ export async function getScreenReportData(screenId: string): Promise<ScreenRepor
 
     let runQuery = client
       .from("runs")
-      .select("id, status, engine_version, image_digest, created_at, error")
+      .select("id, status, engine_version, image_digest, created_at, error, settings")
       .eq("screen_id", screenId)
       .eq("org_id", orgId);
     if (screen.current_run_id) runQuery = runQuery.eq("id", screen.current_run_id);

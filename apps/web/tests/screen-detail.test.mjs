@@ -156,14 +156,14 @@ test("the run summary counts the whole run, ignores the filter, and stays inside
   }
   assert.ok(h.some((q) => q.filters.some(([k, v]) => k === "direction" && v === "depleted")));
   assert.ok(h.some((q) => q.filters.some(([k, v]) => k === "direction" && v === "enriched")));
-  assert.ok(h.some((q) => q.extra.some(([m, col, v]) => m === "lte" && col === "fdr" && v === custom.mod.SIGNIFICANT_FDR)));
+  assert.ok(h.some((q) => q.extra.some(([m, col, v]) => m === "lt" && col === "fdr" && v === custom.mod.SIGNIFICANT_FDR)));
   assert.ok(h.some((q) => /hit_flags!inner/.test(q.columns)));
   // The candidate count on the summary is flagged-and-significant, so one head
   // query carries both the inner join and the significance threshold, and that
   // threshold is the page's own rather than whatever the reader filtered to.
   assert.ok(h.some((q) =>
     /hit_flags!inner/.test(q.columns)
-    && q.extra.some(([m, col, v]) => m === "lte" && col === "fdr" && v === custom.mod.SIGNIFICANT_FDR)));
+    && q.extra.some(([m, col, v]) => m === "lt" && col === "fdr" && v === custom.mod.SIGNIFICANT_FDR)));
   assert.equal(result.detail.summary.recorded, 14, "recorded is the two arms together");
 });
 
@@ -497,4 +497,12 @@ test("every filter the address carries reaches the database query", () => {
   assert.match(source, /if \(query\.comparison\) hitsQuery = hitsQuery\.eq\("comparison_id"/);
   assert.match(source, /if \(query\.q !== ""\) hitsQuery = hitsQuery\.ilike\("gene_symbol"/);
   assert.match(source, /query\.flagged \? "hit_flags!inner/);
+});
+
+test("run-specific significance threshold controls summary counts", async () => {
+  const app = harness({ responses: present({ runs: { data: { id: runId, status: "complete", settings: { fdr_threshold: 0.05 } }, error: null } }) });
+  await app.getScreenDetail(screenId);
+  const comparisons = heads(app).flatMap((query) => query.extra).filter(([method, column]) => method === "lt" && column === "fdr");
+  assert.equal(comparisons.length, 2);
+  assert.ok(comparisons.every(([, , value]) => value === 0.05));
 });

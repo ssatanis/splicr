@@ -392,7 +392,7 @@ def _parse_learned(path: Path, slug: str) -> Library:
             continue
         gene = (row.get("gene") or "").strip()
         guides.append(Guide(guide_id=(row.get("guide_id") or f"{slug}:{n}").strip(),
-                            sequence=seq, gene=gene or None, is_control=not gene))
+                            sequence=seq, gene=gene or None, is_control=not gene or str(row.get("is_control", "")).lower() in {"true", "1", "yes"}))
     meta_path = path.with_suffix(".json")
     meta = json.loads(meta_path.read_text()) if meta_path.exists() else {}
     return Library(slug, meta.get("name", slug), guides, source_file=path,

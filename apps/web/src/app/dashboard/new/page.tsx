@@ -30,11 +30,14 @@ import { listLibraries } from "@/lib/data/libraries";
 import { getCurrentContext, getOrgSettings } from "@/lib/data/org";
 import { listScreenRequests } from "@/lib/data/screen-requests";
 import { DEFAULT_WORKSPACE_SETTINGS, ROLE_RANK } from "@/lib/data/types";
+import { isUuid } from "@/lib/data/types";
+import { createClient } from "@/lib/supabase/server";
+import type { UploadItem } from "@/components/dashboard/intake/file-list";
 
 export const metadata = { title: "New analysis" };
 export const dynamic = "force-dynamic";
 
-export default async function NewAnalysisPage() {
+export default async function NewAnalysisPage({ searchParams }: { searchParams: Promise<{ draft?: string }> }) {
   const context = await getCurrentContext();
   const [requests, catalog, settings] = await Promise.all([
     listScreenRequests(),
@@ -44,6 +47,21 @@ export default async function NewAnalysisPage() {
 
   const role = context.role;
   const canRun = role !== null && ROLE_RANK[role] >= ROLE_RANK.member;
+  const params = await searchParams;
+  let initialDraft: { screenId: string; orgId: string; name: string; files: UploadItem[] } | undefined;
+  let drafts: { id: string; name: string }[] = [];
+  if (canRun && context.org && context.user) {
+    const client = await createClient();
+    const recent = await client.from("screens").select("id,name").eq("org_id", context.org.id).eq("created_by", context.user.id).eq("status", "draft").is("archived_at", null).order("created_at", { ascending: false }).limit(8);
+    drafts = recent.data ?? [];
+    if (params.draft && isUuid(params.draft)) {
+      const screen = await client.from("screens").select("id,name").eq("id", params.draft).eq("org_id", context.org.id).eq("created_by", context.user.id).eq("status", "draft").is("archived_at", null).maybeSingle();
+      if (screen.data) {
+        const files = await client.from("screen_files").select("id,original_name,byte_size,kind,checksum_sha256,metadata").eq("screen_id", screen.data.id).eq("status", "complete").order("created_at");
+        if (!files.error) initialDraft = { screenId: screen.data.id, orgId: context.org.id, name: screen.data.name, files: (files.data ?? []).map((file) => ({ key: file.id, name: file.original_name, bytes: Number(file.byte_size), kind: file.kind === "other" ? "context" : file.kind, sent: Number(file.byte_size), checksum: file.checksum_sha256, status: "done", error: null, fileId: file.id })) };
+      }
+    }
+  }
 
   const libraries = catalog.libraries.map((library) => ({
     id: library.id,
@@ -55,19 +73,20 @@ export default async function NewAnalysisPage() {
   );
 
   return (
-    <div className="flex flex-col gap-3 pb-6">
+    <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-5 pb-6">
       <PageHeader
-        dense
         title="New analysis"
-        body="Bring your own screen, or ask SplicR to reanalyse a published one."
+        body="Turn your experiment files into clear, reproducible evidence."
       />
 
       <div className="grid grid-cols-12 content-start gap-4">
-        <Panel title="Start an analysis" span={8} bodyClassName="space-y-4">
+        <Panel title="Start an analysis" span={8} bodyClassName="space-y-5 !p-5 sm:!p-6">
           {canRun ? (
             <IntakeWorkspace
               own={
                 <UploadFlow
+                  key={initialDraft?.screenId ?? "new"}
+                  initialDraft={initialDraft}
                   libraries={libraries}
                   librarySlugToId={librarySlugToId}
                   defaults={{
@@ -115,7 +134,9 @@ export default async function NewAnalysisPage() {
         </Panel>
 
         <div className="col-span-12 flex flex-col gap-4 md:col-span-6 lg:col-span-4">
-          <Card title="What SplicR needs">
+          {drafts.length > 0 && <details className="rounded-xl border border-line bg-white p-4"><summary className="cursor-pointer text-[12.5px] font-medium text-ink">Continue a draft</summary><ul className="mt-3 space-y-2">{drafts.map((draft) => <li key={draft.id}><Link href={`/dashboard/new?draft=${draft.id}`} className="text-[12.5px] text-cyan-600 underline underline-offset-2">{draft.name}</Link></li>)}</ul></details>}
+          <Card title="A few things to bring" className="!rounded-xl !p-5">
+            <p className="mb-4 text-[12.5px] leading-relaxed text-muted">Attach your experiment together. Review the detected samples and design before anything runs.</p>
             <ul className="space-y-2 text-[12.5px] leading-snug text-body">
               <li>
                 <span className="font-medium text-ink">A count table, or FASTQ.</span> Guide-level counts
@@ -132,7 +153,7 @@ export default async function NewAnalysisPage() {
             </ul>
           </Card>
 
-          <Card title="Where the result goes">
+          <Card title="Made for your workspace" className="!rounded-xl !p-5">
             <p className="text-[12.5px] leading-snug text-body">
               Your own screen stays private to this workspace and appears under{" "}
               <Link
@@ -144,6 +165,7 @@ export default async function NewAnalysisPage() {
               . A reanalysed public study becomes shared evidence in the Atlas, where anyone using SplicR
               can see it.
             </p>
+            <p className="mt-3 border-t border-line pt-3 text-[12px] leading-relaxed text-muted">All file types can be attached. Tables and reads are checked for analysis; readable documents are previewed. Files requiring OCR or a dedicated parser are flagged.</p>
             <p className="mt-2 text-[12.5px] leading-snug text-muted">
               Uploaded reads are kept for{" "}
               <span className="num">{settings.retention.raw_reads_days}</span> days, then removed. Counts

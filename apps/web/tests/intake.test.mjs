@@ -15,8 +15,8 @@ test("file classification matches the formats the inspector can read", () => {
   assert.equal(shape.classify("treated_R1.fastq.gz"), "fastq");
   assert.equal(shape.classify("counts.csv"), "counts");
   assert.equal(shape.classify("Brunello_library.tsv"), "library");
-  assert.equal(shape.classify("lane.fastq.bz2"), null);
-  assert.equal(shape.classify("notes.pdf"), null);
+  assert.equal(shape.classify("lane.fastq.bz2"), "context");
+  assert.equal(shape.classify("notes.pdf"), "context");
 });
 
 test("sample names become editable arm and replicate guesses", () => {

@@ -243,8 +243,10 @@ def sample_qc(
         verdicts.append("fail")
         q.notes.append(
             f"{q.zero_fraction:.1%} of guides have no reads. Above "
-            f"{thresholds.zero_fraction_warn:.0%} the library is bottlenecked and no "
-            "downstream correction recovers the lost guides."
+            f"{thresholds.zero_fraction_warn:.0%} this exceeds the guide-loss threshold. "
+            "Review baseline coverage, negative controls and replicate agreement to "
+            "distinguish biological depletion from technical dropout. Missing guide "
+            "measurements cannot be recovered by downstream correction."
         )
     elif q.zero_fraction > thresholds.zero_fraction_max:
         verdicts.append("warn")

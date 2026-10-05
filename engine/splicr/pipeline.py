@@ -28,7 +28,7 @@ from .design import Design, DesignError, REFERENCE_ROLES, build_design
 from .detect import Detection, detect_from_count_table, detect_from_fastq
 from .hits import HitTable, call_hits
 from .qc import ScreenQc, screen_qc
-from .references import Library, load_library
+from .references import Library, load_library, _parse_learned
 
 STAGES = ("ingest", "detect", "count", "qc", "hits", "artifacts", "atlas", "score", "report")
 
@@ -83,7 +83,8 @@ def _persist_guide_evidence(conn, ctx, hits: HitTable, library: Library,
     }
     try:
         annotated = annotate_guides(hits.guide_effects, library, genes=shortlist)
-        guide_rows = db.write_guide_effects(conn, ctx, annotated, REFERENCE_VERSIONS)
+        with conn.transaction():
+            guide_rows = db.write_guide_effects(conn, ctx, annotated, REFERENCE_VERSIONS)
     except Exception as exc:  # noqa: BLE001
         db.log_event(conn, ctx.run_id,
                      f"per-guide rows were not stored: {type(exc).__name__}: {exc}",
@@ -117,7 +118,8 @@ def _persist_guide_evidence(conn, ctx, hits: HitTable, library: Library,
             for gene, rows in sorted(by_gene.items())
             if len(rows) >= MIN_GUIDES
         ]
-        gene_rows = db.write_gene_disagreement(conn, ctx, reports)
+        with conn.transaction():
+            gene_rows = db.write_gene_disagreement(conn, ctx, reports)
     except Exception as exc:  # noqa: BLE001
         db.log_event(conn, ctx.run_id,
                      f"gene disagreement rows were not stored: {type(exc).__name__}: {exc}",
@@ -188,13 +190,13 @@ def _score_candidates(hits: HitTable, flags, qc, atlas, spec, result) -> dict:
                             "validation_error": blank["detail"]}
         return blank
 
-    called = hits.significant(0.1)
+    called = hits.significant(spec.fdr_threshold)
     context = {
         "assay_class": _assay_class(spec),
         "modality": spec.modality if spec.modality in
                     ("knockout", "crispri", "crispra", "base_editing") else "other",
         "phenotype_family": _phenotype_family(spec),
-        "model_type": "cancer_cell_line",
+        "model_type": spec.model_type or "other",
         "treatment": spec.condition,
     }
     try:
@@ -331,6 +333,7 @@ class PipelineResult:
     #: The score stage's output: per-candidate, per-question calibrated
     #: probabilities, or the named reason there are none.
     validation: dict | None = None
+    fdr_threshold: float = 0.1
 
     @property
     def ok(self) -> bool:
@@ -356,8 +359,8 @@ class PipelineResult:
                     for note in s.notes:
                         lines.append(f"  qc {s.label} ({s.verdict}): {note}")
         if self.hits:
-            sig = self.hits.significant(0.1)
-            lines.append(f"  {len(self.hits.genes)} genes scored, {len(sig)} significant at FDR 0.1")
+            sig = self.hits.significant(self.fdr_threshold)
+            lines.append(f"  {len(self.hits.genes)} genes scored, {len(sig)} significant at FDR {self.fdr_threshold:g}")
             d = self.hits.direction
             if d is not None and d.n_essential:
                 lines.append(f"  known essentials among them: {d.depleted} depleted, "
@@ -366,7 +369,7 @@ class PipelineResult:
             for w in self.hits.warnings:
                 lines.append(f"  hits warning: {w}")
         if self.flags and self.hits:
-            called = [g.gene for g in self.hits.significant(0.1)]
+            called = [g.gene for g in self.hits.significant(self.fdr_threshold)]
             lines.append(f"  flags on called hits: "
                          f"{summarise_flags(self.flags, called) or 'none'}")
             lines.append(f"  flags over all genes: {summarise_flags(self.flags)}")
@@ -384,8 +387,20 @@ class ScreenInput:
     treatment: list[str] = field(default_factory=list)
     control: list[str] = field(default_factory=list)
     library_slug: str | None = None                         # None means detect
+    library_path: Path | None = None
+    normalization: str = "median"
+    fdr_threshold: float = 0.1
+    hit_callers: list[str] | None = None
+    source_sheet: str | None = None
+    guide_aliases: dict[str, str] = field(default_factory=dict)
+    canonicalize_upload: bool = False
+    count_mapping: dict | None = None
+    mle_design: dict | None = None
+    drugz_options: dict = field(default_factory=dict)
+    sample_factors: dict = field(default_factory=dict)
     cell_line: str | None = None
     model_id: str | None = None                             # DepMap ACH-######
+    model_type: str | None = None
     phenotype: str | None = None
     modality: str = "knockout"
     condition: str | None = None
@@ -421,7 +436,7 @@ def run_pipeline(
     persist=True writes every stage to Postgres as it completes, so progress
     is visible from the app while the run is still going. It needs org_id.
     """
-    result = PipelineResult(screen_name=spec.name)
+    result = PipelineResult(screen_name=spec.name, fdr_threshold=spec.fdr_threshold)
     workdir = workdir.resolve()
     workdir.mkdir(parents=True, exist_ok=True)
     conn = None
@@ -443,6 +458,11 @@ def run_pipeline(
                             detail, tool, metrics, duration)
             conn.commit()
 
+    def begin(stage: str, detail: str) -> None:
+        if conn is not None and ctx is not None:
+            conn.execute("update public.run_stages set status='running', started_at=coalesce(started_at, now()), finished_at=null, detail=%s where run_id=%s and stage=%s", (detail, ctx.run_id, stage))
+            conn.commit()
+
     try:
         if persist:
             if existing is None and not org_id:
@@ -451,6 +471,23 @@ def run_pipeline(
 
         # --- 01 ingest -----------------------------------------------------
         t = time.time()
+        if not 0 < spec.fdr_threshold < 1:
+            raise ValueError("FDR threshold must be between 0 and 1")
+        if spec.normalization not in {"median", "total", "control"}:
+            raise ValueError("Unknown count normalization")
+        from .validation.outcomes import MODEL_TYPES
+        if spec.model_type is not None and spec.model_type not in MODEL_TYPES:
+            raise ValueError("Choose a valid model type")
+        if spec.hit_callers is not None and ("mageck_rra" not in spec.hit_callers or set(spec.hit_callers) - {"mageck_rra", "mageck_mle", "bagel2", "drugz"}):
+            raise ValueError("This analysis supports MAGeCK RRA with optional MLE, BAGEL2 and DrugZ")
+        original_sources = list(spec.fastqs.values()) + ([spec.count_table] if spec.count_table else [])
+        input_provenance = {"files": [{"name": Path(path).name, "sha256": _file_sha256(Path(path))} for path in original_sources], "sheet": spec.source_sheet, "confirmed_guide_aliases": spec.guide_aliases, "library_map_sha256": _file_sha256(spec.library_path) if spec.library_path else None}
+        if spec.canonicalize_upload:
+            if not spec.library_path and not spec.library_slug:
+                raise ValueError("Confirm a guide library before analysing this count table")
+            upload_library = (_parse_learned(spec.library_path, spec.library_slug or "custom") if spec.library_path else load_library(spec.library_slug))
+            from .upload_tables import canonical_counts
+            spec.count_table = canonical_counts(Path(spec.count_table), upload_library, list(dict.fromkeys(spec.control + spec.treatment)), workdir / "reviewed_counts.tsv", spec.source_sheet, spec.guide_aliases, spec.count_mapping)
         sources = list(spec.fastqs.values()) + ([spec.count_table] if spec.count_table else [])
         if bool(spec.fastqs) == bool(spec.count_table):
             raise ValueError("supply exactly one input type: FASTQ files or a count table")
@@ -521,7 +558,10 @@ def run_pipeline(
         # --- 02 detect -----------------------------------------------------
         active_stage = "detect"
         t = time.time()
-        if spec.library_slug:
+        if spec.library_path:
+            library = _parse_learned(spec.library_path, spec.library_slug or "custom")
+            detail = f"{library.name} (confirmed workspace guide map)"
+        elif spec.library_slug:
             library = load_library(spec.library_slug)
             detail = f"{library.name} (supplied, not detected)"
         else:
@@ -540,14 +580,18 @@ def run_pipeline(
         # --- 03 count ------------------------------------------------------
         active_stage = "count"
         t = time.time()
+        begin("count", "Counting uploaded reads" if spec.fastqs else "Reading guide counts")
         if spec.fastqs:
             samples: list[SampleCounts] = []
-            location = None
             for label, path in spec.fastqs.items():
-                sc = count_fastq(Path(path), library, label=label, location=location)
-                location = sc.location      # reuse across samples of one screen
+                # Primer offsets and read orientation can differ between files.
+                # Identify the spacer separately for every biological sample.
+                sc = count_fastq(Path(path), library, label=label)
                 samples.append(sc)
                 say(f"      {sc.summary()}")
+                if conn is not None and ctx is not None:
+                    conn.execute("update public.run_stages set detail=%s, metrics=%s::jsonb where run_id=%s and stage='count'", (f"Counted {len(samples)} of {len(spec.fastqs)} samples", json.dumps({"completed_samples": len(samples), "total_samples": len(spec.fastqs)}), ctx.run_id))
+                    conn.commit()
             matrix = CountMatrix.from_samples(library, samples)
             mean_rate = sum(s.mapping_rate for s in samples) / len(samples)
             detail = f"{len(samples)} samples, {mean_rate:.1%} mean mapping rate"
@@ -556,7 +600,7 @@ def run_pipeline(
             detail = f"count table with {len(matrix.samples)} samples"
         result.matrix = matrix
         record("count", "done", detail, "splicr.count", t,
-               {"n_samples": len(matrix.samples), "n_guides": len(matrix.guide_ids)})
+               {"n_samples": len(matrix.samples), "n_guides": len(matrix.guide_ids), "sample_locations": {sample.label: asdict(sample.location) for sample in matrix.per_sample if sample.location is not None}})
 
         if persist and conn is not None and ctx is not None:
             sample_ids = db.write_samples(conn, ctx.screen_id, matrix, roles)
@@ -584,20 +628,48 @@ def run_pipeline(
         # --- 05 hits -------------------------------------------------------
         active_stage = "hits"
         t = time.time()
+        begin("hits", "Running the selected statistical methods")
+        if spec.hit_callers and "bagel2" in spec.hit_callers and not essentiality_contrast:
+            raise ValueError("BAGEL2 requires a declared loss-of-function fitness contrast against a library reference")
+        mle_design = None
+        if spec.hit_callers and "mageck_mle" in spec.hit_callers:
+            mle_design = workdir / "mle_design.tsv"
+            mle_spec = spec.mle_design or {"columns": ["baseline", "treatment"], "rows": [{"sample": sample, "values": [1, int(sample in treat)]} for sample in ctrl + treat], "coefficient": "treatment", "permutation_round": 10}
+            mle_spec = {"random_seed": 0, **mle_spec}
+            from .analysis_plan import validate_mle
+            validate_mle(mle_spec, ctrl + treat)
+            mle_design.write_text("Samples\t" + "\t".join(mle_spec["columns"]) + "\n" + "".join(row["sample"] + "\t" + "\t".join(str(value) for value in row["values"]) + "\n" for row in mle_spec["rows"]))
+        control_guides = None
+        if spec.normalization == "control":
+            present = set(matrix.guide_ids)
+            controls = [guide.guide_id for guide in library.guides if guide.is_control and guide.guide_id in present]
+            if not controls:
+                raise ValueError("Control normalization needs negative-control guides in this count table")
+            control_guides = workdir / "normalization_controls.txt"
+            control_guides.write_text("\n".join(controls) + "\n")
         hits = call_hits(matrix, library, treat, ctrl, workdir / "hits",
-                         run_bagel=essentiality_contrast,
+                         norm_method=spec.normalization, control_sgrna=control_guides,
+                         run_mle=mle_design is not None, mle_design_matrix=mle_design, mle_coefficient=mle_spec["coefficient"] if mle_design else None,
+                         mle_permutation_round=mle_spec.get("permutation_round", 10) if mle_design else 10,
+                         mle_random_seed=mle_spec.get("random_seed", 0) if mle_design else 0,
+                         run_bagel=essentiality_contrast and (spec.hit_callers is None or "bagel2" in spec.hit_callers),
                          run_drug=spec.run_drugz, drugz_paired=spec.drugz_paired,
+                         drugz_pseudocount=float(spec.drugz_options.get("pseudocount", 5)),
+                         drugz_half_window_size=int(spec.drugz_options.get("half_window_size", 500)),
                          essentiality_contrast=essentiality_contrast)
         if not essentiality_contrast:
             hits.warnings.append("BAGEL2 and the essential-direction inversion guard were "
                                  "not applied: this contrast is not a declared loss-of-function "
                                  "fitness endpoint against a library reference.")
         result.hits = hits
-        sig = hits.significant(0.1)
+        missing_requested = set(spec.hit_callers or []) - set(hits.methods)
+        if missing_requested:
+            raise ValueError("Requested methods did not complete: " + ", ".join(sorted(missing_requested)) + ". " + " ".join(hits.warnings))
+        sig = hits.significant(spec.fdr_threshold)
         record("hits", "done",
-               f"{len(hits.genes)} genes, {len(sig)} at FDR 0.1, methods {hits.methods}",
+               f"{len(hits.genes)} genes, {len(sig)} at FDR {spec.fdr_threshold:g}, methods {hits.methods}",
                ", ".join(hits.methods), t,
-               {"methods": hits.methods, "n_significant": len(sig),
+               {"methods": hits.methods, "n_significant": len(sig), "fdr_threshold": spec.fdr_threshold, "normalization": spec.normalization,
                 "warnings": hits.warnings,
                 "fdr_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
                 "essentiality_contrast": essentiality_contrast})
@@ -639,7 +711,7 @@ def run_pipeline(
         result.flags = flags
         # Reported over the called hits. Every gene keeps its flags in the
         # database; the headline is about the genes anyone will read.
-        called = [g.gene for g in hits.significant(0.1)]
+        called = [g.gene for g in hits.significant(spec.fdr_threshold)]
         on_called = summarise_flags(flags, called)
         record("artifacts", "done",
                f"{len(called)} called hits: {on_called or 'no flags'}",
@@ -685,16 +757,17 @@ def run_pipeline(
         # the existing database columns cannot represent without a migration.
         report = {
             "schema_version": "splicr.postscreen.v1",
-            "provenance": _report_provenance(workdir),
+            "provenance": {**_report_provenance(workdir), "uploads": input_provenance},
             "screen_name": spec.name,
             "task": "post_screen_analysis",
             "context": {"cell_line": spec.cell_line, "phenotype": spec.phenotype,
                         "modality": spec.modality, "condition": spec.condition},
             "design": design.as_dict(), "qc": qc.as_dict(),
+            "analysis_plan": {"sample_factors": spec.sample_factors, "count_mapping": spec.count_mapping, "mle_design": mle_spec if mle_design else None, "drugz_options": spec.drugz_options},
             "methods": hits.methods, "warnings": hits.warnings,
             "drugz_pairing": ("paired in the declared sample order" if spec.drugz_paired
                               else "unpaired") if spec.run_drugz else None,
-            "statistics": {"fdr_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
+            "statistics": {"fdr_threshold": spec.fdr_threshold, "normalization": spec.normalization, "fdr_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
                            "p_value_method": "min(1, 2*min(MAGeCK directional p-values))",
                            "directional_statistics": "tool-native; separate tail families",
                            # The score stage answers this now. It is still null
@@ -730,8 +803,9 @@ def run_pipeline(
             #  and does not lose a run that has already produced its hits.
             prediction_rows = 0
             try:
-                prediction_rows = db.write_validation_predictions(
-                    conn, ctx, result.validation or {})
+                with conn.transaction():
+                    prediction_rows = db.write_validation_predictions(
+                        conn, ctx, result.validation or {})
             except Exception as exc:  # noqa: BLE001
                 db.log_event(conn, ctx.run_id,
                              f"validation predictions were not stored: "
@@ -755,6 +829,7 @@ def run_pipeline(
             traceback.print_exc()
         if conn is not None and ctx is not None:
             try:
+                conn.rollback()
                 db.log_event(conn, ctx.run_id, result.error, result.failed_at, "error")
                 db.finish_run(conn, ctx, "failed", result.error)
                 conn.commit()

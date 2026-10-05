@@ -1,0 +1,47 @@
+import fs from "node:fs";
+import path from "node:path";
+import {expect,test} from "@playwright/test";
+import {createClient} from "@supabase/supabase-js";
+import {readEnv} from "../fixtures/handles";
+const ROOT=path.resolve(process.cwd(),"../..");
+const ENABLED=process.env.SPLICR_E2E_OTHER_STUDY==="1";
+test('a second study uses sample metadata, original library files and a reviewed plan',async({page})=>{
+ test.skip(!ENABLED,'Enable the full independent-study upload explicitly.');test.setTimeout(360_000);
+ const files=["data/research/postscreen_reliability/tools/counts.txt","data/references/libraries/geckov2-a.csv","data/references/libraries/geckov2-b.csv","apps/web/e2e/fixtures/files/hela-sample-metadata.csv"].map(file=>path.join(ROOT,file));
+ await page.goto('/dashboard/new');await page.getByRole('radio',{name:/My experiment/}).click();
+ await page.locator('input[type=file]:not([webkitdirectory])').setInputFiles(files);
+ for(const file of files) await expect(page.getByRole('listitem').filter({hasText:path.basename(file)}).getByText('Uploaded')).toBeVisible({timeout:90_000});
+ await page.getByRole('button',{name:'Describe the experiment'}).click();
+ for(const name of ['geckov2-a.csv','geckov2-b.csv']) {
+  const inventory=page.locator('details').filter({has:page.locator('summary').filter({hasText:'File interpretations and sample sheets'})}).first();
+  if(!(await inventory.getAttribute('open'))) await inventory.locator('> summary').click();
+  const editor=inventory.locator('details').filter({has:page.locator('summary').filter({hasText:`${name} / Table`})}).first();
+  await editor.locator('> summary').click();
+  await page.getByLabel(`Table purpose for ${name} Table`).selectOption('library');
+  await page.getByLabel(`Guide ID for ${name} Table`).fill('UID');
+  await page.getByLabel(`Gene for ${name} Table`).fill('gene_id');
+  await page.getByLabel(`Sequence for ${name} Table`).fill('seq');
+  await editor.getByRole('button',{name:'Apply interpretation'}).click();
+  await expect(page.getByRole('heading',{name:'Review experiment'})).toBeVisible({timeout:60_000});
+ }
+ await page.getByRole('button',{name:'Apply sample sheet Table'}).click();
+ await expect(page.getByRole('checkbox',{name:/Run olaparib/})).toHaveCount(1);
+ await page.getByLabel('Custom library name').first().fill('GeCKOv2 A+B, exact reviewed sources');
+ await page.getByRole('button',{name:'Import combined library'}).click();
+ await expect(page.getByText(/Library imported: 123,411 guides/)).toBeVisible({timeout:90_000});
+ const aliases=page.getByRole('button',{name:'Confirm guide mapping',exact:true});if(await aliases.count()) await aliases.click();
+ await page.getByRole('checkbox',{name:/Run Essentiality/}).uncheck();
+ await page.locator('summary').filter({hasText:'Pipeline settings'}).click();
+ await page.getByLabel('Experiment FDR threshold').fill('0.05');await page.getByLabel('Experiment model type').selectOption('cancer_cell_line');
+ const mle=page.getByRole('checkbox',{name:/Add MAGeCK MLE/});if(await mle.isChecked())await mle.uncheck();
+ const bagel=page.getByRole('checkbox',{name:/Add BAGEL2/});if(await bagel.isChecked())await bagel.uncheck();
+ await page.getByRole('button',{name:'Review analysis plan'}).click();await expect(page.getByRole('button',{name:'Run 1 comparisons'})).toBeDisabled();
+ await page.getByLabel('Confirm reviewed analysis plan').check();await page.screenshot({path:path.join(ROOT,'artifacts/gse145743-screen-20261005/review-plan.png'),fullPage:true});
+ await page.getByRole('button',{name:'Run 1 comparisons'}).click();await expect(page.getByText('The runs are queued.',{exact:false})).toBeVisible({timeout:90_000});
+ const href=await page.getByRole('link',{name:'olaparib / endpoint HeLa',exact:true}).getAttribute('href');expect(href).toBeTruthy();
+ const id=href!.split('/').pop()!;const env=readEnv();const admin=createClient(env.SUPABASE_URL,env.SUPABASE_SECRET_KEY,{auth:{persistSession:false}});
+ const {data:screen,error}=await admin.from('screens').select('id,name,current_run_id,source_ref').eq('id',id).single();if(error)throw error;
+ const {data:run,error:runError}=await admin.from('runs').select('id,status,settings').eq('id',screen.current_run_id).single();if(runError)throw runError;
+ expect(run.settings.hit_callers).toEqual(['mageck_rra','drugz']);expect(run.settings.sample_factors.DMSO1.model).toBe('HeLa');expect(run.settings.library_snapshot.n_guides).toBe(123411);expect(run.settings.source_checksum_sha256).toHaveLength(64);
+ fs.writeFileSync(path.join(ROOT,'artifacts/gse145743-screen-20261005/ui-queued-runs.json'),JSON.stringify({screen,run},null,2));
+});

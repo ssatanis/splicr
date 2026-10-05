@@ -1,0 +1,32 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {expect,test} from '@playwright/test';
+import {createClient} from '@supabase/supabase-js';
+import {readEnv} from '../fixtures/handles';
+const ROOT=path.resolve(process.cwd(),'../..');
+test('real GeCKOv2 library A FASTQs upload, configure and run through the researcher UI',async({page})=>{
+ test.skip(process.env.SPLICR_E2E_RAW_FASTQ!=='1','Enable the full-size sequencing upload explicitly.');test.setTimeout(1200_000);page.setDefaultTimeout(30_000);
+ const names=['SRR11144453_libA_DMSO_rep1.fastq.gz','SRR11144450_libA_DMSO_rep2.fastq.gz','SRR11144451_libA_olaparib_rep1.fastq.gz','SRR11144452_libA_olaparib_rep2.fastq.gz'];
+ await page.goto(process.env.SPLICR_E2E_RESUME_DRAFT ? `/dashboard/new?draft=${process.env.SPLICR_E2E_RESUME_DRAFT}` : '/dashboard/new');await page.getByRole('radio',{name:/My experiment/}).click();
+ if(!process.env.SPLICR_E2E_RESUME_DRAFT)await page.locator('input[type=file]:not([webkitdirectory])').setInputFiles(names.map(name=>path.join(ROOT,'data/testdata/GSE145743/fastq',name)));
+ for(const name of names)await expect.poll(async()=>{const item=page.getByRole('listitem').filter({hasText:name});if(await item.getByText('Failed',{exact:true}).isVisible())throw new Error(await item.innerText());return await item.getByText('Uploaded',{exact:true}).isVisible();},{timeout:900_000}).toBe(true);
+ await page.getByRole('button',{name:'Describe the experiment'}).click();
+ const edit=page.getByRole('button',{name:'Edit design',exact:true});if(await edit.isVisible())await edit.click();
+ await page.getByRole('textbox',{name:'Screen name',exact:true}).fill('GSE145743 HeLa olaparib, raw GeCKOv2 A');
+ await page.getByRole('textbox',{name:'Cell line or model',exact:true}).fill('HeLa');
+ await page.getByRole('textbox',{name:'What was measured',exact:true}).fill('Olaparib sensitisation and resistance');
+ const env=readEnv();const admin=createClient(env.SUPABASE_URL,env.SUPABASE_SECRET_KEY,{auth:{persistSession:false}});
+ await page.getByLabel('Guide library',{exact:true}).selectOption({label:'GeCKOv2 Set A, 65,383 guides'});
+ await page.getByRole('button',{name:/Pipeline settings/}).click();
+ await page.getByLabel('Analysis model type',{exact:true}).selectOption('cancer_cell_line');
+ for(const method of ['BAGEL2','MAGeCK MLE']){const checkbox=page.getByRole('checkbox',{name:method,exact:true});if(await checkbox.isChecked())await checkbox.uncheck();}
+ await page.getByRole('checkbox',{name:'DrugZ',exact:true}).check();await page.getByLabel(/^FDR threshold/).fill('0.05');
+ await page.getByRole('button',{name:'Start the analysis'}).click();await expect(page.getByRole('heading',{name:'Confirm analysis plan'})).toBeVisible();
+ await page.getByLabel('Confirm reviewed analysis plan').check();await page.screenshot({path:path.join(ROOT,'artifacts/gse145743-screen-20261005/raw-review-plan.png'),fullPage:true});
+ await page.getByRole('button',{name:'Run analysis',exact:true}).click();await expect(page.getByText('The runs are queued.',{exact:false})).toBeVisible({timeout:90_000});
+ const href=await page.getByRole('link',{name:'Open the screen',exact:true}).getAttribute('href');const id=href!.split('/').pop()!;
+ const {data:screen,error}=await admin.from('screens').select('id,name,current_run_id').eq('id',id).single();if(error)throw error;
+ const {data:run,error:runError}=await admin.from('runs').select('id,status,settings').eq('id',screen.current_run_id).single();if(runError)throw runError;
+ expect(run.settings.hit_callers).toEqual(['mageck_rra','drugz']);
+ fs.writeFileSync(path.join(ROOT,'artifacts/gse145743-screen-20261005/raw-ui-queued-run.json'),JSON.stringify({screen,run},null,2));
+});

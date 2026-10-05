@@ -64,7 +64,7 @@ async function putSmall(options: UploadOptions): Promise<UploadResult> {
     const request = new XMLHttpRequest();
     request.open("PUT", init.url);
     request.timeout = SMALL_UPLOAD_TIMEOUT_MS;
-    if (file.type) request.setRequestHeader("content-type", file.type);
+    request.setRequestHeader("content-type", file.type || "application/octet-stream");
 
     const onAbort = () => request.abort();
     signal?.addEventListener("abort", onAbort);
@@ -128,6 +128,18 @@ function uploadPart(url: string, blob: Blob, signal?: AbortSignal): Promise<stri
   });
 }
 
+// Storage can be unavailable in private browsing. Resumability is optional;
+// inability to persist the upload ID must never prevent the upload itself.
+function getResume(key: string): string | null {
+  try { return window.localStorage.getItem(key); } catch { return null; }
+}
+function saveResume(key: string, id: string | null): void {
+  try {
+    if (id) window.localStorage.setItem(key, id);
+    else window.localStorage.removeItem(key);
+  } catch { /* Continue uploading without persistent resume state. */ }
+}
+
 async function putMultipart(options: UploadOptions): Promise<UploadResult> {
   const { file, screenId, onProgress, signal } = options;
   const started = await api<{
@@ -144,15 +156,20 @@ async function putMultipart(options: UploadOptions): Promise<UploadResult> {
   }, signal);
 
   const resumeKey = `splicr:r2:${started.key}:${file.size}:${file.lastModified}`;
-  const storedUploadId = window.localStorage.getItem(resumeKey);
-  const uploadId = storedUploadId || started.uploadId;
-  window.localStorage.setItem(resumeKey, uploadId);
-
-  if (storedUploadId && storedUploadId !== started.uploadId) {
-    void api({ action: "abort", key: started.key, uploadId: started.uploadId }, signal).catch(() => undefined);
+  const storedUploadId = getResume(resumeKey);
+  let uploadId = started.uploadId;
+  let held: { parts: MultipartPart[] } = { parts: [] };
+  if (storedUploadId) {
+    // An expired/aborted upload ID must not poison every future retry.
+    try {
+      held = await api<{ parts: MultipartPart[] }>({ action: "list", key: started.key, uploadId: storedUploadId }, signal);
+      uploadId = storedUploadId;
+      void api({ action: "abort", key: started.key, uploadId: started.uploadId }, signal).catch(() => undefined);
+    } catch (error) {
+      if (signal?.aborted) throw error;
+    }
   }
-
-  const held = await api<{ parts: MultipartPart[] }>({ action: "list", key: started.key, uploadId }, signal).catch(() => ({ parts: [] }));
+  saveResume(resumeKey, uploadId);
   const completed = new Map<number, string>(held.parts.map((part) => [part.PartNumber, part.ETag]));
   let sent = [...completed.keys()].reduce((sum, part) => {
     const start = (part - 1) * started.partSize;
@@ -179,13 +196,13 @@ async function putMultipart(options: UploadOptions): Promise<UploadResult> {
       uploadId,
       parts: [...completed.entries()].map(([PartNumber, ETag]) => ({ PartNumber, ETag })),
     }, signal);
-    window.localStorage.removeItem(resumeKey);
+    saveResume(resumeKey, null);
     onProgress?.(file.size, file.size);
     return { storageKey: started.storageKey };
   } catch (error) {
     if (!(error instanceof DOMException && error.name === "AbortError")) {
       // Keep the upload id for retry. The next attempt asks which parts landed.
-      window.localStorage.setItem(resumeKey, uploadId);
+      saveResume(resumeKey, uploadId);
     }
     throw error;
   }

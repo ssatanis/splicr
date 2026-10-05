@@ -1,0 +1,53 @@
+{
+  "verified_at": "2026-10-05",
+  "engine": {
+    "passed": 713,
+    "skipped": 2,
+    "deselected": 9,
+    "command": "cd engine && .tools/env/bin/python -m pytest -q -m 'not network and not slow'"
+  },
+  "web_unit": {
+    "passed": 660,
+    "skipped": 1,
+    "command": "npm run test:web"
+  },
+  "browser": {
+    "regression_cases_passed": 34,
+    "screen_detail_cases_passed": 4,
+    "actual_workflows": [
+      "Dow workbook upload, private library and six comparisons",
+      "six completed cloud comparisons, repeated with seeded MLE",
+      "native statistics, settings JSON export and cross-comparison rankings",
+      "retrospective Truth Loop and mobile review",
+      "original GeCKOv2 A+B guide files, author counts and sample metadata",
+      "1.26 GB of four original FASTQs, multipart upload and draft reopening",
+      "two full FASTQ cloud analyses and browser exports",
+      "completed-analysis retry preserving both executions results"
+    ],
+    "run_history_check": "489 hits, 3044 guide effects and 489 disagreement reports retained for each of two executions; RRA and MLE statistics identical"
+  },
+  "production_build": "passed",
+  "typecheck": "passed",
+  "lint": "passed",
+  "git_diff_check": "passed",
+  "deployment": {
+    "modal_worker": "deployed",
+    "database_migrations": "eleven applied",
+    "cloudflare_upload_cors": "verified local and production domains, with ETag exposed",
+    "web": "built and tested locally against hosted services; linked Vercel team access denied with 403"
+  },
+  "limits": [
+    "Network and marked slow engine tests were excluded.",
+    "OCR, Chronos, actual copy-number correction and specialized screen adapters are not implemented.",
+    "No 100% interpretation, universal-screen or biological-superiority claim is supported.",
+    "Earlier reruns replaced database result rows. The run-history migration prevents that for future executions; missing historical rows were not reconstructed.",
+    "Raw benchmark uses library A; author processed counts use A+B and are normalized, so these are separate test inputs."
+  ],
+  "whole_screen_plot": {
+    "genes": 20665,
+    "unique_genes": 20665,
+    "authorized_and_missing_workspace_queries": "verified",
+    "query_ms": 654,
+    "change": "one workspace authorization, current-run filtering and indexed guide-report join"
+  }
+}

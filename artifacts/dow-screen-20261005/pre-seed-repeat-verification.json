@@ -1,0 +1,848 @@
+{
+  "verified_at": "2026-10-05T19:31:28.914Z",
+  "experiment_id": "01a10d66-ab7b-74d2-afed-67d0e3f79c6e",
+  "screens": [
+    {
+      "id": "01a10d66-d10b-7232-9e92-7f00281b91bb",
+      "name": "Essentiality ICSBCS002",
+      "status": "complete",
+      "qc": "fail",
+      "current_run_id": "01a10d7b-c48c-7dd6-b9c9-359ed4ff159c",
+      "settings": {
+        "source": {
+          "sheet": "ICSBCS002 gRNA raw count",
+          "fileId": "01a10d66-b273-7e39-97f8-c3a2e1246a05"
+        },
+        "modality": "knockout",
+        "rerun_of": "01a10d66-d11d-7d9d-bb14-be52dd5b0787",
+        "mle_design": {
+          "rows": [
+            {
+              "sample": "D4_rep1",
+              "values": [
+                1,
+                0
+              ]
+            },
+            {
+              "sample": "D4_rep2",
+              "values": [
+                1,
+                0
+              ]
+            },
+            {
+              "sample": "D39_DMSO_rep1",
+              "values": [
+                1,
+                1
+              ]
+            },
+            {
+              "sample": "D39_DMSO_rep2",
+              "values": [
+                1,
+                1
+              ]
+            }
+          ],
+          "columns": [
+            "baseline",
+            "treatment"
+          ],
+          "coefficient": "treatment",
+          "permutation_round": 10
+        },
+        "model_type": "organoid",
+        "hit_callers": [
+          "mageck_rra",
+          "mageck_mle"
+        ],
+        "drugz_paired": false,
+        "plan_version": "guide-abundance-v2",
+        "cn_correction": false,
+        "drugz_options": {
+          "pseudocount": 5,
+          "half_window_size": 500
+        },
+        "experiment_id": "01a10d66-ab7b-74d2-afed-67d0e3f79c6e",
+        "fdr_threshold": 0.05,
+        "fitness_assay": true,
+        "guide_aliases": {
+          "PRL9_e3.1": "RPL9_e3.1",
+          "PRL9_e3.2": "RPL9_e3.2",
+          "PRL9_e4.1": "RPL9_e4.1",
+          "PRL9_e4.2": "RPL9_e4.2"
+        },
+        "normalization": "median",
+        "organism_taxid": 9606,
+        "sample_factors": {
+          "D4_rep1": {},
+          "D4_rep2": {},
+          "D39_DMSO_rep1": {},
+          "D39_DMSO_rep2": {}
+        },
+        "library_snapshot": {
+          "id": "01a10d66-bd02-7986-a6c2-c80899b8ecc3",
+          "cas": "SpCas9",
+          "name": "Vakoc kinase-domain #117725, reviewed upload",
+          "taxid": 9606,
+          "n_genes": 489,
+          "modality": "knockout",
+          "n_guides": 3051
+        },
+        "review_confirmed": true,
+        "source_checksum_sha256": "2d57117c5edb06c33be746cb2df54ed15295df13fb76bff573db2dfc0cebd6f9"
+      },
+      "started_at": "2026-10-05T19:13:10.423Z",
+      "finished_at": "2026-10-05T19:16:55.939Z",
+      "completed_stages": "8",
+      "hit_metrics": {
+        "methods": [
+          "mageck_rra",
+          "mageck_mle"
+        ],
+        "warnings": [],
+        "fdr_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
+        "fdr_threshold": 0.05,
+        "n_significant": 29,
+        "normalization": "median",
+        "essentiality_contrast": true
+      },
+      "counts": {
+        "genes": "489",
+        "splicr": "29",
+        "rra_depletion": "33",
+        "rra_enrichment": "0",
+        "drugz": "0",
+        "mle": "41",
+        "drugz_rows": "0"
+      }
+    },
+    {
+      "id": "01a10d66-d127-7cbe-ba22-5aa65ea6aef1",
+      "name": "Gefitinib ICSBCS002",
+      "status": "complete",
+      "qc": "fail",
+      "current_run_id": "01a10d7b-e5d8-7edf-8bbd-454101adc3e7",
+      "settings": {
+        "source": {
+          "sheet": "ICSBCS002 gRNA raw count",
+          "fileId": "01a10d66-b273-7e39-97f8-c3a2e1246a05"
+        },
+        "modality": "knockout",
+        "rerun_of": "01a10d66-d12a-73e2-bd02-99cd965cc428",
+        "mle_design": {
+          "rows": [
+            {
+              "sample": "D39_DMSO_rep1",
+              "values": [
+                1,
+                0
+              ]
+            },
+            {
+              "sample": "D39_DMSO_rep2",
+              "values": [
+                1,
+                0
+              ]
+            },
+            {
+              "sample": "D39_GEF_rep1",
+              "values": [
+                1,
+                1
+              ]
+            },
+            {
+              "sample": "D39_GEF_rep2",
+              "values": [
+                1,
+                1
+              ]
+            }
+          ],
+          "columns": [
+            "baseline",
+            "treatment"
+          ],
+          "coefficient": "treatment",
+          "permutation_round": 10
+        },
+        "model_type": "organoid",
+        "hit_callers": [
+          "mageck_rra",
+          "mageck_mle",
+          "drugz"
+        ],
+        "plan_version": "guide-abundance-v2",
+        "cn_correction": false,
+        "drugz_options": {
+          "pseudocount": 5,
+          "half_window_size": 500
+        },
+        "experiment_id": "01a10d66-ab7b-74d2-afed-67d0e3f79c6e",
+        "fdr_threshold": 0.05,
+        "fitness_assay": false,
+        "guide_aliases": {
+          "PRL9_e3.1": "RPL9_e3.1",
+          "PRL9_e3.2": "RPL9_e3.2",
+          "PRL9_e4.1": "RPL9_e4.1",
+          "PRL9_e4.2": "RPL9_e4.2"
+        },
+        "normalization": "median",
+        "organism_taxid": 9606,
+        "sample_factors": {
+          "D39_GEF_rep1": {},
+          "D39_GEF_rep2": {},
+          "D39_DMSO_rep1": {},
+          "D39_DMSO_rep2": {}
+        },
+        "library_snapshot": {
+          "id": "01a10d66-bd02-7986-a6c2-c80899b8ecc3",
+          "cas": "SpCas9",
+          "name": "Vakoc kinase-domain #117725, reviewed upload",
+          "taxid": 9606,
+          "n_genes": 489,
+          "modality": "knockout",
+          "n_guides": 3051
+        },
+        "review_confirmed": true,
+        "source_checksum_sha256": "2d57117c5edb06c33be746cb2df54ed15295df13fb76bff573db2dfc0cebd6f9"
+      },
+      "started_at": "2026-10-05T19:13:23.517Z",
+      "finished_at": "2026-10-05T19:16:57.171Z",
+      "completed_stages": "8",
+      "hit_metrics": {
+        "methods": [
+          "mageck_rra",
+          "mageck_mle",
+          "drugz"
+        ],
+        "warnings": [
+          "BAGEL2 and the essential-direction inversion guard were not applied: this contrast is not a declared loss-of-function fitness endpoint against a library reference."
+        ],
+        "fdr_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
+        "fdr_threshold": 0.05,
+        "n_significant": 0,
+        "normalization": "median",
+        "essentiality_contrast": false
+      },
+      "counts": {
+        "genes": "489",
+        "splicr": "0",
+        "rra_depletion": "0",
+        "rra_enrichment": "0",
+        "drugz": "3",
+        "mle": "1",
+        "drugz_rows": "488"
+      }
+    },
+    {
+      "id": "01a10d66-d12e-72ec-9b53-6701ccaae68a",
+      "name": "Trametinib ICSBCS002",
+      "status": "complete",
+      "qc": "fail",
+      "current_run_id": "01a10d7c-0902-726f-b97f-06c1510c0c4f",
+      "settings": {
+        "source": {
+          "sheet": "ICSBCS002 gRNA raw count",
+          "fileId": "01a10d66-b273-7e39-97f8-c3a2e1246a05"
+        },
+        "modality": "knockout",
+        "rerun_of": "01a10d66-d131-7e42-ac46-33ccb88bb348",
+        "mle_design": {
+          "rows": [
+            {
+              "sample": "D39_DMSO_rep1",
+              "values": [
+                1,
+                0
+              ]
+            },
+            {
+              "sample": "D39_DMSO_rep2",
+              "values": [
+                1,
+                0
+              ]
+            },
+            {
+              "sample": "D39_TRM_rep1",
+              "values": [
+                1,
+                1
+              ]
+            },
+            {
+              "sample": "D39_TRM_rep2",
+              "values": [
+                1,
+                1
+              ]
+            }
+          ],
+          "columns": [
+            "baseline",
+            "treatment"
+          ],
+          "coefficient": "treatment",
+          "permutation_round": 10
+        },
+        "model_type": "organoid",
+        "hit_callers": [
+          "mageck_rra",
+          "mageck_mle",
+          "drugz"
+        ],
+        "plan_version": "guide-abundance-v2",
+        "cn_correction": false,
+        "drugz_options": {
+          "pseudocount": 5,
+          "half_window_size": 500
+        },
+        "experiment_id": "01a10d66-ab7b-74d2-afed-67d0e3f79c6e",
+        "fdr_threshold": 0.05,
+        "fitness_assay": false,
+        "guide_aliases": {
+          "PRL9_e3.1": "RPL9_e3.1",
+          "PRL9_e3.2": "RPL9_e3.2",
+          "PRL9_e4.1": "RPL9_e4.1",
+          "PRL9_e4.2": "RPL9_e4.2"
+        },
+        "normalization": "median",
+        "organism_taxid": 9606,
+        "sample_factors": {
+          "D39_TRM_rep1": {},
+          "D39_TRM_rep2": {},
+          "D39_DMSO_rep1": {},
+          "D39_DMSO_rep2": {}
+        },
+        "library_snapshot": {
+          "id": "01a10d66-bd02-7986-a6c2-c80899b8ecc3",
+          "cas": "SpCas9",
+          "name": "Vakoc kinase-domain #117725, reviewed upload",
+          "taxid": 9606,
+          "n_genes": 489,
+          "modality": "knockout",
+          "n_guides": 3051
+        },
+        "review_confirmed": true,
+        "source_checksum_sha256": "2d57117c5edb06c33be746cb2df54ed15295df13fb76bff573db2dfc0cebd6f9"
+      },
+      "started_at": "2026-10-05T19:14:14.979Z",
+      "finished_at": "2026-10-05T19:19:29.537Z",
+      "completed_stages": "8",
+      "hit_metrics": {
+        "methods": [
+          "mageck_rra",
+          "mageck_mle",
+          "drugz"
+        ],
+        "warnings": [
+          "BAGEL2 and the essential-direction inversion guard were not applied: this contrast is not a declared loss-of-function fitness endpoint against a library reference."
+        ],
+        "fdr_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
+        "fdr_threshold": 0.05,
+        "n_significant": 0,
+        "normalization": "median",
+        "essentiality_contrast": false
+      },
+      "counts": {
+        "genes": "489",
+        "splicr": "0",
+        "rra_depletion": "0",
+        "rra_enrichment": "0",
+        "drugz": "0",
+        "mle": "7",
+        "drugz_rows": "486"
+      }
+    },
+    {
+      "id": "01a10d66-d134-7929-93f5-2562f0d3f485",
+      "name": "Essentiality ICSBCS007",
+      "status": "complete",
+      "qc": "warn",
+      "current_run_id": "01a10d7c-29b0-7ac3-87ba-c93d3d91b0e6",
+      "settings": {
+        "source": {
+          "sheet": "ICSBCS007 gRNA raw count",
+          "fileId": "01a10d66-b273-7e39-97f8-c3a2e1246a05"
+        },
+        "modality": "knockout",
+        "rerun_of": "01a10d66-d137-7afb-839a-f89cda298309",
+        "mle_design": {
+          "rows": [
+            {
+              "sample": "D3_Rep_1",
+              "values": [
+                1,
+                0
+              ]
+            },
+            {
+              "sample": "D3_Rep_2",
+              "values": [
+                1,
+                0
+              ]
+            },
+            {
+              "sample": "D3_Rep_3",
+              "values": [
+                1,
+                0
+              ]
+            },
+            {
+              "sample": "D31_DMSO_1",
+              "values": [
+                1,
+                1
+              ]
+            },
+            {
+              "sample": "D31_DMSO_2",
+              "values": [
+                1,
+                1
+              ]
+            },
+            {
+              "sample": "D31_DMSO_3",
+              "values": [
+                1,
+                1
+              ]
+            }
+          ],
+          "columns": [
+            "baseline",
+            "treatment"
+          ],
+          "coefficient": "treatment",
+          "permutation_round": 10
+        },
+        "model_type": "organoid",
+        "hit_callers": [
+          "mageck_rra",
+          "mageck_mle"
+        ],
+        "drugz_paired": false,
+        "plan_version": "guide-abundance-v2",
+        "cn_correction": false,
+        "drugz_options": {
+          "pseudocount": 5,
+          "half_window_size": 500
+        },
+        "experiment_id": "01a10d66-ab7b-74d2-afed-67d0e3f79c6e",
+        "fdr_threshold": 0.05,
+        "fitness_assay": true,
+        "guide_aliases": {
+          "PRL9_e3.1": "RPL9_e3.1",
+          "PRL9_e3.2": "RPL9_e3.2",
+          "PRL9_e4.1": "RPL9_e4.1",
+          "PRL9_e4.2": "RPL9_e4.2"
+        },
+        "normalization": "median",
+        "organism_taxid": 9606,
+        "sample_factors": {
+          "D3_Rep_1": {},
+          "D3_Rep_2": {},
+          "D3_Rep_3": {},
+          "D31_DMSO_1": {},
+          "D31_DMSO_2": {},
+          "D31_DMSO_3": {}
+        },
+        "library_snapshot": {
+          "id": "01a10d66-bd02-7986-a6c2-c80899b8ecc3",
+          "cas": "SpCas9",
+          "name": "Vakoc kinase-domain #117725, reviewed upload",
+          "taxid": 9606,
+          "n_genes": 489,
+          "modality": "knockout",
+          "n_guides": 3051
+        },
+        "review_confirmed": true,
+        "source_checksum_sha256": "2d57117c5edb06c33be746cb2df54ed15295df13fb76bff573db2dfc0cebd6f9"
+      },
+      "started_at": "2026-10-05T19:14:19.376Z",
+      "finished_at": "2026-10-05T19:20:44.730Z",
+      "completed_stages": "8",
+      "hit_metrics": {
+        "methods": [
+          "mageck_rra",
+          "mageck_mle"
+        ],
+        "warnings": [],
+        "fdr_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
+        "fdr_threshold": 0.05,
+        "n_significant": 38,
+        "normalization": "median",
+        "essentiality_contrast": true
+      },
+      "counts": {
+        "genes": "489",
+        "splicr": "38",
+        "rra_depletion": "37",
+        "rra_enrichment": "3",
+        "drugz": "0",
+        "mle": "36",
+        "drugz_rows": "0"
+      }
+    },
+    {
+      "id": "01a10d66-d13b-7f37-8c3f-4731781c8740",
+      "name": "Gefitinib ICSBCS007",
+      "status": "complete",
+      "qc": "warn",
+      "current_run_id": "01a10d7c-6c69-79ea-acbf-3bdcbbde965f",
+      "settings": {
+        "source": {
+          "sheet": "ICSBCS007 gRNA raw count",
+          "fileId": "01a10d66-b273-7e39-97f8-c3a2e1246a05"
+        },
+        "modality": "knockout",
+        "rerun_of": "01a10d66-d13f-70b1-a086-acbf7c2d5475",
+        "mle_design": {
+          "rows": [
+            {
+              "sample": "D31_DMSO_1",
+              "values": [
+                1,
+                0
+              ]
+            },
+            {
+              "sample": "D31_DMSO_2",
+              "values": [
+                1,
+                0
+              ]
+            },
+            {
+              "sample": "D31_DMSO_3",
+              "values": [
+                1,
+                0
+              ]
+            },
+            {
+              "sample": "D31_GEF_1",
+              "values": [
+                1,
+                1
+              ]
+            },
+            {
+              "sample": "D31_GEF_2",
+              "values": [
+                1,
+                1
+              ]
+            },
+            {
+              "sample": "D31_GEF_3",
+              "values": [
+                1,
+                1
+              ]
+            }
+          ],
+          "columns": [
+            "baseline",
+            "treatment"
+          ],
+          "coefficient": "treatment",
+          "permutation_round": 10
+        },
+        "model_type": "organoid",
+        "hit_callers": [
+          "mageck_rra",
+          "mageck_mle",
+          "drugz"
+        ],
+        "plan_version": "guide-abundance-v2",
+        "cn_correction": false,
+        "drugz_options": {
+          "pseudocount": 5,
+          "half_window_size": 500
+        },
+        "experiment_id": "01a10d66-ab7b-74d2-afed-67d0e3f79c6e",
+        "fdr_threshold": 0.05,
+        "fitness_assay": false,
+        "guide_aliases": {
+          "PRL9_e3.1": "RPL9_e3.1",
+          "PRL9_e3.2": "RPL9_e3.2",
+          "PRL9_e4.1": "RPL9_e4.1",
+          "PRL9_e4.2": "RPL9_e4.2"
+        },
+        "normalization": "median",
+        "organism_taxid": 9606,
+        "sample_factors": {
+          "D31_GEF_1": {},
+          "D31_GEF_2": {},
+          "D31_GEF_3": {},
+          "D31_DMSO_1": {},
+          "D31_DMSO_2": {},
+          "D31_DMSO_3": {}
+        },
+        "library_snapshot": {
+          "id": "01a10d66-bd02-7986-a6c2-c80899b8ecc3",
+          "cas": "SpCas9",
+          "name": "Vakoc kinase-domain #117725, reviewed upload",
+          "taxid": 9606,
+          "n_genes": 489,
+          "modality": "knockout",
+          "n_guides": 3051
+        },
+        "review_confirmed": true,
+        "source_checksum_sha256": "2d57117c5edb06c33be746cb2df54ed15295df13fb76bff573db2dfc0cebd6f9"
+      },
+      "started_at": "2026-10-05T19:14:22.440Z",
+      "finished_at": "2026-10-05T19:18:34.334Z",
+      "completed_stages": "8",
+      "hit_metrics": {
+        "methods": [
+          "mageck_rra",
+          "mageck_mle",
+          "drugz"
+        ],
+        "warnings": [
+          "BAGEL2 and the essential-direction inversion guard were not applied: this contrast is not a declared loss-of-function fitness endpoint against a library reference."
+        ],
+        "fdr_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
+        "fdr_threshold": 0.05,
+        "n_significant": 3,
+        "normalization": "median",
+        "essentiality_contrast": false
+      },
+      "counts": {
+        "genes": "489",
+        "splicr": "3",
+        "rra_depletion": "0",
+        "rra_enrichment": "4",
+        "drugz": "5",
+        "mle": "6",
+        "drugz_rows": "485"
+      }
+    },
+    {
+      "id": "01a10d66-d145-7fa8-a95b-1b51e8e07fac",
+      "name": "Trametinib ICSBCS007",
+      "status": "complete",
+      "qc": "warn",
+      "current_run_id": "01a10d7c-4bd0-77d3-95ac-ca302d24d416",
+      "settings": {
+        "source": {
+          "sheet": "ICSBCS007 gRNA raw count",
+          "fileId": "01a10d66-b273-7e39-97f8-c3a2e1246a05"
+        },
+        "modality": "knockout",
+        "rerun_of": "01a10d66-d148-7c48-9e9a-f565e013121d",
+        "mle_design": {
+          "rows": [
+            {
+              "sample": "D31_DMSO_1",
+              "values": [
+                1,
+                0
+              ]
+            },
+            {
+              "sample": "D31_DMSO_2",
+              "values": [
+                1,
+                0
+              ]
+            },
+            {
+              "sample": "D31_DMSO_3",
+              "values": [
+                1,
+                0
+              ]
+            },
+            {
+              "sample": "D31_TRM_1",
+              "values": [
+                1,
+                1
+              ]
+            },
+            {
+              "sample": "D31_TRM_2",
+              "values": [
+                1,
+                1
+              ]
+            },
+            {
+              "sample": "D31_TRM_3",
+              "values": [
+                1,
+                1
+              ]
+            }
+          ],
+          "columns": [
+            "baseline",
+            "treatment"
+          ],
+          "coefficient": "treatment",
+          "permutation_round": 10
+        },
+        "model_type": "organoid",
+        "hit_callers": [
+          "mageck_rra",
+          "mageck_mle",
+          "drugz"
+        ],
+        "plan_version": "guide-abundance-v2",
+        "cn_correction": false,
+        "drugz_options": {
+          "pseudocount": 5,
+          "half_window_size": 500
+        },
+        "experiment_id": "01a10d66-ab7b-74d2-afed-67d0e3f79c6e",
+        "fdr_threshold": 0.05,
+        "fitness_assay": false,
+        "guide_aliases": {
+          "PRL9_e3.1": "RPL9_e3.1",
+          "PRL9_e3.2": "RPL9_e3.2",
+          "PRL9_e4.1": "RPL9_e4.1",
+          "PRL9_e4.2": "RPL9_e4.2"
+        },
+        "normalization": "median",
+        "organism_taxid": 9606,
+        "sample_factors": {
+          "D31_TRM_1": {},
+          "D31_TRM_2": {},
+          "D31_TRM_3": {},
+          "D31_DMSO_1": {},
+          "D31_DMSO_2": {},
+          "D31_DMSO_3": {}
+        },
+        "library_snapshot": {
+          "id": "01a10d66-bd02-7986-a6c2-c80899b8ecc3",
+          "cas": "SpCas9",
+          "name": "Vakoc kinase-domain #117725, reviewed upload",
+          "taxid": 9606,
+          "n_genes": 489,
+          "modality": "knockout",
+          "n_guides": 3051
+        },
+        "review_confirmed": true,
+        "source_checksum_sha256": "2d57117c5edb06c33be746cb2df54ed15295df13fb76bff573db2dfc0cebd6f9"
+      },
+      "started_at": "2026-10-05T19:14:17.603Z",
+      "finished_at": "2026-10-05T19:17:23.348Z",
+      "completed_stages": "8",
+      "hit_metrics": {
+        "methods": [
+          "mageck_rra",
+          "mageck_mle",
+          "drugz"
+        ],
+        "warnings": [
+          "BAGEL2 and the essential-direction inversion guard were not applied: this contrast is not a declared loss-of-function fitness endpoint against a library reference."
+        ],
+        "fdr_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
+        "fdr_threshold": 0.05,
+        "n_significant": 5,
+        "normalization": "median",
+        "essentiality_contrast": false
+      },
+      "counts": {
+        "genes": "489",
+        "splicr": "5",
+        "rra_depletion": "2",
+        "rra_enrichment": "3",
+        "drugz": "6",
+        "mle": "9",
+        "drugz_rows": "489"
+      }
+    }
+  ],
+  "repeat_statistics": [
+    {
+      "name": "Essentiality ICSBCS002",
+      "previous_run": "01a10d34-67e8-7c05-826f-cb8295584c83",
+      "current_run": "01a10d7b-c48c-7dd6-b9c9-359ed4ff159c",
+      "genes": "489",
+      "max_splicr_fdr_delta": 0,
+      "max_lfc_delta": 0,
+      "max_depletion_fdr_delta": 0,
+      "max_enrichment_fdr_delta": 0,
+      "max_drugz_fdr_delta": null,
+      "max_drugz_z_delta": null,
+      "max_mle_fdr_delta": 0.07188
+    },
+    {
+      "name": "Gefitinib ICSBCS002",
+      "previous_run": "01a10d34-67f3-77ea-8134-fbcb8b744ee1",
+      "current_run": "01a10d7b-e5d8-7edf-8bbd-454101adc3e7",
+      "genes": "489",
+      "max_splicr_fdr_delta": 0,
+      "max_lfc_delta": 0,
+      "max_depletion_fdr_delta": 0,
+      "max_enrichment_fdr_delta": 0,
+      "max_drugz_fdr_delta": 0,
+      "max_drugz_z_delta": 0,
+      "max_mle_fdr_delta": 0.11609
+    },
+    {
+      "name": "Trametinib ICSBCS002",
+      "previous_run": "01a10d34-67fa-7619-af71-fe7998666be5",
+      "current_run": "01a10d7c-0902-726f-b97f-06c1510c0c4f",
+      "genes": "489",
+      "max_splicr_fdr_delta": 0,
+      "max_lfc_delta": 0,
+      "max_depletion_fdr_delta": 0,
+      "max_enrichment_fdr_delta": 0,
+      "max_drugz_fdr_delta": 0.015,
+      "max_drugz_z_delta": 0.03,
+      "max_mle_fdr_delta": 0.085
+    },
+    {
+      "name": "Essentiality ICSBCS007",
+      "previous_run": "01a10d34-6800-7e71-95a3-0152d782da82",
+      "current_run": "01a10d7c-29b0-7ac3-87ba-c93d3d91b0e6",
+      "genes": "489",
+      "max_splicr_fdr_delta": 0,
+      "max_lfc_delta": 0,
+      "max_depletion_fdr_delta": 0,
+      "max_enrichment_fdr_delta": 0,
+      "max_drugz_fdr_delta": null,
+      "max_drugz_z_delta": null,
+      "max_mle_fdr_delta": 0.04765
+    },
+    {
+      "name": "Gefitinib ICSBCS007",
+      "previous_run": "01a10d34-6806-734c-a3f4-3f39cf0afb15",
+      "current_run": "01a10d7c-6c69-79ea-acbf-3bdcbbde965f",
+      "genes": "489",
+      "max_splicr_fdr_delta": 0,
+      "max_lfc_delta": 0,
+      "max_depletion_fdr_delta": 0,
+      "max_enrichment_fdr_delta": 0,
+      "max_drugz_fdr_delta": 0,
+      "max_drugz_z_delta": 0,
+      "max_mle_fdr_delta": 0.09995
+    },
+    {
+      "name": "Trametinib ICSBCS007",
+      "previous_run": "01a10d34-680d-74c3-bf06-501045a6d9d8",
+      "current_run": "01a10d7c-4bd0-77d3-95ac-ca302d24d416",
+      "genes": "489",
+      "max_splicr_fdr_delta": 0,
+      "max_lfc_delta": 0,
+      "max_depletion_fdr_delta": 0,
+      "max_enrichment_fdr_delta": 0,
+      "max_drugz_fdr_delta": 0,
+      "max_drugz_z_delta": 0.00999999,
+      "max_mle_fdr_delta": 0.10263
+    }
+  ]
+}

@@ -372,6 +372,9 @@ def run_mageck_mle(
     prefix: str = "mageck_mle",
     permutation_round: int = 10,
     coefficient: str | None = None,
+    norm_method: str = "median",
+    control_sgrna: Path | None = None,
+    random_seed: int = 0,
 ) -> dict[str, tuple[float | None, float | None]]:
     """
     MAGeCK MLE.
@@ -381,11 +384,16 @@ def run_mageck_mle(
     p-values.
     """
     workdir.mkdir(parents=True, exist_ok=True)
-    _run(
-        ["mageck", "mle", "-k", str(counts.resolve()), "-d", str(design_matrix.resolve()),
-         "-n", prefix, "--permutation-round", str(permutation_round)],
-        workdir, "mageck mle",
-    )
+    if isinstance(random_seed, bool) or not isinstance(random_seed, int) or not 0 <= random_seed <= 2**32 - 1:
+        raise ValueError("MLE random seed must be an unsigned 32-bit integer")
+    # MAGeCK has no seed flag. Seed both upstream RNGs before its unchanged
+    # entry point runs, keeping this process isolated from the analysis worker.
+    launcher = "import random,runpy,sys,numpy as np;seed=int(sys.argv.pop(1));random.seed(seed);np.random.seed(seed);sys.argv=sys.argv[1:];runpy.run_path(sys.argv[0],run_name='__main__')"
+    command = [str(SETTINGS.tool_bin / "python"), "-c", launcher, str(random_seed), str(SETTINGS.tool_bin / "mageck"), "mle", "-k", str(counts.resolve()), "-d", str(design_matrix.resolve()),
+               "-n", prefix, "--permutation-round", str(permutation_round), "--norm-method", norm_method]
+    if control_sgrna is not None:
+        command.extend(["--control-sgrna", str(control_sgrna.resolve())])
+    _run(command, workdir, "mageck mle")
     gene_file = workdir / f"{prefix}.gene_summary.txt"
     if not gene_file.exists():
         raise ToolError("MAGeCK MLE produced no gene_summary.")
@@ -497,6 +505,8 @@ def run_drugz(
     workdir: Path,
     prefix: str = "drugz",
     paired: bool = False,
+    pseudocount: float = 5,
+    half_window_size: int = 500,
 ) -> dict[str, tuple[float | None, float | None]]:
     """
     DrugZ normZ, for chemogenetic (drug modifier) designs.
@@ -510,12 +520,14 @@ def run_drugz(
         raise ToolError(f"DrugZ not found at {script}. Run engine/setup.sh.")
     if paired and len(treatment) != len(control):
         raise ToolError("Paired DrugZ requires one matched control per treatment sample")
+    if not math.isfinite(pseudocount) or not float(pseudocount).is_integer() or not 0 < pseudocount <= 1000 or not isinstance(half_window_size, int) or not 2 <= half_window_size <= 10000:
+        raise ToolError("Invalid DrugZ pseudocount or smoothing window")
     workdir = workdir.resolve()
     workdir.mkdir(parents=True, exist_ok=True)
     out_file = workdir / f"{prefix}.txt"
     cmd = [str(SETTINGS.tool_bin / "python"), str(script),
            "-i", str(counts.resolve()), "-c", ",".join(control), "-x", ",".join(treatment),
-           "-o", str(out_file)]
+           "-o", str(out_file), "-p", str(int(pseudocount)), "--half_window_size", str(half_window_size)]
     if not paired:
         cmd.append("-unpaired")
     _run(cmd, workdir, "drugz")
@@ -553,7 +565,13 @@ def call_hits(
     essentiality_contrast: bool = False,
     mle_design_matrix: Path | None = None,
     mle_coefficient: str | None = None,
+    mle_permutation_round: int = 10,
+    mle_random_seed: int = 0,
     drugz_paired: bool = False,
+    drugz_pseudocount: float = 5,
+    drugz_half_window_size: int = 500,
+    norm_method: str = "median",
+    control_sgrna: Path | None = None,
 ) -> HitTable:
     """
     Run every applicable caller and merge.
@@ -595,7 +613,7 @@ def call_hits(
     methods: list[str] = []
     warnings: list[str] = []
 
-    genes, warn = run_mageck_rra(counts_file, treatment, control, workdir)
+    genes, warn = run_mageck_rra(counts_file, treatment, control, workdir, norm_method=norm_method, control_sgrna=control_sgrna)
     methods.append("mageck_rra")
     warnings.extend(warn)
     guide_effects = read_guide_effects(workdir)
@@ -603,7 +621,7 @@ def call_hits(
     if run_mle:
         try:
             mle = run_mageck_mle(counts_file, mle_design_matrix, workdir,
-                                 coefficient=mle_coefficient)
+                                 coefficient=mle_coefficient, permutation_round=mle_permutation_round, norm_method=norm_method, control_sgrna=control_sgrna, random_seed=mle_random_seed)
             for gene, (beta, fdr) in mle.items():
                 if gene in genes:
                     genes[gene].mle_beta, genes[gene].mle_fdr = beta, fdr
@@ -629,7 +647,8 @@ def call_hits(
 
     if run_drug:
         try:
-            dz = run_drugz(counts_file, treatment, control, workdir, paired=drugz_paired)
+            dz = run_drugz(counts_file, treatment, control, workdir, paired=drugz_paired,
+                           pseudocount=drugz_pseudocount, half_window_size=drugz_half_window_size)
             for gene, (z, fdr) in dz.items():
                 if gene in genes:
                     genes[gene].norm_z, genes[gene].drugz_fdr = z, fdr

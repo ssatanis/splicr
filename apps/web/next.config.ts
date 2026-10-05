@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["pdf-parse", "@napi-rs/canvas"],
   // The dev-mode route indicator (bottom-left badge/toast on every
   // navigation) is a debugging aid, not something visitors should see.
   devIndicators: false,

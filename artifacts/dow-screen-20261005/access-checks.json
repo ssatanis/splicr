@@ -1,0 +1,12 @@
+[
+  {
+    "name": "archived_input",
+    "rejected": true,
+    "reason": "A workspace draft is required."
+  },
+  {
+    "name": "other_workspace",
+    "rejected": true,
+    "reason": "A workspace draft is required."
+  }
+]

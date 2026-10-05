@@ -1,0 +1,93 @@
+{
+  "screen": {
+    "id": "01a10d73-6b33-7dec-ade3-00acfdbbd63f",
+    "name": "olaparib / endpoint HeLa",
+    "current_run_id": "01a10d73-6b45-73dd-bb0b-78f4157806be",
+    "source_ref": "01a10d72-b67f-7949-8e01-de04babba257"
+  },
+  "run": {
+    "id": "01a10d73-6b45-73dd-bb0b-78f4157806be",
+    "status": "queued",
+    "settings": {
+      "source": {
+        "sheet": "Table",
+        "fileId": "01a10d72-c29a-706e-8535-6db987aab65b"
+      },
+      "modality": "knockout",
+      "model_type": "cancer_cell_line",
+      "hit_callers": [
+        "mageck_rra",
+        "drugz"
+      ],
+      "plan_version": "guide-abundance-v2",
+      "cn_correction": false,
+      "drugz_options": {
+        "pseudocount": 5,
+        "half_window_size": 500
+      },
+      "experiment_id": "01a10d72-b67f-7949-8e01-de04babba257",
+      "fdr_threshold": 0.05,
+      "fitness_assay": false,
+      "guide_aliases": {},
+      "normalization": "median",
+      "organism_taxid": 9606,
+      "sample_factors": {
+        "DMSO1": {
+          "Role": "control",
+          "Model": "HeLa",
+          "model": "HeLa",
+          "Sample": "DMSO1",
+          "Condition": "vehicle",
+          "Replicate": "1",
+          "Timepoint": "endpoint",
+          "condition": "vehicle",
+          "timepoint": "endpoint"
+        },
+        "DMSO2": {
+          "Role": "control",
+          "Model": "HeLa",
+          "model": "HeLa",
+          "Sample": "DMSO2",
+          "Condition": "vehicle",
+          "Replicate": "2",
+          "Timepoint": "endpoint",
+          "condition": "vehicle",
+          "timepoint": "endpoint"
+        },
+        "Olaparib1": {
+          "Role": "treatment",
+          "Model": "HeLa",
+          "model": "HeLa",
+          "Sample": "Olaparib1",
+          "Condition": "olaparib",
+          "Replicate": "1",
+          "Timepoint": "endpoint",
+          "condition": "olaparib",
+          "timepoint": "endpoint"
+        },
+        "Olaparib2": {
+          "Role": "treatment",
+          "Model": "HeLa",
+          "model": "HeLa",
+          "Sample": "Olaparib2",
+          "Condition": "olaparib",
+          "Replicate": "2",
+          "Timepoint": "endpoint",
+          "condition": "olaparib",
+          "timepoint": "endpoint"
+        }
+      },
+      "library_snapshot": {
+        "id": "01a10d72-fb54-71ef-8067-ad7049b5b57b",
+        "cas": "SpCas9",
+        "name": "GeCKOv2 A+B, exact reviewed sources",
+        "taxid": 9606,
+        "n_genes": 20915,
+        "modality": "knockout",
+        "n_guides": 123411
+      },
+      "review_confirmed": true,
+      "source_checksum_sha256": "65ed6e68c83277d45cfdd0aa6df01d146b5a3a1c81008bd677cb9a389b0751d7"
+    }
+  }
+}

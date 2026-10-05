@@ -188,7 +188,12 @@ function HitDetail({
         <Fact term="Direction">{hit.direction}</Fact>
         <Fact term="Log fold change">{formatSigned(hit.lfc)}</Fact>
         <Fact term="p-value">{formatStat(hit.p_value)}</Fact>
-        <Fact term="FDR">{formatStat(hit.fdr)}</Fact>
+        <Fact term="SplicR two-direction FDR">{formatStat(hit.fdr)}</Fact>
+        <Fact term="MAGeCK depletion FDR">{formatStat(hit.depleted_fdr ?? null)}</Fact>
+        <Fact term="MAGeCK enrichment FDR">{formatStat(hit.enriched_fdr ?? null)}</Fact>
+        <Fact term="DrugZ normZ">{formatStat(hit.norm_z ?? null)}</Fact>
+        <Fact term="DrugZ directional FDR">{formatStat(hit.drugz_fdr ?? null)}</Fact>
+        <Fact term="MLE beta / FDR">{formatStat(hit.mle_beta ?? null)} / {formatStat(hit.mle_fdr ?? null)}</Fact>
         <Fact term="BAGEL2 Bayes factor">{formatStat(hit.bayes_factor)}</Fact>
         <Fact term="Good / total guides">
           {hit.n_good_guides === null ? "Not recorded" : formatNumber(hit.n_good_guides)} / {hit.n_guides === null ? "Not recorded" : formatNumber(hit.n_guides)}

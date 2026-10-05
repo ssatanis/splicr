@@ -14,7 +14,7 @@ export const MAX_FILES = 64;
 /** Above this, the upload goes through the resumable endpoint. */
 export const RESUMABLE_THRESHOLD = 6 * 1024 * 1024;
 
-export type IntakeKind = "counts" | "fastq" | "library";
+export type IntakeKind = "counts" | "fastq" | "library" | "context";
 
 export type SampleRole = "reference" | "control" | "treatment" | "plasmid";
 
@@ -48,12 +48,17 @@ export interface IntakeFile {
 }
 
 export interface IntakeSample {
+  factors?: Record<string, string>;
   /** The count-table column, or the FASTQ file's name. Stable within a screen. */
   label: string;
   role: SampleRole;
   replicate: number;
   /** Which uploaded file this sample's reads came from, when it is per-file. */
   file_id?: string | null;
+  file_ids?: string[];
+  read1_file_ids?: string[];
+  read2_file_ids?: string[];
+  included?: boolean;
 }
 
 export interface IntakeDesign {
@@ -70,7 +75,7 @@ export interface IntakeDesign {
 // ---------------------------------------------------------------------------
 
 const FASTQ = /\.(fastq|fq)(\.gz)?$/i;
-const TABLE = /\.(tsv|txt|csv|counts?|count)(\.gz)?$/i;
+const TABLE = /\.(tsv|txt|csv|counts?|count|xlsx|xls|xlsb|ods|json)(\.gz)?$/i;
 const LIBRARY_NAME = /(library|lib|guides?|sgrna)/i;
 
 /** True when the name ends in a gzip extension. The magic number confirms it. */
@@ -81,8 +86,7 @@ export function looksCompressed(name: string): boolean {
 /**
  * What a file is, from its name alone.
  *
- * Returns null for a name SplicR has no reading for, so the drop zone can
- * refuse it by name rather than uploading gigabytes and failing at the far end.
+ * Unknown formats are retained as supporting files for review.
  * A table whose name mentions a library is offered as a library; the researcher
  * can still say it is counts, because the name is a hint and not evidence.
  */
@@ -90,13 +94,14 @@ export function classify(name: string): IntakeKind | null {
   const base = name.split("/").pop() ?? name;
   if (FASTQ.test(base)) return "fastq";
   if (TABLE.test(base)) return LIBRARY_NAME.test(base) ? "library" : "counts";
-  return null;
+  return "context";
 }
 
 export const ACCEPT_ATTRIBUTE = [
   ".fastq", ".fq", ".fastq.gz", ".fq.gz",
   ".tsv", ".txt", ".csv", ".counts", ".count",
   ".tsv.gz", ".txt.gz", ".csv.gz",
+  ".xlsx", ".xls", ".xlsb", ".ods", ".json", ".pdf", ".png", ".jpg", ".zip",
 ].join(",");
 
 /** Bytes, written the way a sequencing core writes them. */
@@ -123,7 +128,7 @@ export function formatBytes(bytes: number): string {
  * able to tell which object was which sample.
  */
 export function storageKey(orgId: string, screenId: string, name: string): string {
-  const base = (name.split("/").pop() ?? name).slice(-180);
+  const base = name.replace(/\/+/g, "__").slice(-180);
   const safe = base.replace(/[^A-Za-z0-9._-]+/g, "_").replace(/^_+/, "");
   return `${orgId}/${screenId}/${safe || "file"}`;
 }
@@ -140,12 +145,13 @@ export interface DesignProblem {
 
 export function checkDesign(design: IntakeDesign, files: IntakeFile[]): DesignProblem[] {
   const problems: DesignProblem[] = [];
+  if (files.some((file) => file.kind === "fastq") && !design.library_id) problems.push({ field: "library", message: "Choose or import a guide library before analyzing sequencing reads." });
 
   if (design.name.trim().length < 2) {
     problems.push({ field: "name", message: "Give the screen a name you will recognise later." });
   }
 
-  const analysable = files.filter((f) => f.kind !== "library");
+  const analysable = files.filter((f) => f.kind === "counts" || f.kind === "fastq");
   if (analysable.length === 0) {
     problems.push({ field: "files", message: "Add a count table or FASTQ files." });
   }
@@ -159,8 +165,8 @@ export function checkDesign(design: IntakeDesign, files: IntakeFile[]): DesignPr
     labels.add(sample.label);
   }
 
-  const controls = design.samples.filter((s) => CONTROL_ROLES.includes(s.role)).length;
-  const treated = design.samples.filter((s) => s.role === "treatment").length;
+  const controls = design.samples.filter((s) => s.included !== false && CONTROL_ROLES.includes(s.role)).length;
+  const treated = design.samples.filter((s) => s.included !== false && s.role === "treatment").length;
   if (controls === 0 || treated === 0) {
     problems.push({
       field: "samples",
@@ -176,8 +182,8 @@ export function checkDesign(design: IntakeDesign, files: IntakeFile[]): DesignPr
  * writes it rather than as an identifier.
  */
 export function contrastName(design: IntakeDesign): string {
-  const treated = design.samples.filter((s) => s.role === "treatment");
-  const control = design.samples.filter((s) => CONTROL_ROLES.includes(s.role));
+  const treated = design.samples.filter((s) => s.included !== false && s.role === "treatment");
+  const control = design.samples.filter((s) => s.included !== false && CONTROL_ROLES.includes(s.role));
   const left = treated.length === 1 ? treated[0].label : `${treated.length} treated`;
   const right = control.length === 1 ? control[0].label : `${control.length} control`;
   return `${left} vs ${right}`;

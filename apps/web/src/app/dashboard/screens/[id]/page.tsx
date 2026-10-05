@@ -23,6 +23,7 @@ import { ScreenDoctor } from "@/components/dashboard/evidence/screen-doctor";
 import { GeneFocusProvider } from "@/components/dashboard/evidence/gene-focus";
 import { HitFilters } from "@/components/dashboard/hit-report/filters";
 import { HitTable } from "@/components/dashboard/hit-report/table";
+import { RetryAnalysis } from "@/components/dashboard/intake/retry-analysis";
 import {
   Card,
   FootLink,
@@ -61,6 +62,7 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
   }
 
   const { screen, run, qc, stages, comparisons, hits, total, summary } = result.detail;
+  const significantFdr = run?.settings?.fdr_threshold ?? SIGNIFICANT_FDR;
   const base = `/dashboard/screens/${screen.id}`;
   // One QC verdict, from the run that produced the results on this page. The
   // database keeps screens.qc equal to it, so the chip, the health panel and
@@ -120,7 +122,7 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
         runId: run.id,
         comparisonId: plotComparison?.id ?? null,
         comparisonName: plotComparison?.name ?? "this run",
-        maxFdr: SIGNIFICANT_FDR,
+        maxFdr: significantFdr,
         atlas: atlasIndex,
         outcomes,
       })
@@ -141,6 +143,7 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
         body="Recorded results from your workspace"
         actions={
           <>
+            {screen.source_ref && <Link href={`/dashboard/experiments/${screen.source_ref}`} className="inline-flex h-7 items-center text-[12px] text-cyan-600 underline underline-offset-2">Compare experiment</Link>}
             <Link href="/dashboard/screens" className="inline-flex h-7 items-center gap-1 text-[12px] text-cyan-600 underline decoration-line-strong underline-offset-2">
               <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> All screens
             </Link>
@@ -203,7 +206,7 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
             <DecisionSummary
               diagnosis={diagnosis}
               significant={summary.significant}
-              significantFdr={SIGNIFICANT_FDR}
+              significantFdr={significantFdr}
               significantFlagged={summary.significantFlagged}
               outcomes={outcomes}
               candidatesHref="#candidates"
@@ -224,7 +227,7 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
             title="Candidates"
             count={
               universe.status === "found"
-                ? `${formatNumber(universe.candidates.length)} at or below FDR ${SIGNIFICANT_FDR} in ${plotComparison?.name ?? "this run"}`
+                ? `${formatNumber(universe.candidates.length)} at or below FDR ${significantFdr} in ${plotComparison?.name ?? "this run"}`
                 : "unavailable"
             }
             body="flush"
@@ -263,7 +266,7 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
                   screenName={screen.name}
                   comparisonName={plotComparison.name}
                   series={points.series}
-                  defaultMaxFdr={SIGNIFICANT_FDR}
+                  defaultMaxFdr={significantFdr}
                 />
               ) : (
                 <p className="px-4 py-10 text-center text-[12.5px] text-muted">
@@ -369,6 +372,7 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
               </div>
             </dl>
             {run.error && <p className="mt-3 whitespace-pre-wrap text-[12.5px] text-orange-700">{run.error}</p>}
+            {canLog && ["failed", "complete"].includes(screen.status) && <RetryAnalysis screenId={screen.id} completed={screen.status === "complete"}/>}
             {stages.length === 0 ? (
               <p className="mt-3 text-[12.5px] text-muted">No stage evidence was recorded.</p>
             ) : (

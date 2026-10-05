@@ -1,0 +1,981 @@
+[
+  {
+    "comparison": "Essentiality ICSBCS002",
+    "ok": true,
+    "error": null,
+    "qc": {
+      "verdict": "fail",
+      "nnmd": null,
+      "nnmd_contrast": "D39_DMSO_rep1+D39_DMSO_rep2 vs T0",
+      "nnmd_reason": "only 16 essential and 5 nonessential reference genes were measured in this screen, too few to compute NNMD",
+      "nnmd_by_arm": {
+        "D39_DMSO_rep1": null,
+        "D39_DMSO_rep2": null
+      },
+      "auroc": 1.0,
+      "n_essential_found": 16,
+      "n_nonessential_found": 5,
+      "bottlenecked": [],
+      "suspect_arms": [],
+      "replicate_correlations": [
+        {
+          "a": "D4_rep1",
+          "b": "D4_rep2",
+          "role": "reference",
+          "r": 0.8388,
+          "r_lfc": null
+        },
+        {
+          "a": "D39_DMSO_rep1",
+          "b": "D39_DMSO_rep2",
+          "role": "treatment",
+          "r": 0.4393,
+          "r_lfc": 0.353
+        }
+      ],
+      "samples": [
+        {
+          "label": "D4_rep1",
+          "role": "reference",
+          "total_reads": null,
+          "mapped_reads": 3473390,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 3473390,
+          "zero_guides": 0,
+          "zero_fraction": 0.0,
+          "represented_fraction": 1.0,
+          "gini": 0.046,
+          "skew_ratio": 3.94,
+          "mean_reads_per_guide": 1141.1,
+          "verdict": "pass",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+          ]
+        },
+        {
+          "label": "D4_rep2",
+          "role": "reference",
+          "total_reads": null,
+          "mapped_reads": 3556078,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 3556078,
+          "zero_guides": 0,
+          "zero_fraction": 0.0,
+          "represented_fraction": 1.0,
+          "gini": 0.0484,
+          "skew_ratio": 4.23,
+          "mean_reads_per_guide": 1168.2,
+          "verdict": "pass",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+          ]
+        },
+        {
+          "label": "D39_DMSO_rep1",
+          "role": "treatment",
+          "total_reads": null,
+          "mapped_reads": 3482564,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 3482564,
+          "zero_guides": 255,
+          "zero_fraction": 0.08377,
+          "represented_fraction": 1.0,
+          "gini": 0.1971,
+          "skew_ratio": 183.12,
+          "mean_reads_per_guide": 1144.1,
+          "verdict": "fail",
+          "notes": [
+            "8.4% of guides have no reads. Above 5% the library is bottlenecked and no downstream correction recovers the lost guides.",
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+            "Skew ratio 183.1 above 10 (90th/10th percentile guide count)."
+          ]
+        },
+        {
+          "label": "D39_DMSO_rep2",
+          "role": "treatment",
+          "total_reads": null,
+          "mapped_reads": 2379699,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 2379699,
+          "zero_guides": 201,
+          "zero_fraction": 0.06603,
+          "represented_fraction": 1.0,
+          "gini": 0.1791,
+          "skew_ratio": 62.56,
+          "mean_reads_per_guide": 781.8,
+          "verdict": "fail",
+          "notes": [
+            "6.6% of guides have no reads. Above 5% the library is bottlenecked and no downstream correction recovers the lost guides.",
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+            "Skew ratio 62.6 above 10 (90th/10th percentile guide count)."
+          ]
+        }
+      ],
+      "notes": [
+        "NNMD could not be computed: only 16 essential and 5 nonessential reference genes were measured in this screen, too few to compute NNMD."
+      ]
+    },
+    "methods": [
+      "mageck_rra"
+    ],
+    "report": "/Users/sahaj/Documents/Projects/SplicR/artifacts/dow-screen-20261005/comparison-1/postscreen_report.json"
+  },
+  {
+    "comparison": "Gefitinib ICSBCS002",
+    "ok": true,
+    "error": null,
+    "qc": {
+      "verdict": "fail",
+      "nnmd": null,
+      "nnmd_contrast": "none available",
+      "nnmd_reason": "essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay",
+      "nnmd_by_arm": {},
+      "auroc": null,
+      "n_essential_found": 0,
+      "n_nonessential_found": 0,
+      "bottlenecked": [],
+      "suspect_arms": [],
+      "replicate_correlations": [
+        {
+          "a": "D39_DMSO_rep1",
+          "b": "D39_DMSO_rep2",
+          "role": "control",
+          "r": 0.4393,
+          "r_lfc": null
+        },
+        {
+          "a": "D39_GEF_rep1",
+          "b": "D39_GEF_rep2",
+          "role": "treatment",
+          "r": 0.4363,
+          "r_lfc": null
+        }
+      ],
+      "samples": [
+        {
+          "label": "D39_DMSO_rep1",
+          "role": "control",
+          "total_reads": null,
+          "mapped_reads": 3482564,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 3482564,
+          "zero_guides": 189,
+          "zero_fraction": 0.06347,
+          "represented_fraction": 0.9783,
+          "gini": 0.1793,
+          "skew_ratio": 76.54,
+          "mean_reads_per_guide": 1169.4,
+          "verdict": "fail",
+          "notes": [
+            "6.3% of guides have no reads. Above 5% the library is bottlenecked and no downstream correction recovers the lost guides.",
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+            "Skew ratio 76.5 above 10 (90th/10th percentile guide count)."
+          ]
+        },
+        {
+          "label": "D39_DMSO_rep2",
+          "role": "control",
+          "total_reads": null,
+          "mapped_reads": 2379699,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 2379699,
+          "zero_guides": 135,
+          "zero_fraction": 0.04533,
+          "represented_fraction": 0.9783,
+          "gini": 0.1609,
+          "skew_ratio": 43.84,
+          "mean_reads_per_guide": 799.1,
+          "verdict": "warn",
+          "notes": [
+            "4.5% of guides have no reads.",
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+            "Skew ratio 43.8 above 10 (90th/10th percentile guide count)."
+          ]
+        },
+        {
+          "label": "D39_GEF_rep1",
+          "role": "treatment",
+          "total_reads": null,
+          "mapped_reads": 3106350,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 3106350,
+          "zero_guides": 323,
+          "zero_fraction": 0.10846,
+          "represented_fraction": 0.9783,
+          "gini": 0.2108,
+          "skew_ratio": null,
+          "mean_reads_per_guide": 1043.1,
+          "verdict": "fail",
+          "notes": [
+            "10.8% of guides have no reads. Above 5% the library is bottlenecked and no downstream correction recovers the lost guides.",
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+          ]
+        },
+        {
+          "label": "D39_GEF_rep2",
+          "role": "treatment",
+          "total_reads": null,
+          "mapped_reads": 3028230,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 3028230,
+          "zero_guides": 88,
+          "zero_fraction": 0.02955,
+          "represented_fraction": 0.9783,
+          "gini": 0.1425,
+          "skew_ratio": 34.3,
+          "mean_reads_per_guide": 1016.9,
+          "verdict": "warn",
+          "notes": [
+            "3.0% of guides have no reads.",
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+            "Skew ratio 34.3 above 10 (90th/10th percentile guide count)."
+          ]
+        }
+      ],
+      "notes": [
+        "NNMD/AUROC not assessed: essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay.",
+        "Replicates D39_DMSO_rep1 and D39_DMSO_rep2 correlate at r=0.44 on log counts. This screen has no library reference, so replicate agreement cannot be measured on fold change, which is the sensitive version of this check.",
+        "Replicates D39_GEF_rep1 and D39_GEF_rep2 correlate at r=0.44 on log counts. This screen has no library reference, so replicate agreement cannot be measured on fold change, which is the sensitive version of this check."
+      ]
+    },
+    "methods": [
+      "mageck_rra",
+      "drugz"
+    ],
+    "report": "/Users/sahaj/Documents/Projects/SplicR/artifacts/dow-screen-20261005/comparison-2/postscreen_report.json"
+  },
+  {
+    "comparison": "Trametinib ICSBCS002",
+    "ok": true,
+    "error": null,
+    "qc": {
+      "verdict": "fail",
+      "nnmd": null,
+      "nnmd_contrast": "none available",
+      "nnmd_reason": "essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay",
+      "nnmd_by_arm": {},
+      "auroc": null,
+      "n_essential_found": 0,
+      "n_nonessential_found": 0,
+      "bottlenecked": [],
+      "suspect_arms": [],
+      "replicate_correlations": [
+        {
+          "a": "D39_DMSO_rep1",
+          "b": "D39_DMSO_rep2",
+          "role": "control",
+          "r": 0.4393,
+          "r_lfc": null
+        },
+        {
+          "a": "D39_TRM_rep1",
+          "b": "D39_TRM_rep2",
+          "role": "treatment",
+          "r": 0.4411,
+          "r_lfc": null
+        }
+      ],
+      "samples": [
+        {
+          "label": "D39_DMSO_rep1",
+          "role": "control",
+          "total_reads": null,
+          "mapped_reads": 3482564,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 3482564,
+          "zero_guides": 189,
+          "zero_fraction": 0.06347,
+          "represented_fraction": 0.9783,
+          "gini": 0.1793,
+          "skew_ratio": 76.54,
+          "mean_reads_per_guide": 1169.4,
+          "verdict": "fail",
+          "notes": [
+            "6.3% of guides have no reads. Above 5% the library is bottlenecked and no downstream correction recovers the lost guides.",
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+            "Skew ratio 76.5 above 10 (90th/10th percentile guide count)."
+          ]
+        },
+        {
+          "label": "D39_DMSO_rep2",
+          "role": "control",
+          "total_reads": null,
+          "mapped_reads": 2379699,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 2379699,
+          "zero_guides": 135,
+          "zero_fraction": 0.04533,
+          "represented_fraction": 0.9783,
+          "gini": 0.1609,
+          "skew_ratio": 43.84,
+          "mean_reads_per_guide": 799.1,
+          "verdict": "warn",
+          "notes": [
+            "4.5% of guides have no reads.",
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+            "Skew ratio 43.8 above 10 (90th/10th percentile guide count)."
+          ]
+        },
+        {
+          "label": "D39_TRM_rep1",
+          "role": "treatment",
+          "total_reads": null,
+          "mapped_reads": 3892837,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 3892837,
+          "zero_guides": 185,
+          "zero_fraction": 0.06212,
+          "represented_fraction": 0.9783,
+          "gini": 0.173,
+          "skew_ratio": 75.08,
+          "mean_reads_per_guide": 1307.2,
+          "verdict": "fail",
+          "notes": [
+            "6.2% of guides have no reads. Above 5% the library is bottlenecked and no downstream correction recovers the lost guides.",
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+            "Skew ratio 75.1 above 10 (90th/10th percentile guide count)."
+          ]
+        },
+        {
+          "label": "D39_TRM_rep2",
+          "role": "treatment",
+          "total_reads": null,
+          "mapped_reads": 3067452,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 3067452,
+          "zero_guides": 193,
+          "zero_fraction": 0.06481,
+          "represented_fraction": 0.9783,
+          "gini": 0.1755,
+          "skew_ratio": 59.75,
+          "mean_reads_per_guide": 1030.0,
+          "verdict": "fail",
+          "notes": [
+            "6.5% of guides have no reads. Above 5% the library is bottlenecked and no downstream correction recovers the lost guides.",
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+            "Skew ratio 59.7 above 10 (90th/10th percentile guide count)."
+          ]
+        }
+      ],
+      "notes": [
+        "NNMD/AUROC not assessed: essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay.",
+        "Replicates D39_DMSO_rep1 and D39_DMSO_rep2 correlate at r=0.44 on log counts. This screen has no library reference, so replicate agreement cannot be measured on fold change, which is the sensitive version of this check.",
+        "Replicates D39_TRM_rep1 and D39_TRM_rep2 correlate at r=0.44 on log counts. This screen has no library reference, so replicate agreement cannot be measured on fold change, which is the sensitive version of this check."
+      ]
+    },
+    "methods": [
+      "mageck_rra",
+      "drugz"
+    ],
+    "report": "/Users/sahaj/Documents/Projects/SplicR/artifacts/dow-screen-20261005/comparison-3/postscreen_report.json"
+  },
+  {
+    "comparison": "Essentiality ICSBCS007",
+    "ok": true,
+    "error": null,
+    "qc": {
+      "verdict": "warn",
+      "nnmd": null,
+      "nnmd_contrast": "D31_DMSO_1+D31_DMSO_2+D31_DMSO_3 vs T0",
+      "nnmd_reason": "only 16 essential and 5 nonessential reference genes were measured in this screen, too few to compute NNMD",
+      "nnmd_by_arm": {
+        "D31_DMSO_1": null,
+        "D31_DMSO_2": null,
+        "D31_DMSO_3": null
+      },
+      "auroc": 1.0,
+      "n_essential_found": 16,
+      "n_nonessential_found": 5,
+      "bottlenecked": [],
+      "suspect_arms": [],
+      "replicate_correlations": [
+        {
+          "a": "D3_Rep_1",
+          "b": "D3_Rep_2",
+          "role": "reference",
+          "r": 0.8086,
+          "r_lfc": null
+        },
+        {
+          "a": "D3_Rep_1",
+          "b": "D3_Rep_3",
+          "role": "reference",
+          "r": 0.8881,
+          "r_lfc": null
+        },
+        {
+          "a": "D3_Rep_2",
+          "b": "D3_Rep_3",
+          "role": "reference",
+          "r": 0.8425,
+          "r_lfc": null
+        },
+        {
+          "a": "D31_DMSO_1",
+          "b": "D31_DMSO_2",
+          "role": "treatment",
+          "r": 0.6196,
+          "r_lfc": 0.4929
+        },
+        {
+          "a": "D31_DMSO_1",
+          "b": "D31_DMSO_3",
+          "role": "treatment",
+          "r": 0.7207,
+          "r_lfc": 0.6064
+        },
+        {
+          "a": "D31_DMSO_2",
+          "b": "D31_DMSO_3",
+          "role": "treatment",
+          "r": 0.6726,
+          "r_lfc": 0.5481
+        }
+      ],
+      "samples": [
+        {
+          "label": "D3_Rep_1",
+          "role": "reference",
+          "total_reads": null,
+          "mapped_reads": 5235334,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 5235334,
+          "zero_guides": 0,
+          "zero_fraction": 0.0,
+          "represented_fraction": 1.0,
+          "gini": 0.042,
+          "skew_ratio": 3.7,
+          "mean_reads_per_guide": 1719.9,
+          "verdict": "pass",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+          ]
+        },
+        {
+          "label": "D3_Rep_2",
+          "role": "reference",
+          "total_reads": null,
+          "mapped_reads": 5928897,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 5928897,
+          "zero_guides": 0,
+          "zero_fraction": 0.0,
+          "represented_fraction": 1.0,
+          "gini": 0.0441,
+          "skew_ratio": 4.07,
+          "mean_reads_per_guide": 1947.7,
+          "verdict": "pass",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+          ]
+        },
+        {
+          "label": "D3_Rep_3",
+          "role": "reference",
+          "total_reads": null,
+          "mapped_reads": 5120429,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 5120429,
+          "zero_guides": 0,
+          "zero_fraction": 0.0,
+          "represented_fraction": 1.0,
+          "gini": 0.041,
+          "skew_ratio": 3.57,
+          "mean_reads_per_guide": 1682.1,
+          "verdict": "pass",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+          ]
+        },
+        {
+          "label": "D31_DMSO_1",
+          "role": "treatment",
+          "total_reads": null,
+          "mapped_reads": 4949820,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 4949820,
+          "zero_guides": 37,
+          "zero_fraction": 0.01216,
+          "represented_fraction": 1.0,
+          "gini": 0.0846,
+          "skew_ratio": 10.01,
+          "mean_reads_per_guide": 1626.1,
+          "verdict": "warn",
+          "notes": [
+            "1.2% of guides have no reads.",
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+            "Skew ratio 10.0 above 10 (90th/10th percentile guide count)."
+          ]
+        },
+        {
+          "label": "D31_DMSO_2",
+          "role": "treatment",
+          "total_reads": null,
+          "mapped_reads": 5285598,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 5285598,
+          "zero_guides": 57,
+          "zero_fraction": 0.01873,
+          "represented_fraction": 1.0,
+          "gini": 0.0839,
+          "skew_ratio": 8.71,
+          "mean_reads_per_guide": 1736.4,
+          "verdict": "warn",
+          "notes": [
+            "1.9% of guides have no reads.",
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+          ]
+        },
+        {
+          "label": "D31_DMSO_3",
+          "role": "treatment",
+          "total_reads": null,
+          "mapped_reads": 5015200,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 5015200,
+          "zero_guides": 22,
+          "zero_fraction": 0.00723,
+          "represented_fraction": 1.0,
+          "gini": 0.0726,
+          "skew_ratio": 7.86,
+          "mean_reads_per_guide": 1647.6,
+          "verdict": "pass",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+          ]
+        }
+      ],
+      "notes": [
+        "NNMD could not be computed: only 16 essential and 5 nonessential reference genes were measured in this screen, too few to compute NNMD."
+      ]
+    },
+    "methods": [
+      "mageck_rra"
+    ],
+    "report": "/Users/sahaj/Documents/Projects/SplicR/artifacts/dow-screen-20261005/comparison-4/postscreen_report.json"
+  },
+  {
+    "comparison": "Gefitinib ICSBCS007",
+    "ok": true,
+    "error": null,
+    "qc": {
+      "verdict": "warn",
+      "nnmd": null,
+      "nnmd_contrast": "none available",
+      "nnmd_reason": "essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay",
+      "nnmd_by_arm": {},
+      "auroc": null,
+      "n_essential_found": 0,
+      "n_nonessential_found": 0,
+      "bottlenecked": [],
+      "suspect_arms": [],
+      "replicate_correlations": [
+        {
+          "a": "D31_DMSO_1",
+          "b": "D31_DMSO_2",
+          "role": "control",
+          "r": 0.6196,
+          "r_lfc": null
+        },
+        {
+          "a": "D31_DMSO_1",
+          "b": "D31_DMSO_3",
+          "role": "control",
+          "r": 0.7207,
+          "r_lfc": null
+        },
+        {
+          "a": "D31_DMSO_2",
+          "b": "D31_DMSO_3",
+          "role": "control",
+          "r": 0.6726,
+          "r_lfc": null
+        },
+        {
+          "a": "D31_GEF_1",
+          "b": "D31_GEF_2",
+          "role": "treatment",
+          "r": 0.6769,
+          "r_lfc": null
+        },
+        {
+          "a": "D31_GEF_1",
+          "b": "D31_GEF_3",
+          "role": "treatment",
+          "r": 0.7238,
+          "r_lfc": null
+        },
+        {
+          "a": "D31_GEF_2",
+          "b": "D31_GEF_3",
+          "role": "treatment",
+          "r": 0.7016,
+          "r_lfc": null
+        }
+      ],
+      "samples": [
+        {
+          "label": "D31_DMSO_1",
+          "role": "control",
+          "total_reads": null,
+          "mapped_reads": 4949820,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 4949820,
+          "zero_guides": 36,
+          "zero_fraction": 0.01183,
+          "represented_fraction": 0.9997,
+          "gini": 0.0843,
+          "skew_ratio": 9.96,
+          "mean_reads_per_guide": 1626.6,
+          "verdict": "warn",
+          "notes": [
+            "1.2% of guides have no reads.",
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+          ]
+        },
+        {
+          "label": "D31_DMSO_2",
+          "role": "control",
+          "total_reads": null,
+          "mapped_reads": 5285598,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 5285598,
+          "zero_guides": 56,
+          "zero_fraction": 0.0184,
+          "represented_fraction": 0.9997,
+          "gini": 0.0836,
+          "skew_ratio": 8.7,
+          "mean_reads_per_guide": 1737.0,
+          "verdict": "warn",
+          "notes": [
+            "1.8% of guides have no reads.",
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+          ]
+        },
+        {
+          "label": "D31_DMSO_3",
+          "role": "control",
+          "total_reads": null,
+          "mapped_reads": 5015200,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 5015200,
+          "zero_guides": 21,
+          "zero_fraction": 0.0069,
+          "represented_fraction": 0.9997,
+          "gini": 0.0723,
+          "skew_ratio": 7.85,
+          "mean_reads_per_guide": 1648.1,
+          "verdict": "pass",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+          ]
+        },
+        {
+          "label": "D31_GEF_1",
+          "role": "treatment",
+          "total_reads": null,
+          "mapped_reads": 4515464,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 4515464,
+          "zero_guides": 12,
+          "zero_fraction": 0.00394,
+          "represented_fraction": 0.9997,
+          "gini": 0.0772,
+          "skew_ratio": 9.27,
+          "mean_reads_per_guide": 1483.9,
+          "verdict": "pass",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+          ]
+        },
+        {
+          "label": "D31_GEF_2",
+          "role": "treatment",
+          "total_reads": null,
+          "mapped_reads": 5378005,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 5378005,
+          "zero_guides": 25,
+          "zero_fraction": 0.00822,
+          "represented_fraction": 0.9997,
+          "gini": 0.0759,
+          "skew_ratio": 9.2,
+          "mean_reads_per_guide": 1767.3,
+          "verdict": "pass",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+          ]
+        },
+        {
+          "label": "D31_GEF_3",
+          "role": "treatment",
+          "total_reads": null,
+          "mapped_reads": 5301202,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 5301202,
+          "zero_guides": 8,
+          "zero_fraction": 0.00263,
+          "represented_fraction": 0.9997,
+          "gini": 0.0685,
+          "skew_ratio": 7.74,
+          "mean_reads_per_guide": 1742.1,
+          "verdict": "pass",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+          ]
+        }
+      ],
+      "notes": [
+        "NNMD/AUROC not assessed: essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay."
+      ]
+    },
+    "methods": [
+      "mageck_rra",
+      "drugz"
+    ],
+    "report": "/Users/sahaj/Documents/Projects/SplicR/artifacts/dow-screen-20261005/comparison-5/postscreen_report.json"
+  },
+  {
+    "comparison": "Trametinib ICSBCS007",
+    "ok": true,
+    "error": null,
+    "qc": {
+      "verdict": "warn",
+      "nnmd": null,
+      "nnmd_contrast": "none available",
+      "nnmd_reason": "essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay",
+      "nnmd_by_arm": {},
+      "auroc": null,
+      "n_essential_found": 0,
+      "n_nonessential_found": 0,
+      "bottlenecked": [],
+      "suspect_arms": [],
+      "replicate_correlations": [
+        {
+          "a": "D31_DMSO_1",
+          "b": "D31_DMSO_2",
+          "role": "control",
+          "r": 0.6196,
+          "r_lfc": null
+        },
+        {
+          "a": "D31_DMSO_1",
+          "b": "D31_DMSO_3",
+          "role": "control",
+          "r": 0.7207,
+          "r_lfc": null
+        },
+        {
+          "a": "D31_DMSO_2",
+          "b": "D31_DMSO_3",
+          "role": "control",
+          "r": 0.6726,
+          "r_lfc": null
+        },
+        {
+          "a": "D31_TRM_1",
+          "b": "D31_TRM_2",
+          "role": "treatment",
+          "r": 0.689,
+          "r_lfc": null
+        },
+        {
+          "a": "D31_TRM_1",
+          "b": "D31_TRM_3",
+          "role": "treatment",
+          "r": 0.7031,
+          "r_lfc": null
+        },
+        {
+          "a": "D31_TRM_2",
+          "b": "D31_TRM_3",
+          "role": "treatment",
+          "r": 0.6981,
+          "r_lfc": null
+        }
+      ],
+      "samples": [
+        {
+          "label": "D31_DMSO_1",
+          "role": "control",
+          "total_reads": null,
+          "mapped_reads": 4949820,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 4949820,
+          "zero_guides": 36,
+          "zero_fraction": 0.01183,
+          "represented_fraction": 0.9997,
+          "gini": 0.0843,
+          "skew_ratio": 9.96,
+          "mean_reads_per_guide": 1626.6,
+          "verdict": "warn",
+          "notes": [
+            "1.2% of guides have no reads.",
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+          ]
+        },
+        {
+          "label": "D31_DMSO_2",
+          "role": "control",
+          "total_reads": null,
+          "mapped_reads": 5285598,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 5285598,
+          "zero_guides": 56,
+          "zero_fraction": 0.0184,
+          "represented_fraction": 0.9997,
+          "gini": 0.0836,
+          "skew_ratio": 8.7,
+          "mean_reads_per_guide": 1737.0,
+          "verdict": "warn",
+          "notes": [
+            "1.8% of guides have no reads.",
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+          ]
+        },
+        {
+          "label": "D31_DMSO_3",
+          "role": "control",
+          "total_reads": null,
+          "mapped_reads": 5015200,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 5015200,
+          "zero_guides": 21,
+          "zero_fraction": 0.0069,
+          "represented_fraction": 0.9997,
+          "gini": 0.0723,
+          "skew_ratio": 7.85,
+          "mean_reads_per_guide": 1648.1,
+          "verdict": "pass",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+          ]
+        },
+        {
+          "label": "D31_TRM_1",
+          "role": "treatment",
+          "total_reads": null,
+          "mapped_reads": 5143821,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 5143821,
+          "zero_guides": 33,
+          "zero_fraction": 0.01084,
+          "represented_fraction": 0.9997,
+          "gini": 0.0847,
+          "skew_ratio": 10.3,
+          "mean_reads_per_guide": 1690.4,
+          "verdict": "warn",
+          "notes": [
+            "1.1% of guides have no reads.",
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+            "Skew ratio 10.3 above 10 (90th/10th percentile guide count)."
+          ]
+        },
+        {
+          "label": "D31_TRM_2",
+          "role": "treatment",
+          "total_reads": null,
+          "mapped_reads": 5011886,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 5011886,
+          "zero_guides": 22,
+          "zero_fraction": 0.00723,
+          "represented_fraction": 0.9997,
+          "gini": 0.067,
+          "skew_ratio": 6.3,
+          "mean_reads_per_guide": 1647.0,
+          "verdict": "pass",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+          ]
+        },
+        {
+          "label": "D31_TRM_3",
+          "role": "treatment",
+          "total_reads": null,
+          "mapped_reads": 5628755,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 5628755,
+          "zero_guides": 14,
+          "zero_fraction": 0.0046,
+          "represented_fraction": 0.9997,
+          "gini": 0.0658,
+          "skew_ratio": 6.76,
+          "mean_reads_per_guide": 1849.7,
+          "verdict": "pass",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+          ]
+        }
+      ],
+      "notes": [
+        "NNMD/AUROC not assessed: essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay."
+      ]
+    },
+    "methods": [
+      "mageck_rra",
+      "drugz"
+    ],
+    "report": "/Users/sahaj/Documents/Projects/SplicR/artifacts/dow-screen-20261005/comparison-6/postscreen_report.json"
+  }
+]
