@@ -11,6 +11,10 @@ import { loadTs } from "./helpers/load-ts.mjs";
 const root = path.resolve(import.meta.dirname, "../../..");
 const { site } = loadTs("lib/site.ts");
 
+// A booking account's URL is an integration address, not location copy.
+// Remove only that configured URL so university wording elsewhere still fails.
+const locationCopy = (text) => text.replaceAll(site.calendly, "");
+
 /** The only source file allowed to name the university, and the generated
  *  research artifacts that record an older verified page state and are rewritten
  *  only by the verification pipeline, never by hand. */
@@ -47,7 +51,7 @@ test("the shared site location is exactly the canonical public one", () => {
   assert.equal(site.location, "New York, NY");
   // Origin history is not an address field. If a future field carries it, it
   // has to be named for what it is, not smuggled into the location.
-  assert.ok(!/cornell|ithaca/i.test(JSON.stringify(site)), "site config names no university");
+  assert.ok(!/cornell|ithaca/i.test(locationCopy(JSON.stringify(site))), "site config names no university in location copy");
 });
 
 test("no product copy outside the About page names the university or Ithaca", () => {
@@ -59,7 +63,7 @@ test("no product copy outside the About page names the university or Ithaca", ()
       const relative = path.relative(root, file);
       if (ALLOWED.includes(relative)) continue;
       if (ALLOWED_DIRS.some((prefix) => relative.startsWith(prefix))) continue;
-      const contents = fs.readFileSync(file, "utf8");
+      const contents = locationCopy(fs.readFileSync(file, "utf8"));
       for (const pattern of BANNED) {
         if (pattern.test(contents)) offenders.push(`${relative}: ${pattern}`);
       }
