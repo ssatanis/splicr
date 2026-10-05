@@ -14,6 +14,7 @@
  */
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { LiveProgress } from "@/components/dashboard/live-progress";
 import { notFound, redirect } from "next/navigation";
 
 import { CandidateBoard } from "@/components/dashboard/evidence/candidate-board";
@@ -24,6 +25,7 @@ import { GeneFocusProvider } from "@/components/dashboard/evidence/gene-focus";
 import { HitFilters } from "@/components/dashboard/hit-report/filters";
 import { HitTable } from "@/components/dashboard/hit-report/table";
 import { RetryAnalysis } from "@/components/dashboard/intake/retry-analysis";
+import { DeleteScreenButton } from "@/components/dashboard/delete-screen-button";
 import {
   Card,
   FootLink,
@@ -144,6 +146,7 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
         actions={
           <>
             {screen.source_ref && <Link href={`/dashboard/experiments/${screen.source_ref}`} className="inline-flex h-7 items-center text-[12px] text-cyan-600 underline underline-offset-2">Compare experiment</Link>}
+            {canLog && <DeleteScreenButton screenId={screen.id} screenName={screen.name} />}
             <Link href="/dashboard/screens" className="inline-flex h-7 items-center gap-1 text-[12px] text-cyan-600 underline decoration-line-strong underline-offset-2">
               <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> All screens
             </Link>
@@ -197,29 +200,7 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
           </p>
         </Card>
       ) : screen.status !== "complete" && screen.status !== "failed" ? (
-        <Card title="Analysis in progress">
-          <p className="text-[12.5px] text-muted">The engine is processing this screen. Check back later for the results.</p>
-          <div className="mt-6 w-full max-w-xl text-left">
-            <div className="mb-2 flex items-center justify-between text-[11px] font-medium text-ink">
-              <span>Progress</span>
-              <span>{stages.length} stages completed</span>
-            </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-line">
-              <div className="h-full rounded-full bg-navy transition-all duration-500" style={{ width: `${Math.min(100, Math.max(5, (stages.length / 5) * 100))}%` }} />
-            </div>
-            {stages.length > 0 && (
-              <ol className="mt-4 divide-y divide-line border-t border-line">
-                {stages.map((stage) => (
-                  <li key={stage.stage} className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 py-1.5 text-[12.5px]">
-                    <span className="w-32 shrink-0 font-medium text-ink">{stage.stage}</span>
-                    <StatusChip tone={statusTone(stage.status)}>{stage.status}</StatusChip>
-                    {stage.detail && <span className="basis-full whitespace-pre-wrap text-[12px] text-muted">{stage.detail}</span>}
-                  </li>
-                ))}
-              </ol>
-            )}
-          </div>
-        </Card>
+        <LiveProgress runId={run.id} screenName={screen.name} initialStages={stages} />
       ) : (
         <>
           <Panel

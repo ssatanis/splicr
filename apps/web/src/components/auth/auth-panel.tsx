@@ -47,7 +47,7 @@ export function AuthPanel({ children }: { children: React.ReactNode }) {
         </main>
 
         <footer className="relative z-10 px-6 pb-6 text-center text-[11px] text-muted sm:px-8 sm:pb-8">
-          {site.name}, {site.location}
+          &copy; {new Date().getFullYear()} {site.name}. All rights reserved.
         </footer>
       </section>
     </div>

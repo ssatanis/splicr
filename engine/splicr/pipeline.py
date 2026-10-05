@@ -443,6 +443,18 @@ def run_pipeline(
     ctx: db.RunContext | None = None
     active_stage = "ingest"
 
+    def _ensure_conn() -> None:
+        nonlocal conn
+        if conn is not None:
+            try:
+                conn.execute("SELECT 1")
+            except Exception:
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+                conn = db.open_connection()
+
     def say(msg: str) -> None:
         if verbose:
             print(msg, flush=True)
@@ -454,20 +466,30 @@ def run_pipeline(
         result.stages.append(rec)
         say(f"  [{stage}] {status} ({duration:.1f}s) {detail}")
         if conn is not None and ctx is not None:
+            _ensure_conn()
             db.record_stage(conn, ctx.run_id, stage, status, STAGES.index(stage),
                             detail, tool, metrics, duration)
             conn.commit()
 
     def begin(stage: str, detail: str) -> None:
         if conn is not None and ctx is not None:
+            _ensure_conn()
             conn.execute("update public.run_stages set status='running', started_at=coalesce(started_at, now()), finished_at=null, detail=%s where run_id=%s and stage=%s", (detail, ctx.run_id, stage))
             conn.commit()
+
 
     try:
         if persist:
             if existing is None and not org_id:
                 raise ValueError("persist=True requires org_id")
             conn = db.open_connection()
+            if existing is not None:
+                ctx = db.RunContext(existing.org_id, existing.screen_id, existing.run_id,
+                                    existing.comparison_id or "")
+                conn.execute("update public.runs set status = 'running', started_at = coalesce(started_at, now()) where id = %s", (existing.run_id,))
+                conn.execute("update public.screens set status = 'running' where id = %s", (existing.screen_id,))
+                conn.commit()
+            begin("ingest", "verifying input and design")
 
         # --- 01 ingest -----------------------------------------------------
         t = time.time()
@@ -529,14 +551,10 @@ def run_pipeline(
                         "roles": roles, "design_notes": design.notes}
             if existing is not None:
                 screen_id, run_id = existing.screen_id, existing.run_id
-                ctx = db.RunContext(existing.org_id, existing.screen_id, existing.run_id,
-                                    existing.comparison_id or "")
                 conn.execute(
                     """
                     update public.runs
-                       set status = 'running',
-                           started_at = coalesce(started_at, now()),
-                           settings = coalesce(nullif(settings, '{}'::jsonb), %s::jsonb)
+                       set settings = coalesce(nullif(settings, '{}'::jsonb), %s::jsonb)
                      where id = %s
                     """,
                     (json.dumps(settings), existing.run_id),
@@ -558,6 +576,7 @@ def run_pipeline(
         # --- 02 detect -----------------------------------------------------
         active_stage = "detect"
         t = time.time()
+        begin("detect", "Identifying the guide library")
         if spec.library_path:
             library = _parse_learned(spec.library_path, spec.library_slug or "custom")
             detail = f"{library.name} (confirmed workspace guide map)"
@@ -613,6 +632,7 @@ def run_pipeline(
         # --- 04 QC ---------------------------------------------------------
         active_stage = "qc"
         t = time.time()
+        begin("qc", "Measuring screen quality")
         qc = screen_qc(matrix, roles, treat, ctrl, library,
                        assess_essentiality=assess_essentiality)
         result.qc = qc
@@ -656,7 +676,8 @@ def run_pipeline(
                          run_drug=spec.run_drugz, drugz_paired=spec.drugz_paired,
                          drugz_pseudocount=float(spec.drugz_options.get("pseudocount", 5)),
                          drugz_half_window_size=int(spec.drugz_options.get("half_window_size", 500)),
-                         essentiality_contrast=essentiality_contrast)
+                         essentiality_contrast=essentiality_contrast,
+                         progress_fn=lambda msg: begin("hits", msg))
         if not essentiality_contrast:
             hits.warnings.append("BAGEL2 and the essential-direction inversion guard were "
                                  "not applied: this contrast is not a declared loss-of-function "
@@ -685,6 +706,7 @@ def run_pipeline(
 
         # --- 06 artifacts --------------------------------------------------
         active_stage = "artifacts"
+        begin("artifacts", "Flagging potential experimental artifacts")
         # The Atlas is retrieved here rather than in stage 07, because the
         # frequent_hitter flag needs it and stage 07 runs after this one. Stage
         # 07 then reports on what this loaded. atlas_context never raises: a
@@ -721,6 +743,7 @@ def run_pipeline(
         # --- 07 atlas ------------------------------------------------------
         active_stage = "atlas"
         t = time.time()
+        begin("atlas", "Comparing against the SplicR Atlas")
         # The work happened in stage 06, so the duration is back-dated.
         # Recording time.time() here would report 0.0s for a stage that did
         # real work.
@@ -731,6 +754,7 @@ def run_pipeline(
         # --- 08 score ------------------------------------------------------
         active_stage = "score"
         t = time.time()
+        begin("score", "Predicting validation outcomes")
         # The Validation Network, if a cohort exists to fit it on.
         #
         # This stage used to be hard-coded `skipped`, which was true and
@@ -753,6 +777,7 @@ def run_pipeline(
         # --- 09 report -----------------------------------------------------
         active_stage = "report"
         t = time.time()
+        begin("report", "Generating final output tables")
         # A portable report also preserves raw directional statistics, which
         # the existing database columns cannot represent without a migration.
         report = {
@@ -794,6 +819,7 @@ def run_pipeline(
         temporary.replace(report_path)
         result.report_path = report_path
         if persist and conn is not None and ctx is not None:
+            _ensure_conn()
             written = db.write_hits(conn, ctx, hits, flags)
             guide_rows, gene_rows = _persist_guide_evidence(conn, ctx, hits, library, sig)
             #  Both branches of the gate are stored. A refusal is a row saying
@@ -829,6 +855,7 @@ def run_pipeline(
             traceback.print_exc()
         if conn is not None and ctx is not None:
             try:
+                _ensure_conn()
                 conn.rollback()
                 db.log_event(conn, ctx.run_id, result.error, result.failed_at, "error")
                 db.finish_run(conn, ctx, "failed", result.error)

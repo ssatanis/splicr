@@ -39,12 +39,12 @@ export function FirstRun({ orgName, contactHref }: { orgName: string; contactHre
               It has no screens yet.
             </h1>
             <p className="mt-4 max-w-[46ch] text-[14px] leading-relaxed text-body">
-              Send us a count table and we will run it through the pipeline. The
+              Upload a count table and we will run it through the pipeline. The
               results land here, with the evidence behind every call.
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3">
-              <Link href={contactHref} className="btn btn-orange btn-sm">
-                Send us a screen
+              <Link href="/dashboard/new" className="btn btn-teal btn-sm">
+                Start a new analysis
               </Link>
             </div>
           </div>
@@ -91,8 +91,8 @@ export function FirstRun({ orgName, contactHref }: { orgName: string; contactHre
           {[
             {
               n: "01",
-              t: "You send counts",
-              b: "A guide-level count table, or FASTQ. Any library, any caller you already use.",
+              t: "You upload counts",
+              b: "A guide-level count table. Any library, any caller you already use.",
             },
             {
               n: "02",
@@ -106,7 +106,7 @@ export function FirstRun({ orgName, contactHref }: { orgName: string; contactHre
             },
           ].map((s) => (
             <li key={s.n} className="bg-white p-6">
-              <span className="font-serif text-[20px] text-orange-500">{s.n}</span>
+              <span className="font-serif text-[20px] text-teal-600">{s.n}</span>
               <h3 className="mt-2 text-[14px] font-medium text-ink">{s.t}</h3>
               <p className="mt-1.5 text-[12.5px] leading-snug text-muted">{s.b}</p>
             </li>
@@ -116,10 +116,7 @@ export function FirstRun({ orgName, contactHref }: { orgName: string; contactHre
 
       {/* ---------- the honest note ---------- */}
       <p className="text-[12px] leading-relaxed text-muted">
-        Analysis is run by us during the pilot rather than from this browser, so the
-        first screen is a conversation and not an upload form. Nothing here is a
-        validation probability, and a candidate that reproduces is not the same as one
-        that passes a bench assay.
+        Nothing here is a validation probability, and a candidate that reproduces is not the same as one that passes a bench assay.
       </p>
     </div>
   );

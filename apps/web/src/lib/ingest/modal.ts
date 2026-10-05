@@ -21,11 +21,13 @@ function modalConfigured(): boolean {
 }
 
 function getModalClient() {
-  const tokenId = process.env.MODAL_API_KEY?.trim() && !process.env.MODAL_TOKEN_ID?.trim()
-    ? process.env.MODAL_API_KEY.trim()
-    : undefined;
+  const tokenId = process.env.MODAL_API_KEY?.trim() || process.env.MODAL_TOKEN_ID?.trim();
+  const tokenSecret = process.env.MODAL_TOKEN_SECRET?.trim();
   
-  return new ModalClient(tokenId ? { tokenId, tokenSecret: process.env.MODAL_TOKEN_SECRET?.trim() } : undefined);
+  if (tokenId && tokenSecret) {
+    return new ModalClient({ tokenId, tokenSecret });
+  }
+  return new ModalClient();
 }
 
 /**

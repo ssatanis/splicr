@@ -40,8 +40,7 @@ export function Footer() {
         <div className="mt-12 pt-6 border-t border-white/10 text-sm text-white/80">
           <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
             <span className="flex flex-col gap-0.5">
-              <span>© {new Date().getFullYear()} SplicR</span>
-              <span className="text-white/60">{site.location}</span>
+              <span>&copy; {new Date().getFullYear()} {site.name}. All rights reserved.</span>
             </span>
             <span className="flex gap-5">
               <Link href="/terms" className="hover:text-white">

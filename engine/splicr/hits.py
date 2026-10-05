@@ -1,3 +1,4 @@
+import typing
 """
 Hit calling.
 
@@ -572,6 +573,7 @@ def call_hits(
     drugz_half_window_size: int = 500,
     norm_method: str = "median",
     control_sgrna: Path | None = None,
+    progress_fn: typing.Callable[[str], None] | None = None,
 ) -> HitTable:
     """
     Run every applicable caller and merge.
@@ -585,6 +587,9 @@ def call_hits(
     reference. Enrichment in drug comparisons or reporter assays is not proof
     of inversion. An apparent inversion raises unless allow_inverted is set.
     """
+    def report(msg: str) -> None:
+        if progress_fn:
+            progress_fn(msg)
     if not treatment:
         raise ValueError(
             "call_hits was given no treatment sample. MAGeCK is handed '-t ' with "
@@ -613,12 +618,14 @@ def call_hits(
     methods: list[str] = []
     warnings: list[str] = []
 
+    report("Running MAGeCK RRA...")
     genes, warn = run_mageck_rra(counts_file, treatment, control, workdir, norm_method=norm_method, control_sgrna=control_sgrna)
     methods.append("mageck_rra")
     warnings.extend(warn)
     guide_effects = read_guide_effects(workdir)
 
     if run_mle:
+        report("Running MAGeCK MLE...")
         try:
             mle = run_mageck_mle(counts_file, mle_design_matrix, workdir,
                                  coefficient=mle_coefficient, permutation_round=mle_permutation_round, norm_method=norm_method, control_sgrna=control_sgrna, random_seed=mle_random_seed)
@@ -630,6 +637,7 @@ def call_hits(
             warnings.append(f"MAGeCK MLE did not run: {exc}")
 
     if run_bagel:
+        report("Running BAGEL2...")
         try:
             bf = run_bagel2(counts_file, workdir,
                             all_samples=matrix.samples,
@@ -646,6 +654,7 @@ def call_hits(
             warnings.append(f"BAGEL2 did not run: {exc}")
 
     if run_drug:
+        report("Running DrugZ...")
         try:
             dz = run_drugz(counts_file, treatment, control, workdir, paired=drugz_paired,
                            pseudocount=drugz_pseudocount, half_window_size=drugz_half_window_size)
