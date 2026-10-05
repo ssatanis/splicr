@@ -313,7 +313,7 @@ export function GeneDrawer({
       onMouseDown={(event) => event.target === event.currentTarget && onClose()}
     >
       <aside
-        className="absolute inset-y-0 right-0 flex w-full max-w-[820px] flex-col border-l border-line bg-surface"
+        className="absolute inset-y-0 right-0 flex w-full max-w-[820px] flex-col border-l border-line bg-white"
         role="dialog"
         aria-modal="true"
         aria-labelledby="gene-drawer-title"
@@ -321,12 +321,22 @@ export function GeneDrawer({
         <header className="flex shrink-0 items-start gap-3 border-b border-line px-4 py-3">
           <div className="min-w-0">
             <p className="text-[11px] text-muted">Guide evidence, {screenName}</p>
-            <h2 id="gene-drawer-title" className="mt-0.5 truncate text-[17px] font-medium text-ink">
-              {state.gene}
+            <h2 id="gene-drawer-title" className="mt-0.5 flex items-center gap-3 truncate text-[17px] font-medium text-ink">
+              <span>{state.gene}</span>
               {state.kind === "found" && state.report.ensembl_gene_id && (
-                <span className="num ml-2 text-[11px] font-normal text-muted">
+                <span className="num text-[11px] font-normal text-muted">
                   {state.report.ensembl_gene_id}
                 </span>
+              )}
+              {state.kind === "found" && state.report.uniprot_accession && (
+                <a
+                  href={`https://www.uniprot.org/uniprotkb/${state.report.uniprot_accession}/entry`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-teal-200 bg-teal-50 px-2.5 py-0.5 text-[10px] font-medium text-teal-800 hover:bg-teal-100"
+                >
+                  View on UniProt
+                </a>
               )}
             </h2>
           </div>

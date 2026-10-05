@@ -54,7 +54,7 @@ export function GuideStrip({
         })}
       </svg>
       {agreement && (
-        <span className="num text-[11px] text-muted">
+        <span className="num inline-block w-6 text-right text-[11px] text-muted">
           {agreement.agree}/{agreement.total}
         </span>
       )}

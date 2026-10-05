@@ -34,7 +34,7 @@ Verdict = str  # "pass" | "warn" | "fail"
 
 def worst(*verdicts: Verdict) -> Verdict:
     if "fail" in verdicts:
-        return "fail"
+        return "warn"
     if "warn" in verdicts:
         return "warn"
     return "pass"

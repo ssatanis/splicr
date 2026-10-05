@@ -107,10 +107,7 @@ function DecisionForm({ screenId, gene, current }: {
           Record
         </button>
       </div>
-      <p className="text-[11px] leading-snug text-muted">
-        {STATE_COPY[choice as CandidateStatus].help} Recorded with the statistics as they stand now, and kept
-        when the screen is reanalysed.
-      </p>
+
       {state?.error && (
         <p role="alert" className="rounded-md bg-orange-50 px-2.5 py-1.5 text-[12px] leading-snug text-orange-700">
           {state.error}

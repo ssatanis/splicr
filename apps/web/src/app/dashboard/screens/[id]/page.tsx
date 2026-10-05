@@ -146,7 +146,6 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
         actions={
           <>
             {screen.source_ref && <Link href={`/dashboard/experiments/${screen.source_ref}`} className="inline-flex h-7 items-center text-[12px] text-cyan-600 underline underline-offset-2">Compare experiment</Link>}
-            {canLog && <DeleteScreenButton screenId={screen.id} screenName={screen.name} />}
             <Link href="/dashboard/screens" className="inline-flex h-7 items-center gap-1 text-[12px] text-cyan-600 underline decoration-line-strong underline-offset-2">
               <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> All screens
             </Link>
