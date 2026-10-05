@@ -196,6 +196,30 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
             nothing about whether the experiment has hits.
           </p>
         </Card>
+      ) : screen.status !== "complete" && screen.status !== "failed" ? (
+        <Card title="Analysis in progress">
+          <p className="text-[12.5px] text-muted">The engine is processing this screen. Check back later for the results.</p>
+          <div className="mt-6 w-full max-w-xl text-left">
+            <div className="mb-2 flex items-center justify-between text-[11px] font-medium text-ink">
+              <span>Progress</span>
+              <span>{stages.length} stages completed</span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-line">
+              <div className="h-full rounded-full bg-navy transition-all duration-500" style={{ width: `${Math.min(100, Math.max(5, (stages.length / 5) * 100))}%` }} />
+            </div>
+            {stages.length > 0 && (
+              <ol className="mt-4 divide-y divide-line border-t border-line">
+                {stages.map((stage) => (
+                  <li key={stage.stage} className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 py-1.5 text-[12.5px]">
+                    <span className="w-32 shrink-0 font-medium text-ink">{stage.stage}</span>
+                    <StatusChip tone={statusTone(stage.status)}>{stage.status}</StatusChip>
+                    {stage.detail && <span className="basis-full whitespace-pre-wrap text-[12px] text-muted">{stage.detail}</span>}
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        </Card>
       ) : (
         <>
           <Panel

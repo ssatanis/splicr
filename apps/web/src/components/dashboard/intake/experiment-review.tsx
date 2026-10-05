@@ -12,10 +12,10 @@ import { MODEL_TYPES, type ModelType } from "@/lib/validation/model";
 export interface LibraryUpload { sources?: { fileId: string; sheet: string }[]; fileId: string; name: string; sheet: string; rows: number; preview: string[][]; warnings: string[] }
 const FIELD = "h-8 rounded-md border border-line bg-white px-2 text-[12px] text-ink outline-none focus:border-cyan-500";
 
-export function ExperimentReview({ tables, onTables, comparisons, onChange, libraryUploads, libraries, libraryId, onLibrary, onImport, settings, onSettings, disabled, mappingReady, onStart }: {
+export function ExperimentReview({ tables, onTables, comparisons, onChange, libraryUploads, libraries, libraryId, onLibrary, onImport, onFiles, settings, onSettings, disabled, mappingReady, onStart }: {
   tables: ExperimentTable[]; onTables: (tables: ExperimentTable[]) => void; comparisons: ExperimentComparison[]; onChange: (rows: ExperimentComparison[]) => void;
   libraryUploads: LibraryUpload[]; libraries: LibraryChoice[]; libraryId: string | null; onLibrary: (id: string | null) => void;
-  onImport: (upload: LibraryUpload, name: string, options: LibraryImportOptions) => Promise<void>; settings: AnalysisSettings; onSettings: (settings: AnalysisSettings) => void;
+  onImport: (upload: LibraryUpload, name: string, options: LibraryImportOptions) => Promise<void>; onFiles?: (files: File[]) => void; settings: AnalysisSettings; onSettings: (settings: AnalysisSettings) => void;
   mappingReady: boolean; disabled: boolean; onStart: () => void;
 }) {
   const [plan, setPlan] = useState(false);
@@ -43,10 +43,16 @@ export function ExperimentReview({ tables, onTables, comparisons, onChange, libr
 
     <section className="rounded-xl border border-line bg-white p-4">
       <h3 className="text-sm font-medium text-ink">Guide library</h3>
-      <select aria-label="Experiment guide library" value={libraryId ?? ""} disabled={disabled} onChange={(event) => onLibrary(event.target.value || null)} className={`${FIELD} mt-2 w-full`}>
-        <option value="">Choose a library or import your own</option>
-        {libraries.map((library) => <option key={library.id} value={library.id} disabled={library.n_guides < 1}>{library.name}, {library.n_guides.toLocaleString()} guides</option>)}
-      </select>
+      <div className="mt-2 flex items-center gap-2">
+        <select aria-label="Experiment guide library" value={libraryId ?? ""} disabled={disabled} onChange={(event) => onLibrary(event.target.value || null)} className={`${FIELD} flex-1`}>
+          <option value="">Choose a library or import your own</option>
+          {libraries.map((library) => <option key={library.id} value={library.id} disabled={library.n_guides < 1}>{library.name}, {library.n_guides.toLocaleString()} guides</option>)}
+        </select>
+        <label className="flex h-8 cursor-pointer items-center justify-center rounded-md border border-line bg-mist-soft px-3 text-[12px] font-medium text-ink hover:bg-mist">
+          Import...
+          <input type="file" className="hidden" accept=".csv,.tsv,.xlsx" onChange={(e) => { if (e.target.files?.length && onFiles) onFiles(Array.from(e.target.files)); }} disabled={disabled} />
+        </label>
+      </div>
       <UploadedLibraryImport uploads={libraryUploads} disabled={disabled} onImport={onImport}/>
     </section>
 
