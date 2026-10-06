@@ -139,3 +139,23 @@ then checks the deployed tools, references, and database with `doctor`.
 It uses the repository's `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET` Actions secrets.
 The deployed pipeline version includes a source-content hash, so different
 working-tree builds cannot silently share the same version label.
+
+### Screen navigation and cancellation
+
+Runs and stages live in Postgres and execute in Modal independently of any
+browser page. Screen detail and the screen list observe Realtime changes, poll
+active runs every five seconds, and refresh immediately on mount, tab focus,
+visibility, reconnection, and browser restoration. Elapsed time uses the saved
+run start (or creation while queued), so navigation cannot restart the clock.
+Completed runs refresh into the recorded hit report.
+
+A researcher may cancel a queued or running current run. The SQL operation
+checks workspace membership and serializes with completion, then cancels its
+job and freezes the run. A private SQL implementation and an invoker API wrapper
+keep worker APIs out of browser reach. Canceled runs reject late stage/result
+writes. The worker records its exact Modal function-call ID in the same
+transaction as the claim. The authenticated gateway terminates that invocation's
+container; the minute schedule retries unacknowledged cancellations. The detail
+page shows **Stopping analysis** until Modal acknowledges, then **Analysis
+canceled**. Uploaded inputs are retained. Idle Modal functions still scale down
+normally.

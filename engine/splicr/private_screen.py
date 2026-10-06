@@ -240,12 +240,13 @@ def _screen_spec(conn, job: Job, workdir: Path) -> tuple[ScreenInput, str | None
     )
 
 
-def process_one(owner: str | None = None) -> dict:
+def process_one(owner: str | None = None, call_id: str | None = None) -> dict:
     owner = owner or _worker_name()
     with db.connect() as conn:
         job = _claim(conn, owner)
         if job is None:
             return {"claimed": False}
+        conn.execute("update public.jobs set modal_call_id=%s, modal_cancelled_at=null where id=%s", (call_id, job.id))
         conn.commit()
 
     error: str | None = None
@@ -285,5 +286,9 @@ def process_one(owner: str | None = None) -> dict:
             heartbeat.join(timeout=5)
 
     with db.connect() as conn:
+        # A canceled or superseded lease is a normal stop, not a failed job.
+        state = conn.execute("select status, lease_owner from public.jobs where id=%s for update", (job.id,)).fetchone()
+        if not state or state[0] == "canceled" or state[1] != owner:
+            return {"claimed": True, "job_id": job.id, "run_id": job.run_id, "ok": False, "canceled": bool(state and state[0] == "canceled")}
         _finish(conn, job, owner, ok, error)
     return {"claimed": True, "job_id": job.id, "run_id": job.run_id, "ok": ok, "error": error}

@@ -15,7 +15,9 @@ export interface ScreenListRow {
   status: string;
   qc: string;
   created_at: string;
-  current_run?: { id: string; stages: { status: string }[] } | null;
+  experiment_date?: string | null;
+  researcher_name?: string | null;
+  current_run?: { id: string; status: string; created_at: string; started_at: string | null; finished_at: string | null; stages: { status: string }[] } | null;
 }
 
 export type WorkspaceListResult<T> =
@@ -42,5 +44,5 @@ async function readList<T>(table: "screens", columns: string, date: string, page
 }
 
 export function getWorkspaceScreens(page = 1): Promise<WorkspaceListResult<ScreenListRow>> {
-  return readList("screens", "id, name, cell_line, phenotype, modality, status, qc, created_at, current_run:runs!screens_current_run_fk(id, stages:run_stages(status))", "created_at", page);
+  return readList("screens", "id, name, cell_line, phenotype, modality, status, qc, created_at, experiment_date, researcher_name, current_run:runs!screens_current_run_fk(id, status, created_at, started_at, finished_at, stages:run_stages(status))", "created_at", page);
 }

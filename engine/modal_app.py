@@ -139,7 +139,7 @@ def process_study(accession: str) -> dict:
               max_containers=8)
 def process_private_screen() -> dict:
     from splicr.private_screen import process_one
-    return process_one()
+    return process_one(call_id=modal.current_function_call_id())
 
 
 @app.function(**COMMON, cpu=0.25, memory=512, timeout=60,
@@ -148,6 +148,7 @@ def private_queue_scheduled() -> dict:
     """Recover missed web dispatches and retries independently of the browser."""
     from splicr import db
 
+    cancel_private_runs.local()
     with db.connect() as conn:
         due = conn.execute("""
             select count(*) from public.jobs
@@ -163,6 +164,31 @@ def private_queue_scheduled() -> dict:
 
 
 @app.function(**COMMON, cpu=0.25, memory=512, timeout=60, max_containers=3)
+def cancel_private_runs(run_id: str | None = None) -> dict:
+    """Retry durable cancellations even after a browser closes or HTTP fails."""
+    from splicr import db
+    with db.connect() as conn:
+        rows = conn.execute("""
+            select id, modal_call_id from public.jobs
+             where kind='pipeline' and status='canceled' and modal_cancelled_at is null
+               and (%s::uuid is null or run_id=%s::uuid)
+             order by updated_at limit 64
+        """, (run_id, run_id)).fetchall()
+    canceled = 0
+    for job_id, call_id in rows:
+        try:
+            if call_id:
+                modal.FunctionCall.from_id(call_id).cancel(terminate_containers=True)
+            with db.connect() as conn:
+                conn.execute("update public.jobs set modal_cancelled_at=now() where id=%s and status='canceled'", (job_id,))
+                conn.commit()
+            canceled += 1
+        except Exception as exc:
+            print(f"Modal cancellation will retry: {type(exc).__name__}", flush=True)
+    return {"accepted": True, "canceled": canceled, "pending": len(rows)-canceled}
+
+
+@app.function(**COMMON, cpu=0.25, memory=512, timeout=60, max_containers=3)
 @modal.fastapi_endpoint(method="POST", requires_proxy_auth=True)
 def queue_gateway(payload: dict):
     """Authenticated acknowledgement only; a browser never reaches the engine."""
@@ -171,6 +197,15 @@ def queue_gateway(payload: dict):
     from fastapi.responses import JSONResponse
     from splicr.compute_gateway import dispatch, validate_dispatch
 
+    if isinstance(payload, dict) and payload.get("kind") == "cancel":
+        from uuid import UUID
+        try:
+            if set(payload) != {"kind", "run_id"}:
+                raise ValueError("Invalid cancellation request")
+            run_id = str(UUID(payload["run_id"]))
+        except (ValueError, TypeError, AttributeError):
+            return JSONResponse({"error": "Invalid cancellation request."}, status_code=422)
+        return JSONResponse(cancel_private_runs.local(run_id), status_code=202)
     try:
         kind, _ = validate_dispatch(payload)
     except (ValueError, TypeError):
