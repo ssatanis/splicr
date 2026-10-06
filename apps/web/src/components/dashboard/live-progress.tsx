@@ -6,6 +6,7 @@ import { Card } from "@/components/dashboard/ui";
 import { Check, Loader2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import type { WorkspaceStage } from "@/lib/data/screen-detail";
 
 export function LiveProgress({ 
   runId, 
@@ -14,11 +15,11 @@ export function LiveProgress({
 }: { 
   runId: string;
   screenName: string;
-  initialStages: any[];
+  initialStages: WorkspaceStage[];
 }) {
   const [stages, setStages] = useState(initialStages);
   const router = useRouter();
-  const supabase = createClient();
+  const [supabase] = useState(createClient);
 
   useEffect(() => {
     // 1. Polling fallback
@@ -26,14 +27,14 @@ export function LiveProgress({
       const { data } = await supabase.from("run_stages").select("*").eq("run_id", runId).order("position");
       if (data) {
         setStages(data);
-        const hasActive = data.some((s: any) => ["queued", "running"].includes(s.status));
+        const hasActive = data.some((s) => ["queued", "running"].includes(s.status));
         if (!hasActive) router.refresh();
       }
     }, 5000);
 
     // 2. Realtime Database Changes
     const channel = supabase.channel(`run:${runId}`)
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "run_stages", filter: `run_id=eq.${runId}` }, (payload: any) => {
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "run_stages", filter: `run_id=eq.${runId}` }, (payload) => {
         setStages(current => {
           const next = [...current];
           const idx = next.findIndex(s => s.stage === payload.new.stage);
@@ -43,7 +44,7 @@ export function LiveProgress({
           return next;
         });
       })
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "runs", filter: `id=eq.${runId}` }, (payload: any) => {
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "runs", filter: `id=eq.${runId}` }, (payload) => {
         if (payload.new.status === "complete" || payload.new.status === "failed") {
           router.refresh();
         }
@@ -67,7 +68,7 @@ export function LiveProgress({
           <div>
             <h2 className="text-lg font-medium text-ink flex items-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin text-cyan-600" />
-              Analyzing &middot; <span className="font-normal text-muted">{screenName}</span>
+              Analyzing: <span className="font-normal text-muted">{screenName}</span>
             </h2>
             <p className="text-[13px] text-muted mt-1">
               {completedCount} of 9 stages complete
@@ -95,7 +96,6 @@ export function LiveProgress({
             const isDone = stage.status === "done" || stage.status === "skipped";
             const isRunning = stage.status === "running";
             const isFailed = stage.status === "failed";
-            const isQueued = stage.status === "queued";
             
             return (
               <div key={stage.stage} className={cn(

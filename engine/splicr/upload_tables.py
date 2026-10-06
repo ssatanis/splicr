@@ -90,12 +90,17 @@ def canonical_counts(path: Path, library: Library, samples: list[str], dest: Pat
             if len(candidates) == 1:
                 guide = candidates[0]
         if not guide_key and row_number == len(clean) and output:
-            if all(Decimal(row[index]) == sum(record[j + 2] for record in output) for j, index in enumerate(indices)):
+            try:
+                verified_footer = all(Decimal(row[index]) == sum(record[j + 2] for record in output) for j, index in enumerate(indices))
+            except (InvalidOperation, IndexError, ValueError):
+                verified_footer = False
+            if verified_footer:
                 continue  # Verified footer totals, not a guide with missing identity.
+            raise ValueError(f"{path.name}, row {row_number}: a row without a guide ID is not a verified footer total")
         if guide is None:
-            continue
+            raise ValueError(f"{path.name}, row {row_number}: guide {guide_key!r} has no unambiguous match in the confirmed library")
         if guide.guide_id in seen:
-            continue
+            raise ValueError(f"{path.name}, row {row_number}: duplicate guide {guide.guide_id!r}; counts cannot be discarded or merged implicitly")
         seen.add(guide.guide_id)
         counts = []
         for sample, index in zip(samples, indices):

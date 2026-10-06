@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { getCurrentContext } from "@/lib/data/org";
 import { createClient } from "@/lib/supabase/server";
 import { actionFailed, isUuid, type ActionResult } from "@/lib/data/types";

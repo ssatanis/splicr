@@ -75,7 +75,10 @@ def open_connection() -> "psycopg.Connection":
         raise RuntimeError(
             "psycopg is not installed: engine/.tools/env/bin/python -m pip install 'psycopg[binary]'"
         )
-    return psycopg.connect(database_url(), autocommit=False)
+    # Transaction-mode Supavisor reassigns sessions between transactions.
+    # Server-side prepared statements cannot be assumed to survive that move.
+    return psycopg.connect(database_url(), autocommit=False, prepare_threshold=None,
+                          connect_timeout=15)
 
 
 @contextmanager

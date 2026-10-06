@@ -50,6 +50,7 @@ supabase/.temp
 .vscode/*
 !.vscode/extensions.json
 coverage/
+apps/web/test-results-*/
 engine/.tools/
 
 # Workflow worktrees, created per agent and removed when unchanged.

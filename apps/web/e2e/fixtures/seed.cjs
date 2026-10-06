@@ -33,10 +33,12 @@ const pg = require("pg");
 //  Playwright, which transpiles the suite to CommonJS.
 const ROOT = path.resolve(__dirname, "../../../..");
 
+const fixtureNamespace = process.env.SPLICR_E2E_NAMESPACE || "";
+if (fixtureNamespace && !/^[a-z0-9-]{1,40}$/.test(fixtureNamespace)) throw new Error("Invalid E2E fixture namespace");
 const FIXTURE = {
-  email: "splicr-e2e@splicr.invalid",
-  orgSlug: "splicr-e2e-fixture",
-  orgName: "SplicR E2E Fixture Lab",
+  email: fixtureNamespace ? `splicr-e2e-${fixtureNamespace}@splicr.invalid` : "splicr-e2e@splicr.invalid",
+  orgSlug: fixtureNamespace ? `splicr-e2e-fixture-${fixtureNamespace}` : "splicr-e2e-fixture",
+  orgName: fixtureNamespace ? `SplicR E2E Fixture Lab (${fixtureNamespace})` : "SplicR E2E Fixture Lab",
   screenName: "E2E fixture screen (synthetic, not a real experiment)",
   engineVersion: "e2e-fixture",
   genes: 20_000,
@@ -279,19 +281,26 @@ async function seed() {
 /** Remove everything the fixture created, including decisions the suite made. */
 async function teardown() {
   const config = env();
+  const admin = createClient(config.SUPABASE_URL, config.SUPABASE_SECRET_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
   const db = await connect(config.SUPABASE_DB_URL);
   try {
     const user = await db.query(`select id from public.profiles where email = $1`, [FIXTURE.email]);
     if (user.rowCount > 0) {
       // Stored objects are not rows and nothing cascades to them, so a logo a
       // spec uploaded has to go before the organization that named it does.
-      await db.query(
-        `delete from storage.objects
+      const objects = await db.query(
+        `select name from storage.objects
           where bucket_id = 'lab-logos'
             and split_part(name, '/', 1) in (
               select org_id::text from public.org_members where user_id = $1)`,
         [user.rows[0].id],
       );
+      for (let start = 0; start < objects.rows.length; start += 100) {
+        const removed = await admin.storage.from("lab-logos").remove(objects.rows.slice(start, start + 100).map((object) => object.name));
+        if (removed.error) throw removed.error;
+      }
       await db.query(
         `delete from public.organizations where id in (
            select org_id from public.org_members where user_id = $1)`,
@@ -302,9 +311,6 @@ async function teardown() {
   } finally {
     await db.end();
   }
-  const admin = createClient(config.SUPABASE_URL, config.SUPABASE_SECRET_KEY, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
   const users = await admin.auth.admin.listUsers({ perPage: 200 });
   const found = users.data?.users.find((user) => user.email === FIXTURE.email);
   if (found) await admin.auth.admin.deleteUser(found.id);

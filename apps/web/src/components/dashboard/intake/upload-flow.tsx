@@ -499,6 +499,19 @@ export function UploadFlow({ libraries, defaults, librarySlugToId, initialDraft 
     if (importedTables.length) {
       for (const file of result.files) if (file.shape?.kind === "counts" && file.kind !== "library") experimentTables.push({ fileId: file.fileId, name: file.name, sheet: "Table", model: cellLine || file.name.replace(/\.[^.]+$/, ""), samples: tableSamples(file.shape.sample_columns), rows: file.shape.rows_seen, preview: file.shape.preview, warnings: [] });
     }
+    if (importedTables.length === 1 && !libraryId) {
+      const upload = importedTables[0];
+      const res = await importCustomLibrary({ screenId: context.screenId, fileId: upload.fileId, sheet: upload.sheet, sources: upload.sources, name: upload.name.replace(/\.[^.]+$/, ""), options: { modality: "knockout", organism_taxid: 9606, cas: "Cas9" } });
+      if (res.ok) {
+        setCustomLibraries((current) => [...current.filter((library) => library.id !== res.libraryId), { id: res.libraryId, name: res.name, n_guides: res.nGuides }]);
+        setLibraryId(res.libraryId);
+        setSettings((current) => ({ ...current, modality: "knockout", organism_taxid: 9606 }));
+        setModality("knockout");
+        setAliases(res.aliases);
+        setAliasesConfirmed(res.aliases.length === 0);
+        setNotice(`Library auto-imported: ${res.nGuides.toLocaleString()} guides, ${res.nGenes} target labels, ${res.nControls} negative controls.`);
+      }
+    }
     setLibraryUploads(importedTables);
     if (experimentTables.length) {
       setTables(experimentTables);

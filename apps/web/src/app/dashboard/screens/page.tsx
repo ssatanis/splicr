@@ -9,7 +9,7 @@ export const metadata = { title: "Screens" };
 export const dynamic = "force-dynamic";
 
 export default async function ScreensPage(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
-  const [, search] = await Promise.all([getCurrentContext(), props.searchParams]);
+  const [context, search] = await Promise.all([getCurrentContext(), props.searchParams]);
   const page = typeof search.page === "string" ? Number(search.page) : 1;
   const result = await getWorkspaceScreens(page);
   const hasActive = result.status === "ready" && result.rows.some(s => ["queued", "running", "analysing", "pending"].includes(s.status));
@@ -30,7 +30,7 @@ export default async function ScreensPage(props: { searchParams: Promise<{ [key:
               </p>
             </div>
           ) : (
-            <ScreensTable screens={result.rows} />
+            <ScreensTable screens={result.rows} canDelete={context.role === "owner" || context.role === "admin"} />
           )}
           <RecordPages path="/dashboard/screens" page={page} total={result.total} />
         </Card>

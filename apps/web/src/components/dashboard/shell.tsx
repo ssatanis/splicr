@@ -49,6 +49,7 @@ const NAV: { group: string | null; items: NavItem[] }[] = [
   {
     group: "Decide and plan",
     items: [
+      { href: "/dashboard/discovery", label: "Discovery", icon: FlaskConical },
       { href: "/dashboard/validation", label: "Truth Loop", icon: CheckCircle2, exact: true },
       { href: "/dashboard/validation/network", label: "Validation Network", icon: Gauge },
       { href: "/dashboard/planner", label: "Planner", icon: Waypoints },

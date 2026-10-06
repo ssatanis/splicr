@@ -1,23 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Trash2 } from "lucide-react";
+import { Download, Trash2 } from "lucide-react";
+import { ScreensExportDialog } from "./screens-export-dialog";
 import { DenseTable } from "@/components/dashboard/ui";
 import { deleteScreen } from "@/lib/data/screen-actions";
 import type { ScreenListRow } from "@/lib/data/workspace-lists";
 
-export function ScreensTable({ screens }: { screens: ScreenListRow[] }) {
+export function ScreensTable({ screens, canDelete = false }: { screens: ScreenListRow[]; canDelete?: boolean }) {
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showExport, setShowExport] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const deleteDialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    if (showConfirm) deleteDialog.current?.showModal();
+  }, [showConfirm]);
+  const selectedScreens = screens.filter(screen => selectedIds.has(screen.id));
+  const selection = selectedScreens.map(screen => screen.id);
 
   const toggleSelectAll = () => {
-    if (selectedIds.size === screens.length) {
+    if (selectedScreens.length === screens.length) {
       setSelectedIds(new Set());
     } else {
       setSelectedIds(new Set(screens.map(s => s.id)));
@@ -25,61 +33,71 @@ export function ScreensTable({ screens }: { screens: ScreenListRow[] }) {
   };
 
   const toggleSelect = (id: string) => {
-    const next = new Set(selectedIds);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setSelectedIds(next);
+    setSelectedIds(current => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   };
 
   const handleDelete = async () => {
     setIsDeleting(true);
     setError(null);
-    let successCount = 0;
-    
-    // Delete one by one to use the existing robust server action
-    for (const id of Array.from(selectedIds)) {
-      const result = await deleteScreen(id);
-      if (!result.ok) {
-        setError(`Failed to delete one or more screens. ${result.error}`);
-        break;
+    const deleted = new Set<string>();
+    try {
+      for (const id of selection) {
+        const result = await deleteScreen(id);
+        if (!result.ok) {
+          setError(`${deleted.size} deleted. ${result.error} Remaining screens are still selected.`);
+          break;
+        }
+        deleted.add(id);
       }
-      successCount++;
+      if (deleted.size === selection.length) {
+        setSelectMode(false); setShowConfirm(false);
+      }
+    } catch {
+      setError(`${deleted.size} deleted. Deletion could not finish. Remaining screens are still selected.`);
+    } finally {
+      setSelectedIds(current => new Set([...current].filter(id => !deleted.has(id))));
+      if (deleted.size > 0) router.refresh();
+      setIsDeleting(false);
     }
-    
-    if (successCount === selectedIds.size) {
-      setSelectMode(false);
-      setSelectedIds(new Set());
-      setShowConfirm(false);
-      router.refresh();
-    }
-    setIsDeleting(false);
   };
 
   return (
     <>
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-medium text-ink">
-          {selectMode ? `${selectedIds.size} selected` : "Recorded screens"}
+          {selectMode ? `${selectedScreens.length} selected` : "Recorded screens"}
         </h2>
         <div className="flex gap-2">
           {selectMode ? (
             <>
               <button
                 type="button"
+                disabled={isDeleting}
                 onClick={() => { setSelectMode(false); setSelectedIds(new Set()); }}
                 className="inline-flex h-7 items-center justify-center rounded px-3 text-[12px] font-medium text-muted hover:text-ink hover:bg-line/50 transition-colors"
               >
                 Cancel
               </button>
+              <button type="button" onClick={() => setShowExport(true)} disabled={selection.length === 0 || isDeleting}
+                className="inline-flex h-7 items-center justify-center gap-1.5 rounded border border-line px-3 text-[12px] font-medium text-ink hover:bg-line/50 disabled:opacity-50">
+                <Download className="h-3.5 w-3.5" />Export selected
+              </button>
+              {canDelete && (
               <button
                 type="button"
-                onClick={() => setShowConfirm(true)}
-                disabled={selectedIds.size === 0}
+                onClick={() => { setError(null); setShowConfirm(true); }}
+                disabled={selection.length === 0 || isDeleting}
                 className="inline-flex h-7 items-center justify-center gap-1.5 rounded bg-red-50 px-3 text-[12px] font-medium text-red-600 hover:bg-red-100 disabled:opacity-50 transition-colors"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 Delete Selected
               </button>
+              )}
             </>
           ) : (
             <button
@@ -102,7 +120,9 @@ export function ScreensTable({ screens }: { screens: ScreenListRow[] }) {
               <th scope="col" className="w-10">
                 <input
                   type="checkbox"
-                  checked={screens.length > 0 && selectedIds.size === screens.length}
+                  aria-label="Select all screens on this page"
+                  disabled={isDeleting}
+                  checked={screens.length > 0 && selectedScreens.length === screens.length}
                   onChange={toggleSelectAll}
                   className="rounded border-line text-cyan-600 focus:ring-cyan-600"
                 />
@@ -119,7 +139,7 @@ export function ScreensTable({ screens }: { screens: ScreenListRow[] }) {
             
             let progressPercent = 0;
             if (screen.current_run?.stages) {
-               const completedCount = screen.current_run.stages.filter((s: any) => s.status === 'done' || s.status === 'skipped').length;
+               const completedCount = screen.current_run.stages.filter(s => s.status === 'done' || s.status === 'skipped').length;
                progressPercent = Math.min(100, Math.max(5, (completedCount / 9) * 100));
             }
 
@@ -129,6 +149,8 @@ export function ScreensTable({ screens }: { screens: ScreenListRow[] }) {
                   <td>
                     <input
                       type="checkbox"
+                      aria-label={`Select ${screen.name}`}
+                      disabled={isDeleting}
                       checked={selectedIds.has(screen.id)}
                       onChange={() => toggleSelect(screen.id)}
                       className="rounded border-line text-cyan-600 focus:ring-cyan-600"
@@ -169,14 +191,15 @@ export function ScreensTable({ screens }: { screens: ScreenListRow[] }) {
         </tbody>
       </DenseTable>
 
+      {showExport && <ScreensExportDialog screenIds={selection} onClose={() => setShowExport(false)} />}
+
       {showConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/20 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-xl border border-line bg-white p-6 shadow-xl">
-            <h2 className="text-lg font-semibold text-ink">Delete Multiple Screens</h2>
+        <dialog ref={deleteDialog} onCancel={event => { event.preventDefault(); if (!isDeleting) setShowConfirm(false); }} aria-labelledby="delete-screens-title" className="m-auto w-[min(448px,calc(100vw-32px))] rounded-xl border border-line bg-white p-6 shadow-xl backdrop:bg-black/30">
+            <h2 id="delete-screens-title" className="text-lg font-semibold text-ink">Delete selected screens</h2>
             <p className="mt-2 text-[13px] leading-relaxed text-body">
-              Are you sure you want to permanently delete <strong>{selectedIds.size} screens</strong>? This action cannot be undone. All associated files, count tables, analysis runs, and evidence records will be genuinely and permanently removed.
+              Permanently delete <strong>{selection.length} screens</strong> and their associated analysis records? This action cannot be undone.
             </p>
-            {error && <p className="mt-3 text-[12px] font-medium text-red-600">{error}</p>}
+            {error && <p role="alert" className="mt-3 text-[12px] font-medium text-red-600">{error}</p>}
             <div className="mt-6 flex justify-end gap-3">
               <button
                 type="button"
@@ -195,8 +218,7 @@ export function ScreensTable({ screens }: { screens: ScreenListRow[] }) {
                 {isDeleting ? "Deleting..." : "Yes, delete screens"}
               </button>
             </div>
-          </div>
-        </div>
+        </dialog>
       )}
     </>
   );

@@ -68,6 +68,7 @@ image = (
         # anything else. Without this, planning dies on import for every study
         # and the ingest stops silently. Pinned to engine/requirements.txt.
         "pydantic==2.13.5",
+        "fastapi==0.142.2",
     )
     .run_commands(
         # Same BAGEL2 commit as the local engine/.tools/bagel2 (v2.0 build 115).
@@ -94,7 +95,8 @@ image = (
 app = modal.App("splicr-ingest", image=image)
 refs = modal.Volume.from_name("splicr-reference-data")
 secret = modal.Secret.from_name("splicr-ingest")
-COMMON = dict(secrets=[secret], volumes={"/refs": refs})
+pool_secret = modal.Secret.from_name("splicr-postgres-pool", required_keys=["SUPABASE_DB_URL"])
+COMMON = dict(secrets=[secret, pool_secret], volumes={"/refs": refs})
 
 MAX_PROCESS_PER_SWEEP = 6
 # Plan everything the classifier calls "screen" or "maybe" (score >= 0.40). On
@@ -133,6 +135,28 @@ def process_study(accession: str) -> dict:
 def process_private_screen() -> dict:
     from splicr.private_screen import process_one
     return process_one()
+
+
+@app.function(**COMMON, cpu=0.25, memory=512, timeout=60, max_containers=3)
+@modal.fastapi_endpoint(method="POST", requires_proxy_auth=True)
+def queue_gateway(payload: dict):
+    """Authenticated acknowledgement only; a browser never reaches the engine."""
+    import os
+    from urllib.parse import urlparse
+    from fastapi.responses import JSONResponse
+    from splicr.compute_gateway import dispatch, validate_dispatch
+
+    try:
+        kind, _ = validate_dispatch(payload)
+    except (ValueError, TypeError):
+        return JSONResponse({"error": "Invalid dispatch request."}, status_code=422)
+    if kind == "health":
+        connection = urlparse(os.environ.get("SUPABASE_DB_URL", ""))
+        return {"gateway_ready": bool(connection.hostname),
+                "transaction_pooler": bool(connection.hostname and connection.hostname.endswith(".pooler.supabase.com") and connection.port == 6543),
+                "pipeline_version": os.environ.get("SPLICR_PIPELINE_VERSION", "unknown")}
+    return JSONResponse(dispatch(payload, public=lambda: sweep.spawn(),
+                                 private=lambda: process_private_screen.spawn()), status_code=202)
 
 
 @app.function(**COMMON, cpu=1.0, memory=2048, timeout=1800)

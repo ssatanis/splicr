@@ -41,6 +41,7 @@ export function Footer() {
           <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
             <span className="flex flex-col gap-0.5">
               <span>&copy; {new Date().getFullYear()} {site.name}. All rights reserved.</span>
+              <span>{site.location}</span>
             </span>
             <span className="flex gap-5">
               <Link href="/terms" className="hover:text-white">

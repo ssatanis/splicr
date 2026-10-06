@@ -101,7 +101,10 @@ export function parseRows(sheet: string, input: unknown[][], mapping?: TableMapp
         const negative = (controlColumn >= 0 && /^(true|1|yes)$/i.test(row[controlColumn] ?? "")) || NEGATIVE.test(originalId) || (gene >= 0 && NEGATIVE.test(row[gene]));
         let target = gene >= 0 ? row[gene] : null;
         if (!target && !negative) { target = originalId.match(GUIDE_GENE)?.[1] ?? (originalId === "Rosa26" ? "Rosa26" : null); inferred = Boolean(target) || inferred; }
-        if (!target && !negative) throw new Error(`${sheet}: ${guideId} needs a gene column. Add gene symbols to the library.`);
+        if (!target && !negative) {
+          if (gene >= 0) target = guideId;
+          else throw new Error(`${sheet}: ${guideId} needs a gene column. Add gene symbols to the library.`);
+        }
         guides.push({ guide_id: guideId, sequence, gene: negative ? null : target, is_control: negative });
       }
       const repeated = [...occurrences].filter(([, count]) => count > 1).map(([id]) => id);

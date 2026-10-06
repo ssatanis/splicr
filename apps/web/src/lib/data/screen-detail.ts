@@ -39,6 +39,8 @@ export interface WorkspaceRun {
   image_digest: string | null;
   settings?: { fdr_threshold?: number; [key: string]: unknown } | null;
   created_at: string;
+  started_at?: string | null;
+  finished_at?: string | null;
   error: string | null;
 }
 

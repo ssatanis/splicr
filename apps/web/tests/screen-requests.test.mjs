@@ -217,11 +217,11 @@ test("a recorded request still succeeds if the immediate sweep kick fails", asyn
   assert.match(app.adminWrites[0].update.detail, /could not start/);
 });
 
-test("a recorded request says so when Modal credentials are missing", async () => {
+test("a recorded request says so when compute gateway configuration is missing", async () => {
   const app = actions({ kickResult: { started: false, reason: "not_configured" } });
   const result = await app.requestScreenAnalysis(form({ accession: "GSE145743" }));
   assert.equal(result.ok, true);
-  assert.match(app.adminWrites[0].update.detail, /missing Modal credentials/);
+  assert.match(app.adminWrites[0].update.detail, /missing authenticated compute gateway configuration/);
 });
 
 test("a kicked request is annotated if it remains queued after the wait", async () => {

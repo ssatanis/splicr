@@ -8,6 +8,7 @@ import ts from "typescript";
 import * as React from "react";
 import * as jsxRuntime from "react/jsx-runtime";
 import { renderToStaticMarkup } from "react-dom/server";
+import { loadTs } from "./helpers/load-ts.mjs";
 
 const workspace = { isDemo: false, user: { id: "u" }, org: { id: "workspace-from-session" } };
 const compile = (file) => ts.transpileModule(fs.readFileSync(path.join(import.meta.dirname, "../src", file), "utf8"), {
@@ -124,6 +125,10 @@ function routeHarness(route, context = workspace, result = { status: "ready", ro
       PageHeader: ({ title, body }) => React.createElement("header", null, title, body),
       DenseTable: ({ children }) => React.createElement("table", null, children),
     };
+    if (name === "@/components/dashboard/auto-refresh") return { AutoRefresh: () => null };
+    if (name === "@/components/dashboard/screens-table") return loadTs("components/dashboard/screens-table.tsx", {
+      mocks: { "next/navigation": { useRouter: () => ({ refresh() {} }) }, "@/lib/data/screen-actions": { deleteScreen: async () => ({ ok: true }) } },
+    });
     if (name === "@/lib/data/screen-requests") return { listScreenRequests: async () => ({ status: "found", requests: [] }) };
     if (name === "@/lib/data/libraries") return { listLibraries: async () => ({ libraries: [], unavailable: false }) };
     if (name === "@/components/dashboard/intake/intake-workspace") return {

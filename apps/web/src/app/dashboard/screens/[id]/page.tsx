@@ -25,7 +25,6 @@ import { GeneFocusProvider } from "@/components/dashboard/evidence/gene-focus";
 import { HitFilters } from "@/components/dashboard/hit-report/filters";
 import { HitTable } from "@/components/dashboard/hit-report/table";
 import { RetryAnalysis } from "@/components/dashboard/intake/retry-analysis";
-import { DeleteScreenButton } from "@/components/dashboard/delete-screen-button";
 import {
   Card,
   FootLink,
@@ -145,6 +144,7 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
         body="Recorded results from your workspace"
         actions={
           <>
+            {run && plotComparison && <Link href={`/dashboard/discovery?screen=${screen.id}&comparison=${plotComparison.id}`} className="inline-flex h-7 items-center text-[12px] text-cyan-600 underline underline-offset-2">Plan discovery experiments</Link>}
             {screen.source_ref && <Link href={`/dashboard/experiments/${screen.source_ref}`} className="inline-flex h-7 items-center text-[12px] text-cyan-600 underline underline-offset-2">Compare experiment</Link>}
             <Link href="/dashboard/screens" className="inline-flex h-7 items-center gap-1 text-[12px] text-cyan-600 underline decoration-line-strong underline-offset-2">
               <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" /> All screens

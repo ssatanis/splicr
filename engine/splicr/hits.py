@@ -1,4 +1,3 @@
-import typing
 """
 Hit calling.
 
@@ -15,6 +14,7 @@ deep inside its own log while exiting on a missing output file.
 
 from __future__ import annotations
 
+import typing
 import math
 import statistics as st
 import subprocess

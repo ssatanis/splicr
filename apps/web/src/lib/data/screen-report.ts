@@ -48,6 +48,14 @@ export interface ReportHitRow {
   atlas_screen_count: number | null;
   atlas_hit_rate: number | null;
   hit_flags: { flag: string; severity: string; message: string }[] | null;
+  stat_rank?: number | null;
+  rra_score?: number | null;
+  chronos_effect?: number | null;
+  max_guide_share?: number | null;
+  guide_lfcs?: number[] | null;
+  chance_lower?: number | null;
+  chance_upper?: number | null;
+  reason_features?: Record<string, unknown> | null;
 }
 
 export interface ReportData {
@@ -66,7 +74,7 @@ export type ScreenReportResult =
   | { status: "unavailable" };
 
 const HIT_COLUMNS =
-  "id, comparison_id, gene_symbol, direction, lfc, p_value, fdr, bayes_factor, depleted_fdr, enriched_fdr, norm_z, drugz_fdr, mle_beta, mle_fdr, n_guides, n_good_guides, cn_corrected, chance_real, novelty, verdict, reason, model_version, atlas_hit_count, atlas_screen_count, atlas_hit_rate, hit_flags(flag, severity, message)";
+  "id, comparison_id, gene_symbol, direction, lfc, p_value, fdr, bayes_factor, depleted_fdr, enriched_fdr, norm_z, drugz_fdr, mle_beta, mle_fdr, n_guides, n_good_guides, cn_corrected, chance_real, novelty, verdict, reason, model_version, atlas_hit_count, atlas_screen_count, atlas_hit_rate, stat_rank, rra_score, chronos_effect, max_guide_share, guide_lfcs, chance_lower, chance_upper, reason_features, hit_flags(flag, severity, message)";
 
 export async function getScreenReportData(screenId: string): Promise<ScreenReportResult> {
   if (!isUuid(screenId)) return { status: "not_found" };
@@ -78,7 +86,7 @@ export async function getScreenReportData(screenId: string): Promise<ScreenRepor
     const client = await createClient();
     const screenResult = await client
       .from("screens")
-      .select("id, name, description, cell_line, modality, phenotype, status, qc, current_run_id, taxid")
+      .select("id, name, description, cell_line, modality, phenotype, status, qc, current_run_id, taxid, source_ref")
       .eq("id", screenId)
       .eq("org_id", orgId)
       .maybeSingle();
@@ -88,7 +96,7 @@ export async function getScreenReportData(screenId: string): Promise<ScreenRepor
 
     let runQuery = client
       .from("runs")
-      .select("id, status, engine_version, image_digest, created_at, error, settings")
+      .select("id, status, engine_version, image_digest, created_at, started_at, finished_at, error, settings")
       .eq("screen_id", screenId)
       .eq("org_id", orgId);
     if (screen.current_run_id) runQuery = runQuery.eq("id", screen.current_run_id);
@@ -106,7 +114,7 @@ export async function getScreenReportData(screenId: string): Promise<ScreenRepor
       .select("id, name, kind, is_primary")
       .eq("screen_id", screenId)
       .order("is_primary", { ascending: false });
-    if (comparisonsResult.error) throw comparisonsResult.error;
+    if (comparisonsResult.error || !Array.isArray(comparisonsResult.data)) throw comparisonsResult.error ?? new Error("Comparison read unavailable");
 
     const hits: ReportHitRow[] = [];
     let truncated = false;
@@ -120,12 +128,17 @@ export async function getScreenReportData(screenId: string): Promise<ScreenRepor
         .order("gene_symbol")
         .order("id")
         .range(from, from + CHUNK - 1);
-      if (chunk.error) throw chunk.error;
+      if (chunk.error || !Array.isArray(chunk.data)) throw chunk.error ?? new Error("Result read unavailable");
       const rows = (chunk.data ?? []) as unknown as ReportHitRow[];
       hits.push(...rows);
       if (rows.length < CHUNK) break;
       if (hits.length >= REPORT_ROW_CAP) {
-        truncated = true;
+        const extra = await client.from("hits").select("id")
+          .eq("screen_id", screenId).eq("run_id", run.id)
+          .order("fdr", { ascending: true, nullsFirst: false }).order("gene_symbol").order("id")
+          .range(REPORT_ROW_CAP, REPORT_ROW_CAP);
+        if (extra.error || !Array.isArray(extra.data)) throw extra.error ?? new Error("Result limit check unavailable");
+        truncated = (extra.data ?? []).length > 0;
         break;
       }
     }

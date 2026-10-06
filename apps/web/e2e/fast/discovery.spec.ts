@@ -1,0 +1,85 @@
+import fs from "node:fs";
+import path from "node:path";
+import { createHash } from "node:crypto";
+import { expect, test } from "@playwright/test";
+
+function canonical(v: unknown): string {
+  if (v === null || typeof v !== "object") return JSON.stringify(v);
+  if (Array.isArray(v)) return `[${v.map(canonical).join(",")}]`;
+  return `{${Object.entries(v).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([k, n]) => `${JSON.stringify(k)}:${canonical(n)}`).join(",")}}`;
+}
+
+test("discovery evidence → costed freeze → blinded export → scored result → Truth Loop", async ({ page }) => {
+  test.setTimeout(180_000);
+  const fixture = JSON.parse(fs.readFileSync(path.resolve("e2e/.auth", process.env.SPLICR_E2E_NAMESPACE ?? "", "fixture.json"), "utf8"));
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto(`/dashboard/validation?screen=${fixture.screenId}&gene=HIT01`);
+  const discoveryRows = page.getByRole("row").filter({ hasText: "HIT01" }).filter({ hasText: "Discovery: orthogonal_confirmation" });
+  const previousOutcomes = await discoveryRows.count();
+  await page.goto(`/dashboard/discovery?screen=${fixture.screenId}`);
+  await expect(page.getByRole("heading", { name: "Evidence snapshot", exact: true })).toBeVisible();
+  const document = JSON.parse(await page.getByLabel("Evidence JSON", { exact: true }).inputValue());
+  document.context.biological_unit = "SYNTHETIC-E2E-PATIENT";
+  document.context.culture = "organoid";
+  document.context.lineage = "synthetic";
+  document.context.medium = "fixture-medium";
+  document.context.matrix = "fixture-matrix";
+  document.context.library = "fixture-library";
+  document.context.endpoint = "viability";
+  document.context.time_hours = 72;
+  document.sources = [{ id: "fixture", citation: "Synthetic browser fixture; never biological evidence", usage: "laboratory_owned", rights_statement: "Synthetic test inputs owned by this fixture workspace." }];
+  document.nominations = ["HIT01", "HIT02", "HIT03", "HIT04", "HIT08"].map((gene) => ({ id: `N-${gene}`, gene, source_id: "fixture", assay: "orthogonal_confirmation", rationale: "Synthetic expert nomination outside the depletion cutoff." }));
+  document.drugs = [{ id: "D-HIT05", gene: "HIT05", source_id: "fixture", model_id: document.context.model_id, compound: "Synthetic compound", dose_um: 1, time_hours: 72, relative_viability: 0.2, biological_replicates: 3 }];
+  document.pairs = [{ id: "P-HIT06", gene: "HIT06", partner: "HIT07", source_id: "fixture", model_id: document.context.model_id, biological_unit: document.context.biological_unit, evidence: "independent_pair_screen", reagents_available: true }];
+  await page.getByLabel("Import evidence JSON", { exact: true }).setInputFiles({ name: "synthetic-evidence.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(document)) });
+  await page.getByRole("button", { name: "Save evidence snapshot", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Save evidence snapshot", exact: true })).toBeDisabled();
+  await expect(page.getByText("Genetic", { exact: true })).toHaveCount(0);
+  const name = `Discovery E2E ${Date.now()}`;
+  await page.getByLabel("Batch name", { exact: true }).fill(name);
+  await page.getByLabel("Selection budget", { exact: true }).fill("4");
+  await page.getByLabel("Laboratory effect threshold", { exact: true }).fill("0.5");
+  for (const gene of ["HIT03", "HIT04"]) await page.getByRole("checkbox", { name: new RegExp(`^Investigator chooses ${gene}\\|`) }).check();
+  await page.getByRole("checkbox", { name: /^Missed sample HIT08\|/ }).check();
+  await expect(page.getByText(/Union plus missed sample: 7 experiments/)).toBeVisible();
+  await page.getByRole("button", { name: "Freeze worklist", exact: true }).click();
+  await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
+  await expect(page.getByText(/SHA-256:/)).toBeVisible();
+  const [blindDownload] = await Promise.all([page.waitForEvent("download"), page.getByRole("link", { name: "Download blinded bench worksheet" }).click()]);
+  const blindPath = await blindDownload.path();
+  const blind = fs.readFileSync(blindPath!, "utf8");
+  expect(blind).toContain('"blind_id"'); expect(blind).not.toMatch(/wanted_by|investigator|priority|splicr|Explicit laboratory nomination/);
+  const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("link", { name: "Download full evidence receipt" }).click()]);
+  const exported = JSON.parse(fs.readFileSync((await download.path())!, "utf8"));
+  expect(createHash("sha256").update(canonical(exported.receipt)).digest("hex")).toBe(exported.sha256);
+  expect(exported.receipt.plan.union_cost).toBe(7);
+  await page.getByRole("button", { name: "Record result for HIT01", exact: true }).click();
+  await page.getByLabel("Laboratory identifier", { exact: true }).fill("SYNTHETIC-E2E-LAB");
+  await page.getByLabel("Measured effect size", { exact: true }).fill("-1.5");
+  await page.getByLabel("Biological replicates", { exact: true }).fill("3");
+  await page.getByLabel("Independent perturbations", { exact: true }).fill("3");
+  await page.getByLabel("Independent perturbation", { exact: true }).selectOption("yes");
+  await page.getByLabel("Different constructs from screening library", { exact: true }).selectOption("yes");
+  for (const control of exported.receipt.endpoint.control_criteria) await page.getByLabel(`Control: ${control.replaceAll("_", " ")}`, { exact: true }).selectOption("yes");
+  await page.getByRole("button", { name: "Save measured result", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Record result for HIT01", exact: true })).toHaveCount(0);
+  await expect(page.getByText("Every prespecified criterion was met.", { exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByText("Every prespecified criterion was met.", { exact: true })).toBeVisible();
+  await page.screenshot({ path: path.resolve("../../artifacts/discovery-20261005/frozen-worklist.png"), fullPage: true });
+  await page.getByRole("link", { name: "Open Truth Loop outcomes", exact: true }).click();
+  await expect(discoveryRows).toHaveCount(previousOutcomes + 1);
+  await expect(discoveryRows.first()).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test("discovery UI retains empty and invalid context values without trapping the editor", async ({ page }) => {
+  const fixture = JSON.parse(fs.readFileSync(path.resolve("e2e/.auth", process.env.SPLICR_E2E_NAMESPACE ?? "", "fixture.json"), "utf8"));
+  await page.goto(`/dashboard/discovery?screen=${fixture.screenId}`);
+  const patient = page.getByLabel("Patient or biological unit", { exact: true });
+  await patient.fill(""); await patient.fill("UPDATED-SYNTHETIC-IDENTITY");
+  await expect(patient).toHaveValue("UPDATED-SYNTHETIC-IDENTITY");
+  await page.getByRole("button", { name: "Save evidence snapshot", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Save evidence snapshot", exact: true })).toBeDisabled();
+});

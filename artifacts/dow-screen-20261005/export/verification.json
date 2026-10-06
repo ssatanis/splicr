@@ -1,0 +1,84 @@
+{
+  "verified_at": "2026-10-06T01:03:19.356Z",
+  "source": "All three files downloaded from SplicR's authenticated bulk export",
+  "schema": "splicr.screens-export.v1",
+  "selected_columns": 37,
+  "selected_sections": [
+    "qc",
+    "guides",
+    "disagreement",
+    "provenance"
+  ],
+  "totals": {
+    "gene_rows": 2930,
+    "guide_rows": 18240,
+    "disagreement_rows": 2928,
+    "checked_cells": 1278296
+  },
+  "screens": [
+    {
+      "screen": "Essentiality ICSBCS002",
+      "screen_id": "01a10e40-6569-7a8f-a08a-64dec9542a8b",
+      "run_id": "01a10e40-6576-7f52-a49f-ef8231c0f9d9",
+      "qc": "fail",
+      "genes": 489,
+      "guides": 3040,
+      "disagreement": 488
+    },
+    {
+      "screen": "Gefitinib ICSBCS002",
+      "screen_id": "01a10e40-6581-78ad-9627-c00968561379",
+      "run_id": "01a10e40-6585-7c59-a23f-bdd94f235229",
+      "qc": "fail",
+      "genes": 488,
+      "guides": 3040,
+      "disagreement": 488
+    },
+    {
+      "screen": "Trametinib ICSBCS002",
+      "screen_id": "01a10e40-6588-7a87-8ae5-5d12158f7b8e",
+      "run_id": "01a10e40-658b-7950-b9ce-82c565116168",
+      "qc": "fail",
+      "genes": 488,
+      "guides": 3040,
+      "disagreement": 488
+    },
+    {
+      "screen": "Essentiality ICSBCS007",
+      "screen_id": "01a10e40-658e-7119-9baf-b33e772de906",
+      "run_id": "01a10e40-6591-7817-bcb1-e29dc80444fd",
+      "qc": "warn",
+      "genes": 489,
+      "guides": 3040,
+      "disagreement": 488
+    },
+    {
+      "screen": "Gefitinib ICSBCS007",
+      "screen_id": "01a10e40-6594-75d7-85d3-c990015be80d",
+      "run_id": "01a10e40-6597-755d-87d8-ada8d40e8453",
+      "qc": "warn",
+      "genes": 488,
+      "guides": 3040,
+      "disagreement": 488
+    },
+    {
+      "screen": "Trametinib ICSBCS007",
+      "screen_id": "01a10e40-659a-7177-b019-8c9213a0bdf8",
+      "run_id": "01a10e40-659d-76c0-bf98-ab72ee28c7c5",
+      "qc": "warn",
+      "genes": 488,
+      "guides": 3040,
+      "disagreement": 488
+    }
+  ],
+  "sha256": {
+    "SplicR-Dow-kinome-results.json": "f79b85f172747194aad158e91b5c0a7549aa2b1a8ace505363528411135ca84a",
+    "SplicR-Dow-kinome-results.xlsx": "5f272e0ce3bd2b1fd6a4e5a4cf23bde41923273e214d9abc27571d4914b284e7",
+    "SplicR-Dow-kinome-results-csv.zip": "86c319e9c0678c5fca415a0945f5b58788b87d501a30e36d8d0575b8a2250172"
+  },
+  "checks": [
+    "Every gene, guide, disagreement, QC and provenance cell matches across Excel, JSON and CSV",
+    "Six screen/run IDs and QC statuses agree",
+    "All 13 workbook sheets present; Arial, frozen panes and filters verified"
+  ]
+}

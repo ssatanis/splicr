@@ -16,7 +16,8 @@ import { expect, test as setup } from "@playwright/test";
 import { FIXTURE, readEnv, seed } from "./fixtures/handles";
 
 const E2E = path.resolve(process.cwd(), "e2e");
-const STATE = path.join(E2E, ".auth/researcher.json");
+const AUTH = path.join(E2E, ".auth", process.env.SPLICR_E2E_NAMESPACE ?? "");
+const STATE = path.join(AUTH, "researcher.json");
 
 setup("seed the fixture workspace and sign in", async ({ page, context }) => {
   setup.setTimeout(180_000);
@@ -24,7 +25,7 @@ setup("seed the fixture workspace and sign in", async ({ page, context }) => {
   const seeded = await seed();
   fs.mkdirSync(path.dirname(STATE), { recursive: true });
   fs.writeFileSync(
-    path.join(E2E, ".auth/fixture.json"),
+    path.join(AUTH, "fixture.json"),
     `${JSON.stringify({ orgId: seeded.orgId, screenId: seeded.screenId, runId: seeded.runId }, null, 1)}\n`,
   );
 

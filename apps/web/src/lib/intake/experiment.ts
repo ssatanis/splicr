@@ -24,7 +24,7 @@ export function suggestComparisons(tables: ExperimentTable[]): ExperimentCompari
     if (references.length && controls.length) out.push({ id: `${index}:${model}:fitness`, table: index, name: `Essentiality ${model}`, model, phenotype: "Growth", treatment: controls, control: references, drug: false, fitness: true, enabled: true });
     const groups = new Map<string, { condition: string; timepoint: string; treatment: string[] }>();
     samples.filter((sample) => sample.role === "treatment").forEach((sample) => {
-      const condition = sample.factors?.condition || sample.label.replace(/(?:^|[_ .-])(?:rep(?:licate)?|r)?[_ .-]?\d{1,2}$/i, "").replace(/^(?:D|day)[_ ]?\d+[_ .-]+/i, "");
+      const condition = sample.factors?.condition || sample.label.replace(/(?:^|[_ .-])(?:(?:rep(?:licate)?|r)[_ .-]?([0-9]{1,2}|[A-Za-z])|[_ .-]+([0-9]{1,2}|[A-Za-z]))$/i, "").replace(/^(?:D|day)[_ ]?\d+[_ .-]+/i, "");
       const timepoint = sample.factors?.timepoint ?? "", dose = sample.factors?.dose ?? "";
       const key = [condition, timepoint, dose].filter(Boolean).join(" / ");
       groups.set(key, { condition, timepoint, treatment: [...(groups.get(key)?.treatment ?? []), sample.label] });

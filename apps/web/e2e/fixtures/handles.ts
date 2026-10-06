@@ -50,7 +50,7 @@ export function readEnv(): Record<string, string> {
 
 /** What the setup project wrote about the workspace it seeded. */
 export function fixtureIds(): { orgId: string; screenId: string; runId: string } {
-  const at = path.join(WEB, "e2e/.auth/fixture.json");
+  const at = path.join(WEB, "e2e/.auth", process.env.SPLICR_E2E_NAMESPACE ?? "", "fixture.json");
   if (!fs.existsSync(at)) {
     throw new Error("the setup project did not run; there is no seeded fixture to test against");
   }

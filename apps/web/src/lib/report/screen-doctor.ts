@@ -136,7 +136,7 @@ function mappingFinding(evidence: QcEvidence): Finding | null {
   const typical = median(others);
   return {
     id: "mapping",
-    level: failing.length > 0 ? "warn" : "warn",
+    level: failing.length > 0 ? "fail" : "warn",
     title: `${list(affected.map((s) => s.label))} ${affected.length === 1 ? "has" : "have"} a low mapping rate`,
     detail:
       "Reads that do not match a guide are not counted, so this sample's effective depth is lower than its "
@@ -207,7 +207,7 @@ function separationFinding(evidence: QcEvidence): Finding | null {
   const contrast = evidence.nnmdContrast ? ` on ${evidence.nnmdContrast}` : "";
   return {
     id: "separation",
-    level: passes ? "ok" : "warn",
+    level: passes ? "ok" : "fail",
     title: passes
       ? "Essential genes separate from non-essential ones"
       : "Essential genes do not separate from non-essential ones",
@@ -228,7 +228,7 @@ function replicateFinding(evidence: QcEvidence): Finding | null {
   const weak = rated.filter((pair) => (pair.r as number) < QC.replicateRMin.value);
   return {
     id: "replicates",
-    level: weak.length > 0 ? "warn" : "ok",
+    level: weak.length > 0 ? "fail" : "ok",
     title: weak.length > 0 ? "Replicates disagree" : "Replicates agree",
     detail: weak.length > 0
       ? "Replicates of the same arm should see the same library, so a low correlation means at least one of them is not measuring the experiment."

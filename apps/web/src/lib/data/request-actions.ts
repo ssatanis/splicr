@@ -72,7 +72,7 @@ async function startIngestForRequest(
       await annotateQueuedRequest(
         requestId,
         kick.reason === "not_configured"
-          ? "Recorded, but this deployment is missing Modal credentials, so the ingest engine cannot be started from the console."
+          ? "Recorded, but this deployment is missing authenticated compute gateway configuration, so the ingest engine cannot be started from the console."
           : "Recorded. Automatic ingest start is disabled for this deployment.",
       );
       return;

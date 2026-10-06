@@ -23,7 +23,7 @@
  */
 import Link from "next/link";
 
-export function FirstRun({ orgName, contactHref }: { orgName: string; contactHref: string }) {
+export function FirstRun({ orgName }: { orgName: string; contactHref: string }) {
   return (
     <div className="flex flex-col gap-8 pb-4">
       {/* ---------- the welcome ---------- */}

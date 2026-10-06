@@ -24,14 +24,15 @@ export function guessRole(label: string): SampleRole {
   return "treatment";
 }
 
-const REPLICATE = /(?:^|[_\-. ])(?:r|rep|replicate)[_\-. ]?(\d{1,2})(?:$|[_\-. ])/i;
-const TRAILING = /(\d{1,2})$/;
+const REPLICATE = /(?:^|[_\-. ])(?:r|rep|replicate)[_\-. ]?(\d{1,2}|[a-z])(?:$|[_\-. ])/i;
+const TRAILING = /(?:[_\-. ])(\d{1,2}|[a-z])$/i;
 
 export function guessReplicate(label: string): number {
+  const parse = (val: string) => /^\d+$/.test(val) ? Number(val) : val.toUpperCase().charCodeAt(0) - 64;
   const named = label.match(REPLICATE);
-  if (named) return Math.max(1, Number(named[1]));
+  if (named) return Math.max(1, parse(named[1]));
   const trailing = label.match(TRAILING);
-  if (trailing) return Math.max(1, Number(trailing[1]));
+  if (trailing) return Math.max(1, parse(trailing[1]));
   return 1;
 }
 
