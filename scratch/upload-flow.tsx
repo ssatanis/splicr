@@ -170,7 +170,6 @@ export function UploadFlow({ libraries, defaults, librarySlugToId, initialDraft 
 
   const [items, setItems] = useState<UploadItem[]>(initialDraft?.files ?? []);
   const [stage, setStage] = useState<Stage>("drop");
-  const [wizardStep, setWizardStep] = useState(1);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [starting, setStarting] = useState(false);
@@ -474,8 +473,7 @@ export function UploadFlow({ libraries, defaults, librarySlugToId, initialDraft 
       const file = result.files.find((row) => row.fileId === item.fileId);
       return file ? { ...item, kind: file.kind } : item;
     }));
-    const nextSourceTables = result.files.flatMap((file) => file.shape?.kind === "tables" ? file.shape.tables.map((table) => ({ fileId: file.fileId, name: file.name, table })) : []);
-    setSourceTables(nextSourceTables);
+    setSourceTables(result.files.flatMap((file) => file.shape?.kind === "tables" ? file.shape.tables.map((table) => ({ fileId: file.fileId, name: file.name, table })) : []));
     const unreadable = result.files.filter((file) => file.error !== null);
     if (unreadable.length > 0) {
       setItems((current) =>
@@ -501,30 +499,25 @@ export function UploadFlow({ libraries, defaults, librarySlugToId, initialDraft 
     if (importedTables.length) {
       for (const file of result.files) if (file.shape?.kind === "counts" && file.kind !== "library") experimentTables.push({ fileId: file.fileId, name: file.name, sheet: "Table", model: cellLine || file.name.replace(/\.[^.]+$/, ""), samples: tableSamples(file.shape.sample_columns), rows: file.shape.rows_seen, preview: file.shape.preview, warnings: [] });
     }
-    
-    let nextAliases: { source: string; target: string; }[] = [];
-    let autoImportedOk = false;
-    if (importedTables.length === 1) {
+    if (importedTables.length === 1 && !libraryId) {
       const upload = importedTables[0];
       const res = await importCustomLibrary({ screenId: context.screenId, fileId: upload.fileId, sheet: upload.sheet, sources: upload.sources, name: upload.name.replace(/\.[^.]+$/, ""), options: { modality: "knockout", organism_taxid: 9606, cas: "Cas9" } });
       if (res.ok) {
-        autoImportedOk = true;
         setCustomLibraries((current) => [...current.filter((library) => library.id !== res.libraryId), { id: res.libraryId, name: res.name, n_guides: res.nGuides }]);
         setLibraryId(res.libraryId);
         setSettings((current) => ({ ...current, modality: "knockout", organism_taxid: 9606 }));
         setModality("knockout");
-        nextAliases = res.aliases;
         setAliases(res.aliases);
         setAliasesConfirmed(res.aliases.length === 0);
         setNotice(`Library auto-imported: ${res.nGuides.toLocaleString()} guides, ${res.nGenes} target labels, ${res.nControls} negative controls.`);
       }
     }
-    const finalLibraryUploads = autoImportedOk ? [] : importedTables;
-    setLibraryUploads(finalLibraryUploads);
+    setLibraryUploads(importedTables);
     if (experimentTables.length) {
       setTables(experimentTables);
+      setLibraryUploads(importedTables);
       setComparisons(suggestComparisons(experimentTables));
-      setWizardStep(nextSourceTables.length > 0 || nextAliases.length > 0 ? 2 : 3);
+      setStage("experiment");
       return;
     }
 
@@ -551,7 +544,7 @@ export function UploadFlow({ libraries, defaults, librarySlugToId, initialDraft 
       })),
     );
     const goodMatch = result.libraries.length > 0 && (result.libraries[0].match_rate >= 0.95 || result.libraries[0].coverage >= 0.95);
-    const nextLibraryId = goodMatch ? result.libraries[0].library_id : null;
+    const nextLibraryId = goodMatch ? result.libraries[0].library_id : libraryId;
     if (nextLibraryId !== libraryId) setLibraryId(nextLibraryId);
 
     const nextDesign = { name, cell_line: cellLine, phenotype, modality, library_id: nextLibraryId, samples: derived };
@@ -570,9 +563,9 @@ export function UploadFlow({ libraries, defaults, librarySlugToId, initialDraft 
     const inferredProblems = checkDesign(nextDesign, doneFiles);
     if (inferredProblems.length > 0 || importedTables.length > 0) {
       if (inferredProblems.length) setNotice(`Needs your input: ${inferredProblems[0].message}`);
-      setWizardStep(2);
+      setStage("design");
     } else {
-      setWizardStep(2);
+      setStage("confirm");
     }
   }, [cellLine, items, libraryId, modality, name, phenotype]);
 
@@ -655,8 +648,8 @@ export function UploadFlow({ libraries, defaults, librarySlugToId, initialDraft 
 
   const interpretations = <details className="rounded-sm border border-stone-200 bg-white p-3"><summary className="cursor-pointer text-[12px] font-medium text-ink">File interpretations and sample sheets</summary>{sourceTables.map(({ fileId, name, table }) => <div key={`${fileId}:${table.sheet}`}><TableMappingEditor name={name} table={table} disabled={starting || busy} onApply={async (mapping) => { if (!draft.current) return; setBusy(true); const result = await setFileTableMapping(draft.current.screenId, fileId, table.sheet, mapping); setBusy(false); if (!result.ok) setNotice(result.error); else await review(); }}/>{table.kind === "metadata" && <button type="button" disabled={starting || busy || !tables.length} className="mt-2 rounded border border-stone-200 px-3 py-1.5 text-[12px] text-ink cursor-pointer disabled:cursor-not-allowed disabled:opacity-50" onClick={() => { try { const next = applySampleMetadata(tables, table.records ?? [], table.mapping?.sample_column); setTables(next); setComparisons(suggestComparisons(next)); setNotice(`Applied ${table.rows_seen} sample metadata rows. Review the suggested comparisons.`); } catch (error) { setNotice(error instanceof Error ? error.message : "Sample metadata could not be matched."); } }}>Apply sample sheet {table.sheet}</button>}</div>)}</details>;
   if (stage === "plan") return <div className="space-y-4"><PhaseRail stage={stage}/><section className="rounded-sm border border-stone-200 bg-white p-6"><h3 className="text-sm font-medium text-ink">Confirm analysis plan</h3><p className="mt-2 text-[12px] text-ink">{name || "Your screen"}: {contrastName({ name, cell_line: cellLine, phenotype, modality, library_id: libraryId, samples })}</p><dl className="mt-3 grid gap-3 text-[12px] sm:grid-cols-2"><div><dt className="text-muted">Methods</dt><dd>{settings.hit_callers.map((caller) => HIT_CALLER_LABEL[caller]).join(", ")}</dd></div><div><dt className="text-muted">Normalization and FDR</dt><dd>{settings.normalization}, {settings.fdr_threshold}</dd></div><div><dt className="text-muted">Included samples</dt><dd>{samples.filter((sample) => sample.included !== false).length}</dd></div><div><dt className="text-muted">Library</dt><dd>{[...libraries, ...customLibraries].find((library) => library.id === libraryId)?.name}</dd></div></dl><label className="mt-4 flex items-center gap-2 text-[12px] text-ink"><input aria-label="Confirm reviewed analysis plan" type="checkbox" checked={planConfirmed} onChange={(event) => setPlanConfirmed(event.target.checked)} disabled={starting}/>I reviewed the inputs, sample mapping and analysis plan</label><div className="mt-4 flex gap-2"><button type="button" onClick={() => void start()} disabled={starting || !planConfirmed} className="h-9 rounded-md bg-ink px-4 text-[12px] text-white disabled:bg-mist disabled:text-muted">{starting ? "Working..." : "Run analysis"}</button><button type="button" disabled={starting} onClick={() => { setStage("design"); setPlanConfirmed(false); }} className="rounded-md border border-stone-200 px-3 text-[12px] text-ink">Edit plan</button></div>{notice && <p role="alert" className="mt-3 text-[12px] text-orange-700">{notice}</p>}</section></div>;
-  
-  // -------------------------------------------------------------------------
+  if (stage === "experiment") return <div className="space-y-4"><PhaseRail stage={stage}/><DropZone compact onFiles={(files) => void onFiles(files)} disabled={busy || starting}/><FileList items={items} onRemove={(key) => void onRemove(key)} onRetry={(key) => void retryUpload(key)} busy={busy || starting}/>{interpretations}<FileInspection files={reviewedFiles}/>{notice && <p role="status" className="rounded-sm border border-stone-200 p-3 text-[12px] text-body">{notice}</p>}{aliases.length > 0 && <section className="rounded-sm border border-orange-200 bg-white p-6"><h3 className="text-sm font-medium text-ink">Confirm guide ID mapping</h3><p className="mt-1 text-[12px] text-muted">These count IDs do not exactly match the library. Review the proposed matches before running.</p>{aliases.map((alias, index) => <label key={alias.source} className="mt-2 flex items-center gap-3 text-[12px] text-ink"><span className="min-w-32">{alias.source}</span><input aria-label={`Map ${alias.source}`} value={alias.target} onChange={(event) => { setAliases((current) => current.map((row, i) => i === index ? { ...row, target: event.target.value } : row)); setAliasesConfirmed(false); }} className="h-8 min-w-0 flex-1 rounded border border-stone-200 px-2"/></label>)}<button type="button" disabled={starting || aliases.some((alias) => !alias.target)} onClick={() => setAliasesConfirmed(true)} className="mt-3 rounded-md border border-stone-200 px-3 py-1.5 text-[12px] text-ink">{aliasesConfirmed ? "Mapping confirmed" : "Confirm guide mapping"}</button></section>}<ExperimentReview mappingReady={aliasesConfirmed} tables={tables} onTables={setTables} comparisons={comparisons} onChange={setComparisons} libraryUploads={libraryUploads} libraries={[...libraries, ...customLibraries]} libraryId={libraryId} onLibrary={setLibraryId} onImport={importLibrary} onFiles={onFiles} settings={settings} onSettings={setSettings} disabled={starting} onStart={() => void startExperiment()}/></div>;
+
   // -------------------------------------------------------------------------
 
   if (stage === "analysing" && started) {
@@ -704,79 +697,139 @@ export function UploadFlow({ libraries, defaults, librarySlugToId, initialDraft 
     );
   }
 
-    const handleNext = () => setWizardStep((prev) => {
-      if (prev === 1 && sourceTables.length === 0 && aliases.length === 0) return 3;
-      return Math.min(prev + 1, 5);
-    });
-    const handleBack = () => setWizardStep((prev) => {
-      if (prev === 3 && sourceTables.length === 0 && aliases.length === 0) return 1;
-      return Math.max(prev - 1, 1);
-    });
-    const uploading = items.some((item) => item.status === "uploading" || item.status === "recording");
+  const uploading = items.some((item) => item.status === "uploading" || item.status === "recording");
   const ready = items.length > 0 && items.every((item) => item.status === "done" || item.status === "failed");
   const landed = items.filter((item) => item.status === "done").length;
+  const design = { name, cell_line: cellLine, phenotype, modality, library_id: libraryId, samples };
+  const designFiles = items.map((item) => ({
+    id: item.fileId ?? item.key,
+    name: item.name,
+    bytes: item.bytes,
+    kind: item.kind,
+    compressed: false,
+    storage_key: "",
+    checksum_sha256: item.checksum,
+    status: item.status === "done" ? ("complete" as const) : ("pending" as const),
+  }));
+  const problems = stage === "design" || stage === "confirm" ? checkDesign(design, designFiles) : [];
+  const selectedLibrary = detected[0]?.name ?? libraries.find((library) => library.id === libraryId)?.name ?? "Not fixed yet";
 
-  const isNextDisabled = () => {
-      if (wizardStep === 1) return !ready || landed === 0 || busy || starting;
-      if (wizardStep === 2) return !aliasesConfirmed || starting;
-      if (wizardStep === 3) return !comparisons.some((row) => row.enabled) || comparisons.some((row) => row.enabled && (!row.treatment.length || !row.control.length)) || starting;
-      if (wizardStep === 4) return starting;
-      return false;
-    };
+  return (
+    <div className="space-y-4">
+      <PhaseRail stage={stage} />
 
-    return (
-      <div className="mx-auto max-w-4xl space-y-6">
-        <PhaseRail stage={stage} />
-        
-        {wizardStep === 1 && (
-          <div className="space-y-6">
-            <DropZone compact onFiles={(files) => void onFiles(files)} disabled={busy || starting}/>
-            <FileList items={items} onRemove={(key) => void onRemove(key)} onRetry={(key) => void retryUpload(key)} busy={busy || starting}/>
-            <FileInspection files={reviewedFiles}/>
-          </div>
-        )}
+      {stage === "drop" ? (
+        <DropZone onFiles={(files) => void onFiles(files)} disabled={busy} compact={items.length > 0} />
+      ) : (
+        <DropZone onFiles={(files) => void onFiles(files)} disabled={busy || starting} compact />
+      )}
 
-        {wizardStep === 2 && (
-          <div className="space-y-6">
-            {sourceTables.length > 0 ? interpretations : null}
-            {aliases.length > 0 && (
-              <section className="rounded-sm border border-orange-200 bg-white p-6">
-                <h3 className="text-sm font-medium text-ink">Confirm guide ID mapping</h3>
-                <p className="mt-1 text-[12px] text-muted">These count IDs do not exactly match the library. Review the proposed matches before running.</p>
-                {aliases.map((alias, index) => (
-                  <label key={alias.source} className="mt-2 flex items-center gap-3 text-[12px] text-ink">
-                    <span className="min-w-32">{alias.source}</span>
-                    <input aria-label={`Map ${alias.source}`} value={alias.target} onChange={(event) => { setAliases((current) => current.map((row, i) => i === index ? { ...row, target: event.target.value } : row)); setAliasesConfirmed(false); }} className="h-8 min-w-0 flex-1 rounded border border-stone-200 px-2"/>
-                  </label>
-                ))}
-                <button type="button" disabled={starting || aliases.some((alias) => !alias.target)} onClick={() => setAliasesConfirmed(true)} className="mt-3 rounded-md border border-stone-200 px-3 py-1.5 text-[12px] text-ink">{aliasesConfirmed ? "Mapping confirmed" : "Confirm guide mapping"}</button>
-              </section>
-            )}
-          </div>
-        )}
+      <FileList onRetry={(key) => void retryUpload(key)} items={items} onRemove={(key) => void onRemove(key)} busy={busy || starting} onPurpose={stage === "drop" ? async (key, kind) => {
+        const item = items.find((row) => row.key === key);
+        if (!draft.current || !item?.fileId) return;
+        setBusy(true);
+        const result = await setUploadedFilePurpose(draft.current.screenId, item.fileId, kind);
+        setBusy(false);
+        if (!result.ok) setNotice(result.error);
+        else { setItems((current) => current.map((row) => row.key === key ? { ...row, kind } : row)); kinds.current.set(key, kind); setReviewedFiles([]); setSourceTables([]); }
+      } : undefined}/>
 
-        {wizardStep >= 3 && (
-          <ExperimentReview 
-            step={wizardStep}
-            mappingReady={aliasesConfirmed} tables={tables} onTables={setTables} comparisons={comparisons} onChange={setComparisons} libraryUploads={libraryUploads} libraries={[...libraries, ...customLibraries]} libraryId={libraryId} onLibrary={setLibraryId} onImport={importLibrary} onFiles={onFiles} settings={settings} onSettings={setSettings} disabled={starting} onStart={() => void startExperiment()}
+      <FileInspection files={reviewedFiles}/>
+      {sourceTables.length > 0 && interpretations}
+      {notice && (
+        <p role="alert" className="flex items-start gap-1.5 rounded-md bg-orange-50 px-2.5 py-1.5 text-[12px] leading-snug text-orange-700">
+          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          {notice}
+        </p>
+      )}
+
+      {stage === "confirm" && samples.length > 0 && (
+        <ConfirmationCard
+          library={selectedLibrary}
+          samples={samples}
+          comparison={contrastName(design)}
+          disabled={starting}
+          onLooksRight={() => { setNotice(null); setPlanConfirmed(false); setStage("plan"); }}
+          onEdit={() => setStage("design")}
+        />
+      )}
+
+      {stage === "design" && samples.length > 0 && (
+        <>
+          <hr className="border-stone-200" />
+          <UploadedLibraryImport uploads={libraryUploads} disabled={starting} onImport={importLibrary}/>
+          <DesignForm
+            name={name}
+            cellLine={cellLine}
+            phenotype={phenotype}
+            modality={modality}
+            libraryId={libraryId}
+            samples={samples}
+            settings={settings}
+            libraries={[...libraries, ...customLibraries]}
+            detected={detected}
+            defaultsFromWorkspace
+            disabled={starting}
+            onChange={(next) => {
+              if (next.name !== undefined) setName(next.name);
+              if (next.cellLine !== undefined) setCellLine(next.cellLine);
+              if (next.phenotype !== undefined) setPhenotype(next.phenotype);
+              if (next.modality !== undefined) setModality(next.modality);
+              if (next.libraryId !== undefined) setLibraryId(next.libraryId);
+              if (next.samples !== undefined) setSamples(next.samples);
+              if (next.settings !== undefined) setSettings(next.settings);
+            }}
           />
-        )}
+        </>
+      )}
 
-        {notice && <p role="status" className="rounded-sm border border-orange-200 p-4 text-[13px] text-orange-700 bg-orange-50">{notice}</p>}
-        
-        <div className="flex items-center justify-between border-t border-stone-200 pt-6">
-          <div className="flex gap-3">
-             {wizardStep > 1 && (
-               <button type="button" onClick={handleBack} disabled={busy || starting} className="h-9 rounded-md border border-stone-200 bg-white px-4 text-[13px] font-medium text-ink hover:bg-mist-soft">Back</button>
-             )}
-             {wizardStep < 5 ? (
-               <button type="button" onClick={handleNext} disabled={isNextDisabled()} className="h-9 rounded-md bg-ink px-4 text-[13px] font-medium text-white hover:bg-ink/90 disabled:bg-mist disabled:text-muted">Next Step</button>
-             ) : null}
-          </div>
-          <button type="button" onClick={() => { window.location.href = "/dashboard"; }} disabled={busy || starting} className="h-9 rounded-md border border-stone-200 bg-white px-4 text-[13px] font-medium text-ink hover:bg-mist-soft">Save as Draft</button>
+      {/* One primary action, and it changes with the step rather than
+          multiplying into three buttons that are all nearly the same. */}
+      {items.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 border-t border-stone-200 pt-3">
+          {stage === "drop" ? (
+            <button
+              type="button"
+              onClick={() => void review()}
+              disabled={!ready || landed === 0 || busy}
+              className="inline-flex h-8 items-center gap-1.5 rounded-md bg-ink px-3 text-[12px] font-medium text-white hover:bg-ink/90 disabled:bg-mist disabled:text-muted"
+            >
+              {busy ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+              {uploading ? "Uploading" : "Describe the experiment"}
+            </button>
+          ) : stage === "design" ? (
+            <button
+              type="button"
+              onClick={() => { setNotice(null); setPlanConfirmed(false); setStage("plan"); }}
+              disabled={starting || problems.length > 0}
+              className="inline-flex h-8 items-center gap-1.5 rounded-md bg-ink px-3 text-[12px] font-medium text-white hover:bg-ink/90 disabled:bg-mist disabled:text-muted"
+            >
+              {starting && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />}
+              Start the analysis
+            </button>
+          ) : null}
+
+          {(stage === "design" || stage === "confirm") && problems.length > 0 && (
+            <span className="text-[11.5px] leading-snug text-orange-700">{problems[0].message}</span>
+          )}
+          {(stage === "design" || stage === "confirm") && problems.length === 0 && (
+            <span className="text-[11.5px] text-muted">Will test {contrastName(design)}.</span>
+          )}
+
+          <button
+            type="button"
+            onClick={() => void discard()}
+            disabled={busy || starting}
+            className="ml-auto inline-flex items-center gap-1 rounded-sm text-[11.5px] text-muted outline-none hover:text-ink focus-visible:ring-2 focus-visible:ring-cyan-500 disabled:opacity-50"
+          >
+            <Trash2 className="h-3 w-3" aria-hidden="true" /> Discard
+          </button>
         </div>
-      </div>
-    );
-
-
+      )}
+    </div>
+  );
 }
