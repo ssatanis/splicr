@@ -198,8 +198,8 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
             nothing about whether the experiment has hits.
           </p>
         </Card>
-      ) : screen.status !== "complete" && screen.status !== "failed" ? (
-        <LiveProgress runId={run.id} screenName={screen.name} initialStages={stages} />
+      ) : run.status === "queued" || run.status === "running" ? (
+        <LiveProgress key={run.id} runId={run.id} screenId={screen.id} screenName={screen.name} initialStatus={run.status} initialQc={screen.qc} initialStages={stages} />
       ) : (
         <>
           <Panel

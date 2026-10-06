@@ -11,7 +11,20 @@ async function dispatch(kind: "public" | "private", count: number): Promise<Inge
   const endpoint = process.env.MODAL_GATEWAY_URL?.trim();
   const key = process.env.MODAL_PROXY_TOKEN_ID?.trim();
   const secret = process.env.MODAL_PROXY_TOKEN_SECRET?.trim();
-  if (!endpoint || !key || !secret) return { started: false, reason: "not_configured" };
+  if (!endpoint || !key || !secret) {
+    // Local development uses the same authenticated Modal profile as the CLI.
+    // Production keeps using the narrowly scoped HTTP proxy credentials.
+    if (process.env.VERCEL || process.env.NODE_ENV !== "development") return { started: false, reason: "not_configured" };
+    const { ModalClient } = await import("modal");
+    const client = new ModalClient();
+    try {
+      const worker = await client.functions.fromName("splicr-ingest", kind === "private" ? "process_private_screen" : "sweep");
+      await Promise.all(Array.from({ length: kind === "private" ? count : 1 }, () => worker.spawn([])));
+      return { started: true };
+    } finally {
+      client.close();
+    }
+  }
   const url = new URL(endpoint);
   if (url.protocol !== "https:" || !url.hostname.endsWith(".modal.run") || url.username || url.password || url.search || url.hash) {
     throw new Error("The compute gateway must be an HTTPS Modal Web Function URL.");

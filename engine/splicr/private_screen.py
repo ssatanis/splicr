@@ -39,14 +39,14 @@ def _worker_name() -> str:
 
 
 def _claim(conn, owner: str) -> Job | None:
-    row = conn.execute("select * from public.claim_pipeline_job(%s)", (owner,)).fetchone()
+    row = conn.execute("select * from public.claim_pipeline_job(%s, interval '5 minutes')", (owner,)).fetchone()
     if not row:
         return None
     return Job(id=str(row[0]), run_id=str(row[1]), screen_id=str(row[2]), org_id=str(row[3]), attempts=int(row[5]))
 
 
 def _heartbeat(conn, job: Job, owner: str, progress: float | None = None) -> None:
-    conn.execute("select public.pipeline_job_heartbeat(%s::uuid, %s, %s::numeric)", (job.id, owner, progress))
+    conn.execute("select public.pipeline_job_heartbeat(%s::uuid, %s, %s::numeric, interval '5 minutes')", (job.id, owner, progress))
     conn.commit()
 
 

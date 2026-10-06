@@ -111,3 +111,31 @@ processable historical corpus is on the order of a few thousand studies, not
 8 CPUs) that is terabytes of transfer and thousands of CPU-hours: a budgeted
 backfill, not a switch to flip. The engine processes forward automatically from
 the watermark; a historical backfill is a separate, costed decision.
+
+## Private screen activity and automatic deployment
+
+The web server dispatches saved private analyses immediately through the
+proxy-authenticated `queue_gateway`. Production uses `MODAL_GATEWAY_URL`,
+`MODAL_PROXY_TOKEN_ID`, and `MODAL_PROXY_TOKEN_SECRET`. In local development,
+when those are absent, the server uses the authenticated Modal CLI profile
+through the JavaScript SDK. Tokens stay on the server.
+
+`private_queue_scheduled` checks due private jobs every minute, independent of
+web requests or open browser tabs, and starts workers up to the configured
+concurrency limit. It also recovers missed dispatches and scheduled retries.
+Each worker renews a five-minute database lease once per minute. The database
+requeues expired leases and fails jobs that exhaust their retries. Job transitions
+synchronize the run, screen, and stage activity, including input downloads.
+
+The screen page distinguishes queued work from an active worker. Realtime
+updates have a five-second polling fallback covering run state, stages, and QC;
+returning to the tab triggers an immediate refresh. A disconnected client shows
+that it is reconnecting instead of presenting stale activity as current.
+Modal's `Inactive` label is expected when a function has no current calls:
+workers scale down after completing their work.
+
+`.github/workflows/modal-deploy.yml` deploys engine changes pushed to `main`,
+then checks the deployed tools, references, and database with `doctor`.
+It uses the repository's `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET` Actions secrets.
+The deployed pipeline version includes a source-content hash, so different
+working-tree builds cannot silently share the same version label.
