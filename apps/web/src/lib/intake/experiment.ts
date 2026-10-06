@@ -23,18 +23,22 @@ export function suggestComparisons(tables: ExperimentTable[]): ExperimentCompari
     const controls = samples.filter((sample) => sample.role === "control").map((sample) => sample.label);
     if (references.length && controls.length) out.push({ id: `${index}:${model}:fitness`, table: index, name: `Essentiality ${model}`, model, phenotype: "Growth", treatment: controls, control: references, drug: false, fitness: true, enabled: true });
     const groups = new Map<string, { condition: string; timepoint: string; treatment: string[] }>();
-    samples.filter((sample) => sample.role === "treatment").forEach((sample) => {
-      const condition = sample.factors?.condition || sample.label.replace(/(?:^|[_ .-])(?:(?:rep(?:licate)?|r)[_ .-]?([0-9]{1,2}|[A-Za-z])|[_ .-]+([0-9]{1,2}|[A-Za-z]))$/i, "").replace(/^(?:D|day)[_ ]?\d+[_ .-]+/i, "");
+    samples.filter((sample) => sample.role === "treatment" && !/^empty$/i.test(sample.label)).forEach((sample) => {
+      let condition = sample.factors?.condition || sample.label.replace(/(?:^|[_ .-])(?:(?:rep(?:licate)?|r)[_ .-]?([0-9]{1,2}|[A-Za-z])|[_ .-]+([0-9]{1,2}|[A-Za-z]))$/i, "").replace(/^(?:D|day)[_ ]?\d+[_ .-]+/i, "");
       const timepoint = sample.factors?.timepoint ?? "", dose = sample.factors?.dose ?? "";
       const key = [condition, timepoint, dose].filter(Boolean).join(" / ");
       groups.set(key, { condition, timepoint, treatment: [...(groups.get(key)?.treatment ?? []), sample.label] });
     });
+    let contrastIndex = 1;
     for (const [label, { condition, timepoint, treatment }] of groups) {
       const matchingControls = samples.filter((sample) => sample.role === "control" && (!timepoint || !sample.factors?.timepoint || sample.factors.timepoint === timepoint)).map((sample) => sample.label);
       const denominator = controls.length ? matchingControls : references;
       if (!denominator.length) continue;
       const drug = controls.length > 0;
-      out.push({ id: `${index}:${model}:${label}`, table: index, name: `${label === condition && condition === "GEF" ? "Gefitinib" : label === condition && condition === "TRM" ? "Trametinib" : label} ${model}`, model, phenotype: drug ? "Drug sensitisation and resistance" : "Growth", treatment, control: denominator, drug, fitness: !drug, enabled: true });
+      let prettyName = label === condition && condition === "GEF" ? "Gefitinib" : label === condition && condition === "TRM" ? "Trametinib" : label;
+      // Strip trailing _CP0082 or similar library prefixes for clean UI
+      prettyName = prettyName.replace(/_CP0082$/, "");
+      out.push({ id: `${index}:${model}:${label}`, table: index, name: `Contrast ${contrastIndex++}: ${prettyName} Viability`, model, phenotype: drug ? "Drug sensitisation and resistance" : "Fitness endpoint", treatment, control: denominator, drug, fitness: !drug, enabled: true });
     }
     }
   });

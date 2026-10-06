@@ -303,7 +303,9 @@ export async function setFileTableMapping(screenId: string, fileId: string, shee
   const mappings = { ...data.metadata?.table_mappings, [sheet]: mapping };
   const result = await inspectStoredFile(data.storage_key, "counts", Boolean(data.metadata?.compressed), data.original_name, mappings);
   if (!result.ok) return actionFailed(result.error);
-  if (result.kind !== "tables" || !result.tables.some((table) => table.sheet === sheet && table.mapping)) return actionFailed("The selected worksheet is missing.");
+  const table = result.kind === "tables" ? result.tables.find((table) => table.sheet === sheet) : null;
+  if (!table) return actionFailed("The selected worksheet is missing.");
+  if (!table.mapping) return actionFailed(table.warnings.join(" ") || "The columns do not exist or are invalid.");
   const updated = await supabase.from("screen_files").update({ metadata: { ...data.metadata, table_mappings: mappings } }).eq("screen_id", screenId).eq("id", fileId);
   return updated.error ? actionFailed("The file interpretation could not be saved.") : { ok: true };
 }

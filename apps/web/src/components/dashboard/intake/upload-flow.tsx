@@ -79,10 +79,10 @@ interface Props {
 
 type Stage = "drop" | "confirm" | "design" | "experiment" | "plan" | "analysing";
 
-const PHASES = ["Upload files", "Review experiment", "Analyse", "Results"] as const;
+const PHASES = ["Data Ingestion", "Library & Mapping", "Experimental Design", "Pipeline & Launch"] as const;
 
 function PhaseRail({ stage }: { stage: Stage }) {
-  const active = stage === "drop" ? 0 : stage === "confirm" || stage === "design" || stage === "experiment" || stage === "plan" ? 1 : 2;
+  const active = stage === "drop" ? 0 : stage === "confirm" || stage === "design" ? 1 : stage === "experiment" ? 2 : 3;
   return (
     <ol aria-label="Analysis progress" className="grid grid-cols-4 gap-2 py-1">
       {PHASES.map((phase, index) => {
@@ -543,7 +543,7 @@ export function UploadFlow({ libraries, defaults, librarySlugToId, initialDraft 
         match_rate: candidate.match_rate,
       })),
     );
-    const goodMatch = result.libraries.length > 0 && (result.libraries[0].match_rate >= 0.25 || result.libraries[0].coverage >= 0.25);
+    const goodMatch = result.libraries.length > 0 && (result.libraries[0].match_rate >= 0.95 || result.libraries[0].coverage >= 0.95);
     const nextLibraryId = goodMatch ? result.libraries[0].library_id : libraryId;
     if (nextLibraryId !== libraryId) setLibraryId(nextLibraryId);
 
