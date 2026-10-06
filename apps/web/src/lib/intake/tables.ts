@@ -22,7 +22,7 @@ export interface ParsedTable {
 }
 
 const DNA = /^[ACGT]{17,30}$/i;
-const GENE = /^(gene|gene[_ ]?symbol|symbol|target[_ ]?gene|target)$/i;
+const GENE = /^(gene|gene[_ ]?symbol|symbol|target[_ ]?gene|target|target[_ ]?gene[_ ]?symbol)$/i;
 const ID = /^(id|guide[_ ]?id|sgrna[_ ]?id|name|guide|grna|sgid|sgrna)$/i;
 const NEGATIVE = /^(neg\d+|ntc\d*|non[-_ ]?targeting.*|negative[-_ ]?control.*|control)$/i;
 const ANNOTATION = /^(chr|chromosome|start|end|position|cut[_ ]?pos|strand|score|efficacy|gc|length|index|is[_ ]?control|control[_ ]?type)$/i;

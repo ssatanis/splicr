@@ -474,7 +474,7 @@ export function UploadFlow({ libraries, defaults, librarySlugToId, initialDraft 
       const file = result.files.find((row) => row.fileId === item.fileId);
       return file ? { ...item, kind: file.kind } : item;
     }));
-    const nextSourceTables = result.files.flatMap((file) => file.shape?.kind === "tables" ? file.shape.tables.map((table) => ({ fileId: file.fileId, name: file.name, table })) : []);
+    const nextSourceTables = result.files.flatMap((file) => file.shape?.kind === "tables" ? file.shape.tables.filter(table => table.kind === "context" || table.warnings.length > 0).map((table) => ({ fileId: file.fileId, name: file.name, table })) : []);
     setSourceTables(nextSourceTables);
     const unreadable = result.files.filter((file) => file.error !== null);
     if (unreadable.length > 0) {
@@ -547,7 +547,6 @@ export function UploadFlow({ libraries, defaults, librarySlugToId, initialDraft 
     if (experimentTables.length) {
       setTables(experimentTables);
       setComparisons(suggestComparisons(experimentTables));
-      setWizardStep(nextSourceTables.length > 0 || nextAliases.length > 0 ? 2 : 3);
       return;
     }
 
@@ -573,7 +572,7 @@ export function UploadFlow({ libraries, defaults, librarySlugToId, initialDraft 
     if (inferredProblems.length > 0 || importedTables.length > 0) {
       if (inferredProblems.length) setNotice(`Needs your input: ${inferredProblems[0].message}`);
     }
-    setWizardStep(nextSourceTables.length > 0 || nextAliases.length > 0 ? 2 : 3);
+    
   }, [cellLine, items, libraryId, modality, name, phenotype]);
 
   const start = useCallback(async () => {
@@ -704,14 +703,8 @@ export function UploadFlow({ libraries, defaults, librarySlugToId, initialDraft 
     );
   }
 
-    const handleNext = () => setWizardStep((prev) => {
-      if (prev === 1 && sourceTables.length === 0 && aliases.length === 0) return 3;
-      return Math.min(prev + 1, 5);
-    });
-    const handleBack = () => setWizardStep((prev) => {
-      if (prev === 3 && sourceTables.length === 0 && aliases.length === 0) return 1;
-      return Math.max(prev - 1, 1);
-    });
+    const handleNext = () => setWizardStep((prev) => Math.min(prev + 1, 4));
+    const handleBack = () => setWizardStep((prev) => Math.max(prev - 1, 1));
     const uploading = items.some((item) => item.status === "uploading" || item.status === "recording");
   const ready = items.length > 0 && items.every((item) => item.status === "done" || item.status === "failed");
   const landed = items.filter((item) => item.status === "done").length;
@@ -725,7 +718,7 @@ export function UploadFlow({ libraries, defaults, librarySlugToId, initialDraft 
     };
 
     return (
-      <div className="mx-auto max-w-4xl space-y-6">
+      <div className="mx-auto max-w-4xl space-y-6 bg-[#FAF9F6] p-6">
         <PhaseRail stage={stage} />
         
         {wizardStep === 1 && (
@@ -738,6 +731,48 @@ export function UploadFlow({ libraries, defaults, librarySlugToId, initialDraft 
 
         {wizardStep === 2 && (
           <div className="space-y-6">
+            <section className="rounded-sm border border-stone-200 bg-white p-6">
+              <h3 className="text-sm font-medium text-ink">Guide library</h3>
+              
+              
+              {customLibraries.length > 0 ? (
+                <div className="mt-3 rounded-sm border border-emerald-100 bg-emerald-50/50 p-4">
+                  <p className="flex items-center gap-2 text-[13px] font-medium text-emerald-700">
+                    <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                    Library auto-detected from uploaded map: {customLibraries[0].name} ({customLibraries[0].n_guides.toLocaleString()} guides).
+                  </p>
+                </div>
+              ) : detected.length > 0 && (detected[0].match_rate >= 0.95 || detected[0].coverage >= 0.95) ? (
+
+                <div className="mt-3 rounded-sm border border-cyan-100 bg-cyan-50/50 p-4">
+                  <p className="flex items-center gap-2 text-[13px] font-medium text-cyan-700">
+                    <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                    Library auto-detected
+                  </p>
+                  <p className="mt-1 text-[12px] text-cyan-800">
+                    Your guides matched <span className="font-medium">{detected[0].name}</span>:{" "}
+                    {Math.round(detected[0].coverage * 100)}% of that library is present,
+                    and {Math.round(detected[0].match_rate * 100)}% of the guides checked
+                    are in it.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="mt-3 flex items-center gap-2">
+                    <select aria-label="Experiment guide library" value={libraryId ?? ""} disabled={starting || busy} onChange={(event) => setLibraryId(event.target.value || null)} className="h-8 flex-1 rounded border border-stone-200 bg-white px-2 text-[12px] text-ink outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500">
+                      <option value="">Choose a library or import your own</option>
+                      {[...libraries, ...customLibraries].map((library) => <option key={library.id} value={library.id} disabled={library.n_guides < 1}>{library.name}, {library.n_guides.toLocaleString()} guides</option>)}
+                    </select>
+                    <label className="flex h-8 cursor-pointer items-center justify-center rounded-md border border-stone-200 bg-mist-soft px-3 text-[12px] font-medium text-ink hover:bg-mist">
+                      Import...
+                      <input type="file" className="hidden" accept=".csv,.tsv,.xlsx" onChange={(e) => { if (e.target.files?.length) onFiles(Array.from(e.target.files)); }} disabled={starting || busy} />
+                    </label>
+                  </div>
+                  {libraryUploads.length > 0 && <UploadedLibraryImport uploads={libraryUploads} disabled={starting || busy} onImport={importLibrary}/>}
+                </>
+              )}
+            </section>
+            
             {sourceTables.length > 0 ? interpretations : null}
             {aliases.length > 0 && (
               <section className="rounded-sm border border-orange-200 bg-white p-6">

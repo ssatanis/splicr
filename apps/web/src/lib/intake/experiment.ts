@@ -18,28 +18,32 @@ export function suggestComparisons(tables: ExperimentTable[]): ExperimentCompari
   tables.forEach((table, index) => {
     const models = [...new Set(table.samples.map((sample) => sample.factors?.model || table.model))];
     for (const model of models) {
-    const samples = table.samples.filter((sample) => (sample.factors?.model || table.model) === model);
-    const references = samples.filter((sample) => sample.role === "reference" || sample.role === "plasmid").map((sample) => sample.label);
-    const controls = samples.filter((sample) => sample.role === "control").map((sample) => sample.label);
-    if (references.length && controls.length) out.push({ id: `${index}:${model}:fitness`, table: index, name: `Essentiality ${model}`, model, phenotype: "Growth", treatment: controls, control: references, drug: false, fitness: true, enabled: true });
-    const groups = new Map<string, { condition: string; timepoint: string; treatment: string[] }>();
-    samples.filter((sample) => sample.role === "treatment" && !/^empty$/i.test(sample.label)).forEach((sample) => {
-      let condition = sample.factors?.condition || sample.label.replace(/(?:^|[_ .-])(?:(?:rep(?:licate)?|r)[_ .-]?([0-9]{1,2}|[A-Za-z])|[_ .-]+([0-9]{1,2}|[A-Za-z]))$/i, "").replace(/^(?:D|day)[_ ]?\d+[_ .-]+/i, "");
-      const timepoint = sample.factors?.timepoint ?? "", dose = sample.factors?.dose ?? "";
-      const key = [condition, timepoint, dose].filter(Boolean).join(" / ");
-      groups.set(key, { condition, timepoint, treatment: [...(groups.get(key)?.treatment ?? []), sample.label] });
-    });
-    let contrastIndex = 1;
-    for (const [label, { condition, timepoint, treatment }] of groups) {
-      const matchingControls = samples.filter((sample) => sample.role === "control" && (!timepoint || !sample.factors?.timepoint || sample.factors.timepoint === timepoint)).map((sample) => sample.label);
-      const denominator = controls.length ? matchingControls : references;
-      if (!denominator.length) continue;
-      const drug = controls.length > 0;
-      let prettyName = label === condition && condition === "GEF" ? "Gefitinib" : label === condition && condition === "TRM" ? "Trametinib" : label;
-      // Strip trailing _CP0082 or similar library prefixes for clean UI
-      prettyName = prettyName.replace(/_CP0082$/, "");
-      out.push({ id: `${index}:${model}:${label}`, table: index, name: `Contrast ${contrastIndex++}: ${prettyName} Viability`, model, phenotype: drug ? "Drug sensitisation and resistance" : "Fitness endpoint", treatment, control: denominator, drug, fitness: !drug, enabled: true });
-    }
+      const samples = table.samples.filter((sample) => (sample.factors?.model || table.model) === model);
+      const references = samples.filter((sample) => sample.role === "reference" || sample.role === "plasmid").map((sample) => sample.label);
+      const controls = samples.filter((sample) => sample.role === "control").map((sample) => sample.label);
+      
+      const groups = new Map<string, { condition: string; timepoint: string; treatment: string[] }>();
+      samples.filter((sample) => sample.role === "treatment" && !/^empty$/i.test(sample.label)).forEach((sample) => {
+        let condition = sample.factors?.condition || sample.label;
+        // Clean up Jacquere prefixes and replicate suffixes
+        condition = condition.replace(/^(?:CP0082_)?(A375|A549).*$/i, "$1");
+        condition = condition.replace(/(?:^|[_ .-])(?:(?:rep(?:licate)?|r)[_ .-]?([0-9]{1,2}|[A-Za-z])|[_ .-]+([0-9]{1,2}|[A-Za-z]))$/i, "").replace(/^(?:D|day)[_ ]?\d+[_ .-]+/i, "");
+        
+        const timepoint = sample.factors?.timepoint ?? "", dose = sample.factors?.dose ?? "";
+        const key = [condition, timepoint, dose].filter(Boolean).join(" / ");
+        groups.set(key, { condition, timepoint, treatment: [...(groups.get(key)?.treatment ?? []), sample.label] });
+      });
+
+      let contrastIndex = 1;
+      for (const [label, { condition, timepoint, treatment }] of groups) {
+        const matchingControls = samples.filter((sample) => sample.role === "control" && (!timepoint || !sample.factors?.timepoint || sample.factors.timepoint === timepoint)).map((sample) => sample.label);
+        const denominator = controls.length ? matchingControls : references;
+        if (!denominator.length) continue;
+        const drug = controls.length > 0;
+        let prettyName = label === condition && condition === "GEF" ? "Gefitinib" : label === condition && condition === "TRM" ? "Trametinib" : label;
+        prettyName = prettyName.replace(/_CP0082$/, "");
+        out.push({ id: `${index}:${model}:${label}`, table: index, name: `${prettyName} Viability`, model, phenotype: drug ? "Drug sensitisation and resistance" : "Fitness endpoint", treatment, control: denominator, drug, fitness: !drug, enabled: true });
+      }
     }
   });
   return out;

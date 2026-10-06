@@ -27,7 +27,7 @@ export function mappedRows(input: unknown[][], mapping: TableMapping): { rows: s
     if (!cleanName) throw new Error(`Select a ${label ?? "column"}.`);
     let i = header.indexOf(cleanName);
     if (i < 0) {
-      i = header.findIndex(h => h.toLowerCase() === cleanName.toLowerCase());
+      i = header.findIndex(h => h.trim().toLowerCase() === cleanName.toLowerCase());
     }
     if (i < 0) throw new Error(`Column "${name}" is missing from the table.`);
     return i;
