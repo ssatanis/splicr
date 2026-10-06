@@ -20,10 +20,11 @@ export function mappedRows(input: unknown[][], mapping: TableMapping): { rows: s
   if (!header?.length) throw new Error("The selected header row is empty.");
   if (new Set(header.filter(Boolean)).size !== header.filter(Boolean).length) throw new Error("The selected header has duplicate column names.");
   const body = rows.slice(mapping.header_row).filter((row) => row.some(Boolean));
-  const index = (name: string | undefined, required = false) => {
+  const index = (name: string | undefined, required = false, label?: string) => {
     if (!name && !required) return -1;
-    const i = header.indexOf(name ?? "");
-    if (i < 0) throw new Error(`Column ${name || "(not selected)"} is missing.`);
+    if (!name) throw new Error(`Select a ${label ?? "column"}.`);
+    const i = header.indexOf(name);
+    if (i < 0) throw new Error(`Column "${name}" is missing from the table.`);
     return i;
   };
   if (mapping.kind === "context" || mapping.kind === "metadata") return { rows: [header, ...body], source_columns: header };
@@ -33,14 +34,21 @@ export function mappedRows(input: unknown[][], mapping: TableMapping): { rows: s
     if (names.some((name) => !name) || new Set(names).size !== names.length) throw new Error("Transposed rows need unique sample labels in the first column.");
     return { rows: [["guide_id", ...names], ...header.slice(1).map((guide, i) => [guide, ...body.map((row) => row[i + 1] ?? "")])], source_columns: header };
   }
-  const guide = index(mapping.guide_column, true), gene = index(mapping.gene_column), sequence = index(mapping.sequence_column);
+  let guide = index(mapping.guide_column, false, "Guide ID column");
+  const gene = index(mapping.gene_column, false, "Gene column");
+  const sequence = index(mapping.sequence_column, false, "Sequence column");
+
+  if (guide < 0) {
+    if (sequence >= 0) guide = sequence;
+    else throw new Error("Select a Guide ID column.");
+  }
   if (mapping.kind === "library") {
     if (sequence < 0) throw new Error("Select a guide sequence column.");
-    const control = index(mapping.control_column);
+    const control = index(mapping.control_column, false, "Negative-control flag column");
     return { rows: [["guide_id", "Gene", "Sequence", "is_control"], ...body.map((row) => [row[guide], gene < 0 ? "" : row[gene], row[sequence], String(control >= 0 && row[control]?.toLowerCase() === (mapping.control_value || "1").toLowerCase())])], source_columns: header };
   }
   if (mapping.layout === "long") {
-    const sample = index(mapping.sample_column, true), count = index(mapping.count_column, true);
+    const sample = index(mapping.sample_column, true, "Sample ID column"), count = index(mapping.count_column, true, "Read count column");
     const names = [...new Set(body.map((row) => row[sample]))];
     if (names.some((name) => !name)) throw new Error("Every long-format row needs a sample label.");
     const guides = new Map<string, Map<string, string>>();
