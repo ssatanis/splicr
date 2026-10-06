@@ -73,14 +73,14 @@ export default async function NewAnalysisPage({ searchParams }: { searchParams: 
   );
 
   return (
-    <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-5 pb-6">
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-5 pb-6">
       <PageHeader
         title="New analysis"
         body="Turn your experiment files into clear, reproducible evidence."
       />
 
-      <div className="grid grid-cols-12 content-start gap-4">
-        <Panel title="Start an analysis" span={8} bodyClassName="space-y-5 !p-5 sm:!p-6">
+      <div className="grid grid-cols-1 content-start gap-4">
+        <Panel title="Start an analysis" span={12} bodyClassName="space-y-5 !p-5 sm:!p-6">
           {canRun ? (
             <IntakeWorkspace
               own={
@@ -132,47 +132,6 @@ export default async function NewAnalysisPage({ searchParams }: { searchParams: 
             </p>
           )}
         </Panel>
-
-        <div className="col-span-12 flex flex-col gap-4 md:col-span-6 lg:col-span-4">
-          {drafts.length > 0 && <details className="rounded-xl border border-line bg-white p-4"><summary className="cursor-pointer text-[12.5px] font-medium text-ink">Continue a draft</summary><ul className="mt-3 space-y-2">{drafts.map((draft) => <li key={draft.id}><Link href={`/dashboard/new?draft=${draft.id}`} className="text-[12.5px] text-cyan-600 underline underline-offset-2">{draft.name}</Link></li>)}</ul></details>}
-          <Card title="A few things to bring" className="!rounded-xl !p-5">
-            <p className="mb-4 text-[12.5px] leading-relaxed text-muted">Attach your experiment together. Review the detected samples and design before anything runs.</p>
-            <ul className="space-y-2 text-[12.5px] leading-snug text-body">
-              <li>
-                <span className="font-medium text-ink">A count table, or FASTQ.</span> Guide-level counts
-                with one numeric column per sample, or the raw reads to count from.
-              </li>
-              <li>
-                <span className="font-medium text-ink">Two arms to compare.</span> At least one control or
-                start-of-screen sample, and at least one treated sample.
-              </li>
-              <li>
-                <span className="font-medium text-ink">A pooled library.</span> SplicR identifies it from
-                the guide sequences. Pin one yourself if the match is not what you expected.
-              </li>
-            </ul>
-          </Card>
-
-          <Card title="Made for your workspace" className="!rounded-xl !p-5">
-            <p className="text-[12.5px] leading-snug text-body">
-              Your own screen stays private to this workspace and appears under{" "}
-              <Link
-                href="/dashboard/screens"
-                className="text-cyan-600 underline decoration-line-strong underline-offset-2"
-              >
-                Screens
-              </Link>
-              . A reanalysed public study becomes shared evidence in the Atlas, where anyone using SplicR
-              can see it.
-            </p>
-            <p className="mt-3 border-t border-line pt-3 text-[12px] leading-relaxed text-muted">All file types can be attached. Tables and reads are checked for analysis; readable documents are previewed. Files requiring OCR or a dedicated parser are flagged.</p>
-            <p className="mt-2 text-[12.5px] leading-snug text-muted">
-              Uploaded reads are kept for{" "}
-              <span className="num">{settings.retention.raw_reads_days}</span> days, then removed. Counts
-              and results are kept.
-            </p>
-          </Card>
-        </div>
       </div>
     </div>
   );

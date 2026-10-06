@@ -251,7 +251,7 @@ export function DesignForm({
           </Field>
           {top && (top.match_rate >= 0.95 || top.coverage >= 0.95) ? (
             <p className="mt-1.5 flex items-start gap-1.5 text-[11.5px] leading-snug text-cyan-700">
-              <Info className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
+              
               <span>
                 Your guides matched <span className="font-medium">{top.name}</span>:{" "}
                 <span className="num">{Math.round(top.coverage * 100)}%</span> of that library is present,
@@ -362,7 +362,7 @@ export function DesignForm({
               <span>
                 Correct for copy number
                 <span className="mt-0.5 flex items-start gap-1 text-[11px] leading-snug text-muted">
-                  <Info className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
+                  
                   Requires a matched copy-number profile. Not available for this upload workflow.
                 </span>
               </span>

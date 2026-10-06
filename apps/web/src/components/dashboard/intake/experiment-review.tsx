@@ -12,23 +12,26 @@ import { MODEL_TYPES, type ModelType } from "@/lib/validation/model";
 export interface LibraryUpload { sources?: { fileId: string; sheet: string }[]; fileId: string; name: string; sheet: string; rows: number; preview: string[][]; warnings: string[] }
 const FIELD = "h-8 rounded-md border border-stone-200 bg-white px-2 text-[12px] text-ink outline-none focus:border-cyan-500";
 
-export function ExperimentReview({ tables, onTables, comparisons, onChange, libraryUploads, libraries, libraryId, onLibrary, onImport, onFiles, settings, onSettings, disabled, mappingReady, onStart }: {
+export function ExperimentReview({ step,  tables, onTables, comparisons, onChange, libraryUploads, libraries, libraryId, onLibrary, onImport, onFiles, settings, onSettings, disabled, mappingReady, onStart }: {
   tables: ExperimentTable[]; onTables: (tables: ExperimentTable[]) => void; comparisons: ExperimentComparison[]; onChange: (rows: ExperimentComparison[]) => void;
   libraryUploads: LibraryUpload[]; libraries: LibraryChoice[]; libraryId: string | null; onLibrary: (id: string | null) => void;
   onImport: (upload: LibraryUpload, name: string, options: LibraryImportOptions) => Promise<void>; onFiles?: (files: File[]) => void; settings: AnalysisSettings; onSettings: (settings: AnalysisSettings) => void;
-  mappingReady: boolean; disabled: boolean; onStart: () => void;
+  step: number; mappingReady: boolean; disabled: boolean; onStart: () => void;
 }) {
-  const [plan, setPlan] = useState(false);
+  
   const [confirmed, setConfirmed] = useState(false);
   const [factor, setFactor] = useState("");
   const selected = comparisons.filter((row) => row.enabled);
   const problems = selected.flatMap((row) => settings.hit_callers.includes("mageck_mle") ? [validateMle(row.mle_design ?? defaultMle(tables[row.table].samples, row.treatment, row.control), [...row.control, ...row.treatment])].filter(Boolean) : []);
   if (settings.drugz_options) { const problem = validateDrugz(settings.drugz_options); if (problem) problems.push(problem); }
   const exportPlan = () => { const blob = new Blob([JSON.stringify({ plan_version: "guide-abundance-v2", library_id: libraryId, tables, comparisons: selected, settings }, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = "splicr-analysis-plan.json"; link.click(); URL.revokeObjectURL(url); };
-  if (plan) return <section className="rounded-sm border border-stone-200 bg-white p-6"><h3 className="text-sm font-medium text-ink">Confirm analysis plan</h3><p className="mt-1 text-[12px] text-muted">{selected.length} comparisons, {settings.normalization} normalization, FDR {settings.fdr_threshold}. Inputs and settings are saved with each run.</p><div className="mt-3 overflow-x-auto"><table className="dense-table dense-table-compact"><thead><tr><th>Comparison</th><th>Numerator / denominator</th><th>Methods</th><th>MLE coefficient</th></tr></thead><tbody>{selected.map((row) => <tr key={row.id}><td>{row.name}</td><td>{row.treatment.length} / {row.control.length}</td><td>RRA{settings.hit_callers.includes("mageck_mle") ? ", MLE" : ""}{row.drug ? ", DrugZ" : row.fitness && settings.hit_callers.includes("bagel2") ? ", BAGEL2" : ""}</td><td>{settings.hit_callers.includes("mageck_mle") ? row.mle_design?.coefficient ?? "treatment" : "None"}</td></tr>)}</tbody></table></div><label className="mt-4 flex items-start gap-2 text-[12px] text-ink"><input aria-label="Confirm reviewed analysis plan" type="checkbox" disabled={disabled} checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)}/>I reviewed the inputs, sample mapping and analysis plan</label><div className="mt-4 flex flex-wrap gap-2"><button type="button" disabled={disabled || !confirmed} onClick={onStart} className="h-9 rounded-md bg-ink px-4 text-[12px] text-white disabled:bg-mist disabled:text-muted">{disabled ? "Working..." : `Run ${selected.length} comparisons`}</button><button type="button" disabled={disabled} onClick={() => { setPlan(false); setConfirmed(false); }} className="rounded-md border border-stone-200 px-3 text-[12px] text-ink">Edit plan</button><button type="button" onClick={exportPlan} className="rounded-md border border-stone-200 px-3 text-[12px] text-ink">Export plan</button></div></section>;
+  if (step === 5) return <section className="rounded-sm border border-stone-200 bg-white p-6"><h3 className="text-sm font-medium text-ink">Confirm analysis plan</h3><p className="mt-1 text-[12px] text-muted">{selected.length} comparisons, {settings.normalization} normalization, FDR {settings.fdr_threshold}. Inputs and settings are saved with each run.</p><div className="mt-3 overflow-x-auto"><table className="dense-table dense-table-compact"><thead><tr><th>Comparison</th><th>Numerator / denominator</th><th>Methods</th><th>MLE coefficient</th></tr></thead><tbody>{selected.map((row) => <tr key={row.id}><td>{row.name}</td><td>{row.treatment.length} / {row.control.length}</td><td>RRA{settings.hit_callers.includes("mageck_mle") ? ", MLE" : ""}{row.drug ? ", DrugZ" : row.fitness && settings.hit_callers.includes("bagel2") ? ", BAGEL2" : ""}</td><td>{settings.hit_callers.includes("mageck_mle") ? row.mle_design?.coefficient ?? "treatment" : "None"}</td></tr>)}</tbody></table></div><label className="mt-4 flex items-start gap-2 text-[12px] text-ink"><input aria-label="Confirm reviewed analysis plan" type="checkbox" disabled={disabled} checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)}/>I reviewed the inputs, sample mapping and analysis plan</label><div className="mt-4 flex flex-wrap gap-2"><button type="button" disabled={disabled || !confirmed} onClick={onStart} className="h-9 rounded-md bg-ink px-4 text-[12px] text-white disabled:bg-mist disabled:text-muted">{disabled ? "Working..." : `Run ${selected.length} comparisons`}</button><button type="button" onClick={exportPlan} className="rounded-md border border-stone-200 px-3 text-[12px] text-ink">Export plan</button></div></section>;
   const patch = (id: string, next: Partial<ExperimentComparison>) => onChange(comparisons.map((row) => row.id === id ? { ...row, ...next } : row));
-  return <div className="space-y-4">
-    <section className="rounded-sm border border-stone-200 bg-white p-6">
+  return (
+  <div className="space-y-4">
+    {step === 3 && (
+      <>
+        <section className="rounded-sm border border-stone-200 bg-white p-6">
       <h3 className="text-sm font-medium text-ink">Review experiment</h3>
       <p className="mt-1 text-[12px] text-muted">{tables.length} count tables, {tables.reduce((sum, table) => sum + table.samples.length, 0)} samples. Confirm the models, replicates and comparisons.</p>
       {tables.map((table, index) => <details key={`${table.fileId}:${table.sheet}`} className="mt-3 border-t border-stone-200 pt-2">
@@ -41,7 +44,8 @@ export function ExperimentReview({ tables, onTables, comparisons, onChange, libr
       <div className="mt-3 flex flex-wrap gap-2"><input aria-label="New sample factor" placeholder="Timepoint, dose, batch..." value={factor} onChange={(event) => setFactor(event.target.value)} disabled={disabled} className={`${FIELD} w-44`}/><button type="button" className="rounded-md border border-stone-200 px-3 text-[12px] text-ink" disabled={disabled || !factor.trim()} onClick={() => { onTables(tables.map((table) => ({ ...table, samples: table.samples.map((sample) => ({ ...sample, factors: { ...sample.factors, [factor.trim()]: sample.factors?.[factor.trim()] ?? "" } })) }))); setFactor(""); }}>Add sample factor</button><button type="button" className="rounded-md border border-stone-200 px-3 text-[12px] text-ink" disabled={disabled} onClick={() => onChange(suggestComparisons(tables))}>Suggest comparisons from sample sheet</button></div>
     </section>
 
-    <section className="rounded-sm border border-stone-200 bg-white p-6">
+    
+        <section className="rounded-sm border border-stone-200 bg-white p-6">
       <h3 className="text-sm font-medium text-ink">Guide library</h3>
       <div className="mt-2 flex items-center gap-2">
         <select aria-label="Experiment guide library" value={libraryId ?? ""} disabled={disabled} onChange={(event) => onLibrary(event.target.value || null)} className={`${FIELD} flex-1`}>
@@ -73,7 +77,12 @@ export function ExperimentReview({ tables, onTables, comparisons, onChange, libr
       </details>)}
     </section>
 
-    <div className="rounded-sm border border-stone-200 bg-white p-6">
+    
+      </>
+    )}
+    {step === 4 && (
+      <>
+        <div className="rounded-sm border border-stone-200 bg-white p-6">
       <h3 className="text-sm font-medium text-ink">Pipeline settings</h3>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
       <label className="text-[12px] text-ink">Readout<select aria-label="Analysis readout" value={settings.profile ?? "pooled_abundance"} disabled={disabled} onChange={(event) => onSettings({ ...settings, profile: event.target.value as AnalysisSettings["profile"] })} className={`${FIELD} mt-1 w-full`}>{PROFILES.map((profile) => <option key={profile.id} value={profile.id} disabled={!profile.available}>{profile.label}{profile.available ? "" : ", adapter required"}</option>)}</select></label><label className="text-[12px] text-ink">Model type<select aria-label="Experiment model type" value={settings.model_type ?? "other"} disabled={disabled} onChange={(event) => onSettings({ ...settings, model_type: event.target.value as ModelType })} className={`${FIELD} mt-1 w-full`}>{MODEL_TYPES.map((type) => <option key={type} value={type}>{type.replaceAll("_", " ")}</option>)}</select></label>
@@ -88,12 +97,11 @@ export function ExperimentReview({ tables, onTables, comparisons, onChange, libr
       <p className="text-[11px] text-muted sm:col-span-2">Chronos requires pDNA batches and collection times. Copy-number correction requires matched profiles. These methods are unavailable in this intake.</p>
       </div></details>
     </div>
-    {problems.length > 0 && <p role="alert" className="text-[12px] text-orange-700">{problems[0]}</p>}
-    <div className="flex flex-wrap gap-2">
-      <button type="button" onClick={() => { setPlan(true); setConfirmed(false); }} disabled={disabled || problems.length > 0 || !mappingReady || !libraryId || !comparisons.some((row) => row.enabled) || comparisons.some((row) => row.enabled && (!row.treatment.length || !row.control.length))} className="h-9 rounded-md bg-ink px-4 text-[12px] font-medium text-white disabled:bg-mist disabled:text-muted">{disabled ? "Working..." : "Initialize Pipeline"}</button>
-      <button type="button" onClick={() => { window.location.href = "/dashboard"; }} disabled={disabled} className="h-9 rounded-md border border-stone-200 bg-white px-4 text-[12px] font-medium text-ink hover:bg-mist-soft">Save as Draft</button>
-    </div>
-  </div>;
+    
+      </>
+    )}
+  </div>
+);
 }
 
 export function comparisonSamples(table: ExperimentTable, comparison: ExperimentComparison): IntakeSample[] {

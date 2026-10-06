@@ -22,8 +22,13 @@ export function mappedRows(input: unknown[][], mapping: TableMapping): { rows: s
   const body = rows.slice(mapping.header_row).filter((row) => row.some(Boolean));
   const index = (name: string | undefined, required = false, label?: string) => {
     if (!name && !required) return -1;
-    if (!name) throw new Error(`Select a ${label ?? "column"}.`);
-    const i = header.indexOf(name);
+    const cleanName = name?.trim() ?? "";
+    if (!cleanName && !required) return -1;
+    if (!cleanName) throw new Error(`Select a ${label ?? "column"}.`);
+    let i = header.indexOf(cleanName);
+    if (i < 0) {
+      i = header.findIndex(h => h.toLowerCase() === cleanName.toLowerCase());
+    }
     if (i < 0) throw new Error(`Column "${name}" is missing from the table.`);
     return i;
   };
