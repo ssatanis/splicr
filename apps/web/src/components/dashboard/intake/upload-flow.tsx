@@ -498,8 +498,10 @@ export function UploadFlow({ libraries, defaults, librarySlugToId, initialDraft 
         if (table.kind === "library") importedTables.push({ fileId: file.fileId, name: file.name, sheet: table.sheet, rows: table.rows_seen, preview: table.preview, warnings: table.warnings });
       }
     }
-    if (importedTables.length) {
-      for (const file of result.files) if (file.shape?.kind === "counts" && file.kind !== "library") experimentTables.push({ fileId: file.fileId, name: file.name, sheet: "Table", model: cellLine || file.name.replace(/\.[^.]+$/, ""), samples: tableSamples(file.shape.sample_columns), rows: file.shape.rows_seen, preview: file.shape.preview, warnings: [] });
+    for (const file of result.files) {
+      if (file.shape?.kind === "counts" && file.kind !== "library") {
+        experimentTables.push({ fileId: file.fileId, name: file.name, sheet: "Table", model: cellLine || file.name.replace(/\.[^.]+$/, ""), samples: tableSamples(file.shape.sample_columns), rows: file.shape.rows_seen, preview: file.shape.preview, warnings: [] });
+      }
     }
     
     let nextAliases: { source: string; target: string; }[] = [];
@@ -521,27 +523,15 @@ export function UploadFlow({ libraries, defaults, librarySlugToId, initialDraft 
     }
     const finalLibraryUploads = autoImportedOk ? [] : importedTables;
     setLibraryUploads(finalLibraryUploads);
-    if (experimentTables.length) {
-      setTables(experimentTables);
-      setComparisons(suggestComparisons(experimentTables));
-      setWizardStep(nextSourceTables.length > 0 || nextAliases.length > 0 ? 2 : 3);
-      return;
-    }
-
-    const countColumns = result.files.flatMap((file) =>
-      file.shape?.kind === "counts" ? file.shape.sample_columns : [],
-    );
     const fastq = result.files
       .filter((file) => file.shape?.kind === "fastq")
       .map((file) => ({ fileId: file.fileId, name: file.name }));
-
+    const countColumns = result.files.flatMap((file) =>
+      file.shape?.kind === "counts" ? file.shape.sample_columns : [],
+    );
     const derived = deriveSamples(countColumns, fastq);
-    if (derived.length === 0) {
-      setNotice("No samples could be read from these files. A count table needs numeric sample columns.");
-      return;
-    }
-
     setSamples(derived);
+    
     setDetected(
       result.libraries.map((candidate) => ({
         library_id: candidate.library_id,
@@ -553,6 +543,18 @@ export function UploadFlow({ libraries, defaults, librarySlugToId, initialDraft 
     const goodMatch = result.libraries.length > 0 && (result.libraries[0].match_rate >= 0.95 || result.libraries[0].coverage >= 0.95);
     const nextLibraryId = goodMatch ? result.libraries[0].library_id : null;
     if (nextLibraryId !== libraryId) setLibraryId(nextLibraryId);
+
+    if (experimentTables.length) {
+      setTables(experimentTables);
+      setComparisons(suggestComparisons(experimentTables));
+      setWizardStep(nextSourceTables.length > 0 || nextAliases.length > 0 ? 2 : 3);
+      return;
+    }
+
+    if (derived.length === 0) {
+      setNotice("No samples could be read from these files. A count table needs numeric sample columns.");
+      return;
+    }
 
     const nextDesign = { name, cell_line: cellLine, phenotype, modality, library_id: nextLibraryId, samples: derived };
     const doneFiles = items
@@ -570,10 +572,8 @@ export function UploadFlow({ libraries, defaults, librarySlugToId, initialDraft 
     const inferredProblems = checkDesign(nextDesign, doneFiles);
     if (inferredProblems.length > 0 || importedTables.length > 0) {
       if (inferredProblems.length) setNotice(`Needs your input: ${inferredProblems[0].message}`);
-      setWizardStep(2);
-    } else {
-      setWizardStep(2);
     }
+    setWizardStep(nextSourceTables.length > 0 || nextAliases.length > 0 ? 2 : 3);
   }, [cellLine, items, libraryId, modality, name, phenotype]);
 
   const start = useCallback(async () => {
