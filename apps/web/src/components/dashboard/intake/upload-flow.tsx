@@ -81,8 +81,8 @@ type Stage = "drop" | "confirm" | "design" | "experiment" | "plan" | "analysing"
 
 const PHASES = ["Data Ingestion", "Library & Mapping", "Experimental Design", "Pipeline & Launch"] as const;
 
-function PhaseRail({ stage }: { stage: Stage }) {
-  const active = stage === "drop" ? 0 : stage === "confirm" || stage === "design" ? 1 : stage === "experiment" ? 2 : 3;
+function PhaseRail({ step }: { step: number }) {
+  const active = step - 1;
   return (
     <ol aria-label="Analysis progress" className="grid grid-cols-4 gap-2 py-1">
       {PHASES.map((phase, index) => {
@@ -653,7 +653,7 @@ export function UploadFlow({ libraries, defaults, librarySlugToId, initialDraft 
   };
 
   const interpretations = <details className="rounded-sm border border-stone-200 bg-white p-3"><summary className="cursor-pointer text-[12px] font-medium text-ink">File interpretations and sample sheets</summary>{sourceTables.map(({ fileId, name, table }) => <div key={`${fileId}:${table.sheet}`}><TableMappingEditor name={name} table={table} disabled={starting || busy} onApply={async (mapping) => { if (!draft.current) return; setBusy(true); const result = await setFileTableMapping(draft.current.screenId, fileId, table.sheet, mapping); setBusy(false); if (!result.ok) setNotice(result.error); else await review(); }}/>{table.kind === "metadata" && <button type="button" disabled={starting || busy || !tables.length} className="mt-2 rounded border border-stone-200 px-3 py-1.5 text-[12px] text-ink cursor-pointer disabled:cursor-not-allowed disabled:opacity-50" onClick={() => { try { const next = applySampleMetadata(tables, table.records ?? [], table.mapping?.sample_column); setTables(next); setComparisons(suggestComparisons(next)); setNotice(`Applied ${table.rows_seen} sample metadata rows. Review the suggested comparisons.`); } catch (error) { setNotice(error instanceof Error ? error.message : "Sample metadata could not be matched."); } }}>Apply sample sheet {table.sheet}</button>}</div>)}</details>;
-  if (stage === "plan") return <div className="space-y-4"><PhaseRail stage={stage}/><section className="rounded-sm border border-stone-200 bg-white p-6"><h3 className="text-sm font-medium text-ink">Confirm analysis plan</h3><p className="mt-2 text-[12px] text-ink">{name || "Your screen"}: {contrastName({ name, cell_line: cellLine, phenotype, modality, library_id: libraryId, samples })}</p><dl className="mt-3 grid gap-3 text-[12px] sm:grid-cols-2"><div><dt className="text-muted">Methods</dt><dd>{settings.hit_callers.map((caller) => HIT_CALLER_LABEL[caller]).join(", ")}</dd></div><div><dt className="text-muted">Normalization and FDR</dt><dd>{settings.normalization}, {settings.fdr_threshold}</dd></div><div><dt className="text-muted">Included samples</dt><dd>{samples.filter((sample) => sample.included !== false).length}</dd></div><div><dt className="text-muted">Library</dt><dd>{[...libraries, ...customLibraries].find((library) => library.id === libraryId)?.name}</dd></div></dl><label className="mt-4 flex items-center gap-2 text-[12px] text-ink"><input aria-label="Confirm reviewed analysis plan" type="checkbox" checked={planConfirmed} onChange={(event) => setPlanConfirmed(event.target.checked)} disabled={starting}/>I reviewed the inputs, sample mapping and analysis plan</label><div className="mt-4 flex gap-2"><button type="button" onClick={() => void start()} disabled={starting || !planConfirmed} className="h-9 rounded-md bg-ink px-4 text-[12px] text-white disabled:bg-mist disabled:text-muted">{starting ? "Working..." : "Run analysis"}</button><button type="button" disabled={starting} onClick={() => { setStage("design"); setPlanConfirmed(false); }} className="rounded-md border border-stone-200 px-3 text-[12px] text-ink">Edit plan</button></div>{notice && <p role="alert" className="mt-3 text-[12px] text-orange-700">{notice}</p>}</section></div>;
+  if (stage === "plan") return <div className="space-y-4"><PhaseRail step={4}/><section className="rounded-sm border border-stone-200 bg-white p-6"><h3 className="text-sm font-medium text-ink">Confirm analysis plan</h3><p className="mt-2 text-[12px] text-ink">{name || "Your screen"}: {contrastName({ name, cell_line: cellLine, phenotype, modality, library_id: libraryId, samples })}</p><dl className="mt-3 grid gap-3 text-[12px] sm:grid-cols-2"><div><dt className="text-muted">Methods</dt><dd>{settings.hit_callers.map((caller) => HIT_CALLER_LABEL[caller]).join(", ")}</dd></div><div><dt className="text-muted">Normalization and FDR</dt><dd>{settings.normalization}, {settings.fdr_threshold}</dd></div><div><dt className="text-muted">Included samples</dt><dd>{samples.filter((sample) => sample.included !== false).length}</dd></div><div><dt className="text-muted">Library</dt><dd>{[...libraries, ...customLibraries].find((library) => library.id === libraryId)?.name}</dd></div></dl><label className="mt-4 flex items-center gap-2 text-[12px] text-ink"><input aria-label="Confirm reviewed analysis plan" type="checkbox" checked={planConfirmed} onChange={(event) => setPlanConfirmed(event.target.checked)} disabled={starting}/>I reviewed the inputs, sample mapping and analysis plan</label><div className="mt-4 flex gap-2"><button type="button" onClick={() => void start()} disabled={starting || !planConfirmed} className="h-9 rounded-md bg-ink px-4 text-[12px] text-white disabled:bg-mist disabled:text-muted">{starting ? "Working..." : "Run analysis"}</button><button type="button" disabled={starting} onClick={() => { setStage("design"); setPlanConfirmed(false); }} className="rounded-md border border-stone-200 px-3 text-[12px] text-ink">Edit plan</button></div>{notice && <p role="alert" className="mt-3 text-[12px] text-orange-700">{notice}</p>}</section></div>;
   
   // -------------------------------------------------------------------------
   // -------------------------------------------------------------------------
@@ -661,7 +661,7 @@ export function UploadFlow({ libraries, defaults, librarySlugToId, initialDraft 
   if (stage === "analysing" && started) {
     return (
       <div className="space-y-4">
-        <PhaseRail stage={stage} />
+        <PhaseRail step={4} />
         <div className="flex flex-col items-start gap-3 rounded-sm border border-cyan-100 bg-cyan-50/50 p-5">
           <span className="flex items-center gap-2 text-[13px] font-medium text-cyan-700">
             <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
@@ -719,7 +719,7 @@ export function UploadFlow({ libraries, defaults, librarySlugToId, initialDraft 
 
     return (
       <div className="mx-auto max-w-4xl space-y-6 bg-[#FAF9F6] p-6">
-        <PhaseRail stage={stage} />
+        <PhaseRail step={wizardStep} />
         
         {wizardStep === 1 && (
           <div className="space-y-6">
