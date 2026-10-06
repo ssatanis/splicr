@@ -65,7 +65,7 @@ export function DropZone({ onFiles, disabled = false, compact = false }: {
         }}
         className={cn(
           "relative overflow-hidden rounded-2xl border border-dashed transition-colors motion-reduce:transition-none",
-          over ? "border-navy bg-navy-tint" : "border-line-strong bg-gradient-to-b from-canvas to-white",
+          over ? "border-navy bg-navy-tint" : "border-stone-200-strong bg-gradient-to-b from-canvas to-white",
           disabled && "opacity-60",
         )}
       >
@@ -77,8 +77,8 @@ export function DropZone({ onFiles, disabled = false, compact = false }: {
             if (files.length) onFiles(files);
           }}
         />
-        <div className={cn("flex items-center justify-center gap-4", compact ? "flex-wrap px-5 py-4" : "flex-col px-5 py-9 sm:py-11")}>
-          <div className={cn("flex shrink-0 items-center justify-center rounded-2xl border border-line bg-white text-navy shadow-sm", compact ? "h-10 w-10" : "h-14 w-14", over && "scale-105")}>
+        <div className={cn("flex items-center justify-center gap-6", compact ? "flex-wrap px-5 py-4" : "flex-col px-5 py-9 sm:py-11")}>
+          <div className={cn("flex shrink-0 items-center justify-center rounded-2xl border border-stone-200 bg-white text-navy shadow-sm", compact ? "h-10 w-10" : "h-14 w-14", over && "scale-105")}>
             <Upload className={compact ? "h-5 w-5" : "h-6 w-6"}/>
           </div>
           <div className={cn(compact ? "min-w-0 flex-1" : "text-center")}>
@@ -90,12 +90,12 @@ export function DropZone({ onFiles, disabled = false, compact = false }: {
             </p>
           </div>
           <button type="button" onClick={open} disabled={disabled}
-            className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg bg-navy px-5 text-[13px] font-medium text-white shadow-sm outline-none transition-colors hover:bg-navy-hover focus-visible:ring-2 focus-visible:ring-navy focus-visible:ring-offset-2 disabled:cursor-wait">
+            className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-sm bg-navy px-5 text-[13px] font-medium text-white shadow-sm outline-none transition-colors hover:bg-navy-hover focus-visible:ring-2 focus-visible:ring-navy focus-visible:ring-offset-2 disabled:cursor-wait">
             <FolderOpen className="h-4 w-4" aria-hidden="true"/> Browse files
           </button>
           {!compact && <p className="text-center text-[11.5px] text-muted">Any file type, Up to 64 files at once, 50 GB per file</p>}
         </div>
-        {!compact && <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-line bg-white/70 px-4 py-3 text-[11px] text-muted">
+        {!compact && <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-stone-200 bg-white/70 px-4 py-3 text-[11px] text-muted">
           <span className="inline-flex items-center gap-1.5"><LockKeyhole className="h-3 w-3" aria-hidden="true"/> Private to your workspace</span>
           <span>Folders are optional. Drop one here to include its files.</span>
         </div>}

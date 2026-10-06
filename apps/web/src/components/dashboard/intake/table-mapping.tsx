@@ -2,14 +2,14 @@
 import { useId, useState } from "react";
 import type { ParsedTable } from "@/lib/intake/tables";
 import type { TableMapping } from "@/lib/intake/mapping";
-const FIELD = "h-8 rounded-md border border-line bg-white px-2 text-[12px] text-ink";
+const FIELD = "h-8 rounded-md border border-stone-200 bg-white px-2 text-[12px] text-ink";
 export function TableMappingEditor({ name, table, disabled, onApply }: { name: string; table: Omit<ParsedTable, "guides">; disabled: boolean; onApply: (mapping: TableMapping) => Promise<void> }) {
   const [mapping, setMapping] = useState<TableMapping>(table.mapping ?? { kind: table.kind, layout: "wide", header_row: table.header_row, guide_column: table.guide_column ?? "", gene_column: table.gene_column ?? "", sequence_column: table.sequence_column ?? "", sample_columns: table.sample_columns, sample_column: table.columns.find((column) => /^(sample|sample[_ ]?id)$/i.test(column)) ?? "" });
   const listId = useId();
   const columns = table.source_columns ?? table.columns;
   const patch = (value: Partial<TableMapping>) => setMapping((current) => ({ ...current, ...value }));
   const select = (label: string, value: string | undefined, update: (value: string) => void) => <label className="text-[11px] text-muted">{label}<input aria-label={`${label} for ${name} ${table.sheet}`} list={listId} className={`${FIELD} mt-1 w-full`} value={value ?? ""} placeholder="Column name" disabled={disabled} onChange={(event) => update(event.target.value)}/></label>;
-  return <details className="mt-2 rounded-lg border border-line p-3"><summary className="cursor-pointer text-[12px] text-ink">{name} / {table.sheet} <span className="text-muted">{table.kind}, edit interpretation</span></summary>
+  return <details className="mt-2 rounded-sm border border-stone-200 p-3"><summary className="cursor-pointer text-[12px] text-ink">{name} / {table.sheet} <span className="text-muted">{table.kind}, edit interpretation</span></summary>
     <datalist id={listId}>{[...new Set(columns.filter(Boolean))].map((column) => <option key={column} value={column}/>)}</datalist>
     <div className="mt-3 grid gap-3 sm:grid-cols-2"><label className="text-[11px] text-muted">Purpose<select aria-label={`Table purpose for ${name} ${table.sheet}`} className={`${FIELD} mt-1 w-full`} value={mapping.kind} onChange={(event) => patch({ kind: event.target.value as TableMapping["kind"] })} disabled={disabled}><option value="counts">Screen counts</option><option value="library">Guide library</option><option value="metadata">Sample metadata</option><option value="context">Supporting table</option></select></label>
     <label className="text-[11px] text-muted">Header row<input aria-label={`Header row for ${name} ${table.sheet}`} className={`${FIELD} mt-1 w-full`} type="number" min={1} max={40} value={mapping.header_row} disabled={disabled} onChange={(event) => patch({ header_row: Number(event.target.value) })}/></label>
@@ -22,6 +22,6 @@ export function TableMappingEditor({ name, table, disabled, onApply }: { name: s
     {mapping.kind === "counts" && mapping.layout === "wide" && <fieldset className="mt-3"><legend className="text-[11px] text-muted">Count columns</legend><div className="mt-1 flex flex-wrap gap-x-4 gap-y-2">{columns.filter((column) => column && ![mapping.guide_column, mapping.gene_column, mapping.sequence_column].includes(column)).map((column) => <label key={column} className="flex items-center gap-1.5 text-[12px] text-ink"><input type="checkbox" aria-label={`Count column ${column}`} checked={mapping.sample_columns?.includes(column) ?? false} disabled={disabled} onChange={(event) => patch({ sample_columns: event.target.checked ? [...mapping.sample_columns ?? [], column] : mapping.sample_columns?.filter((value) => value !== column) })}/>{column}</label>)}</div></fieldset>}
     <div className="mt-3 overflow-x-auto"><table className="dense-table dense-table-compact"><tbody>{table.preview.map((row, i) => <tr key={i}>{row.map((value, j) => <td key={j}>{value}</td>)}</tr>)}</tbody></table></div>
     {table.warnings.map((warning) => <p key={warning} className="mt-2 text-[11px] text-orange-700">{warning}</p>)}
-    <button type="button" className="mt-3 rounded-md border border-line px-3 py-1.5 text-[12px] text-ink cursor-pointer disabled:cursor-wait disabled:opacity-50" disabled={disabled} onClick={() => void onApply(mapping)}>Apply interpretation</button>
+    <button type="button" className="mt-3 rounded-md border border-stone-200 px-3 py-1.5 text-[12px] text-ink cursor-pointer disabled:cursor-wait disabled:opacity-50" disabled={disabled} onClick={() => void onApply(mapping)}>Apply interpretation</button>
   </details>;
 }

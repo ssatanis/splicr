@@ -96,8 +96,8 @@ export function FileList({
   const total = items.reduce((sum, item) => sum + item.bytes, 0);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-line bg-white">
-      <div className="flex items-baseline justify-between gap-2 border-b border-line bg-canvas/60 px-4 py-3">
+    <div className="overflow-hidden rounded-sm border border-stone-200 bg-white">
+      <div className="flex items-baseline justify-between gap-2 border-b border-stone-200 bg-canvas/60 px-4 py-3">
         <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted">Attached files</span>
         <span className="num text-[11px] text-muted">
           {items.filter((item) => item.status === "done").length}/{items.length} uploaded, {formatBytes(total)}
@@ -108,7 +108,7 @@ export function FileList({
           <li key={item.key} className="flex flex-wrap items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4">
             <span
               className={cn(
-                "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+                "flex h-9 w-9 shrink-0 items-center justify-center rounded-sm",
                 item.status === "failed" ? "bg-orange-50 text-orange-700" : "bg-mist-soft text-muted",
               )}
               aria-hidden="true"
@@ -138,8 +138,8 @@ export function FileList({
             </span>
 
             <Progress item={item} />
-            {item.status === "failed" && onRetry && <button type="button" onClick={() => onRetry(item.key)} disabled={busy} aria-label={`Retry ${item.name}`} className="inline-flex items-center gap-1 rounded-md border border-line px-2 py-1 text-[11px] text-navy hover:bg-mist-soft disabled:opacity-40"><RotateCcw className="h-3 w-3" aria-hidden="true"/>Retry</button>}
-            {onPurpose && item.status === "done" && <select aria-label={`Purpose of ${item.name}`} value={item.kind} disabled={busy} onChange={(event) => onPurpose(item.key, event.target.value as IntakeKind)} className="h-7 max-w-32 rounded border border-line bg-white text-[11px] text-ink">{Object.entries(KIND_LABEL).map(([kind, label]) => <option key={kind} value={kind}>{label}</option>)}</select>}
+            {item.status === "failed" && onRetry && <button type="button" onClick={() => onRetry(item.key)} disabled={busy} aria-label={`Retry ${item.name}`} className="inline-flex items-center gap-1 rounded-md border border-stone-200 px-2 py-1 text-[11px] text-navy hover:bg-mist-soft disabled:opacity-40"><RotateCcw className="h-3 w-3" aria-hidden="true"/>Retry</button>}
+            {onPurpose && item.status === "done" && <select aria-label={`Purpose of ${item.name}`} value={item.kind} disabled={busy} onChange={(event) => onPurpose(item.key, event.target.value as IntakeKind)} className="h-7 max-w-32 rounded border border-stone-200 bg-white text-[11px] text-ink">{Object.entries(KIND_LABEL).map(([kind, label]) => <option key={kind} value={kind}>{label}</option>)}</select>}
 
             <button
               type="button"

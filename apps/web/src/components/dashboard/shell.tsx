@@ -182,7 +182,7 @@ export function DashboardShell({
        `console` is the theme scope. Everything inside it reads the console's
        palette: white surfaces, near black type, navy for action. Nothing
        outside it changes, which is what keeps the public site intact. */
-    <div className="console flex h-dvh overflow-hidden bg-white">
+    <div className="console flex h-dvh overflow-hidden bg-canvas">
       <aside
         style={{ width: collapsed ? RAIL_NARROW : RAIL_WIDE }}
         className={cn(

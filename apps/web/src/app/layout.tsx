@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Instrument_Serif, Outfit } from "next/font/google";
+import { Inter, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 
-const outfit = Outfit({
+const outfit = Inter({
   variable: "--font-outfit",
   subsets: ["latin"],
   display: "swap",

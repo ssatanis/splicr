@@ -7,7 +7,7 @@ export function RetryAnalysis({ screenId, completed = false }: { screenId: strin
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  return <div className="mt-3"><button disabled={busy} className="h-8 rounded-md border border-line px-3 text-[12px] text-ink disabled:opacity-50" onClick={async () => {
+  return <div className="mt-3"><button disabled={busy} className="h-8 rounded-md border border-stone-200 px-3 text-[12px] text-ink disabled:opacity-50" onClick={async () => {
     setBusy(true); setError(null);
     const result = await retryScreenAnalysis(screenId);
     setBusy(false);

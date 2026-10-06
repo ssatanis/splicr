@@ -58,15 +58,15 @@ export function IntakeWorkspace({
               aria-checked={active}
               onClick={() => setMode(choice.key)}
               className={cn(
-                "flex items-center gap-3 rounded-xl border px-4 py-4 text-left outline-none transition-colors duration-[var(--dur-2)] focus-visible:ring-2 focus-visible:ring-cyan-500 motion-reduce:transition-none",
+                "flex items-center gap-3 rounded-sm border px-4 py-4 text-left outline-none transition-colors duration-[var(--dur-2)] focus-visible:ring-2 focus-visible:ring-cyan-500 motion-reduce:transition-none",
                 active
                   ? "border-navy/40 bg-navy-tint shadow-sm"
-                  : "border-line bg-white hover:border-line-strong hover:bg-mist-soft/50",
+                  : "border-stone-200 bg-white hover:border-stone-200-strong hover:bg-mist-soft/50",
               )}
             >
               <span
                 className={cn(
-                  "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+                  "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-sm",
                   active ? "bg-navy text-white" : "bg-mist-soft text-muted",
                 )}
                 aria-hidden="true"

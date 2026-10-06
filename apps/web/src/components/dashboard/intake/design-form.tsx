@@ -62,7 +62,7 @@ export interface AnalysisSettings {
 const ROLES: readonly SampleRole[] = ["plasmid", "reference", "control", "treatment"];
 
 const FIELD =
-  "h-8 w-full rounded-md border border-line bg-white px-2.5 text-[12.5px] text-ink outline-none transition-colors duration-[var(--dur-1)] focus:border-cyan-500 motion-reduce:transition-none";
+  "h-8 w-full rounded-md border border-stone-200 bg-white px-2.5 text-[12.5px] text-ink outline-none transition-colors duration-[var(--dur-1)] focus:border-cyan-500 motion-reduce:transition-none";
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
@@ -124,7 +124,7 @@ export function DesignForm({
     <div className="space-y-5">
       {/* --- the one thing only the researcher knows ------------------------ */}
       <section>
-        <div className="mb-1.5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-line pb-1">
+        <div className="mb-1.5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-stone-200 pb-1">
           <h3 className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted">
             Which arm is which
           </h3>
@@ -136,7 +136,7 @@ export function DesignForm({
           SplicR read these sample names from your files and guessed the arms. Correct any it got wrong.
         </p>
 
-        <div className="overflow-hidden rounded-lg border border-line">
+        <div className="overflow-hidden rounded-sm border border-stone-200">
           <table className="dense-table dense-table-compact">
             <thead>
               <tr>
@@ -151,7 +151,7 @@ export function DesignForm({
                 <tr key={sample.label}>
                   <td className="max-w-[1px] truncate" title={sample.label}>{sample.label}
                     {sample.file_ids && <span className="block text-[10px] text-muted">{sample.file_ids.length} read files merged</span>}
-                    {Boolean(sample.read1_file_ids?.length && sample.read2_file_ids?.length) && <select aria-label={`Guide read for ${sample.label}`} value={sample.file_ids?.[0] === sample.read2_file_ids?.[0] ? "R2" : "R1"} disabled={disabled} className="mt-1 h-6 rounded border border-line text-[11px]" onChange={(event) => { const file_ids = event.target.value === "R1" ? sample.read1_file_ids! : sample.read2_file_ids!; setSample(index, { file_ids, file_id: file_ids[0] }); }}><option value="R1">Count R1</option><option value="R2">Count R2</option></select>}
+                    {Boolean(sample.read1_file_ids?.length && sample.read2_file_ids?.length) && <select aria-label={`Guide read for ${sample.label}`} value={sample.file_ids?.[0] === sample.read2_file_ids?.[0] ? "R2" : "R1"} disabled={disabled} className="mt-1 h-6 rounded border border-stone-200 text-[11px]" onChange={(event) => { const file_ids = event.target.value === "R1" ? sample.read1_file_ids! : sample.read2_file_ids!; setSample(index, { file_ids, file_id: file_ids[0] }); }}><option value="R1">Count R1</option><option value="R2">Count R2</option></select>}
                   </td>
                   <td>
                     <select
@@ -161,7 +161,7 @@ export function DesignForm({
                       onChange={(event) => setSample(index, { role: event.target.value as SampleRole })}
                       className={cn(
                         "h-6 w-full max-w-[13rem] rounded border bg-white px-1.5 text-[12px] text-ink outline-none focus:border-cyan-500",
-                        sample.role === "treatment" ? "border-orange-300" : "border-line",
+                        sample.role === "treatment" ? "border-orange-300" : "border-stone-200",
                       )}
                       title={ROLE_HINT[sample.role]}
                     >
@@ -180,7 +180,7 @@ export function DesignForm({
                       disabled={disabled}
                       aria-label={`Replicate number for ${sample.label}`}
                       onChange={(event) => setSample(index, { replicate: Number(event.target.value) || 1 })}
-                      className="num h-6 w-14 rounded border border-line bg-white px-1.5 text-right text-[12px] text-ink outline-none focus:border-cyan-500"
+                      className="num h-6 w-14 rounded border border-stone-200 bg-white px-1.5 text-right text-[12px] text-ink outline-none focus:border-cyan-500"
                     />
                   </td>
                 </tr>
@@ -249,7 +249,7 @@ export function DesignForm({
               ))}
             </select>
           </Field>
-          {top && (top.match_rate >= 0.25 || top.coverage >= 0.25) ? (
+          {top && (top.match_rate >= 0.95 || top.coverage >= 0.95) ? (
             <p className="mt-1.5 flex items-start gap-1.5 text-[11.5px] leading-snug text-cyan-700">
               <Info className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
               <span>
@@ -287,7 +287,7 @@ export function DesignForm({
         </button>
 
         {advanced && (
-          <div id={advancedId} className="mt-3 grid grid-cols-1 gap-3 rounded-lg bg-mist-soft/60 p-3 sm:grid-cols-2">
+          <div id={advancedId} className="mt-3 grid grid-cols-1 gap-3 rounded-sm bg-mist-soft/60 p-3 sm:grid-cols-2">
             <Field label="Model type"><select aria-label="Analysis model type" value={settings.model_type ?? "other"} disabled={disabled} onChange={(event) => onChange({ settings: { ...settings, model_type: event.target.value as ModelType } })} className={FIELD}>{MODEL_TYPES.map((type) => <option key={type} value={type}>{type.replaceAll("_", " ")}</option>)}</select></Field>
             <Field label="Normalization" hint="How counts are put on a common scale before the contrast.">
               <select
@@ -371,7 +371,7 @@ export function DesignForm({
         )}
       </section>
       {settings.hit_callers.includes("mageck_mle") && <MleDesignEditor table={{ fileId: "", name, sheet: "Samples", model: cellLine, rows: 0, preview: [], warnings: [], samples: samples.filter((sample) => sample.included !== false) }} comparison={{ id: "primary", table: 0, name: name || "Primary comparison", model: cellLine, phenotype, enabled: true, drug: settings.hit_callers.includes("drugz"), treatment: samples.filter((sample) => sample.included !== false && sample.role === "treatment").map((sample) => sample.label), control: samples.filter((sample) => sample.included !== false && sample.role !== "treatment").map((sample) => sample.label), mle_design: settings.mle_design }} disabled={disabled} onChange={(mle_design) => onChange({ settings: { ...settings, mle_design } })}/>}
-      {settings.hit_callers.includes("drugz") && <details className="rounded-lg border border-line p-3"><summary className="cursor-pointer text-[12px] text-ink">DrugZ settings</summary><div className="mt-3 grid gap-3 sm:grid-cols-2"><Field label="DrugZ pseudocount"><input aria-label="DrugZ pseudocount" className={FIELD} type="number" step={1} min={1} max={1000} value={settings.drugz_options?.pseudocount ?? 5} disabled={disabled} onChange={(event) => onChange({ settings: { ...settings, drugz_options: { pseudocount: Number(event.target.value), half_window_size: settings.drugz_options?.half_window_size ?? 500 } } })}/></Field><Field label="DrugZ smoothing half-window"><input aria-label="DrugZ smoothing half-window" className={FIELD} type="number" min={2} max={10000} value={settings.drugz_options?.half_window_size ?? 500} disabled={disabled} onChange={(event) => onChange({ settings: { ...settings, drugz_options: { pseudocount: settings.drugz_options?.pseudocount ?? 5, half_window_size: Number(event.target.value) } } })}/></Field><label className="flex items-center gap-2 text-[12px] text-ink"><input aria-label="Paired DrugZ" type="checkbox" disabled={disabled} checked={Boolean(settings.drugz_paired)} onChange={(event) => onChange({ settings: { ...settings, drugz_paired: event.target.checked } })}/>Paired biological replicates</label></div></details>}
+      {settings.hit_callers.includes("drugz") && <details className="rounded-sm border border-stone-200 p-3"><summary className="cursor-pointer text-[12px] text-ink">DrugZ settings</summary><div className="mt-3 grid gap-3 sm:grid-cols-2"><Field label="DrugZ pseudocount"><input aria-label="DrugZ pseudocount" className={FIELD} type="number" step={1} min={1} max={1000} value={settings.drugz_options?.pseudocount ?? 5} disabled={disabled} onChange={(event) => onChange({ settings: { ...settings, drugz_options: { pseudocount: Number(event.target.value), half_window_size: settings.drugz_options?.half_window_size ?? 500 } } })}/></Field><Field label="DrugZ smoothing half-window"><input aria-label="DrugZ smoothing half-window" className={FIELD} type="number" min={2} max={10000} value={settings.drugz_options?.half_window_size ?? 500} disabled={disabled} onChange={(event) => onChange({ settings: { ...settings, drugz_options: { pseudocount: settings.drugz_options?.pseudocount ?? 5, half_window_size: Number(event.target.value) } } })}/></Field><label className="flex items-center gap-2 text-[12px] text-ink"><input aria-label="Paired DrugZ" type="checkbox" disabled={disabled} checked={Boolean(settings.drugz_paired)} onChange={(event) => onChange({ settings: { ...settings, drugz_paired: event.target.checked } })}/>Paired biological replicates</label></div></details>}
     </div>
   );
 }
