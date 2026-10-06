@@ -17,6 +17,7 @@ import shutil
 import socket
 import tempfile
 import threading
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlparse
@@ -35,7 +36,9 @@ class Job:
 
 
 def _worker_name() -> str:
-    return f"modal:{socket.gethostname()}:{os.getpid()}"
+    # Modal containers can share the hostname and PID. A fresh invocation must
+    # never inherit an expired worker's authority over the same job.
+    return f"modal:{socket.gethostname()}:{os.getpid()}:{uuid.uuid4().hex}"
 
 
 def _claim(conn, owner: str) -> Job | None:
