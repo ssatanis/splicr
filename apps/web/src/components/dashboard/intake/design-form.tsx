@@ -11,7 +11,7 @@
  * and the pipeline settings are folded away because a researcher who wants the
  * default never has to see them.
  */
-import { ChevronDown, Info, Sparkles } from "lucide-react";
+import { ChevronDown, Info } from "lucide-react";
 import { useId, useState } from "react";
 
 import {
@@ -249,9 +249,9 @@ export function DesignForm({
               ))}
             </select>
           </Field>
-          {top && (
+          {top && (top.match_rate >= 0.25 || top.coverage >= 0.25) ? (
             <p className="mt-1.5 flex items-start gap-1.5 text-[11.5px] leading-snug text-cyan-700">
-              <Sparkles className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
+              <Info className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
               <span>
                 Your guides matched <span className="font-medium">{top.name}</span>:{" "}
                 <span className="num">{Math.round(top.coverage * 100)}%</span> of that library is present,
@@ -259,7 +259,11 @@ export function DesignForm({
                 are in it.
               </span>
             </p>
-          )}
+          ) : libraryId === null || libraryId === "" ? (
+            <p className="mt-1.5 flex items-start gap-1.5 text-[11.5px] leading-snug text-muted">
+              No existing library was a strong match. You can import a custom library or select one from the list.
+            </p>
+          ) : null}
         </div>
       </section>
 

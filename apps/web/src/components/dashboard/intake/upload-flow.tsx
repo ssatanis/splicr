@@ -543,7 +543,8 @@ export function UploadFlow({ libraries, defaults, librarySlugToId, initialDraft 
         match_rate: candidate.match_rate,
       })),
     );
-    const nextLibraryId = result.libraries.length > 0 ? result.libraries[0].library_id : libraryId;
+    const goodMatch = result.libraries.length > 0 && (result.libraries[0].match_rate >= 0.25 || result.libraries[0].coverage >= 0.25);
+    const nextLibraryId = goodMatch ? result.libraries[0].library_id : libraryId;
     if (nextLibraryId !== libraryId) setLibraryId(nextLibraryId);
 
     const nextDesign = { name, cell_line: cellLine, phenotype, modality, library_id: nextLibraryId, samples: derived };

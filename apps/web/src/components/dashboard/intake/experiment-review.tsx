@@ -93,13 +93,32 @@ export function comparisonSamples(table: ExperimentTable, comparison: Experiment
 }
 
 export function UploadedLibraryImport({ uploads, disabled, onImport }: { uploads: LibraryUpload[]; disabled: boolean; onImport: (upload: LibraryUpload, name: string, options: LibraryImportOptions) => Promise<void> }) {
-  const [libraryName, setLibraryName] = useState("");
+  const [libraryName, setLibraryName] = useState(uploads.length === 1 ? uploads[0].name.replace(/\.[^.]+$/, "") : "");
   const [options, setOptions] = useState<LibraryImportOptions>(DEFAULT_LIBRARY);
   return <>{uploads.length > 1 && <button type="button" disabled={disabled} className="mt-3 rounded-md border border-line px-3 py-1.5 text-[12px] text-ink" onClick={() => void onImport({ ...uploads[0], sources: uploads.map(({ fileId, sheet }) => ({ fileId, sheet })) }, libraryName || "Combined guide library", options)}>Import combined library</button>}      {uploads.map((upload) => <div key={`${upload.fileId}:${upload.sheet}`} className="mt-3 border-t border-line pt-2">
         <p className="text-[12px] text-ink">{upload.name}: {upload.rows.toLocaleString()} sequence records</p>
-        {upload.warnings.map((warning) => <p key={warning} className="mt-1 text-[11px] text-orange-700">{warning}</p>)}
-        <details className="mt-1 text-[11px] text-muted"><summary className="cursor-pointer">Preview guide mapping</summary><div className="overflow-x-auto"><table className="dense-table dense-table-compact"><tbody>{upload.preview.map((row, i) => <tr key={i}>{row.map((value, j) => <td key={j}>{value}</td>)}</tr>)}</tbody></table></div></details>
-        <details className="mt-2 text-[12px] text-ink"><summary className="cursor-pointer">Species and modality</summary><div className="mt-2 flex flex-wrap gap-2"><select aria-label="Custom library species" disabled={disabled} value={options.organism_taxid} onChange={(event) => setOptions({ ...options, organism_taxid: Number(event.target.value) })} className={FIELD}><option value={9606}>Human</option><option value={10090}>Mouse</option></select><select aria-label="Custom library modality" disabled={disabled} value={options.modality} onChange={(event) => setOptions({ ...options, modality: event.target.value as LibraryImportOptions["modality"], cas: event.target.value === "knockout" ? "SpCas9" : "dCas9" })} className={FIELD}><option value="knockout">Knockout</option><option value="crispri">CRISPRi</option><option value="crispra">CRISPRa</option></select></div></details>
-        <div className="mt-2 flex flex-wrap gap-2"><input aria-label="Custom library name" placeholder="Custom library name" value={libraryName} onChange={(event) => setLibraryName(event.target.value)} className={`${FIELD} min-w-48 flex-1`} disabled={disabled}/><button type="button" disabled={disabled} onClick={() => void onImport(upload, libraryName || upload.name.replace(/\.[^.]+$/, ""), options)} className="rounded-md border border-line px-3 text-[12px] text-ink disabled:opacity-50">Confirm and import library</button></div>
+        {upload.warnings.map((warning) => <p key={warning} className="mt-1 text-[11.5px] text-orange-700">{warning}</p>)}
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <label className="text-[11.5px] text-muted">Species
+            <select aria-label="Custom library species" disabled={disabled} value={options.organism_taxid} onChange={(event) => setOptions({ ...options, organism_taxid: Number(event.target.value) })} className={`${FIELD} mt-1 w-full`}>
+              <option value={9606}>Human</option><option value={10090}>Mouse</option>
+            </select>
+          </label>
+          <label className="text-[11.5px] text-muted">Modality
+            <select aria-label="Custom library modality" disabled={disabled} value={options.modality} onChange={(event) => setOptions({ ...options, modality: event.target.value as LibraryImportOptions["modality"], cas: event.target.value === "knockout" ? "SpCas9" : "dCas9" })} className={`${FIELD} mt-1 w-full`}>
+              <option value="knockout">Knockout</option><option value="crispri">CRISPRi</option><option value="crispra">CRISPRa</option>
+            </select>
+          </label>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <input aria-label="Custom library name" placeholder="Custom library name" value={libraryName} onChange={(event) => setLibraryName(event.target.value)} className={`${FIELD} min-w-48 flex-1`} disabled={disabled}/>
+          <button type="button" disabled={disabled} onClick={() => void onImport(upload, libraryName || upload.name.replace(/\.[^.]+$/, ""), options)} className="rounded-md bg-ink px-3 text-[12px] font-medium text-white disabled:bg-mist disabled:text-muted disabled:opacity-50">Confirm and import library</button>
+        </div>
+        <details className="mt-4 text-[11.5px] text-muted">
+          <summary className="cursor-pointer font-medium hover:text-ink">Preview guide mapping</summary>
+          <div className="mt-2 overflow-x-auto rounded-md border border-line">
+            <table className="dense-table dense-table-compact"><tbody>{upload.preview.map((row, i) => <tr key={i}>{row.map((value, j) => <td key={j}>{value}</td>)}</tr>)}</tbody></table>
+          </div>
+        </details>
       </div>)}</>;
 }
