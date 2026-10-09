@@ -15,6 +15,7 @@ import traceback
 import json
 import hashlib
 import platform
+import os
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
@@ -43,7 +44,7 @@ GUIDE_ANNOTATION_LIMIT = 500
 
 
 def _persist_guide_evidence(conn, ctx, hits: HitTable, library: Library,
-                            significant) -> tuple[int, int]:
+                            significant, modality: str | None = None) -> tuple[int, int]:
     """
     Store what the deep dive reads, and never fail the run over it.
 
@@ -82,7 +83,14 @@ def _persist_guide_evidence(conn, ctx, hits: HitTable, library: Library,
         [:GUIDE_ANNOTATION_LIMIT]
     }
     try:
-        annotated = annotate_guides(hits.guide_effects, library, genes=shortlist)
+        from dataclasses import replace
+        if modality == "knockout" and library.taxid == 9606:
+            from .guide_mapping import verified_library_coordinates
+            coordinate_library, _ = verified_library_coordinates(library)
+        else:
+            coordinate_library = replace(library, guides=[replace(g,chrom=None,cut_pos=None,strand=None) for g in library.guides],_by_sequence={})
+        annotated = annotate_guides(hits.guide_effects, coordinate_library, genes=shortlist,
+                                    annotate_protein=modality == "knockout" and library.taxid == 9606)
         with conn.transaction():
             guide_rows = db.write_guide_effects(conn, ctx, annotated, REFERENCE_VERSIONS)
     except Exception as exc:  # noqa: BLE001
@@ -146,6 +154,7 @@ def _report_provenance(workdir: Path, source_dir: Path | None = None) -> dict:
     counts_hash = _file_sha256(counts)
     requirements = source_dir.parent / "requirements.txt"
     return {
+        "engine_version": _engine_revision(),
         "python_version": platform.python_version(),
         "code_sha256": {name: _file_sha256(source_dir / name) for name in (
             "pipeline.py", "hits.py", "count.py", "qc.py", "artifacts.py", "atlas.py",
@@ -158,6 +167,26 @@ def _report_provenance(workdir: Path, source_dir: Path | None = None) -> dict:
             "unavailable_reason": "analysis count file is absent" if counts_hash is None else None,
         },
     }
+
+
+def _engine_revision(source_dir: Path | None = None) -> str:
+    """Use the deployed revision, or fingerprint the actual local Python source."""
+    deployed = os.environ.get("SPLICR_PIPELINE_VERSION", "").strip()
+    if deployed and deployed != "unknown":
+        return deployed
+    source_dir = source_dir or Path(__file__).resolve().parent
+    digest = hashlib.sha256()
+    for source in sorted(source_dir.rglob("*.py")):
+        digest.update(str(source.relative_to(source_dir)).encode())
+        digest.update(source.read_bytes())
+    return f"source-sha256:{digest.hexdigest()}"
+
+
+def _start_existing_run(conn, existing) -> None:
+    """A new attempt reruns every stage, so old completion indicators must reset."""
+    conn.execute("update public.runs set status = 'running', engine_version = %s, started_at = coalesce(started_at, now()) where id = %s", (_engine_revision(), existing.run_id))
+    conn.execute("update public.run_stages set status = 'queued', detail = null, tool = null, metrics = '{}'::jsonb, started_at = null, finished_at = null, duration_sec = null where run_id = %s", (existing.run_id,))
+    conn.execute("update public.screens set status = 'running' where id = %s", (existing.screen_id,))
 
 
 def _score_candidates(hits: HitTable, flags, qc, atlas, spec, result) -> dict:
@@ -399,6 +428,8 @@ class ScreenInput:
     drugz_options: dict = field(default_factory=dict)
     sample_factors: dict = field(default_factory=dict)
     cell_line: str | None = None
+    lab_evidence: dict = field(default_factory=dict)
+    deterministic_only: bool = False
     model_id: str | None = None                             # DepMap ACH-######
     model_type: str | None = None
     phenotype: str | None = None
@@ -486,8 +517,7 @@ def run_pipeline(
             if existing is not None:
                 ctx = db.RunContext(existing.org_id, existing.screen_id, existing.run_id,
                                     existing.comparison_id or "")
-                conn.execute("update public.runs set status = 'running', started_at = coalesce(started_at, now()) where id = %s", (existing.run_id,))
-                conn.execute("update public.screens set status = 'running' where id = %s", (existing.screen_id,))
+                _start_existing_run(conn, existing)
                 conn.commit()
             begin("ingest", "verifying input and design")
 
@@ -509,7 +539,7 @@ def run_pipeline(
                 raise ValueError("Confirm a guide library before analysing this count table")
             upload_library = (_parse_learned(spec.library_path, spec.library_slug or "custom") if spec.library_path else load_library(spec.library_slug))
             from .upload_tables import canonical_counts
-            spec.count_table = canonical_counts(Path(spec.count_table), upload_library, list(dict.fromkeys(spec.control + spec.treatment)), workdir / "reviewed_counts.tsv", spec.source_sheet, spec.guide_aliases, spec.count_mapping)
+            spec.count_table = canonical_counts(Path(spec.count_table), upload_library, list(dict.fromkeys(spec.control + spec.treatment + [point["sample"] for point in spec.lab_evidence.get("time_course", [])])), workdir / "reviewed_counts.tsv", spec.source_sheet, spec.guide_aliases, spec.count_mapping)
         sources = list(spec.fastqs.values()) + ([spec.count_table] if spec.count_table else [])
         if bool(spec.fastqs) == bool(spec.count_table):
             raise ValueError("supply exactly one input type: FASTQ files or a count table")
@@ -548,7 +578,10 @@ def run_pipeline(
 
         if persist and conn is not None:
             settings = {"treatment": treat, "control": ctrl,
-                        "roles": roles, "design_notes": design.notes}
+                        "roles": roles, "design_notes": design.notes,
+                        "lab_evidence": spec.lab_evidence, "deterministic_only": spec.deterministic_only,
+                        "normalization": spec.normalization, "fdr_threshold": spec.fdr_threshold,
+                        "hit_callers": spec.hit_callers}
             if existing is not None:
                 screen_id, run_id = existing.screen_id, existing.run_id
                 conn.execute(
@@ -567,10 +600,12 @@ def run_pipeline(
                 screen_id = db.create_screen(conn, org_id, spec.name, spec.library_slug,
                                              spec.cell_line, spec.phenotype, spec.modality,
                                              created_by)
-                run_id = db.start_run(conn, screen_id, org_id, settings)
+                run_id = db.start_run(conn, screen_id, org_id, settings, engine_version=_engine_revision())
                 ctx = db.RunContext(org_id, screen_id, run_id, "")
             result.screen_id, result.run_id = screen_id, run_id
             conn.commit()
+        from .lab_evidence import validate_options
+        validate_options(spec.lab_evidence, list(spec.roles) or (count_table_samples(spec.count_table) if spec.count_table else list(spec.fastqs)))
         record("ingest", "done", detail, "splicr.ingest", t, design.as_dict())
 
         # --- 02 detect -----------------------------------------------------
@@ -634,7 +669,9 @@ def run_pipeline(
         t = time.time()
         begin("qc", "Measuring screen quality")
         qc = screen_qc(matrix, roles, treat, ctrl, library,
-                       assess_essentiality=assess_essentiality)
+                       assess_essentiality=assess_essentiality,
+                       sample_factors={p["sample"]: (p["condition"], p["day"])
+                                       for p in spec.lab_evidence.get("time_course", [])})
         result.qc = qc
         nnmd = f"NNMD {qc.nnmd:.2f}" if qc.nnmd is not None else "NNMD n/a"
         record("qc", "done", f"{qc.verdict}, {nnmd}", "splicr.qc", t, qc.as_dict())
@@ -692,6 +729,13 @@ def run_pipeline(
                ", ".join(hits.methods), t,
                {"methods": hits.methods, "n_significant": len(sig), "fdr_threshold": spec.fdr_threshold, "normalization": spec.normalization,
                 "warnings": hits.warnings,
+                "mle_design": mle_spec if mle_design is not None and "mageck_mle" in hits.methods else None,
+                "drugz_options": {"paired": spec.drugz_paired,
+                                  "pseudocount": float(spec.drugz_options.get("pseudocount", 5)),
+                                  "half_window_size": int(spec.drugz_options.get("half_window_size", 500))}
+                                 if "drugz" in hits.methods else None,
+                "normalization_controls": {"sha256": _file_sha256(control_guides), "n_guides": len(controls)}
+                                          if control_guides is not None else None,
                 "fdr_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
                 "essentiality_contrast": essentiality_contrast})
 
@@ -768,7 +812,9 @@ def run_pipeline(
         # gate before it asks the model, so a run outside the calibrated cohort
         # produces no probability at all - not a probability that the report
         # then declines to print.
-        scored = _score_candidates(hits, flags, qc, atlas, spec, result)
+        scored = ({"n_estimated": 0, "detail": "Deterministic analysis selected; predictive models were not executed.",
+                   "metrics": {"deterministic_only": True}, "candidates": []}
+                  if spec.deterministic_only else _score_candidates(hits, flags, qc, atlas, spec, result))
         result.validation = scored
         record("score",
                "done" if scored["n_estimated"] > 0 else "skipped",
@@ -778,6 +824,8 @@ def run_pipeline(
         active_stage = "report"
         t = time.time()
         begin("report", "Generating final output tables")
+        from .lab_evidence import build_evidence
+        lab_records = build_evidence(matrix, library, hits, spec, workdir)
         # A portable report also preserves raw directional statistics, which
         # the existing database columns cannot represent without a migration.
         report = {
@@ -789,7 +837,10 @@ def run_pipeline(
                         "modality": spec.modality, "condition": spec.condition},
             "design": design.as_dict(), "qc": qc.as_dict(),
             "analysis_plan": {"sample_factors": spec.sample_factors, "count_mapping": spec.count_mapping, "mle_design": mle_spec if mle_design else None, "drugz_options": spec.drugz_options},
+            "lab_evidence": {"schema": "splicr.lab-evidence.v1", "settings": spec.lab_evidence, "records": lab_records},
             "methods": hits.methods, "warnings": hits.warnings,
+            "execution": {"stages": [asdict(stage) for stage in result.stages],
+                          "scope": "Recorded stages before report generation; final report completion is not included."},
             "drugz_pairing": ("paired in the declared sample order" if spec.drugz_paired
                               else "unpaired") if spec.run_drugz else None,
             "statistics": {"fdr_threshold": spec.fdr_threshold, "normalization": spec.normalization, "fdr_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
@@ -821,7 +872,8 @@ def run_pipeline(
         if persist and conn is not None and ctx is not None:
             _ensure_conn()
             written = db.write_hits(conn, ctx, hits, flags)
-            guide_rows, gene_rows = _persist_guide_evidence(conn, ctx, hits, library, sig)
+            guide_rows, gene_rows = _persist_guide_evidence(conn, ctx, hits, library, sig, spec.modality)
+            db.write_lab_evidence(conn, ctx, lab_records)
             #  Both branches of the gate are stored. A refusal is a row saying
             #  which candidate was considered and why no probability was
             #  stated, because a gene with no row and a gene the gate declined
@@ -841,10 +893,14 @@ def run_pipeline(
             record("report", "done",
                    f"wrote {written:,} hit rows, {guide_rows:,} per-guide rows, "
                    f"{gene_rows:,} guide-disagreement reports and "
-                   f"{prediction_rows:,} validation predictions",
-                   "splicr.db", t)
+                   f"{prediction_rows:,} validation decision rows "
+                   f"(including refusals; {(result.validation or {}).get('n_estimated', 0):,} candidates with estimates)",
+                   "splicr.db", t, {"lab_evidence": {"n_receipts": len(lab_records),
+                     "kinds": sorted({r["kind"] for r in lab_records}),
+                     "statuses": {kind: sorted({r["payload"]["status"] for r in lab_records if r["kind"] == kind}) for kind in sorted({r["kind"] for r in lab_records})}}})
         else:
-            record("report", "done", str(report_path), "splicr.report", t)
+            record("report", "done", str(report_path), "splicr.report", t,
+                   {"lab_evidence": {"n_receipts": len(lab_records), "kinds": sorted({r["kind"] for r in lab_records})}})
 
     except Exception as exc:
         result.failed_at = active_stage

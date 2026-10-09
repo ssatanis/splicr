@@ -39,6 +39,7 @@
     "test:engine": "cd engine && PYTHONPATH=. .tools/env/bin/python -m pytest -q -m \"not network and not slow\""
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.8",
     "pg": "^8.18.0",
     "pg-copy-streams": "^7.0.0",
     "supabase": "^2.118.0"

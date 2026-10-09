@@ -1,0 +1,10 @@
+{"schema":"openai.presentation.layout/v5","unit":"px","slide":{"id":"sl/04rket","index":11,"layout":{"id":"ly/n69w3654","name":"Title Slide"},"backgroundColor":"rgba(250,249,246,1)","position":{"left":0,"top":0,"width":1280,"height":720}},
+"elements":[
+{"id":"im/hsretofa","kind":"image","position":{"left":64,"top":32,"width":92,"height":31},"fit":"contain","alt":"SplicR logo"},
+{"id":"sh/zmlsfexo","kind":"textbox","name":"text-1","position":{"left":64,"top":100,"width":1152,"height":70},"text":"The paper’s genes, across both methods","style":{"fontSize":44,"typeface":"Inter","color":"#174F62","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/ylcrm9w3","kind":"textbox","name":"text-2","position":{"left":64,"top":177,"width":1152,"height":42},"text":"Spheroid WT versus plasmid, complete recorded output","style":{"fontSize":21,"typeface":"Inter","color":"#4F6470","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/xk3qdofi","kind":"textbox","name":"text-3","position":{"left":1176,"top":670,"width":64,"height":28},"text":"12","style":{"fontSize":15,"typeface":"Inter","color":"#626B78","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"tb/pcz6pwnq","kind":"table","position":{"left":64,"top":256,"width":1152,"height":260},"text":"Gene\tRRA log₂ change\tMLE beta\tMLE FDR\nFIG4\t+3.14\t+1.83\t0.576\nVAC14\t+4.96\t+3.21\t0.192\nPIKFYVE\t+0.41\t+0.44\t1.000","rows":4,"cols":4},
+{"id":"sh/bil8bexc","kind":"textbox","name":"text-5","position":{"left":64,"top":543,"width":1152,"height":52},"text":"Positive effects and significance are different questions","style":{"fontSize":32,"typeface":"Inter","color":"#174F62","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/ahsri9wr","kind":"textbox","name":"text-6","position":{"left":64,"top":622,"width":1110,"height":42},"text":"None passes MLE FDR 0.05 here. The paper’s beta-score nomination uses different criteria.","style":{"fontSize":17,"typeface":"Inter","color":"#626B78","alignment":"left"},"geometry":"rect","lineWidth":0}
+]}

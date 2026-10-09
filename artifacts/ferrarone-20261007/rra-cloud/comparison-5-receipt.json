@@ -1,0 +1,398 @@
+{
+  "id": "01a1172c-7800-716b-9625-911c32762a0d",
+  "name": "Ferrarone 2024: A549 LKB1 growth screens (RRA validation), 2D: EV vs plasmid",
+  "status": "complete",
+  "cell_line": "A549",
+  "phenotype": "Proliferation",
+  "modality": "knockout",
+  "run_id": "01a1172c-7805-76b1-ad2c-1267a5937cd8",
+  "run_status": "complete",
+  "settings": {
+    "source": {
+      "sheet": "Table",
+      "fileId": "01a1172c-0309-7742-8458-062bca5e08b3"
+    },
+    "profile": "pooled_abundance",
+    "modality": "knockout",
+    "model_type": "cancer_cell_line",
+    "hit_callers": [
+      "mageck_rra"
+    ],
+    "drugz_paired": false,
+    "plan_version": "guide-abundance-v2",
+    "cn_correction": false,
+    "drugz_options": {
+      "pseudocount": 5,
+      "half_window_size": 500
+    },
+    "experiment_id": "01a1172b-f81e-7d74-b5f7-dce163fc5582",
+    "fdr_threshold": 0.05,
+    "fitness_assay": true,
+    "guide_aliases": {},
+    "normalization": "median",
+    "organism_taxid": 9606,
+    "sample_factors": {
+      "ev_2d_d21_a": {
+        "model": "A549",
+        "culture": "2D monolayer",
+        "condition": "LKB1-null (EV)",
+        "timepoint": "21",
+        "perturbation_type": "genetic restoration"
+      },
+      "ev_2d_d21_b": {
+        "model": "A549",
+        "culture": "2D monolayer",
+        "condition": "LKB1-null (EV)",
+        "timepoint": "21",
+        "perturbation_type": "genetic restoration"
+      },
+      "tkov3_plasmid": {
+        "model": "A549",
+        "culture": "2D monolayer",
+        "condition": "TKOv3 plasmid",
+        "timepoint": "plasmid",
+        "perturbation_type": "genetic restoration"
+      }
+    },
+    "library_snapshot": {
+      "id": "01a116fe-842e-7992-a7d8-6340fcbac5db",
+      "cas": "SpCas9",
+      "name": "TKOv3",
+      "taxid": 9606,
+      "n_genes": 18056,
+      "modality": "knockout",
+      "n_guides": 71090
+    },
+    "review_confirmed": true,
+    "experiment_details": {
+      "date": "2026-10-07",
+      "researcher_id": "d40d124b-0a7f-43df-9075-7d7a037140fe",
+      "researcher_name": "E2E Researcher"
+    },
+    "source_checksum_sha256": "b5e01844036815b4636b7e958e5678fd814a7b5c7e11130e93b423c37ed58601"
+  },
+  "started_at": "2026-10-07T16:24:47.253Z",
+  "finished_at": "2026-10-07T16:26:53.572Z",
+  "samples": [
+    {
+      "label": "tkov3_plasmid",
+      "role": "plasmid",
+      "metadata": {
+        "factors": {
+          "model": "A549",
+          "culture": "2D monolayer",
+          "condition": "TKOv3 plasmid",
+          "timepoint": "plasmid",
+          "perturbation_type": "genetic restoration"
+        }
+      }
+    },
+    {
+      "label": "ev_2d_d21_a",
+      "role": "treatment",
+      "metadata": {
+        "factors": {
+          "model": "A549",
+          "culture": "2D monolayer",
+          "condition": "LKB1-null (EV)",
+          "timepoint": "21",
+          "perturbation_type": "genetic restoration"
+        }
+      }
+    },
+    {
+      "label": "ev_2d_d21_b",
+      "role": "treatment",
+      "metadata": {
+        "factors": {
+          "model": "A549",
+          "culture": "2D monolayer",
+          "condition": "LKB1-null (EV)",
+          "timepoint": "21",
+          "perturbation_type": "genetic restoration"
+        }
+      }
+    }
+  ],
+  "stages": [
+    {
+      "stage": "ingest",
+      "status": "done",
+      "tool": null,
+      "detail": "1 file(s), 0.00 GB, ev_2d_d21_a+ev_2d_d21_b vs tkov3_plasmid",
+      "metrics": {
+        "notes": [],
+        "roles": {
+          "ev_2d_d21_a": "treatment",
+          "ev_2d_d21_b": "treatment",
+          "tkov3_plasmid": "plasmid"
+        },
+        "control": [
+          "tkov3_plasmid"
+        ],
+        "treatment": [
+          "ev_2d_d21_a",
+          "ev_2d_d21_b"
+        ]
+      }
+    },
+    {
+      "stage": "detect",
+      "status": "done",
+      "tool": null,
+      "detail": "TKOv3 (supplied, not detected)",
+      "metrics": {
+        "library": "tkov3",
+        "n_guides": 71090
+      }
+    },
+    {
+      "stage": "count",
+      "status": "done",
+      "tool": null,
+      "detail": "count table with 3 samples",
+      "metrics": {
+        "n_guides": 70116,
+        "n_samples": 3,
+        "sample_locations": {}
+      }
+    },
+    {
+      "stage": "qc",
+      "status": "done",
+      "tool": null,
+      "detail": "warn, NNMD -4.93",
+      "metrics": {
+        "nnmd": -4.934,
+        "auroc": 0.939,
+        "notes": [
+          "NNMD -4.93 on ev_2d_d21_a+ev_2d_d21_b vs plasmid passes (threshold -1.25)."
+        ],
+        "samples": [
+          {
+            "gini": 0.0417,
+            "role": "plasmid",
+            "label": "tkov3_plasmid",
+            "notes": [
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+            ],
+            "verdict": "pass",
+            "count_sum": 19348713,
+            "skew_ratio": 2.77,
+            "total_reads": null,
+            "zero_guides": 0,
+            "mapped_reads": 19348713,
+            "mapping_rate": null,
+            "zero_fraction": 0,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 276,
+            "represented_fraction": 1,
+            "mapping_rate_available": false
+          },
+          {
+            "gini": 0.0884,
+            "role": "treatment",
+            "label": "ev_2d_d21_a",
+            "notes": [
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+              "Skew ratio 10.0 above 10 (90th/10th percentile guide count)."
+            ],
+            "verdict": "warn",
+            "count_sum": 42309843,
+            "skew_ratio": 10.01,
+            "total_reads": null,
+            "zero_guides": 0,
+            "mapped_reads": 42309843,
+            "mapping_rate": null,
+            "zero_fraction": 0,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 603.4,
+            "represented_fraction": 1,
+            "mapping_rate_available": false
+          },
+          {
+            "gini": 0.2899,
+            "role": "treatment",
+            "label": "ev_2d_d21_b",
+            "notes": [
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+              "Skew ratio 191.3 above 10 (90th/10th percentile guide count)."
+            ],
+            "verdict": "warn",
+            "count_sum": 54378347,
+            "skew_ratio": 191.33,
+            "total_reads": null,
+            "zero_guides": 0,
+            "mapped_reads": 54378347,
+            "mapping_rate": null,
+            "zero_fraction": 0,
+            "mapping_source": "count_table",
+            "mean_reads_per_guide": 775.5,
+            "represented_fraction": 1,
+            "mapping_rate_available": false
+          }
+        ],
+        "verdict": "warn",
+        "nnmd_by_arm": {
+          "ev_2d_d21_a": -7.669,
+          "ev_2d_d21_b": -3.773
+        },
+        "nnmd_reason": null,
+        "bottlenecked": [],
+        "suspect_arms": [],
+        "nnmd_contrast": "ev_2d_d21_a+ev_2d_d21_b vs plasmid",
+        "n_essential_found": 646,
+        "n_nonessential_found": 797,
+        "replicate_correlations": [
+          {
+            "a": "ev_2d_d21_a",
+            "b": "ev_2d_d21_b",
+            "r": 0.4212,
+            "role": "treatment",
+            "r_lfc": 0.373
+          }
+        ]
+      }
+    },
+    {
+      "stage": "hits",
+      "status": "done",
+      "tool": null,
+      "detail": "18049 genes, 205 at FDR 0.05, methods ['mageck_rra']",
+      "metrics": {
+        "methods": [
+          "mageck_rra"
+        ],
+        "warnings": [],
+        "fdr_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
+        "fdr_threshold": 0.05,
+        "n_significant": 205,
+        "normalization": "median",
+        "essentiality_contrast": true
+      }
+    },
+    {
+      "stage": "artifacts",
+      "status": "done",
+      "tool": null,
+      "detail": "205 called hits: {'frequent_hitter': 199, 'promiscuous_guide': 64, 'multi_gene_guide': 44, 'single_guide': 2}",
+      "metrics": {
+        "all_genes": {
+          "single_guide": 8482,
+          "frequent_hitter": 1874,
+          "multi_gene_guide": 1211,
+          "promiscuous_guide": 2528
+        },
+        "on_called_hits": {
+          "single_guide": 2,
+          "frequent_hitter": 199,
+          "multi_gene_guide": 44,
+          "promiscuous_guide": 64
+        }
+      }
+    },
+    {
+      "stage": "atlas",
+      "status": "done",
+      "tool": null,
+      "detail": "1,167 background screens of 1,952; 10 comparable; context for 18,046 genes; 1,814 frequent hitters; 378 held out (leakage policy publication); 563 resolved via an alias; 3 absent from the Atlas; 10 measured in under 10 unrelated screens",
+      "metrics": {
+        "reason": null,
+        "release": "2.0.18",
+        "available": true,
+        "n_screens": 1952,
+        "n_comparable": 10,
+        "leakage_policy": "publication",
+        "n_frequent_hitters": 1814,
+        "min_screens_to_judge": 10,
+        "n_background_screens": 1167,
+        "n_genes_not_in_atlas": 3,
+        "n_genes_with_context": 18046,
+        "comparable_screen_ids": [
+          2428,
+          2433,
+          1431,
+          1433,
+          703,
+          186,
+          1633,
+          1636,
+          1632,
+          1635
+        ],
+        "n_genes_resolved_by_alias": 563,
+        "n_screens_excluded_for_leakage": 378,
+        "n_genes_too_few_screens_to_judge": 10
+      }
+    },
+    {
+      "stage": "score",
+      "status": "skipped",
+      "tool": null,
+      "detail": "no probability was estimated for any of 205 called hits. No model is fitted for independent genetic reproduction in the same model, because no validation outcome of that kind has been recorded.",
+      "metrics": {
+        "cohort": {
+          "fitted": false,
+          "source": "no cohort file at /data/validation/outcomes.json; the network is unfitted and every estimate is refused with a reason",
+          "n_heads": 0,
+          "problem": null,
+          "n_outcomes": 0,
+          "cohort_path": "/data/validation/outcomes.json",
+          "cohort_sha256": null
+        },
+        "context": {
+          "modality": "knockout",
+          "treatment": null,
+          "model_type": "cancer_cell_line",
+          "assay_class": "ko_fitness",
+          "phenotype_family": "fitness"
+        },
+        "n_called": 205,
+        "n_declined": 205,
+        "by_question": {
+          "reproduces": {
+            "reasons": {
+              "head_not_fitted": 205
+            },
+            "declined": 205,
+            "estimated": 0
+          },
+          "cross_model": {
+            "reasons": {
+              "head_not_fitted": 205
+            },
+            "declined": 205,
+            "estimated": 0
+          },
+          "pharmacologic": {
+            "reasons": {
+              "head_not_fitted": 205
+            },
+            "declined": 205,
+            "estimated": 0
+          },
+          "target_specific": {
+            "reasons": {
+              "head_not_fitted": 205
+            },
+            "declined": 205,
+            "estimated": 0
+          }
+        },
+        "n_estimated": 0
+      }
+    },
+    {
+      "stage": "report",
+      "status": "done",
+      "tool": null,
+      "detail": "wrote 18,049 hit rows, 70,116 per-guide rows, 17,811 guide-disagreement reports and 820 validation predictions",
+      "metrics": {}
+    }
+  ],
+  "counts": {
+    "guide_effects": "70116",
+    "gene_disagreement": "17811"
+  },
+  "n_genes": 18049
+}

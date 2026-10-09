@@ -265,10 +265,11 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
               className="min-h-[460px]"
             >
               {points.status === "found" ? (
-                <EffectExplorer
+                <EffectExplorer key={`${screen.current_run_id}:${plotComparison.id}`}
                   screenId={screen.id}
                   screenName={screen.name}
                   comparisonName={plotComparison.name}
+                  comparisonId={plotComparison.id}
                   series={points.series}
                   defaultMaxFdr={significantFdr}
                 />

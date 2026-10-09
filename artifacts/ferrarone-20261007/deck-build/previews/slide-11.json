@@ -1,0 +1,9 @@
+{"schema":"openai.presentation.layout/v5","unit":"px","slide":{"id":"sl/2g5iw5","index":10,"layout":{"id":"ly/n69w3654","name":"Title Slide"},"backgroundColor":"rgba(250,249,246,1)","position":{"left":0,"top":0,"width":1280,"height":720}},
+"elements":[
+{"id":"im/srmdonql","kind":"image","position":{"left":64,"top":32,"width":92,"height":31},"fit":"contain","alt":"SplicR logo"},
+{"id":"sh/mhwji90z","kind":"textbox","name":"text-1","position":{"left":64,"top":100,"width":1152,"height":70},"text":"Results across the six comparisons","style":{"fontSize":44,"typeface":"Inter","color":"#174F62","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/7250rehk","kind":"textbox","name":"text-2","position":{"left":64,"top":177,"width":1152,"height":42},"text":"RRA candidates at the declared two-direction FDR threshold of 0.05","style":{"fontSize":21,"typeface":"Inter","color":"#4F6470","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/g7y1oji1","kind":"textbox","name":"text-3","position":{"left":1176,"top":670,"width":64,"height":28},"text":"11","style":{"fontSize":15,"typeface":"Inter","color":"#626B78","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"ch/9gjq58f6","kind":"chart","position":{"left":64,"top":250,"width":1152,"height":325},"chartType":"bar"},
+{"id":"sh/u5gjm90v","kind":"textbox","name":"text-5","position":{"left":64,"top":622,"width":1110,"height":42},"text":"Each report covers 18,049 genes. These RRA counts do not reproduce the paper’s MLE figure.","style":{"fontSize":17,"typeface":"Inter","color":"#626B78","alignment":"left"},"geometry":"rect","lineWidth":0}
+]}

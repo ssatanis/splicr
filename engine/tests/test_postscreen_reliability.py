@@ -48,6 +48,36 @@ def test_portable_provenance_hashes_exact_code_and_analyzed_counts(tmp_path):
     assert before["analyzed_counts"] == after["analyzed_counts"]
 
 
+def test_engine_revision_uses_deployed_source_identity(monkeypatch):
+    monkeypatch.setenv("SPLICR_PIPELINE_VERSION", "commit+exact-code-hash")
+    assert pipeline._engine_revision() == "commit+exact-code-hash"
+
+
+@pytest.mark.parametrize("configured", ["", "unknown"])
+def test_local_engine_revision_tracks_source_changes(monkeypatch, tmp_path, configured):
+    monkeypatch.setenv("SPLICR_PIPELINE_VERSION", configured)
+    (tmp_path / "pipeline.py").write_text("# first revision\n")
+    first = pipeline._engine_revision(tmp_path)
+    assert first.startswith("source-sha256:")
+    (tmp_path / "pipeline.py").write_text("# changed revision\n")
+    assert pipeline._engine_revision(tmp_path) != first
+
+
+def test_retry_resets_stale_stage_completion_and_records_revision(monkeypatch):
+    from types import SimpleNamespace
+    class Connection:
+        def __init__(self): self.calls=[]
+        def execute(self,sql,params): self.calls.append((sql,params))
+    monkeypatch.setenv('SPLICR_PIPELINE_VERSION','verified-worker-revision')
+    conn=Connection()
+    pipeline._start_existing_run(conn,SimpleNamespace(run_id='run',screen_id='screen'))
+    assert conn.calls[0][1] == ('verified-worker-revision','run')
+    assert "status = 'queued'" in conn.calls[1][0]
+    assert "metrics = '{}'::jsonb" in conn.calls[1][0]
+    assert 'finished_at = null' in conn.calls[1][0]
+    assert conn.calls[1][1] == ('run',)
+
+
 def test_count_only_mapping_is_unknown_not_perfect(matrix):
     qc = sample_qc(matrix, "T0")
     assert qc.mapping_rate is None
@@ -68,6 +98,17 @@ def test_read_counting_mapping_keeps_observed_fraction(matrix):
     assert qc.total_reads == 1000
     assert qc.as_dict()["mapping_rate_available"] is True
     assert qc.as_dict()["mapping_source"] == "read_counting_summary"
+
+
+def test_failed_mapping_remains_failed_at_sample_and_screen_level(matrix, library):
+    matrix.per_sample = [SampleCounts("T0", total_reads=2000, mapped_exact=600)]
+    sample = sample_qc(matrix, "T0", role="reference")
+    assert sample.mapping_rate == 0.3
+    assert sample.verdict == "fail"
+    screen = screen_qc(matrix, {"T0": "reference", "D21": "treatment"},
+                       ["D21"], ["T0"], library, assess_essentiality=False)
+    assert screen.verdict == "fail"
+    assert any("below the" in note for note in screen.samples[0].notes)
 
 
 def test_zero_reads_cannot_define_a_mapping_fraction(matrix):
@@ -255,6 +296,13 @@ def test_requested_mle_runs_and_merges(monkeypatch, matrix, library, tmp_path):
     assert "mageck_mle" in result.methods
 
 
+@pytest.mark.parametrize("value", ["0", "-1", "33", "invalid"])
+def test_invalid_mle_compute_budget_cannot_start_a_tool(monkeypatch, tmp_path, value):
+    monkeypatch.setenv("SPLICR_MLE_PROCESSES", value)
+    with pytest.raises(ValueError, match="MLE process count"):
+        hits.run_mageck_mle(tmp_path / "counts", tmp_path / "design", tmp_path)
+
+
 @pytest.mark.parametrize("declared", [False, True])
 def test_inversion_guard_requires_declared_fitness_contrast(monkeypatch, matrix, library, tmp_path, declared):
     genes = {f"E{i}": GeneResult(f"E{i}", fdr=0.001, direction="enriched") for i in range(100)}
@@ -353,9 +401,44 @@ def test_pipeline_context_and_portable_evidence_report(monkeypatch, tmp_path, ma
     assert all(report["provenance"]["code_sha256"].values())
     assert report["statistics"]["validation_probability"] is None
     assert report["genes"][0]["depleted_fdr"] == 0.02
+    executed = next(stage for stage in result.stages if stage.stage == "hits").metrics
+    assert executed["mle_design"] is None
+    assert executed["drugz_options"] is None
+    assert executed["normalization_controls"] is None
     if not expected:
         assert report["qc"]["nnmd"] is None
         assert "not applicable" in report["qc"]["nnmd_reason"]
+
+
+def test_pipeline_records_resolved_execution_parameters(monkeypatch, tmp_path, matrix, library):
+    matrix = CountMatrix("test", ["g1", "g2"], ["A", "B"],
+                         ["T0a", "T0b", "D21a", "D21b"],
+                         [[300, 280, 150, 160], [300, 320, 450, 440]])
+    path = matrix.to_mageck_tsv(tmp_path / "counts.tsv")
+    monkeypatch.setattr(pipeline, "load_library", lambda *a: library)
+    observed = {}
+    def call(*args, **kwargs):
+        observed.update(kwargs)
+        return HitTable({"A": GeneResult("A", lfc=-2, fdr=0.04)},
+                        ["mageck_rra", "mageck_mle", "drugz"], "test", ["D21a", "D21b"], ["T0a", "T0b"])
+    monkeypatch.setattr(pipeline, "call_hits", call)
+    monkeypatch.setattr(pipeline, "flag_artifacts", lambda *a, **kw: {})
+    monkeypatch.setattr(pipeline, "atlas_context", lambda *a, **kw: AtlasResult(available=False, reason="fixture"))
+    result = pipeline.run_pipeline(pipeline.ScreenInput("execution record", count_table=path,
+        library_slug="test", treatment=["D21a", "D21b"], control=["T0a", "T0b"],
+        hit_callers=["mageck_rra", "mageck_mle", "drugz"], run_drugz=True,
+        drugz_options={"pseudocount": 7, "half_window_size": 200}), tmp_path / "out", verbose=False)
+    assert result.ok, result.error
+    metrics = next(stage for stage in result.stages if stage.stage == "hits").metrics
+    assert metrics["mle_design"]["random_seed"] == observed["mle_random_seed"] == 0
+    assert metrics["mle_design"]["permutation_round"] == observed["mle_permutation_round"] == 10
+    assert metrics["mle_design"]["coefficient"] == observed["mle_coefficient"] == "treatment"
+    assert metrics["drugz_options"] == {"paired": False, "pseudocount": 7.0, "half_window_size": 200}
+    assert metrics["normalization_controls"] is None
+    report = json.loads(result.report_path.read_text())
+    portable = next(stage for stage in report["execution"]["stages"] if stage["stage"] == "hits")
+    assert portable["metrics"] == metrics
+    assert portable["status"] == "done"
 
 def test_drugz_integer_cli_options_match_the_pinned_tool(monkeypatch,tmp_path):
     (tmp_path / 'drugz.py').touch()

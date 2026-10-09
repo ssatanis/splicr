@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import os
+from itertools import islice
 import uuid
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -228,18 +229,26 @@ def write_guide_counts(conn: "psycopg.Connection", ctx: RunContext,
     Preserve observed zeros, including guides absent from both selected arms.
     A zero count and an unrecorded guide are different pieces of evidence.
     """
+    # Count persistence is a bounded bulk operation, not a web query. Scope the
+    # allowance to this transaction so the pooler's next borrower keeps its
+    # normal timeout. Smaller COPY statements also bound each streaming write.
+    conn.execute("set local statement_timeout = '10min'", ())
     conn.execute("delete from public.guide_counts where screen_id = %s and run_id = %s", (ctx.screen_id, ctx.run_id))
     written = 0
-    with conn.cursor().copy(
-        "copy public.guide_counts "
-        "(screen_id, run_id, sample_id, guide_key, gene_symbol, count) from stdin"
-    ) as copy:
+    def rows():
         for i, guide_id in enumerate(matrix.guide_ids):
             row = matrix.matrix[i]
             gene = matrix.genes[i]
             for j, label in enumerate(matrix.samples):
-                copy.write_row((ctx.screen_id, ctx.run_id, sample_ids[label],
-                                guide_id, gene, row[j]))
+                yield (ctx.screen_id, ctx.run_id, sample_ids[label], guide_id, gene, row[j])
+    source = iter(rows())
+    while batch := list(islice(source, 25_000)):
+        with conn.cursor().copy(
+            "copy public.guide_counts "
+            "(screen_id, run_id, sample_id, guide_key, gene_symbol, count) from stdin"
+        ) as copy:
+            for row in batch:
+                copy.write_row(row)
                 written += 1
     return written
 
@@ -526,6 +535,26 @@ def write_gene_disagreement(conn: "psycopg.Connection", ctx: RunContext, reports
             ))
             written += 1
     return written
+
+
+def write_lab_evidence(conn, ctx: RunContext, records: list[dict]) -> int:
+    """Content-addressed append-only receipts; retries cannot overwrite evidence."""
+    import json
+    values = []
+    for record in records:
+        canonical = record.get("canonical") or json.dumps(
+            {k: v for k, v in record.items() if k not in {"sha256", "canonical"}},
+            sort_keys=True, separators=(",", ":"), allow_nan=False)
+        values.append((ctx.screen_id, ctx.run_id, ctx.comparison_id, record["gene"],
+                       record["kind"], record["sha256"], canonical))
+    if not values:
+        return 0
+    # psycopg pipelines executemany, avoiding one network round trip per gene.
+    with conn.cursor() as cursor:
+        cursor.executemany(
+            "insert into public.lab_evidence (screen_id,run_id,comparison_id,gene_symbol,kind,sha256,canonical) "
+            "values (%s,%s,%s,%s,%s,%s,%s) on conflict do nothing", values)
+        return cursor.rowcount
 
 
 def finish_run(conn: "psycopg.Connection", ctx: RunContext, status: str = "complete",

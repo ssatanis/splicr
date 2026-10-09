@@ -1,0 +1,629 @@
+[
+  {
+    "culture": "2d",
+    "comparison": "EV vs plasmid",
+    "qc": {
+      "verdict": "warn",
+      "nnmd": -4.934,
+      "nnmd_contrast": "ev_2d_d21_a+ev_2d_d21_b vs plasmid",
+      "nnmd_reason": null,
+      "nnmd_by_arm": {
+        "ev_2d_d21_a": -7.669,
+        "ev_2d_d21_b": -3.773
+      },
+      "auroc": 0.939,
+      "n_essential_found": 646,
+      "n_nonessential_found": 797,
+      "bottlenecked": [],
+      "suspect_arms": [],
+      "replicate_correlations": [
+        {
+          "a": "ev_2d_d21_a",
+          "b": "ev_2d_d21_b",
+          "role": "treatment",
+          "r": 0.4212,
+          "r_lfc": 0.373
+        }
+      ],
+      "samples": [
+        {
+          "label": "tkov3_plasmid",
+          "role": "plasmid",
+          "total_reads": null,
+          "mapped_reads": 19348713,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 19348713,
+          "zero_guides": 0,
+          "zero_fraction": 0.0,
+          "represented_fraction": 1.0,
+          "gini": 0.0417,
+          "skew_ratio": 2.77,
+          "mean_reads_per_guide": 276.0,
+          "verdict": "pass",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+          ]
+        },
+        {
+          "label": "ev_2d_d21_a",
+          "role": "treatment",
+          "total_reads": null,
+          "mapped_reads": 42309843,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 42309843,
+          "zero_guides": 0,
+          "zero_fraction": 0.0,
+          "represented_fraction": 1.0,
+          "gini": 0.0884,
+          "skew_ratio": 10.01,
+          "mean_reads_per_guide": 603.4,
+          "verdict": "warn",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+            "Skew ratio 10.0 above 10 (90th/10th percentile guide count)."
+          ]
+        },
+        {
+          "label": "ev_2d_d21_b",
+          "role": "treatment",
+          "total_reads": null,
+          "mapped_reads": 54378347,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 54378347,
+          "zero_guides": 0,
+          "zero_fraction": 0.0,
+          "represented_fraction": 1.0,
+          "gini": 0.2899,
+          "skew_ratio": 191.33,
+          "mean_reads_per_guide": 775.5,
+          "verdict": "warn",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+            "Skew ratio 191.3 above 10 (90th/10th percentile guide count)."
+          ]
+        }
+      ],
+      "notes": [
+        "NNMD -4.93 on ev_2d_d21_a+ev_2d_d21_b vs plasmid passes (threshold -1.25)."
+      ]
+    }
+  },
+  {
+    "culture": "2d",
+    "comparison": "WT vs plasmid",
+    "qc": {
+      "verdict": "warn",
+      "nnmd": -4.276,
+      "nnmd_contrast": "wt_2d_d21_a+wt_2d_d21_b vs plasmid",
+      "nnmd_reason": null,
+      "nnmd_by_arm": {
+        "wt_2d_d21_a": -9.023,
+        "wt_2d_d21_b": -3.053
+      },
+      "auroc": 0.9398,
+      "n_essential_found": 646,
+      "n_nonessential_found": 797,
+      "bottlenecked": [],
+      "suspect_arms": [],
+      "replicate_correlations": [
+        {
+          "a": "wt_2d_d21_a",
+          "b": "wt_2d_d21_b",
+          "role": "treatment",
+          "r": 0.4801,
+          "r_lfc": 0.4201
+        }
+      ],
+      "samples": [
+        {
+          "label": "tkov3_plasmid",
+          "role": "plasmid",
+          "total_reads": null,
+          "mapped_reads": 19348713,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 19348713,
+          "zero_guides": 0,
+          "zero_fraction": 0.0,
+          "represented_fraction": 1.0,
+          "gini": 0.0417,
+          "skew_ratio": 2.77,
+          "mean_reads_per_guide": 276.0,
+          "verdict": "pass",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+          ]
+        },
+        {
+          "label": "wt_2d_d21_a",
+          "role": "treatment",
+          "total_reads": null,
+          "mapped_reads": 45434227,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 45434227,
+          "zero_guides": 0,
+          "zero_fraction": 0.0,
+          "represented_fraction": 1.0,
+          "gini": 0.0755,
+          "skew_ratio": 7.48,
+          "mean_reads_per_guide": 648.0,
+          "verdict": "pass",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+          ]
+        },
+        {
+          "label": "wt_2d_d21_b",
+          "role": "treatment",
+          "total_reads": null,
+          "mapped_reads": 51619493,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 51619493,
+          "zero_guides": 0,
+          "zero_fraction": 0.0,
+          "represented_fraction": 1.0,
+          "gini": 0.252,
+          "skew_ratio": 261.42,
+          "mean_reads_per_guide": 736.2,
+          "verdict": "warn",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+            "Skew ratio 261.4 above 10 (90th/10th percentile guide count)."
+          ]
+        }
+      ],
+      "notes": [
+        "NNMD -4.28 on wt_2d_d21_a+wt_2d_d21_b vs plasmid passes (threshold -1.25)."
+      ]
+    }
+  },
+  {
+    "culture": "2d",
+    "comparison": "WT vs EV",
+    "qc": {
+      "verdict": "warn",
+      "nnmd": null,
+      "nnmd_contrast": "none available",
+      "nnmd_reason": "essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay",
+      "nnmd_by_arm": {},
+      "auroc": null,
+      "n_essential_found": 0,
+      "n_nonessential_found": 0,
+      "bottlenecked": [],
+      "suspect_arms": [],
+      "replicate_correlations": [
+        {
+          "a": "ev_2d_d21_a",
+          "b": "ev_2d_d21_b",
+          "role": "control",
+          "r": 0.4212,
+          "r_lfc": null
+        },
+        {
+          "a": "wt_2d_d21_a",
+          "b": "wt_2d_d21_b",
+          "role": "treatment",
+          "r": 0.4801,
+          "r_lfc": null
+        }
+      ],
+      "samples": [
+        {
+          "label": "ev_2d_d21_a",
+          "role": "control",
+          "total_reads": null,
+          "mapped_reads": 42309843,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 42309843,
+          "zero_guides": 0,
+          "zero_fraction": 0.0,
+          "represented_fraction": 1.0,
+          "gini": 0.0884,
+          "skew_ratio": 10.01,
+          "mean_reads_per_guide": 603.4,
+          "verdict": "warn",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+            "Skew ratio 10.0 above 10 (90th/10th percentile guide count)."
+          ]
+        },
+        {
+          "label": "ev_2d_d21_b",
+          "role": "control",
+          "total_reads": null,
+          "mapped_reads": 54378347,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 54378347,
+          "zero_guides": 0,
+          "zero_fraction": 0.0,
+          "represented_fraction": 1.0,
+          "gini": 0.2899,
+          "skew_ratio": 191.33,
+          "mean_reads_per_guide": 775.5,
+          "verdict": "warn",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+            "Skew ratio 191.3 above 10 (90th/10th percentile guide count)."
+          ]
+        },
+        {
+          "label": "wt_2d_d21_a",
+          "role": "treatment",
+          "total_reads": null,
+          "mapped_reads": 45434227,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 45434227,
+          "zero_guides": 0,
+          "zero_fraction": 0.0,
+          "represented_fraction": 1.0,
+          "gini": 0.0755,
+          "skew_ratio": 7.48,
+          "mean_reads_per_guide": 648.0,
+          "verdict": "pass",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+          ]
+        },
+        {
+          "label": "wt_2d_d21_b",
+          "role": "treatment",
+          "total_reads": null,
+          "mapped_reads": 51619493,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 51619493,
+          "zero_guides": 0,
+          "zero_fraction": 0.0,
+          "represented_fraction": 1.0,
+          "gini": 0.252,
+          "skew_ratio": 261.42,
+          "mean_reads_per_guide": 736.2,
+          "verdict": "warn",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+            "Skew ratio 261.4 above 10 (90th/10th percentile guide count)."
+          ]
+        }
+      ],
+      "notes": [
+        "NNMD/AUROC not assessed: essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay.",
+        "Replicates ev_2d_d21_a and ev_2d_d21_b correlate at r=0.42 on log counts. This screen has no library reference, so replicate agreement cannot be measured on fold change, which is the sensitive version of this check.",
+        "Replicates wt_2d_d21_a and wt_2d_d21_b correlate at r=0.48 on log counts. This screen has no library reference, so replicate agreement cannot be measured on fold change, which is the sensitive version of this check."
+      ]
+    }
+  },
+  {
+    "culture": "3d",
+    "comparison": "EV vs plasmid",
+    "qc": {
+      "verdict": "warn",
+      "nnmd": -4.705,
+      "nnmd_contrast": "ev_3d_d21_a+ev_3d_d21_b vs plasmid",
+      "nnmd_reason": null,
+      "nnmd_by_arm": {
+        "ev_3d_d21_a": -6.042,
+        "ev_3d_d21_b": -3.879
+      },
+      "auroc": 0.9331,
+      "n_essential_found": 646,
+      "n_nonessential_found": 797,
+      "bottlenecked": [],
+      "suspect_arms": [],
+      "replicate_correlations": [
+        {
+          "a": "ev_3d_d21_a",
+          "b": "ev_3d_d21_b",
+          "role": "treatment",
+          "r": 0.3666,
+          "r_lfc": 0.3133
+        }
+      ],
+      "samples": [
+        {
+          "label": "tkov3_plasmid",
+          "role": "plasmid",
+          "total_reads": null,
+          "mapped_reads": 19348713,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 19348713,
+          "zero_guides": 0,
+          "zero_fraction": 0.0,
+          "represented_fraction": 1.0,
+          "gini": 0.0417,
+          "skew_ratio": 2.77,
+          "mean_reads_per_guide": 276.0,
+          "verdict": "pass",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+          ]
+        },
+        {
+          "label": "ev_3d_d21_a",
+          "role": "treatment",
+          "total_reads": null,
+          "mapped_reads": 49766974,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 49766974,
+          "zero_guides": 0,
+          "zero_fraction": 0.0,
+          "represented_fraction": 1.0,
+          "gini": 0.1235,
+          "skew_ratio": 25.12,
+          "mean_reads_per_guide": 709.8,
+          "verdict": "warn",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+            "Skew ratio 25.1 above 10 (90th/10th percentile guide count)."
+          ]
+        },
+        {
+          "label": "ev_3d_d21_b",
+          "role": "treatment",
+          "total_reads": null,
+          "mapped_reads": 49884646,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 49884646,
+          "zero_guides": 0,
+          "zero_fraction": 0.0,
+          "represented_fraction": 1.0,
+          "gini": 0.29,
+          "skew_ratio": 190.0,
+          "mean_reads_per_guide": 711.5,
+          "verdict": "warn",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+            "Skew ratio 190.0 above 10 (90th/10th percentile guide count)."
+          ]
+        }
+      ],
+      "notes": [
+        "NNMD -4.70 on ev_3d_d21_a+ev_3d_d21_b vs plasmid passes (threshold -1.25)."
+      ]
+    }
+  },
+  {
+    "culture": "3d",
+    "comparison": "WT vs plasmid",
+    "qc": {
+      "verdict": "warn",
+      "nnmd": -3.247,
+      "nnmd_contrast": "wt_3d_d21_a+wt_3d_d21_b vs plasmid",
+      "nnmd_reason": null,
+      "nnmd_by_arm": {
+        "wt_3d_d21_a": -6.45,
+        "wt_3d_d21_b": -2.058
+      },
+      "auroc": 0.928,
+      "n_essential_found": 646,
+      "n_nonessential_found": 797,
+      "bottlenecked": [],
+      "suspect_arms": [
+        "wt_3d_d21_b"
+      ],
+      "replicate_correlations": [
+        {
+          "a": "wt_3d_d21_a",
+          "b": "wt_3d_d21_b",
+          "role": "treatment",
+          "r": 0.4018,
+          "r_lfc": 0.3264
+        }
+      ],
+      "samples": [
+        {
+          "label": "tkov3_plasmid",
+          "role": "plasmid",
+          "total_reads": null,
+          "mapped_reads": 19348713,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 19348713,
+          "zero_guides": 0,
+          "zero_fraction": 0.0,
+          "represented_fraction": 1.0,
+          "gini": 0.0417,
+          "skew_ratio": 2.77,
+          "mean_reads_per_guide": 276.0,
+          "verdict": "pass",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+          ]
+        },
+        {
+          "label": "wt_3d_d21_a",
+          "role": "treatment",
+          "total_reads": null,
+          "mapped_reads": 45135092,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 45135092,
+          "zero_guides": 0,
+          "zero_fraction": 0.0,
+          "represented_fraction": 1.0,
+          "gini": 0.0921,
+          "skew_ratio": 10.8,
+          "mean_reads_per_guide": 643.7,
+          "verdict": "warn",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+            "Skew ratio 10.8 above 10 (90th/10th percentile guide count)."
+          ]
+        },
+        {
+          "label": "wt_3d_d21_b",
+          "role": "treatment",
+          "total_reads": null,
+          "mapped_reads": 67696934,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 67696934,
+          "zero_guides": 0,
+          "zero_fraction": 0.0,
+          "represented_fraction": 1.0,
+          "gini": 0.2404,
+          "skew_ratio": 196.2,
+          "mean_reads_per_guide": 965.5,
+          "verdict": "warn",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+            "Skew ratio 196.2 above 10 (90th/10th percentile guide count)."
+          ]
+        }
+      ],
+      "notes": [
+        "NNMD -3.25 on wt_3d_d21_a+wt_3d_d21_b vs plasmid passes (threshold -1.25).",
+        "wt_3d_d21_b separates essentials from nonessentials at NNMD -2.06 while its treatment siblings median -4.25. It kept 48% of their dropout signal."
+      ]
+    }
+  },
+  {
+    "culture": "3d",
+    "comparison": "WT vs EV",
+    "qc": {
+      "verdict": "warn",
+      "nnmd": null,
+      "nnmd_contrast": "none available",
+      "nnmd_reason": "essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay",
+      "nnmd_by_arm": {},
+      "auroc": null,
+      "n_essential_found": 0,
+      "n_nonessential_found": 0,
+      "bottlenecked": [],
+      "suspect_arms": [],
+      "replicate_correlations": [
+        {
+          "a": "ev_3d_d21_a",
+          "b": "ev_3d_d21_b",
+          "role": "control",
+          "r": 0.3666,
+          "r_lfc": null
+        },
+        {
+          "a": "wt_3d_d21_a",
+          "b": "wt_3d_d21_b",
+          "role": "treatment",
+          "r": 0.4018,
+          "r_lfc": null
+        }
+      ],
+      "samples": [
+        {
+          "label": "ev_3d_d21_a",
+          "role": "control",
+          "total_reads": null,
+          "mapped_reads": 49766974,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 49766974,
+          "zero_guides": 0,
+          "zero_fraction": 0.0,
+          "represented_fraction": 1.0,
+          "gini": 0.1235,
+          "skew_ratio": 25.12,
+          "mean_reads_per_guide": 709.8,
+          "verdict": "warn",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+            "Skew ratio 25.1 above 10 (90th/10th percentile guide count)."
+          ]
+        },
+        {
+          "label": "ev_3d_d21_b",
+          "role": "control",
+          "total_reads": null,
+          "mapped_reads": 49884646,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 49884646,
+          "zero_guides": 0,
+          "zero_fraction": 0.0,
+          "represented_fraction": 1.0,
+          "gini": 0.29,
+          "skew_ratio": 190.0,
+          "mean_reads_per_guide": 711.5,
+          "verdict": "warn",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+            "Skew ratio 190.0 above 10 (90th/10th percentile guide count)."
+          ]
+        },
+        {
+          "label": "wt_3d_d21_a",
+          "role": "treatment",
+          "total_reads": null,
+          "mapped_reads": 45135092,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 45135092,
+          "zero_guides": 0,
+          "zero_fraction": 0.0,
+          "represented_fraction": 1.0,
+          "gini": 0.0921,
+          "skew_ratio": 10.8,
+          "mean_reads_per_guide": 643.7,
+          "verdict": "warn",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+            "Skew ratio 10.8 above 10 (90th/10th percentile guide count)."
+          ]
+        },
+        {
+          "label": "wt_3d_d21_b",
+          "role": "treatment",
+          "total_reads": null,
+          "mapped_reads": 67696934,
+          "mapping_rate": null,
+          "mapping_rate_available": false,
+          "mapping_source": "count_table",
+          "count_sum": 67696934,
+          "zero_guides": 0,
+          "zero_fraction": 0.0,
+          "represented_fraction": 1.0,
+          "gini": 0.2404,
+          "skew_ratio": 196.2,
+          "mean_reads_per_guide": 965.5,
+          "verdict": "warn",
+          "notes": [
+            "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency.",
+            "Skew ratio 196.2 above 10 (90th/10th percentile guide count)."
+          ]
+        }
+      ],
+      "notes": [
+        "NNMD/AUROC not assessed: essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay.",
+        "Replicates ev_3d_d21_a and ev_3d_d21_b correlate at r=0.37 on log counts. This screen has no library reference, so replicate agreement cannot be measured on fold change, which is the sensitive version of this check.",
+        "Replicates wt_3d_d21_a and wt_3d_d21_b correlate at r=0.40 on log counts. This screen has no library reference, so replicate agreement cannot be measured on fold change, which is the sensitive version of this check."
+      ]
+    }
+  }
+]

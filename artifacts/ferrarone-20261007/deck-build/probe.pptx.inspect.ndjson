@@ -1,0 +1,6 @@
+{"kind":"deck","id":"pr/ozqr8w","name":"Deck"}
+{"kind":"layout","id":"ly/ils3uhkn","editable":false,"name":"Master","type":"master"}
+{"kind":"layout","id":"ly/p8rupcri","editable":false,"name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/cki1d8","slideIndex":0,"layout":{"id":"ly/p8rupcri","name":"Title Slide"},"title":"SplicR for the Varmus lab","textShapes":1,"backgroundColor":"rgba(255,255,255,1)"}
+{"kind":"textbox","id":"sh/ut8zatcz","slideIndex":0,"position":{"left":70,"top":100,"width":1100,"height":120},"text":"SplicR for the Varmus lab","geometry":"rect","lineWidth":0,"style":{"fontSize":60,"typeface":"Instrument Serif","color":"#174F62","alignment":"left"}}
+{"kind":"notes","id":"nt/cki1d8","slideIndex":0,"text":""}

@@ -136,7 +136,9 @@ def process_study(accession: str) -> dict:
 
 
 @app.function(**COMMON, cpu=8.0, memory=16384, ephemeral_disk=512 * 1024, timeout=6 * 3600,
-              max_containers=8)
+              max_containers=8,
+              env={"SPLICR_MLE_PROCESSES": "8", "OPENBLAS_NUM_THREADS": "1",
+                   "OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1"})
 def process_private_screen() -> dict:
     from splicr.private_screen import process_one
     return process_one(call_id=modal.current_function_call_id())

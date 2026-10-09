@@ -79,3 +79,6 @@ apps/web/src/app/dashboard/zz-probe/
 
 # Keep reproducibility and test logs with the research evidence.
 !research/artifacts/**/*.log
+
+# chart tool scratch output
+.chart-data-*/

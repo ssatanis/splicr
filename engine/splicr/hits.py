@@ -18,6 +18,7 @@ import typing
 import math
 import statistics as st
 import subprocess
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -387,11 +388,18 @@ def run_mageck_mle(
     workdir.mkdir(parents=True, exist_ok=True)
     if isinstance(random_seed, bool) or not isinstance(random_seed, int) or not 0 <= random_seed <= 2**32 - 1:
         raise ValueError("MLE random seed must be an unsigned 32-bit integer")
+    try:
+        processes = int(os.environ.get("SPLICR_MLE_PROCESSES", "1"))
+    except ValueError as exc:
+        raise ValueError("MLE process count must be an integer from 1 to 32") from exc
+    if not 1 <= processes <= 32:
+        raise ValueError("MLE process count must be an integer from 1 to 32")
     # MAGeCK has no seed flag. Seed both upstream RNGs before its unchanged
     # entry point runs, keeping this process isolated from the analysis worker.
     launcher = "import random,runpy,sys,numpy as np;seed=int(sys.argv.pop(1));random.seed(seed);np.random.seed(seed);sys.argv=sys.argv[1:];runpy.run_path(sys.argv[0],run_name='__main__')"
     command = [str(SETTINGS.tool_bin / "python"), "-c", launcher, str(random_seed), str(SETTINGS.tool_bin / "mageck"), "mle", "-k", str(counts.resolve()), "-d", str(design_matrix.resolve()),
-               "-n", prefix, "--permutation-round", str(permutation_round), "--norm-method", norm_method]
+               "-n", prefix, "--permutation-round", str(permutation_round), "--norm-method", norm_method,
+               "--threads", str(processes)]
     if control_sgrna is not None:
         command.extend(["--control-sgrna", str(control_sgrna.resolve())])
     _run(command, workdir, "mageck mle")

@@ -1,0 +1,68 @@
+[
+  {
+    "comparison": "Spheroid: EV vs plasmid",
+    "genes": 18049,
+    "maximum_absolute_differences": {
+      "lfc": 0.0,
+      "fdr": 0.0,
+      "depleted_fdr": 0.0,
+      "enriched_fdr": 0.0
+    },
+    "identical_primary_statistics": true
+  },
+  {
+    "comparison": "Spheroid: WT vs EV",
+    "genes": 18049,
+    "maximum_absolute_differences": {
+      "lfc": 0.0,
+      "fdr": 0.0,
+      "depleted_fdr": 0.0,
+      "enriched_fdr": 0.0
+    },
+    "identical_primary_statistics": true
+  },
+  {
+    "comparison": "Spheroid: WT vs plasmid",
+    "genes": 18049,
+    "maximum_absolute_differences": {
+      "lfc": 0.0,
+      "fdr": 0.0,
+      "depleted_fdr": 0.0,
+      "enriched_fdr": 0.0
+    },
+    "identical_primary_statistics": true
+  },
+  {
+    "comparison": "2D: WT vs plasmid",
+    "genes": 18049,
+    "maximum_absolute_differences": {
+      "lfc": 0.0,
+      "fdr": 0.0,
+      "depleted_fdr": 0.0,
+      "enriched_fdr": 0.0
+    },
+    "identical_primary_statistics": true
+  },
+  {
+    "comparison": "2D: EV vs plasmid",
+    "genes": 18049,
+    "maximum_absolute_differences": {
+      "lfc": 0.0,
+      "fdr": 0.0,
+      "depleted_fdr": 0.0,
+      "enriched_fdr": 0.0
+    },
+    "identical_primary_statistics": true
+  },
+  {
+    "comparison": "2D: WT vs EV",
+    "genes": 18049,
+    "maximum_absolute_differences": {
+      "lfc": 0.0,
+      "fdr": 0.0,
+      "depleted_fdr": 0.0,
+      "enriched_fdr": 0.0
+    },
+    "identical_primary_statistics": true
+  }
+]

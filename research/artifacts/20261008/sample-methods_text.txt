@@ -1,0 +1,170 @@
+SplicR analysis methods — draft for author review
+
+Screen ID: local-study:millman-2026-methods-smoke
+Run ID: local-report-sha256:53ee0870ec8c5585d8b0f8fa89220fef3e565985e95befbb34eae2885119b768
+Exported at: 2026-10-08T15:39:06.192Z
+
+This export contains recorded analysis results. No statistical analysis was
+rerun during export. The recorded engine revision was "source-sha256:da064b66434f20ce2361d4fc4b5bc1ae7747a0559a03569866111107c44d9da1".
+The completed hit-calling methods were ["mageck_rra"].
+Execution evidence: completed hits stage.
+Tool-specific versions: not recorded.
+Container digest: not recorded.
+
+The recorded count normalization was "control".
+The recorded analysis FDR threshold was 0.1.
+The recorded FDR definition was "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound".
+The recorded QC verdict was "pass".
+Detailed parameters, comparisons, requested settings, QC and export selection
+are preserved in methods-record.json and in the exact record below.
+
+An analysis threshold and an export filter are different operations. Missing
+values are unknown, not defaults. Method agreement, a Bayes factor, or a
+confounder flag does not establish a calibrated validation probability or
+prove that a published candidate is false. Before publication, the authors
+must resolve missing versions, reference releases, command lines and input
+provenance using the original run artifacts, and verify the experimental
+design and QC limitations.
+
+Exact recorded evidence:
+{
+  "schema": "splicr.methods-record.v1",
+  "screen_id": "local-study:millman-2026-methods-smoke",
+  "run_id": "local-report-sha256:53ee0870ec8c5585d8b0f8fa89220fef3e565985e95befbb34eae2885119b768",
+  "exported_at": "2026-10-08T15:39:06.192Z",
+  "comparisons": [
+    {
+      "id": "local-comparison:kidney-vs-D0",
+      "name": "kidney vs D0",
+      "kind": "treatment_vs_control"
+    }
+  ],
+  "completed_methods": [
+    "mageck_rra"
+  ],
+  "execution_evidence": "completed hits stage",
+  "engine_version": "source-sha256:da064b66434f20ce2361d4fc4b5bc1ae7747a0559a03569866111107c44d9da1",
+  "container_digest": null,
+  "tool_versions": null,
+  "effective_parameters": {
+    "normalization": "control",
+    "fdr_threshold": 0.1,
+    "fdr_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
+    "essentiality_contrast": false,
+    "mle_design": null,
+    "drugz_options": null,
+    "normalization_controls": {
+      "sha256": "459e985abca6a407062f6839a09a12853f83850f316c37e94412ef7a200d7da9",
+      "n_guides": 3755
+    }
+  },
+  "requested_settings": {
+    "normalization": "control",
+    "fdr_threshold": 0.1,
+    "hit_callers": [
+      "mageck_rra"
+    ],
+    "fitness_assay": false,
+    "treatment": [
+      "kidney"
+    ],
+    "control": [
+      "D0"
+    ],
+    "roles": {
+      "D0": "reference",
+      "kidney": "treatment"
+    }
+  },
+  "warnings": [
+    "BAGEL2 and the essential-direction inversion guard were not applied: this contrast is not a declared loss-of-function fitness endpoint against a library reference."
+  ],
+  "qc": {
+    "verdict": "pass",
+    "nnmd": null,
+    "nnmd_contrast": "kidney vs T0",
+    "nnmd_reason": "essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay",
+    "nnmd_by_arm": {},
+    "auroc": null,
+    "n_essential_found": 0,
+    "n_nonessential_found": 0,
+    "bottlenecked": [],
+    "suspect_arms": [],
+    "replicate_correlations": [],
+    "samples": [
+      {
+        "label": "D0",
+        "role": "reference",
+        "total_reads": null,
+        "mapped_reads": 66916017,
+        "mapping_rate": null,
+        "mapping_rate_available": false,
+        "mapping_source": "count_table",
+        "count_sum": 66916017,
+        "zero_guides": 5,
+        "zero_fraction": 0.00005,
+        "represented_fraction": 0.9997,
+        "gini": 0.0402,
+        "skew_ratio": 2.98,
+        "mean_reads_per_guide": 629.1,
+        "verdict": "pass",
+        "notes": [
+          "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+        ]
+      },
+      {
+        "label": "kidney",
+        "role": "treatment",
+        "total_reads": null,
+        "mapped_reads": 61558710,
+        "mapping_rate": null,
+        "mapping_rate_available": false,
+        "mapping_source": "count_table",
+        "count_sum": 61558710,
+        "zero_guides": 5,
+        "zero_fraction": 0.00005,
+        "represented_fraction": 0.9997,
+        "gini": 0.0431,
+        "skew_ratio": 3.17,
+        "mean_reads_per_guide": 578.8,
+        "verdict": "pass",
+        "notes": [
+          "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+        ]
+      }
+    ],
+    "notes": [
+      "NNMD/AUROC not assessed: essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay."
+    ]
+  },
+  "export_selection": {
+    "fields": [
+      "gene_symbol",
+      "comparison",
+      "comparison_id",
+      "direction",
+      "lfc",
+      "p_value",
+      "fdr",
+      "depleted_fdr",
+      "enriched_fdr",
+      "n_guides",
+      "guide_lfcs",
+      "flags",
+      "flag_messages"
+    ],
+    "sections": [
+      "qc",
+      "provenance"
+    ],
+    "rows": "all",
+    "filter": null
+  },
+  "limitations": [
+    "Methods draft for author review; not a claim of biological validation or statistical superiority.",
+    "Requested settings are distinct from effective execution parameters. Null means not recorded.",
+    "Engine revision is not a version of MAGeCK, BAGEL2, JACKS or Chronos.",
+    "Container identity, tool versions, reference releases, command lines and input hashes require their own execution evidence.",
+    "An export filter selects stored rows; it does not rerun multiple-testing correction."
+  ]
+}

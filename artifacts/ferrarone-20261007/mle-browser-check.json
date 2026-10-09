@@ -1,0 +1,50 @@
+[
+  {
+    "screen": "01a11702-7768-7702-a4c2-2e0abe2bd450",
+    "name": "Ferrarone 2024: A549 LKB1 growth screens, 2D: EV vs plasmid",
+    "http": 200,
+    "genes": 18049,
+    "untruncated": true,
+    "source": "workspace"
+  },
+  {
+    "screen": "01a11702-77b6-7ee0-b7c2-68dbef85873d",
+    "name": "Ferrarone 2024: A549 LKB1 growth screens, 2D: WT vs EV",
+    "http": 200,
+    "genes": 18049,
+    "untruncated": true,
+    "source": "workspace"
+  },
+  {
+    "screen": "01a11702-77ae-7e9c-b85d-3d65a33f81f6",
+    "name": "Ferrarone 2024: A549 LKB1 growth screens, 2D: WT vs plasmid",
+    "http": 200,
+    "genes": 18049,
+    "untruncated": true,
+    "source": "workspace"
+  },
+  {
+    "screen": "01a11702-77c5-7ee8-838c-af193eeb7793",
+    "name": "Ferrarone 2024: A549 LKB1 growth screens, Spheroid: EV vs plasmid",
+    "http": 200,
+    "genes": 18049,
+    "untruncated": true,
+    "source": "workspace"
+  },
+  {
+    "screen": "01a11702-77d5-7337-a508-5e019fee91c0",
+    "name": "Ferrarone 2024: A549 LKB1 growth screens, Spheroid: WT vs EV",
+    "http": 200,
+    "genes": 18049,
+    "untruncated": true,
+    "source": "workspace"
+  },
+  {
+    "screen": "01a11702-77cc-72e2-9307-ab884d26facb",
+    "name": "Ferrarone 2024: A549 LKB1 growth screens, Spheroid: WT vs plasmid",
+    "http": 200,
+    "genes": 18049,
+    "untruncated": true,
+    "source": "workspace"
+  }
+]

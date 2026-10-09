@@ -29,6 +29,7 @@ function listHarness(context = workspace, response = { data: [], count: 0, error
     const chain = {
       select() { return chain; }, order() { return chain; },
       eq(key, value) { read.filters.push([key, value]); return chain; },
+      is(key,value) { read.filters.push([key,value]); return chain; },
       range(start, end) { read.range = [start, end]; return chain; },
       then(resolve, reject) { return Promise.resolve(response).then(resolve, reject); },
     };
@@ -38,6 +39,7 @@ function listHarness(context = workspace, response = { data: [], count: 0, error
     if (name === "server-only") return {};
     if (name === "@/lib/data/org") return {
       getCurrentContext: async () => context,
+      listMembers: async () => [],
       getOrgSettings: async () => ({
         defaults: {
           modality: "knockout",
@@ -65,7 +67,7 @@ for (const [method, table] of [["getWorkspaceScreens", "screens"]]) {
     assert.equal(result.rows[0], row);
     assert.equal(result.total, 110);
     assert.equal(app.reads[0].table, table);
-    assert.deepEqual(app.reads[0].filters, [["org_id", workspace.org.id]]);
+    assert.deepEqual(app.reads[0].filters, [["org_id", workspace.org.id],["archived_at",null]]);
     assert.deepEqual(app.reads[0].range, [100, 149]);
   });
   test(`${method} rejects expired session and invalid pages before queries`, async () => {
@@ -104,6 +106,7 @@ function routeHarness(route, context = workspace, result = { status: "ready", ro
     if (name === "@/lib/supabase/server") return { createClient: async () => { throw new Error("A missing member role must not read drafts"); } };
     if (name === "@/lib/data/org") return {
       getCurrentContext: async () => context,
+      listMembers: async () => [],
       getOrgSettings: async () => ({
         defaults: {
           modality: "knockout",

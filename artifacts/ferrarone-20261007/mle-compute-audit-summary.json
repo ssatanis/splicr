@@ -1,0 +1,20 @@
+{
+  "test_genes": 100,
+  "subset_not_biological_validation": true,
+  "timings": [
+    {
+      "blas_threads": null,
+      "mageck_processes": 1,
+      "seconds": 36.53859537
+    },
+    {
+      "blas_threads": "1",
+      "mageck_processes": 8,
+      "seconds": 20.028913859
+    }
+  ],
+  "maximum_reported_differences": {
+    "treatment|beta": 0.0,
+    "treatment|fdr": 0.0
+  }
+}

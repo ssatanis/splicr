@@ -43,7 +43,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   ctx: RouteContext<"/api/v1/screens/[screenId]/genes/[gene]/disagreement">,
 ): Promise<NextResponse> {
   const { screenId, gene } = await ctx.params;
@@ -63,7 +63,9 @@ export async function GET(
     return NextResponse.json({ error: "Sign in to read a workspace screen." }, { status: 401 });
   }
 
-  const result = await getGeneDisagreement(screenId, symbol);
+  const comparison = new URL(request.url).searchParams.get("comparison");
+  if (comparison && !isUuid(comparison)) return NextResponse.json({ error: "comparison must be a UUID." }, { status: 400 });
+  const result = await getGeneDisagreement(screenId, symbol, comparison ?? undefined);
   switch (result.status) {
     case "found":
       return NextResponse.json(
@@ -71,7 +73,7 @@ export async function GET(
         // A stored report for a stored run does not change, so a reader clicking
         // back to a gene does not pay for it twice. Private: it is one
         // workspace's data and must never reach a shared cache.
-        { status: 200, headers: { "cache-control": "private, max-age=300" } },
+        { status: 200, headers: { "cache-control": "private, no-store" } },
       );
     case "no_report":
       return NextResponse.json(

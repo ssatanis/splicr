@@ -2,6 +2,10 @@ import ExcelJS from "exceljs";
 import { strToU8, zipSync } from "fflate";
 import type { EvidenceRow, ExportScreen } from "@/lib/data/screens-export";
 import { EXPORT_FIELDS, type ExportField, type ExportRequest } from "./export-options";
+import { bundleReadme, fileInventory, VERIFY_BUNDLE } from "./bundle-integrity";
+import { labEvidenceFiles } from "./lab-evidence-export";
+import { isLabReceipt } from "@/lib/lab/evidence";
+import { methodsRecord, methodsText } from "./methods-record";
 
 type Cell = string | number | boolean | null;
 type Row = Record<string, Cell>;
@@ -49,6 +53,7 @@ export function prepareExport(screens: ExportScreen[], request: ExportRequest, e
       ...(request.sections.includes("qc") ? { qc: screen.qcEvidence ?? null } : {}),
       ...(request.sections.includes("guides") ? { guides: evidence(screen.guides ?? []) } : {}),
       ...(request.sections.includes("disagreement") ? { disagreement: evidence(screen.disagreement ?? []) } : {}),
+      ...(request.sections.includes("lab") ? { lab: (screen.labEvidence ?? []).filter(row => request.rowScope === "all" || row.gene_symbol === "__SCREEN__" || keys.has(keyFor(row))) } : {}),
       ...(request.sections.includes("provenance") ? { provenance: { run: screen.run, stages: screen.stages ?? [] } } : {}),
     };
   });
@@ -78,10 +83,10 @@ function evidenceTables(data: Prepared): Table[] {
       Object.entries(flatten(s.qc)).map(([field, value]) => ({ ...identity(s), field, value })));
     tables.push({ name: "Quality control", columns: ["screen_id", "screen_name", "run_id", "field", "value"], rows });
   }
-  for (const section of ["guides", "disagreement"] as const) {
+  for (const section of ["guides", "disagreement", "lab"] as const) {
     if (!data.selection.sections.includes(section)) continue;
     const rows = data.screens.flatMap(s => (s[section] ?? []).map(row => ({ ...identity(s), ...Object.fromEntries(Object.entries(row).map(([key, value]) => [key, scalar(value)])) })));
-    tables.push({ name: section === "guides" ? "Guide results" : "Guide disagreement", columns: columnsFor(rows, ["screen_id", "screen_name", "run_id", "comparison_id", "gene_symbol"]), rows });
+    tables.push({ name: section === "guides" ? "Guide results" : section === "lab" ? "Laboratory evidence" : "Guide disagreement", columns: columnsFor(rows, ["screen_id", "screen_name", "run_id", "comparison_id", "gene_symbol"]), rows });
   }
   if (data.selection.sections.includes("provenance")) {
     const rows = data.screens.flatMap(s => Object.entries(flatten(s.provenance)).map(([field, value]) => ({ ...identity(s), field, value })));
@@ -153,12 +158,43 @@ export async function serializeScreensExport(screens: ExportScreen[], request: E
     data.screens.forEach((s, index) => {
       const folder = `${String(index + 1).padStart(2, "0")}-${s.screen.name.replace(/[^a-zA-Z0-9_-]/g, "-").slice(0, 70)}`;
       files[`${folder}/gene-results.csv`] = strToU8(csvTable({ name: s.screen.name, columns: request.fields, rows: s.genes }));
+      files[`${folder}/screen.json`] = strToU8(JSON.stringify({
+        schema: "splicr.export-screen/1", exported_at: data.exported_at,
+        screen: s.screen, run_id: s.run_id, comparisons: s.comparisons,
+        recorded_gene_rows: s.recorded_gene_rows, exported_gene_rows: s.exported_gene_rows,
+        selection: data.selection, notes: data.notes,
+      }, null, 2) + "\n");
+      if (request.sections.includes("provenance")) {
+        const run = screens[index].run!;
+        const methods = methodsRecord(screens[index], request, data.exported_at);
+        files[`${folder}/methods-record.json`] = strToU8(JSON.stringify(methods, null, 2) + "\n");
+        files[`${folder}/methods_text.txt`] = strToU8(methodsText(methods));
+        files[`${folder}/analysis-settings.json`] = strToU8(JSON.stringify({
+          schema: "splicr.export-analysis-settings/1", screen_id: s.screen.id, run_id: run.id,
+          status: run.status, engine_version: run.engine_version ?? null,
+          container_digest: run.image_digest ?? null, settings: run.settings ?? null,
+          created_at: run.created_at ?? null, started_at: run.started_at ?? null, finished_at: run.finished_at ?? null,
+          interpretation: "Recorded run configuration; missing values are unknown. This is not a complete executable environment.",
+        }, null, 2) + "\n");
+      }
+      if (s.lab?.length) {
+        if (s.lab.length > 2000) throw new Error("Figure bundles are limited to 2,000 lab receipts per screen. Use an FDR row filter, JSON for all receipts, or download an individual gene. No partial bundle was created.");
+        const records: unknown[] = s.lab.map(row => ({ ...(row.document as Record<string, unknown>), sha256: row.sha256, canonical: row.canonical, comparison_id: row.comparison_id, recorded_at: row.created_at }));
+        if (!records.every(isLabReceipt)) throw new Error("A lab receipt has an invalid schema. No bundle was created.");
+        const labFiles = labEvidenceFiles(records, { screen_id: s.screen.id, run_id: s.run_id, selection: data.selection });
+        for (const [name, bytes] of Object.entries(labFiles)) files[`${folder}/lab-evidence/${name}`] = bytes;
+      }
       for (const table of evidence) files[`${folder}/${table.name.toLowerCase().replace(/ /g, "-")}.csv`] = strToU8(csvTable({ ...table, rows: table.rows.filter(row => row.screen_id === s.screen.id) }));
     });
-    files["manifest.json"] = strToU8(JSON.stringify({ ...data, screens: data.screens.map(({ genes, qc, guides, disagreement, provenance, ...metadata }) => {
-      void genes; void qc; void guides; void disagreement; void provenance; return metadata;
-    }) }, null, 2) + "\n");
     files["data-dictionary.csv"] = strToU8(csvTable({ name: "Dictionary", columns: ["field", "label", "description"], rows: data.dictionary }));
+    files["README.md"] = strToU8(bundleReadme(data.exported_at));
+    files["verify-bundle.py"] = strToU8(VERIFY_BUNDLE);
+    files["manifest.json"] = strToU8(JSON.stringify({ ...data,
+      integrity: { algorithm: "sha256", scope: "All listed files except manifest.json; byte integrity only, not authenticated provenance" },
+      files: fileInventory(files),
+      screens: data.screens.map(({ genes, qc, guides, disagreement, provenance, lab, ...metadata }) => {
+      void genes; void qc; void guides; void disagreement; void provenance; void lab; return metadata;
+    }) }, null, 2) + "\n");
     return { filename, contentType: "application/zip", bytes: zipSync(files, { level: 6 }) };
   }
   const workbook = new ExcelJS.Workbook();

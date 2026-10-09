@@ -1,0 +1,55 @@
+{
+  "schema": "splicr.vector-scene.v1",
+  "receipt_sha256": "1ac2fdddc5c2c78922407308ff484a29bd76202632bfdb2d8ca1b481c022e9fe",
+  "scene": {
+    "title": "PIKFYVE · every guide",
+    "width": 820,
+    "height": 210,
+    "marks": [
+      {
+        "type": "text",
+        "x": 20,
+        "y": 25,
+        "text": "PIKFYVE · every guide",
+        "size": 15
+      },
+      {
+        "type": "text",
+        "x": 255,
+        "y": 52,
+        "text": "-1.00",
+        "size": 11
+      },
+      {
+        "type": "text",
+        "x": 740,
+        "y": 52,
+        "text": "1.00",
+        "size": 11
+      },
+      {
+        "type": "line",
+        "x": 515,
+        "y": 60,
+        "x2": 515,
+        "y2": 185,
+        "color": "#9ca3af",
+        "width": 1
+      },
+      {
+        "type": "text",
+        "x": 20,
+        "y": 80,
+        "text": "Guide effects were not measured in this reference-only mapping",
+        "size": 11
+      },
+      {
+        "type": "text",
+        "x": 300,
+        "y": 203,
+        "text": "Recorded guide log2 fold change",
+        "size": 11
+      }
+    ]
+  }
+}

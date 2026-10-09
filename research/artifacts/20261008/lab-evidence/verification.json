@@ -1,0 +1,21 @@
+{
+  "schema": "splicr.lab-evidence-smoke.v1",
+  "persisted": false,
+  "scope": "Local real-count pipeline, real reference mapping/context, separately labelled synthetic kinetic software verification; no superiority or validation claim.",
+  "real_counts": {
+    "n_guides": 106400,
+    "n_genes": 18913,
+    "report": "data/research/lab-workspace-20261008/tools/deterministic-evidence/postscreen_report.json",
+    "sha256": "e8b0051ad8a1eebe55e005d2e9c032e553eb907201c0e627dc0dc41df52a9bc1",
+    "deterministic_only": true,
+    "D0_raw_count_gini": 0.24358478505439107
+  },
+  "mapped_libraries": [
+    "brunello",
+    "tkov3"
+  ],
+  "brunello_guides": 4,
+  "tkov3_guides": 4,
+  "reference_model": "ACH-000681",
+  "runtime_seconds": 51.52070783311501
+}

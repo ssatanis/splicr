@@ -1,0 +1,8 @@
+{"schema":"openai.presentation.layout/v5","unit":"px","slide":{"id":"sl/en5dit","index":6,"layout":{"id":"ly/n69w3654","name":"Title Slide"},"backgroundColor":"rgba(250,249,246,1)","position":{"left":0,"top":0,"width":1280,"height":720}},
+"elements":[
+{"id":"im/q18vmlwf","kind":"image","position":{"left":64,"top":32,"width":92,"height":31},"fit":"contain","alt":"SplicR logo"},
+{"id":"sh/cne5obmx","kind":"textbox","name":"text-1","position":{"left":64,"top":100,"width":1152,"height":70},"text":"Six comparisons, ready to review","style":{"fontSize":44,"typeface":"Inter","color":"#174F62","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/donmxgni","kind":"textbox","name":"text-2","position":{"left":1176,"top":670,"width":64,"height":28},"text":"07","style":{"fontSize":15,"typeface":"Inter","color":"#626B78","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/epwnql4n","kind":"textbox","name":"text-3","position":{"left":64,"top":244,"width":286,"height":260},"text":"EV versus plasmid.\nWT versus plasmid.\nWT versus EV.\n\nSeparately for each culture.","style":{"fontSize":28,"typeface":"Inter","color":"#174F62","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"im/2dovilw3","kind":"image","position":{"left":390,"top":212,"width":826,"height":396},"fit":"contain","alt":"Actual SplicR production screenshot"}
+]}

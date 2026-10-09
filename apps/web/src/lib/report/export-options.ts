@@ -47,6 +47,7 @@ export const EXPORT_SECTIONS = [
   { key: "qc", label: "Quality control", description: "Run QC, sample metrics and replicate correlations." },
   { key: "guides", label: "Guide-level results", description: "Recorded guide effects, sequences and resolved annotations." },
   { key: "disagreement", label: "Guide disagreement", description: "Recorded guide spread, fragile calls and concordance evidence." },
+  { key: "lab", label: "Laboratory evidence", description: "Isoform mappings, kinetic trajectories, reference context and library diagnostics. ZIP figure bundles are limited to 2,000 receipts; use individual gene downloads for larger runs." },
   { key: "provenance", label: "Run provenance", description: "Run settings, tool stages, timings and recorded reference evidence." },
 ] as const;
 export type ExportSection = (typeof EXPORT_SECTIONS)[number]["key"];
@@ -63,7 +64,7 @@ export const exportRequestSchema = z.object({
   format: z.enum(["xlsx", "csv", "json"]),
   fields: z.array(z.enum(EXPORT_FIELDS.map(f => f.key) as [ExportField, ...ExportField[]])).min(2)
     .refine(fields => new Set(fields).size === fields.length && REQUIRED_FIELDS.every(f => fields.includes(f)), "Include Gene and Comparison once."),
-  sections: z.array(z.enum(["qc", "guides", "disagreement", "provenance"])).max(4)
+  sections: z.array(z.enum(["qc", "guides", "disagreement", "provenance", "lab"])).max(5)
     .refine(sections => new Set(sections).size === sections.length, "Select each section once."),
   rowScope: z.enum(["all", "fdr"]),
   fdrMetric: z.enum(["fdr", "depleted_fdr", "enriched_fdr", "drugz_fdr", "mle_fdr"]),

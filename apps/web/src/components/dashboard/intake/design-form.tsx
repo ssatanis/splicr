@@ -25,8 +25,14 @@ import {
   type Normalization,
 } from "@/lib/data/types";
 import { MODALITY_LABEL } from "@/components/dashboard/settings/meta";
-import { ROLE_HINT, ROLE_LABEL, type IntakeSample, type SampleRole } from "@/lib/intake/shape";
+import {
+  ROLE_HINT,
+  ROLE_LABEL,
+  type IntakeSample,
+  type SampleRole,
+} from "@/lib/intake/shape";
 import { cn } from "@/lib/utils";
+import { LabEvidenceSettings } from "./lab-evidence-settings";
 import { MleDesignEditor } from "./mle-design";
 import { MODEL_TYPES, type ModelType } from "@/lib/validation/model";
 
@@ -34,6 +40,9 @@ export interface LibraryChoice {
   id: string;
   name: string;
   n_guides: number;
+  taxid?: number;
+  modality?: Modality;
+  custom?: boolean;
 }
 
 export interface DetectedLibrary {
@@ -44,6 +53,8 @@ export interface DetectedLibrary {
 }
 
 export interface AnalysisSettings {
+  lab_evidence?: import("@/lib/lab/options").LabOptions;
+  deterministic_only?: boolean;
   profile?: import("@/lib/intake/analysis-plan").Profile;
   organism_taxid?: number;
   modality?: Modality;
@@ -64,12 +75,22 @@ const ROLES: readonly SampleRole[] = ["plasmid", "reference", "control", "treatm
 const FIELD =
   "h-8 w-full rounded-md border border-stone-200 bg-white px-2.5 text-[12.5px] text-ink outline-none transition-colors duration-[var(--dur-1)] focus:border-cyan-500 motion-reduce:transition-none";
 
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+function Field({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
   return (
     <label className="block">
       <span className="mb-1 block text-[12px] text-ink">{label}</span>
       {children}
-      {hint && <span className="mt-1 block text-[11px] leading-snug text-muted">{hint}</span>}
+      {hint && (
+        <span className="mt-1 block text-[11px] leading-snug text-muted">{hint}</span>
+      )}
     </label>
   );
 }
@@ -114,14 +135,23 @@ export function DesignForm({
 
   const top = detected[0];
   const setSample = (index: number, patch: Partial<IntakeSample>) => {
-    onChange({ samples: samples.map((sample, i) => (i === index ? { ...sample, ...patch } : sample)) });
+    onChange({
+      samples: samples.map((sample, i) =>
+        i === index ? { ...sample, ...patch } : sample,
+      ),
+    });
   };
 
   const treated = samples.filter((s) => s.role === "treatment").length;
-  const controls = samples.filter((sample) => sample.included !== false && sample.role !== "treatment").length;
+  const controls = samples.filter(
+    (sample) => sample.included !== false && sample.role !== "treatment",
+  ).length;
 
   return (
     <div className="space-y-5">
+      <LabEvidenceSettings value={settings.lab_evidence ?? {}} samples={samples} deterministicOnly={settings.deterministic_only ?? true}
+        onChange={lab_evidence => onChange({ settings: { ...settings, lab_evidence } })}
+        onDeterministic={deterministic_only => onChange({ settings: { ...settings, deterministic_only } })} />
       {/* --- the one thing only the researcher knows ------------------------ */}
       <section>
         <div className="mb-1.5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-stone-200 pb-1">
@@ -133,7 +163,8 @@ export function DesignForm({
           </span>
         </div>
         <p className="mb-2 text-[12px] leading-snug text-body">
-          SplicR read these sample names from your files and guessed the arms. Correct any it got wrong.
+          SplicR read these sample names from your files and guessed the arms. Correct any
+          it got wrong.
         </p>
 
         <div className="overflow-hidden rounded-sm border border-stone-200">
@@ -143,34 +174,80 @@ export function DesignForm({
                 <th scope="col">Sample</th>
                 <th scope="col">Arm</th>
                 <th scope="col">Use</th>
-                <th scope="col" className="num-col">Replicate</th>
+                <th scope="col" className="num-col">
+                  Replicate
+                </th>
               </tr>
             </thead>
             <tbody>
               {samples.map((sample, index) => (
                 <tr key={sample.label}>
-                  <td className="max-w-[1px] truncate" title={sample.label}>{sample.label}
-                    {sample.file_ids && <span className="block text-[10px] text-muted">{sample.file_ids.length} read files merged</span>}
-                    {Boolean(sample.read1_file_ids?.length && sample.read2_file_ids?.length) && <select aria-label={`Guide read for ${sample.label}`} value={sample.file_ids?.[0] === sample.read2_file_ids?.[0] ? "R2" : "R1"} disabled={disabled} className="mt-1 h-6 rounded border border-stone-200 text-[11px]" onChange={(event) => { const file_ids = event.target.value === "R1" ? sample.read1_file_ids! : sample.read2_file_ids!; setSample(index, { file_ids, file_id: file_ids[0] }); }}><option value="R1">Count R1</option><option value="R2">Count R2</option></select>}
+                  <td className="max-w-[1px] truncate" title={sample.label}>
+                    {sample.label}
+                    {sample.file_ids && (
+                      <span className="block text-[10px] text-muted">
+                        {sample.file_ids.length} read files merged
+                      </span>
+                    )}
+                    {Boolean(
+                      sample.read1_file_ids?.length && sample.read2_file_ids?.length,
+                    ) && (
+                      <select
+                        aria-label={`Guide read for ${sample.label}`}
+                        value={
+                          sample.file_ids?.[0] === sample.read2_file_ids?.[0]
+                            ? "R2"
+                            : "R1"
+                        }
+                        disabled={disabled}
+                        className="mt-1 h-6 rounded border border-stone-200 text-[11px]"
+                        onChange={(event) => {
+                          const file_ids =
+                            event.target.value === "R1"
+                              ? sample.read1_file_ids!
+                              : sample.read2_file_ids!;
+                          setSample(index, { file_ids, file_id: file_ids[0] });
+                        }}
+                      >
+                        <option value="R1">Count R1</option>
+                        <option value="R2">Count R2</option>
+                      </select>
+                    )}
                   </td>
                   <td>
                     <select
                       value={sample.role}
                       disabled={disabled}
                       aria-label={`Arm for ${sample.label}`}
-                      onChange={(event) => setSample(index, { role: event.target.value as SampleRole })}
+                      onChange={(event) =>
+                        setSample(index, { role: event.target.value as SampleRole })
+                      }
                       className={cn(
                         "h-6 w-full max-w-[13rem] rounded border bg-white px-1.5 text-[12px] text-ink outline-none focus:border-cyan-500",
-                        sample.role === "treatment" ? "border-orange-300" : "border-stone-200",
+                        sample.role === "treatment"
+                          ? "border-orange-300"
+                          : "border-stone-200",
                       )}
                       title={ROLE_HINT[sample.role]}
                     >
                       {ROLES.map((role) => (
-                        <option key={role} value={role}>{ROLE_LABEL[role]}</option>
+                        <option key={role} value={role}>
+                          {ROLE_LABEL[role]}
+                        </option>
                       ))}
                     </select>
                   </td>
-                  <td><input type="checkbox" aria-label={`Use ${sample.label} in this comparison`} checked={sample.included !== false} disabled={disabled} onChange={(event) => setSample(index, { included: event.target.checked })}/></td>
+                  <td>
+                    <input
+                      type="checkbox"
+                      aria-label={`Use ${sample.label} in this comparison`}
+                      checked={sample.included !== false}
+                      disabled={disabled}
+                      onChange={(event) =>
+                        setSample(index, { included: event.target.checked })
+                      }
+                    />
+                  </td>
                   <td className="num-col">
                     <input
                       type="number"
@@ -179,7 +256,9 @@ export function DesignForm({
                       value={sample.replicate}
                       disabled={disabled}
                       aria-label={`Replicate number for ${sample.label}`}
-                      onChange={(event) => setSample(index, { replicate: Number(event.target.value) || 1 })}
+                      onChange={(event) =>
+                        setSample(index, { replicate: Number(event.target.value) || 1 })
+                      }
                       className="num h-6 w-14 rounded border border-stone-200 bg-white px-1.5 text-right text-[12px] text-ink outline-none focus:border-cyan-500"
                     />
                   </td>
@@ -227,7 +306,13 @@ export function DesignForm({
             className={FIELD}
           >
             {MODALITIES.map((item) => (
-              <option key={item} value={item} disabled={!["knockout", "crispri", "crispra"].includes(item)}>{MODALITY_LABEL[item]}</option>
+              <option
+                key={item}
+                value={item}
+                disabled={!["knockout", "crispri", "crispra"].includes(item)}
+              >
+                {MODALITY_LABEL[item]}
+              </option>
             ))}
           </select>
         </Field>
@@ -243,7 +328,11 @@ export function DesignForm({
             >
               <option value="">Let the engine identify it from the guides</option>
               {libraries.map((library) => (
-                <option key={library.id} value={library.id} disabled={library.n_guides < 1}>
+                <option
+                  key={library.id}
+                  value={library.id}
+                  disabled={library.n_guides < 1}
+                >
                   {library.name}, {library.n_guides.toLocaleString()} guides
                 </option>
               ))}
@@ -251,17 +340,18 @@ export function DesignForm({
           </Field>
           {top && (top.match_rate >= 0.95 || top.coverage >= 0.95) ? (
             <p className="mt-1.5 flex items-start gap-1.5 text-[11.5px] leading-snug text-cyan-700">
-              
               <span>
                 Your guides matched <span className="font-medium">{top.name}</span>:{" "}
-                <span className="num">{Math.round(top.coverage * 100)}%</span> of that library is present,
-                and <span className="num">{Math.round(top.match_rate * 100)}%</span> of the guides checked
-                are in it.
+                <span className="num">{Math.round(top.coverage * 100)}%</span> of that
+                library is present, and{" "}
+                <span className="num">{Math.round(top.match_rate * 100)}%</span> of the
+                guides checked are in it.
               </span>
             </p>
           ) : libraryId === null || libraryId === "" ? (
             <p className="mt-1.5 flex items-start gap-1.5 text-[11.5px] leading-snug text-muted">
-              No existing library was a strong match. You can import a custom library or select one from the list.
+              No existing library was a strong match. You can import a custom library or
+              select one from the list.
             </p>
           ) : null}
         </div>
@@ -277,29 +367,68 @@ export function DesignForm({
           className="inline-flex items-center gap-1 rounded-sm text-[12px] text-muted outline-none hover:text-ink focus-visible:ring-2 focus-visible:ring-cyan-500"
         >
           <ChevronDown
-            className={cn("h-3.5 w-3.5 transition-transform duration-[var(--dur-2)] motion-reduce:transition-none", advanced && "rotate-180")}
+            className={cn(
+              "h-3.5 w-3.5 transition-transform duration-[var(--dur-2)] motion-reduce:transition-none",
+              advanced && "rotate-180",
+            )}
             aria-hidden="true"
           />
           Pipeline settings
           {defaultsFromWorkspace && !advanced && (
-            <span className="text-[11px] text-muted">, using this workspace&rsquo;s defaults</span>
+            <span className="text-[11px] text-muted">
+              , using this workspace&rsquo;s defaults
+            </span>
           )}
         </button>
 
         {advanced && (
-          <div id={advancedId} className="mt-3 grid grid-cols-1 gap-3 rounded-sm bg-mist-soft/60 p-3 sm:grid-cols-2">
-            <Field label="Model type"><select aria-label="Analysis model type" value={settings.model_type ?? "other"} disabled={disabled} onChange={(event) => onChange({ settings: { ...settings, model_type: event.target.value as ModelType } })} className={FIELD}>{MODEL_TYPES.map((type) => <option key={type} value={type}>{type.replaceAll("_", " ")}</option>)}</select></Field>
-            <Field label="Normalization" hint="How counts are put on a common scale before the contrast.">
+          <div
+            id={advancedId}
+            className="mt-3 grid grid-cols-1 gap-3 rounded-sm bg-mist-soft/60 p-3 sm:grid-cols-2"
+          >
+            <Field label="Model type">
+              <select
+                aria-label="Analysis model type"
+                value={settings.model_type ?? "other"}
+                disabled={disabled}
+                onChange={(event) =>
+                  onChange({
+                    settings: {
+                      ...settings,
+                      model_type: event.target.value as ModelType,
+                    },
+                  })
+                }
+                className={FIELD}
+              >
+                {MODEL_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {type.replaceAll("_", " ")}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field
+              label="Normalization"
+              hint="How counts are put on a common scale before the contrast."
+            >
               <select
                 value={settings.normalization}
                 disabled={disabled}
                 onChange={(event) =>
-                  onChange({ settings: { ...settings, normalization: event.target.value as Normalization } })
+                  onChange({
+                    settings: {
+                      ...settings,
+                      normalization: event.target.value as Normalization,
+                    },
+                  })
                 }
                 className={FIELD}
               >
                 {NORMALIZATIONS.map((item) => (
-                  <option key={item} value={item}>{NORMALIZATION_LABEL[item]}</option>
+                  <option key={item} value={item}>
+                    {NORMALIZATION_LABEL[item]}
+                  </option>
                 ))}
               </select>
             </Field>
@@ -316,7 +445,9 @@ export function DesignForm({
                 value={settings.fdr_threshold}
                 disabled={disabled}
                 onChange={(event) =>
-                  onChange({ settings: { ...settings, fdr_threshold: Number(event.target.value) } })
+                  onChange({
+                    settings: { ...settings, fdr_threshold: Number(event.target.value) },
+                  })
                 }
                 className={cn(FIELD, "num")}
               />
@@ -326,11 +457,16 @@ export function DesignForm({
               <legend className="mb-1 text-[12px] text-ink">Hit callers</legend>
               <div className="flex flex-wrap gap-x-4 gap-y-1.5">
                 {HIT_CALLERS.map((caller) => (
-                  <label key={caller} className="inline-flex items-center gap-1.5 text-[12px] text-body">
+                  <label
+                    key={caller}
+                    className="inline-flex items-center gap-1.5 text-[12px] text-body"
+                  >
                     <input
                       type="checkbox"
                       checked={settings.hit_callers.includes(caller)}
-                      disabled={disabled || caller === "chronos" || caller === "mageck_rra"}
+                      disabled={
+                        disabled || caller === "chronos" || caller === "mageck_rra"
+                      }
                       onChange={(event) =>
                         onChange({
                           settings: {
@@ -343,7 +479,8 @@ export function DesignForm({
                       }
                       className="h-3.5 w-3.5 accent-cyan-600"
                     />
-                    {HIT_CALLER_LABEL[caller]}{caller === "chronos" ? " (requires pDNA batch metadata)" : ""}
+                    {HIT_CALLER_LABEL[caller]}
+                    {caller === "chronos" ? " (requires pDNA batch metadata)" : ""}
                   </label>
                 ))}
               </div>
@@ -355,23 +492,127 @@ export function DesignForm({
                 checked={false}
                 disabled={true}
                 onChange={(event) =>
-                  onChange({ settings: { ...settings, cn_correction: event.target.checked } })
+                  onChange({
+                    settings: { ...settings, cn_correction: event.target.checked },
+                  })
                 }
                 className="mt-0.5 h-3.5 w-3.5 accent-cyan-600"
               />
               <span>
                 Correct for copy number
                 <span className="mt-0.5 flex items-start gap-1 text-[11px] leading-snug text-muted">
-                  
-                  Requires a matched copy-number profile. Not available for this upload workflow.
+                  Requires a matched copy-number profile. Not available for this upload
+                  workflow.
                 </span>
               </span>
             </label>
           </div>
         )}
       </section>
-      {settings.hit_callers.includes("mageck_mle") && <MleDesignEditor table={{ fileId: "", name, sheet: "Samples", model: cellLine, rows: 0, preview: [], warnings: [], samples: samples.filter((sample) => sample.included !== false) }} comparison={{ id: "primary", table: 0, name: name || "Primary comparison", model: cellLine, phenotype, enabled: true, drug: settings.hit_callers.includes("drugz"), treatment: samples.filter((sample) => sample.included !== false && sample.role === "treatment").map((sample) => sample.label), control: samples.filter((sample) => sample.included !== false && sample.role !== "treatment").map((sample) => sample.label), mle_design: settings.mle_design }} disabled={disabled} onChange={(mle_design) => onChange({ settings: { ...settings, mle_design } })}/>}
-      {settings.hit_callers.includes("drugz") && <details className="rounded-sm border border-stone-200 p-3"><summary className="cursor-pointer text-[12px] text-ink">DrugZ settings</summary><div className="mt-3 grid gap-3 sm:grid-cols-2"><Field label="DrugZ pseudocount"><input aria-label="DrugZ pseudocount" className={FIELD} type="number" step={1} min={1} max={1000} value={settings.drugz_options?.pseudocount ?? 5} disabled={disabled} onChange={(event) => onChange({ settings: { ...settings, drugz_options: { pseudocount: Number(event.target.value), half_window_size: settings.drugz_options?.half_window_size ?? 500 } } })}/></Field><Field label="DrugZ smoothing half-window"><input aria-label="DrugZ smoothing half-window" className={FIELD} type="number" min={2} max={10000} value={settings.drugz_options?.half_window_size ?? 500} disabled={disabled} onChange={(event) => onChange({ settings: { ...settings, drugz_options: { pseudocount: settings.drugz_options?.pseudocount ?? 5, half_window_size: Number(event.target.value) } } })}/></Field><label className="flex items-center gap-2 text-[12px] text-ink"><input aria-label="Paired DrugZ" type="checkbox" disabled={disabled} checked={Boolean(settings.drugz_paired)} onChange={(event) => onChange({ settings: { ...settings, drugz_paired: event.target.checked } })}/>Paired biological replicates</label></div></details>}
+      {settings.hit_callers.includes("mageck_mle") && (
+        <MleDesignEditor
+          table={{
+            fileId: "",
+            name,
+            sheet: "Samples",
+            model: cellLine,
+            rows: 0,
+            preview: [],
+            warnings: [],
+            samples: samples.filter((sample) => sample.included !== false),
+          }}
+          comparison={{
+            id: "primary",
+            table: 0,
+            name: name || "Primary comparison",
+            model: cellLine,
+            phenotype,
+            enabled: true,
+            drug: settings.hit_callers.includes("drugz"),
+            treatment: samples
+              .filter(
+                (sample) => sample.included !== false && sample.role === "treatment",
+              )
+              .map((sample) => sample.label),
+            control: samples
+              .filter(
+                (sample) => sample.included !== false && sample.role !== "treatment",
+              )
+              .map((sample) => sample.label),
+            mle_design: settings.mle_design,
+          }}
+          disabled={disabled}
+          onChange={(mle_design) => onChange({ settings: { ...settings, mle_design } })}
+        />
+      )}
+      {settings.hit_callers.includes("drugz") && (
+        <details className="rounded-sm border border-stone-200 p-3">
+          <summary className="cursor-pointer text-[12px] text-ink">
+            DrugZ settings
+          </summary>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <Field label="DrugZ pseudocount">
+              <input
+                aria-label="DrugZ pseudocount"
+                className={FIELD}
+                type="number"
+                step={1}
+                min={1}
+                max={1000}
+                value={settings.drugz_options?.pseudocount ?? 5}
+                disabled={disabled}
+                onChange={(event) =>
+                  onChange({
+                    settings: {
+                      ...settings,
+                      drugz_options: {
+                        pseudocount: Number(event.target.value),
+                        half_window_size: settings.drugz_options?.half_window_size ?? 500,
+                      },
+                    },
+                  })
+                }
+              />
+            </Field>
+            <Field label="DrugZ smoothing half-window">
+              <input
+                aria-label="DrugZ smoothing half-window"
+                className={FIELD}
+                type="number"
+                min={2}
+                max={10000}
+                value={settings.drugz_options?.half_window_size ?? 500}
+                disabled={disabled}
+                onChange={(event) =>
+                  onChange({
+                    settings: {
+                      ...settings,
+                      drugz_options: {
+                        pseudocount: settings.drugz_options?.pseudocount ?? 5,
+                        half_window_size: Number(event.target.value),
+                      },
+                    },
+                  })
+                }
+              />
+            </Field>
+            <label className="flex items-center gap-2 text-[12px] text-ink">
+              <input
+                aria-label="Paired DrugZ"
+                type="checkbox"
+                disabled={disabled}
+                checked={Boolean(settings.drugz_paired)}
+                onChange={(event) =>
+                  onChange({
+                    settings: { ...settings, drugz_paired: event.target.checked },
+                  })
+                }
+              />
+              Paired biological replicates
+            </label>
+          </div>
+        </details>
+      )}
     </div>
   );
 }

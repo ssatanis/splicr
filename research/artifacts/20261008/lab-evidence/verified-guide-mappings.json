@@ -1,0 +1,310 @@
+{
+  "brunello": {
+    "guides": [
+      {
+        "guide_id": "brunello:64736",
+        "sequence": "AGTGCTCACTAGCTCATGTG",
+        "gene": "PIKFYVE",
+        "is_control": false,
+        "chrom": "chr2",
+        "cut_pos": 208326202,
+        "strand": "-",
+        "perfect_alignments": null,
+        "mismatch1_alignments": null,
+        "genes_hit": null,
+        "gene_offtarget_flagged": false
+      },
+      {
+        "guide_id": "brunello:64737",
+        "sequence": "CCGAATATGATGTACCATGG",
+        "gene": "PIKFYVE",
+        "is_control": false,
+        "chrom": "chr2",
+        "cut_pos": 208330563,
+        "strand": "-",
+        "perfect_alignments": null,
+        "mismatch1_alignments": null,
+        "genes_hit": null,
+        "gene_offtarget_flagged": false
+      },
+      {
+        "guide_id": "brunello:64738",
+        "sequence": "GAAATGGGCATATTGCCACA",
+        "gene": "PIKFYVE",
+        "is_control": false,
+        "chrom": "chr2",
+        "cut_pos": 208301089,
+        "strand": "+",
+        "perfect_alignments": null,
+        "mismatch1_alignments": null,
+        "genes_hit": null,
+        "gene_offtarget_flagged": false
+      },
+      {
+        "guide_id": "brunello:64739",
+        "sequence": "GGGCTGGCATCATAACAACC",
+        "gene": "PIKFYVE",
+        "is_control": false,
+        "chrom": "chr2",
+        "cut_pos": 208314368,
+        "strand": "+",
+        "perfect_alignments": null,
+        "mismatch1_alignments": null,
+        "genes_hit": null,
+        "gene_offtarget_flagged": false
+      }
+    ],
+    "verification": {
+      "brunello:64736": {
+        "status": "sequence_and_pam_verified",
+        "assembly": "GRCh38",
+        "pam": "AGG",
+        "resolution": "unique_exact_pam_locus",
+        "alignment": {
+          "sites": [
+            [
+              "chr2",
+              208326202,
+              "-",
+              "AGG"
+            ]
+          ],
+          "n_exact_alignments": 1,
+          "capped": false,
+          "genome_sha256": "5be01555d98347fdb3714dc84c6f77c9d8bc774adcf32c6f7a8fa06f5baf5e51",
+          "alignment_identity_sha256": "3433086cdd437001cdf76dcc500c115d8ac0a07f796bd324db4e6b86bac7df23",
+          "scope": "Exact 20nt matches with NGG PAM in this indexed reference; no mismatch/bulge or sample-variant specificity claim"
+        },
+        "alignment_unavailable_reason": null,
+        "genome_sha256": "5be01555d98347fdb3714dc84c6f77c9d8bc774adcf32c6f7a8fa06f5baf5e51",
+        "fai_sha256": "3b425de206296a5c8053023fa5ca61da43cfe78c1737c12e58c83367c7e83c21"
+      },
+      "brunello:64737": {
+        "status": "sequence_and_pam_verified",
+        "assembly": "GRCh38",
+        "pam": "GGG",
+        "resolution": "unique_exact_pam_locus",
+        "alignment": {
+          "sites": [
+            [
+              "chr2",
+              208330563,
+              "-",
+              "GGG"
+            ]
+          ],
+          "n_exact_alignments": 1,
+          "capped": false,
+          "genome_sha256": "5be01555d98347fdb3714dc84c6f77c9d8bc774adcf32c6f7a8fa06f5baf5e51",
+          "alignment_identity_sha256": "3433086cdd437001cdf76dcc500c115d8ac0a07f796bd324db4e6b86bac7df23",
+          "scope": "Exact 20nt matches with NGG PAM in this indexed reference; no mismatch/bulge or sample-variant specificity claim"
+        },
+        "alignment_unavailable_reason": null,
+        "genome_sha256": "5be01555d98347fdb3714dc84c6f77c9d8bc774adcf32c6f7a8fa06f5baf5e51",
+        "fai_sha256": "3b425de206296a5c8053023fa5ca61da43cfe78c1737c12e58c83367c7e83c21"
+      },
+      "brunello:64738": {
+        "status": "sequence_and_pam_verified",
+        "assembly": "GRCh38",
+        "pam": "AGG",
+        "resolution": "unique_exact_pam_locus",
+        "alignment": {
+          "sites": [
+            [
+              "chr2",
+              208301089,
+              "+",
+              "AGG"
+            ]
+          ],
+          "n_exact_alignments": 1,
+          "capped": false,
+          "genome_sha256": "5be01555d98347fdb3714dc84c6f77c9d8bc774adcf32c6f7a8fa06f5baf5e51",
+          "alignment_identity_sha256": "3433086cdd437001cdf76dcc500c115d8ac0a07f796bd324db4e6b86bac7df23",
+          "scope": "Exact 20nt matches with NGG PAM in this indexed reference; no mismatch/bulge or sample-variant specificity claim"
+        },
+        "alignment_unavailable_reason": null,
+        "genome_sha256": "5be01555d98347fdb3714dc84c6f77c9d8bc774adcf32c6f7a8fa06f5baf5e51",
+        "fai_sha256": "3b425de206296a5c8053023fa5ca61da43cfe78c1737c12e58c83367c7e83c21"
+      },
+      "brunello:64739": {
+        "status": "sequence_and_pam_verified",
+        "assembly": "GRCh38",
+        "pam": "TGG",
+        "resolution": "unique_exact_pam_locus",
+        "alignment": {
+          "sites": [
+            [
+              "chr2",
+              208314368,
+              "+",
+              "TGG"
+            ]
+          ],
+          "n_exact_alignments": 1,
+          "capped": false,
+          "genome_sha256": "5be01555d98347fdb3714dc84c6f77c9d8bc774adcf32c6f7a8fa06f5baf5e51",
+          "alignment_identity_sha256": "3433086cdd437001cdf76dcc500c115d8ac0a07f796bd324db4e6b86bac7df23",
+          "scope": "Exact 20nt matches with NGG PAM in this indexed reference; no mismatch/bulge or sample-variant specificity claim"
+        },
+        "alignment_unavailable_reason": null,
+        "genome_sha256": "5be01555d98347fdb3714dc84c6f77c9d8bc774adcf32c6f7a8fa06f5baf5e51",
+        "fai_sha256": "3b425de206296a5c8053023fa5ca61da43cfe78c1737c12e58c83367c7e83c21"
+      }
+    }
+  },
+  "tkov3": {
+    "guides": [
+      {
+        "guide_id": "chr2:209141479-209141498_PIKFYVE_-",
+        "sequence": "GAAGCTGAACAGCTGTACGA",
+        "gene": "PIKFYVE",
+        "is_control": false,
+        "chrom": "chr2",
+        "cut_pos": 208276757,
+        "strand": "-",
+        "perfect_alignments": null,
+        "mismatch1_alignments": null,
+        "genes_hit": null,
+        "gene_offtarget_flagged": false
+      },
+      {
+        "guide_id": "chr2:209142356-209142375_PIKFYVE_-",
+        "sequence": "TCTGCCCACATAGTCGGCAA",
+        "gene": "PIKFYVE",
+        "is_control": false,
+        "chrom": "chr2",
+        "cut_pos": 208277634,
+        "strand": "-",
+        "perfect_alignments": null,
+        "mismatch1_alignments": null,
+        "genes_hit": null,
+        "gene_offtarget_flagged": false
+      },
+      {
+        "guide_id": "chr2:209150651-209150670_PIKFYVE_-",
+        "sequence": "TAAGGGACAATACCTTTGCC",
+        "gene": "PIKFYVE",
+        "is_control": false,
+        "chrom": "chr2",
+        "cut_pos": 208285929,
+        "strand": "-",
+        "perfect_alignments": null,
+        "mismatch1_alignments": null,
+        "genes_hit": null,
+        "gene_offtarget_flagged": false
+      },
+      {
+        "guide_id": "chr2:209163461-209163480_PIKFYVE_+",
+        "sequence": "TGTTAGGACAGAGACCACTG",
+        "gene": "PIKFYVE",
+        "is_control": false,
+        "chrom": "chr2",
+        "cut_pos": 208298753,
+        "strand": "+",
+        "perfect_alignments": null,
+        "mismatch1_alignments": null,
+        "genes_hit": null,
+        "gene_offtarget_flagged": false
+      }
+    ],
+    "verification": {
+      "chr2:209141479-209141498_PIKFYVE_-": {
+        "status": "sequence_and_pam_verified",
+        "assembly": "GRCh38",
+        "pam": "GGG",
+        "resolution": "unique_exact_pam_locus",
+        "alignment": {
+          "sites": [
+            [
+              "chr2",
+              208276757,
+              "-",
+              "GGG"
+            ]
+          ],
+          "n_exact_alignments": 1,
+          "capped": false,
+          "genome_sha256": "5be01555d98347fdb3714dc84c6f77c9d8bc774adcf32c6f7a8fa06f5baf5e51",
+          "alignment_identity_sha256": "903efe322f55919e5bc539d57b6b6df4a786b9408ae0b32c688a4a5ae5f9ea0f",
+          "scope": "Exact 20nt matches with NGG PAM in this indexed reference; no mismatch/bulge or sample-variant specificity claim"
+        },
+        "alignment_unavailable_reason": null,
+        "genome_sha256": "5be01555d98347fdb3714dc84c6f77c9d8bc774adcf32c6f7a8fa06f5baf5e51",
+        "fai_sha256": "3b425de206296a5c8053023fa5ca61da43cfe78c1737c12e58c83367c7e83c21"
+      },
+      "chr2:209142356-209142375_PIKFYVE_-": {
+        "status": "sequence_and_pam_verified",
+        "assembly": "GRCh38",
+        "pam": "TGG",
+        "resolution": "unique_exact_pam_locus",
+        "alignment": {
+          "sites": [
+            [
+              "chr2",
+              208277634,
+              "-",
+              "TGG"
+            ]
+          ],
+          "n_exact_alignments": 1,
+          "capped": false,
+          "genome_sha256": "5be01555d98347fdb3714dc84c6f77c9d8bc774adcf32c6f7a8fa06f5baf5e51",
+          "alignment_identity_sha256": "903efe322f55919e5bc539d57b6b6df4a786b9408ae0b32c688a4a5ae5f9ea0f",
+          "scope": "Exact 20nt matches with NGG PAM in this indexed reference; no mismatch/bulge or sample-variant specificity claim"
+        },
+        "alignment_unavailable_reason": null,
+        "genome_sha256": "5be01555d98347fdb3714dc84c6f77c9d8bc774adcf32c6f7a8fa06f5baf5e51",
+        "fai_sha256": "3b425de206296a5c8053023fa5ca61da43cfe78c1737c12e58c83367c7e83c21"
+      },
+      "chr2:209150651-209150670_PIKFYVE_-": {
+        "status": "sequence_and_pam_verified",
+        "assembly": "GRCh38",
+        "pam": "AGG",
+        "resolution": "unique_exact_pam_locus",
+        "alignment": {
+          "sites": [
+            [
+              "chr2",
+              208285929,
+              "-",
+              "AGG"
+            ]
+          ],
+          "n_exact_alignments": 1,
+          "capped": false,
+          "genome_sha256": "5be01555d98347fdb3714dc84c6f77c9d8bc774adcf32c6f7a8fa06f5baf5e51",
+          "alignment_identity_sha256": "903efe322f55919e5bc539d57b6b6df4a786b9408ae0b32c688a4a5ae5f9ea0f",
+          "scope": "Exact 20nt matches with NGG PAM in this indexed reference; no mismatch/bulge or sample-variant specificity claim"
+        },
+        "alignment_unavailable_reason": null,
+        "genome_sha256": "5be01555d98347fdb3714dc84c6f77c9d8bc774adcf32c6f7a8fa06f5baf5e51",
+        "fai_sha256": "3b425de206296a5c8053023fa5ca61da43cfe78c1737c12e58c83367c7e83c21"
+      },
+      "chr2:209163461-209163480_PIKFYVE_+": {
+        "status": "sequence_and_pam_verified",
+        "assembly": "GRCh38",
+        "pam": "AGG",
+        "resolution": "unique_exact_pam_locus",
+        "alignment": {
+          "sites": [
+            [
+              "chr2",
+              208298753,
+              "+",
+              "AGG"
+            ]
+          ],
+          "n_exact_alignments": 1,
+          "capped": false,
+          "genome_sha256": "5be01555d98347fdb3714dc84c6f77c9d8bc774adcf32c6f7a8fa06f5baf5e51",
+          "alignment_identity_sha256": "903efe322f55919e5bc539d57b6b6df4a786b9408ae0b32c688a4a5ae5f9ea0f",
+          "scope": "Exact 20nt matches with NGG PAM in this indexed reference; no mismatch/bulge or sample-variant specificity claim"
+        },
+        "alignment_unavailable_reason": null,
+        "genome_sha256": "5be01555d98347fdb3714dc84c6f77c9d8bc774adcf32c6f7a8fa06f5baf5e51",
+        "fai_sha256": "3b425de206296a5c8053023fa5ca61da43cfe78c1737c12e58c83367c7e83c21"
+      }
+    }
+  }
+}

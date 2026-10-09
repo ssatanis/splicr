@@ -10,6 +10,7 @@ export interface ExportScreen extends ReportData {
   guides?: EvidenceRow[];
   disagreement?: EvidenceRow[];
   stages?: EvidenceRow[];
+  labEvidence?: EvidenceRow[];
 }
 export class ExportError extends Error {
   constructor(message: string, public status: number) { super(message); }
@@ -61,6 +62,8 @@ export async function getScreensExport(request: ExportRequest): Promise<ExportSc
       .then(rows => { output.guides = rows; }));
     if (request.sections.includes("disagreement")) tasks.push(readRows("gene_disagreement", DISAGREEMENT_COLUMNS, ["comparison_id", "gene_symbol"])
       .then(rows => { output.disagreement = rows; }));
+    if (request.sections.includes("lab")) tasks.push(readRows("lab_evidence", "comparison_id,gene_symbol,kind,sha256,canonical,document,created_at", ["comparison_id", "gene_symbol", "kind", "sha256"])
+      .then(rows => { output.labEvidence = rows; }));
     if (request.sections.includes("provenance")) tasks.push((async () => {
       const stages = await client.from("run_stages").select("stage, status, position, detail, tool, metrics, started_at, finished_at, duration_sec")
         .eq("run_id", data.run!.id).order("position");
@@ -68,7 +71,7 @@ export async function getScreensExport(request: ExportRequest): Promise<ExportSc
       output.stages = stages.data as EvidenceRow[];
     })());
     await Promise.all(tasks);
-    totalRows += output.hits.length + (output.guides?.length ?? 0) + (output.disagreement?.length ?? 0);
+    totalRows += output.hits.length + (output.guides?.length ?? 0) + (output.disagreement?.length ?? 0) + (output.labEvidence?.length ?? 0);
     if (totalRows > TOTAL_CAP) throw new ExportError("This export exceeds 300,000 rows. Select fewer screens or omit guide evidence.", 413);
     screens.push(output);
   }

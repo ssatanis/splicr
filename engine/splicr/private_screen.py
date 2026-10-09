@@ -136,9 +136,29 @@ def _screen_spec(conn, job: Job, workdir: Path) -> tuple[ScreenInput, str | None
     fastqs: dict[str, Path] = {}
     fastq_files: dict[str, list[Path]] = {}
     count_table: Path | None = None
+    lab_options = dict(settings.get("lab_evidence") or {})
+    expression_id = lab_options.get("transcript_expression_file_id")
+    expression_found = False
     downloads = workdir / "inputs"
     for file_id, kind, storage_key, original_name, checksum, byte_size, metadata in files:
         original_id = str((metadata or {}).get("source_file_id", file_id))
+        if expression_id and (str(file_id) == expression_id or original_id == expression_id):
+            if byte_size is None or int(byte_size) > 100 * 1024 * 1024 or not checksum:
+                raise ValueError("expression file needs a complete SHA-256 manifest and must be at most 100 MB")
+            target = downloads / f"{file_id}_{_safe_name(original_name)}"
+            _download(storage_key, target)
+            if target.stat().st_size != int(byte_size):
+                raise ValueError("expression file size differs from its upload manifest")
+            with target.open("rb") as handle:
+                actual_hash = hashlib.file_digest(handle, "sha256").hexdigest()
+            if actual_hash != checksum:
+                raise ValueError("expression file SHA-256 differs from its upload manifest")
+            from .lab_evidence import read_expression_file
+            lab_options["transcript_expression"] = read_expression_file(target)
+            lab_options["expression_source"] = lab_options.get("expression_source") or original_name
+            lab_options["expression_source_sha256"] = actual_hash
+            expression_found = True
+            continue
         if source_id and original_id != source_id:
             continue
         if source_id:
@@ -166,6 +186,8 @@ def _screen_spec(conn, job: Job, workdir: Path) -> tuple[ScreenInput, str | None
                 raise ValueError(f"{original_name} is not assigned to a sample")
             fastq_files.setdefault(sample["label"], []).append(target)
 
+    if expression_id and not expression_found:
+        raise ValueError("the selected transcript expression file is not available in this screen's verified uploads")
     for label, paths in fastq_files.items():
         if len(paths) == 1:
             fastqs[label] = paths[0]
@@ -224,6 +246,8 @@ def _screen_spec(conn, job: Job, workdir: Path) -> tuple[ScreenInput, str | None
             drugz_options=settings.get("drugz_options") or {},
             sample_factors={row["label"]: row["metadata"].get("factors", {}) for row in by_id.values()},
             guide_aliases=settings.get("guide_aliases") or {},
+            lab_evidence=lab_options,
+            deterministic_only=bool(settings.get("deterministic_only", True)),
             normalization=settings.get("normalization", "median"),
             fdr_threshold=float(settings.get("fdr_threshold", 0.1)),
             hit_callers=hit_callers,

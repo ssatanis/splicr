@@ -1,5 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { createHash } from "node:crypto";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, dirname } from "node:path";
+import { spawnSync } from "node:child_process";
 import ExcelJS from "exceljs";
 import { unzipSync, strFromU8 } from "fflate";
 import { loadTs } from "./helpers/load-ts.mjs";
@@ -93,11 +98,61 @@ test("CSV ZIP contains one folder per screen and only selected tables/columns", 
   const inputs = [screen(), screen({ screen: { ...screen().screen, id: "second", name: "Screen A" } })];
   const output = await serializeScreensExport(inputs, request({ format: "csv", sections: ["guides"], fields: ["gene_symbol", "comparison", "lfc"] }), now);
   const files = unzipSync(output.bytes);
-  assert.equal(Object.keys(files).length, 6);
+  assert.equal(Object.keys(files).length, 10);
   assert.match(strFromU8(files["01-Screen-A/gene-results.csv"]), /^gene_symbol,comparison,lfc\r\nSEPT1,Day 4 vs Day 39,-1\r\n$/);
   assert.ok(files["02-Screen-A/gene-results.csv"]);
   assert.equal(Object.keys(files).some(f => /quality|provenance|disagreement/.test(f)), false);
   assert.equal(JSON.parse(strFromU8(files["manifest.json"])).screens[0].recorded_gene_rows, 1);
+});
+
+test("CSV bundle inventory matches every payload byte and individual metadata preserves run identity", async () => {
+  const output = await serializeScreensExport([screen()], request({ format: "csv" }), now);
+  const files = unzipSync(output.bytes);
+  const manifest = JSON.parse(strFromU8(files["manifest.json"]));
+  assert.deepEqual(manifest.files.map(file => file.path).sort(), Object.keys(files).filter(path => path !== "manifest.json").sort());
+  for (const file of manifest.files) {
+    assert.equal(file.byte_length, files[file.path].length);
+    assert.equal(file.sha256, createHash("sha256").update(files[file.path]).digest("hex"));
+  }
+  const metadata = JSON.parse(strFromU8(files["01-Screen-A/screen.json"]));
+  assert.equal(metadata.run_id, RUN);
+  assert.equal(metadata.comparisons[0].id, CMP);
+  const settings = JSON.parse(strFromU8(files["01-Screen-A/analysis-settings.json"]));
+  assert.equal(settings.run_id, RUN);
+  assert.deepEqual(settings.settings, screen().run.settings);
+  assert.equal(settings.container_digest, null);
+  assert.match(strFromU8(files["README.md"]), /not a validation probability/);
+});
+
+test("standalone Python verifier detects modified, missing and escaping paths without SplicR", async () => {
+  const output = await serializeScreensExport([screen()], request({ format: "csv", sections: [] }), now);
+  const files = unzipSync(output.bytes);
+  const root = mkdtempSync(join(tmpdir(), "splicr-bundle-"));
+  try {
+    for (const [path, bytes] of Object.entries(files)) {
+      const dest = join(root, path); mkdirSync(dirname(dest), { recursive: true }); writeFileSync(dest, bytes);
+    }
+    const verify = () => spawnSync("python3", [join(root, "verify-bundle.py")], { encoding: "utf8" });
+    assert.equal(verify().status, 0);
+    const target = "01-Screen-A/gene-results.csv";
+    writeFileSync(join(root, target), "changed");
+    assert.match(verify().stderr, /Changed file/);
+    rmSync(join(root, target));
+    assert.match(verify().stderr, /Missing or unsafe file/);
+    writeFileSync(join(root, target), files[target]);
+    const manifest = JSON.parse(strFromU8(files["manifest.json"]));
+    manifest.files.push({ path: "../outside.csv", byte_length: 0, sha256: "x" });
+    writeFileSync(join(root, "manifest.json"), JSON.stringify(manifest));
+    assert.match(verify().stderr, /Invalid or duplicate inventory path/);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("settings files respect provenance selection and preserve unknown rather than invent defaults", async () => {
+  const missing = screen({ run: { ...screen().run, settings: null } });
+  const selected = unzipSync((await serializeScreensExport([missing], request({ format: "csv", sections: ["provenance"] }), now)).bytes);
+  assert.equal(JSON.parse(strFromU8(selected["01-Screen-A/analysis-settings.json"])).settings, null);
+  const omitted = unzipSync((await serializeScreensExport([missing], request({ format: "csv", sections: [] }), now)).bytes);
+  assert.equal(Object.hasOwn(omitted, "01-Screen-A/analysis-settings.json"), false);
 });
 
 test("spreadsheet formulas remain safe, while JSON and Excel preserve original text", async () => {

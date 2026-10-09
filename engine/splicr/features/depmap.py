@@ -146,7 +146,9 @@ import numpy as np
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _REPO = os.path.abspath(os.path.join(_HERE, "..", "..", ".."))
 
-REFERENCES = os.environ.get("SPLICR_REFERENCES", os.path.join(_REPO, "data", "references"))
+from ..config import REFERENCE_DIR
+
+REFERENCES = os.environ.get("SPLICR_REFERENCES", str(REFERENCE_DIR))
 DEPMAP_DIR = os.path.join(REFERENCES, "depmap")
 CELLS_DIR = os.path.join(REFERENCES, "cells")
 CACHE_DIR = os.environ.get("SPLICR_DEPMAP_CACHE", os.path.join(DEPMAP_DIR, "_cache"))

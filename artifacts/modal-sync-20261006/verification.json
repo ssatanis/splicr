@@ -1,0 +1,42 @@
+{
+  "checkedAt": "2026-10-06T17:11:54.651Z",
+  "sourceCommit": "6627c73e08bc5a52e9b70038f4a42541529a5434",
+  "screens": [
+    {
+      "name": "A375 Viability",
+      "status": "running",
+      "qc": "warn",
+      "run_status": "running",
+      "job_status": "running",
+      "attempts": 1,
+      "error": null,
+      "heartbeat_age_seconds": 50,
+      "hits": "0"
+    },
+    {
+      "name": "A549 Viability",
+      "status": "running",
+      "qc": "pass",
+      "run_status": "running",
+      "job_status": "running",
+      "attempts": 1,
+      "error": null,
+      "heartbeat_age_seconds": 39,
+      "hits": "0"
+    }
+  ],
+  "runtimeStateMismatches": 0,
+  "deployedRuntimeDoctor": "healthy; tools, references and database checked remotely",
+  "browserTest": "passed; queued -> reconnecting -> running -> complete with realtime blocked",
+  "engineTests": 64,
+  "isolatedReleaseBuild": "passed",
+  "knownBaselineFailures": [
+    "experiment-import: supplement title rows and blank guide header",
+    "experiment-import: replicate separators and models stay distinct"
+  ],
+  "productionDeployment": "https://splicr-4ndcjzwsg-sahajs-projects-b3f24343.vercel.app",
+  "automaticDeploymentRuns": [
+    "https://github.com/ssatanis/splicr/actions/runs/37501044853",
+    "https://github.com/ssatanis/splicr/actions/runs/37501342489"
+  ]
+}

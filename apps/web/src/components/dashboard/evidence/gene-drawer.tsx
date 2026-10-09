@@ -29,6 +29,8 @@ import { useEffect, useRef, useState } from "react";
 
 import type { DisagreementReport, GuideEvidence } from "@/lib/data/disagreement";
 
+import { LabEvidencePanel } from "./lab-evidence-panel";
+
 import { ProteinTrack } from "./protein-track";
 import { StructureViewer } from "./structure-viewer";
 
@@ -283,8 +285,12 @@ export function GeneDrawer({
   state,
   screenName,
   onClose,
+  screenId,
+  comparisonId,
 }: {
   state: DrawerState;
+  screenId: string;
+  comparisonId?: string;
   screenName: string;
   onClose: () => void;
 }) {
@@ -352,6 +358,7 @@ export function GeneDrawer({
         </header>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+          <div className="mb-4"><a href={`/dashboard/memory?q=${encodeURIComponent(state.gene)}`} className="text-xs text-cyan-700 underline">Search {state.gene} across the lab</a></div>
           {state.kind === "loading" && (
             <p role="status" className="text-[12.5px] text-muted">Reading the recorded report…</p>
           )}
@@ -363,6 +370,7 @@ export function GeneDrawer({
             </div>
           )}
 
+          {state.kind === "message" && <div className="mt-5"><LabEvidencePanel key={state.gene} screenId={screenId} gene={state.gene} comparisonId={comparisonId} /></div>}
           {state.kind === "found" && (
             <div className="space-y-6">
               <section>
@@ -452,6 +460,8 @@ export function GeneDrawer({
                 </h3>
                 <Concordance report={state.report} />
               </section>
+
+              <LabEvidencePanel key={state.gene} screenId={screenId} gene={state.gene} comparisonId={comparisonId} />
 
               <section className="space-y-1 border-t border-line pt-3 text-[11px] leading-snug text-muted">
                 <h3 className="text-[12px] font-medium text-ink">Where these numbers came from</h3>

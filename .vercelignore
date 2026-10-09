@@ -4,6 +4,10 @@ node_modules
 .next
 **/.next
 *.tsbuildinfo
+.env
+.env.*
+**/.env
+**/.env.*
 
 # The web build uses checked-in summaries, not the raw research lake or the
 # local Python/R execution environments. Excluding these keeps a production
@@ -20,3 +24,11 @@ node_modules
 coverage
 apps/web/public/vendor
 apps/web/src/app/dashboard/zz-probe
+
+# Verification sessions and analysis outputs never belong in a web deployment.
+/apps/web/e2e/
+/apps/web/test-results/
+/apps/web/test-results-*/
+/apps/web/playwright-report/
+/artifacts/
+/scratch/

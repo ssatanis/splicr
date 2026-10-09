@@ -1,0 +1,75 @@
+{
+  "release": "v10",
+  "generatedAt": "2026-10-08T01:07:48.794435+00:00",
+  "slides": 20,
+  "fullAnalyses": [
+    {
+      "comparison": "Ferrarone 2024: A549 LKB1 growth screens, 2D: WT vs plasmid",
+      "status": "complete",
+      "genes": 18049,
+      "csvMatchesLatestBrowserExport": true
+    },
+    {
+      "comparison": "Ferrarone 2024: A549 LKB1 growth screens, 2D: WT vs EV",
+      "status": "complete",
+      "genes": 18049,
+      "csvMatchesLatestBrowserExport": true
+    },
+    {
+      "comparison": "Ferrarone 2024: A549 LKB1 growth screens, 2D: EV vs plasmid",
+      "status": "complete",
+      "genes": 18049,
+      "csvMatchesLatestBrowserExport": true
+    },
+    {
+      "comparison": "Ferrarone 2024: A549 LKB1 growth screens, Spheroid: EV vs plasmid",
+      "status": "complete",
+      "genes": 18049,
+      "csvMatchesLatestBrowserExport": true
+    },
+    {
+      "comparison": "Ferrarone 2024: A549 LKB1 growth screens, Spheroid: WT vs plasmid",
+      "status": "complete",
+      "genes": 18049,
+      "csvMatchesLatestBrowserExport": true
+    },
+    {
+      "comparison": "Ferrarone 2024: A549 LKB1 growth screens, Spheroid: WT vs EV",
+      "status": "complete",
+      "genes": 18049,
+      "csvMatchesLatestBrowserExport": true
+    }
+  ],
+  "presentation": {
+    "SplicR-Varmus-lab.pptx": {
+      "sha256": "6deccb4e65628962ad8d2d59448d428c717cc68648b3e93f6b2798456e355566",
+      "bytes": 842157
+    },
+    "SplicR-Varmus-lab.pdf": {
+      "sha256": "d91f0ea0dd7528f7a294709a602c569c147539c3f7f3eafeeea6229cf2f0c7aa",
+      "bytes": 1163690
+    },
+    "SplicR-Varmus-lab.html": {
+      "sha256": "c429229abcd1dd5e1fc0703d00bf54964d0b4c011da7ff56b484338e04b9560b",
+      "bytes": 2375190
+    },
+    "Speaker-notes.md": {
+      "sha256": "4068ab80a9997c2051afc5aee963666fde1c7e0aa5ae4afdc5b8ddde997732b8",
+      "bytes": 18670
+    },
+    "Meeting-prep.md": {
+      "sha256": "04f9a3a4b28d8a604fece031dec69990d899c1b8c2936bafa23d06989e4aa766",
+      "bytes": 23379
+    },
+    "Explain-SplicR-and-the-demo.md": {
+      "sha256": "90bc4092b652eebb00d0c4c0400b98be3f13bd736e369a330c37f9e4abd47dbd",
+      "bytes": 20775
+    },
+    "Cover-preview.png": {
+      "sha256": "dd17bcd513695000a416352c982f1f72db42feae80eaa9471501c987ea3f7be3",
+      "bytes": 55370
+    }
+  },
+  "newAnalysisJobsSubmitted": false,
+  "scope": "Presentation, documentation, packaging and read-only production recheck. No new biological validation or independent full-genome MLE rerun."
+}

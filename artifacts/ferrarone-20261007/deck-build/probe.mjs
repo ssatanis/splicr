@@ -1,0 +1,6 @@
+import {FontLibrary} from '/Users/sahaj/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/@oai/artifact-tool/node_modules/skia-canvas/lib/index.mjs';
+FontLibrary.use('Inter',new URL('./fonts/Inter.ttf',import.meta.url).pathname);FontLibrary.use('Instrument Serif',new URL('./fonts/InstrumentSerif.ttf',import.meta.url).pathname);
+import {GlobalFonts} from '@napi-rs/canvas';
+console.log(GlobalFonts.registerFromPath(new URL('./fonts/Inter.ttf',import.meta.url).pathname,'Inter'),GlobalFonts.registerFromPath(new URL('./fonts/InstrumentSerif.ttf',import.meta.url).pathname,'Instrument Serif'));
+import {Presentation,PresentationFile} from '@oai/artifact-tool';
+const p=Presentation.create({slideSize:{width:1280,height:720}});const s=p.slides.add();const t=s.shapes.add({geometry:'textbox',position:{left:70,top:100,width:1100,height:120},fill:'none',line:{fill:'none',width:0}});t.text='SplicR for the Varmus lab';t.text.style={fontSize:60,typeface:'Instrument Serif',color:'#174f62'};await (await PresentationFile.exportPptx(p)).save(new URL('./probe.pptx',import.meta.url).pathname);const b=await p.export({slide:s,format:'png'});await (await import('node:fs/promises')).writeFile(new URL('./probe.png',import.meta.url),Buffer.from(await b.arrayBuffer()));console.log('done');

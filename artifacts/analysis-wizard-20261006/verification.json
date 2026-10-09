@@ -1,0 +1,35 @@
+{
+  "local_browser_checks": {
+    "passed": 3,
+    "failed": 0,
+    "seconds": 30.5,
+    "dataset_guides": 60550,
+    "checked": [
+      "Fresh Step 1, multiple-file chooser, mode switching, mobile upload zone",
+      "All four step bodies exclusive, confirmation reset, click Step 1 from Step 4",
+      "Real Jacquere counts and map upload, automatic library import, comparisons, pipeline, return to upload"
+    ]
+  },
+  "genome_scale_alias_regression": "passed, 60,550 sequence IDs",
+  "build": "passed",
+  "known_existing_tests": [
+    "experiment-import: supplement title rows comparison count",
+    "experiment-import: replicate separators comparison count"
+  ],
+  "source_sha256": {
+    "apps/web/src/components/dashboard/intake/upload-flow.tsx": "565e538739549cfa77363bc1dd2a64ac9e380d4411ea6f250c3d55b3d7ed2156",
+    "apps/web/src/components/dashboard/intake/experiment-review.tsx": "bf2faa4d52f84e523eb64e079425fe59d6ba9f532d0e74901cda47b0db217380",
+    "apps/web/src/lib/intake/tables.ts": "791ab7b5d9feeb7f9a78004d67ad4bd4b818ae3a611b74c0ab3f51c8fc23ab80",
+    "apps/web/e2e/fast/analysis-wizard.spec.ts": "aab7b55f93b7ac4bb0f5aed85d972416e8d91136d22676acff3594e4ae658c10"
+  },
+  "production": {
+    "url": "https://www.splicr.org/dashboard/new",
+    "deployment_id": "dpl_GwW6dGieNvV1FE9s1NmY28kpoyZf",
+    "deployment_url": "https://splicr-lg5l3i1fl-sahajs-projects-b3f24343.vercel.app",
+    "status": "READY",
+    "browser_checks_passed": 3,
+    "auth_setup_passed": true,
+    "seconds_including_auth_setup": 43.5,
+    "screenshots_from": "production browser checks"
+  }
+}

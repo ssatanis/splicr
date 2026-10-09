@@ -1,0 +1,244 @@
+﻿Pooled Screen Analysis with Apron 
+Apron is a web application created by GPP for the analysis of data from pooled CRISPR screens. Apron was developed to provide an accessible, easy-to-use suite of tools that standardizes pooled screening data processing and analysis. Apron employs a structured workflow that directs data analysis in a step-by-step manner, implementing rigorous QC and statistical tests for assessment of screen quality and hit calling. Apron automatically generates a range of presentation-ready plots and gene lists for downstream examination. Finally, Apron's graphical user interface eliminates the need for command-line familiarity. 
+Apron currently supports analysis of data from CRISPRko, CRISPRa, and CRISPRi screens conducted with either Cas9 or Cas12a, provided each construct targets a single gene, regardless of the number of guides in each construct. For screening modalities not fully supported by Apron (e.g., base editors, combinatorial screens), see the FAQ section and contact your screening scientist for assistance. Finally, Apron is optimized for analysis of PoolQ output files but can support screens deconvoluted elsewhere (see FAQs for further details on file input formats).
+We encourage scheduling a time to meet with a GPP screening scientist for further discussion on your screen quality, resulting gene hits, and anticipated validation studies. For questions not answered in the Methods and FAQ sections below, please contact gpp-apron@broadinstitute.org. 
+
+
+If you are new to working with GPP, please check out an introduction (Broad community or FGC members).
+Getting Started: File Requirements
+If your samples were processed through GPP, sequencing data will be provided through a PoolQ data delivery link. Further information on PoolQ output files can be found in our Screen Deconvolution with PoolQ guide. 
+
+
+The PoolQ output files needed to perform an analysis with Apron are:
+
+
+* A ‘PoolQ counts matrix’ file (the first file in the ‘PoolQ Output Files’ table).
+* A .chip file (an annotations file that maps sequence IDs to targets), accessed via the clone pool ID# link towards the top of your data delivery page.
+
+
+In some cases, you may wish to preprocess your data before uploading to Apron. For example, if conditions of interest span multiple plates, you can merge those split conditions prior to uploading the data. Or if your reference condition is represented by two or more biological replicates, you may wish to combine those replicates prior to upload.
+Analyzing Screening Data
+To launch an analysis, open Apron from the GPP web portal homepage (Broad/Screeners) and click ‘Start Analysis.’
+Add counts
+On this page, click ‘Upload counts’ and select the relevant PoolQ counts matrix file, as described in the previous section. Confirm upload of the correct file via the ‘Counts preview’ window and click ‘Next.’
+Add a data configuration
+Inputs
+Use Apron’s Data Configuration feature to describe how you wish your data to be analyzed. First, choose the column in your counts file that corresponds to the guide sequences from the ‘Construct Barcode column’ dropdown. Next, pick the reference column – that is, the control condition for any particular comparison – from the ‘Reference column’ dropdown (see FAQs for more information). If a given reference condition is supported by two or more biological replicates and you wish to average these instead of handling each in isolation, select the corresponding samples from the dropdown list and assign a name to the group. From the ‘Columns to include in analysis’, remove samples you do not wish to include in downstream analyses, such as empty wells that served as PCR controls. Once specified, use the ‘+ Add data config..’ feature to create additional, independent comparisons if needed. This can be useful when more than one condition can act as a reference. For example, in a drug modifier screen, you may compare a ‘with drug’ sample to ‘vehicle only’ sample and independently, the ‘vehicle only’ sample to the ‘pDNA’.
+
+
+Reference Condition
+Nominating a reference sample (see above) will populate the ‘Reference Condition’ summary statistics window. Key metrics in the table and subsequent figures include:
+
+
+* Fraction of constructs represented by 90% of the reads: In a fully represented and perfectly distributed library, 90% of the constructs will be captured by 90% of the reads. In reality, >70% is acceptable for a plasmid DNA (pDNA) reference sample. However, if the reference sample was exposed to any selective pressure, including time (such as an untreated arm in a drug modifier screen), then this will show more skew. 
+
+
+* Minimum/median/maximum lognorm values: These report on the distribution of the reference sample. A smaller range indicates a more uniform library. Note that loss of one construct will yield a minimum lognorm of 0, while one highly enriched construct can substantially inflate the maximum lognorm value. The closer the median lognorm value is to its theoretical ideal (calculated by dividing 1,000,000 by the # constructs in the library and expressing as log2), the better. For Brunello, this would be log₂(1,000,000 counts ÷ 77,441 constructs) = 3.69. We typically observe 3.61 – 3.63.
+
+
+* Area under the curve (AUC): In the ‘Cumulative Distribution of Reference Reads’ figure, the cumulative fraction of reads associated with each construct (ordered by rank abundance) is displayed. In a perfectly distributed reference sample, each construct will possess an equal share of the reads, resulting in an AUC of 0.5. In reality, 0.5 - 0.6 and 0.5 - 0.65 for pDNA samples of single-guide and multi-guide libraries, respectively, is considered acceptable (Figure 1). An AUC >0.7 suggests the reference sample has undergone selective pressure (see Coverage Considerations In Pooled Genetic Screens for more information), and you should discuss next steps with your screening scientist.
+
+
+* Filtered constructs: By default, Apron will filter low abundance constructs that are 3 standard deviations lower than the mean lognorm. This can be modified as desired. In a positive selection screen, filtering out low-abundance constructs in the reference sample is not recommended, as they could become enriched in treatment arms. A histogram of z-scored lognorm reads is plotted for visualization (Figure 1). 
+
+
+  
+  
+
+	Figure 1. Data from Sanson et al. 2018. AUC and z-scored lognorm distribution of Meljuso untreated Calabrese Set A screen arm. Counts for the untreated replicates were averaged prior to Apron analysis. 
+	
+
+
+
+Sample Correlations
+The ‘Log-Fold Change Correlation’ heatmap displays the similarity between samples via a pairwise matrix based on log-fold change (LFC) profiles. LFC values are calculated by subtracting the log-normalized abundance of each construct in the reference sample from the corresponding log-normalized abundance in each experimental sample. Clicking on a tile within the matrix will generate a scatterplot for further examination. In general, correlations are higher in negative selection screens (ideally r = >0.7) than in positive selection screens. In the latter, general correlation may be weak, but some constructs should perform concordantly (Figure 2).
+
+
+  
+  
+
+	Figure 2. Data from Sanson et al. 2018. Pearson correlation heatmap and log-fold change scatterplot of of Selumetinib-treated Meljuso Calabrese Set A screen replicates. Constructs correlate strongly along the diagonal, with low overall correlation, indicative of strong positive selection during the screen.
+	
+
+Samples to exclude in rest of analysis
+Should you need to remove particular samples from further analysis, e.g. a positively identified sample swap, do so by choosing the sample in the ‘Samples to exclude in rest of analysis’ menu.
+
+
+Replicate groups
+Collapsing replicate samples into a replicate group by averaging their log-fold change values can streamline analysis. Before doing so, ensure samples are concordant (see ‘Sample Correlations’ section above). 
+
+
+Complete the ‘Add a data configuration’ section by clicking ‘Finish configuration and continue analysis.’
+Add an analysis
+After finalizing your data configuration and assessing the quality of your screening samples, Apron can perform two screen-level analyses: ROC-AUC and target-level aggregation. To gauge overall screen quality by calculation of true and false positive rates, click ‘Receiver Operating Characteristic - Area Under The Curve (ROC-AUC).’ For gene list analysis, click ‘Target-level Aggregation.’ More information on each analysis can be found below.
+
+
+Receiver Operating Characteristic - Area Under The Curve (ROC-AUC)
+A screen’s overall quality can be gauged by examining the differential behavior of positive and negative controls. One often-available set of positive and negative controls are constructs targeting essential and nonessential genes, by comparing a late time point to the pDNA or an early time point. These would not serve as controls for all comparisons, however: for example, comparing high vs. low expression of a marker assessed by flow cytometry, or comparing between late time points for drug treated and untreated samples. Custom control sets can theoretically be built into a library to assess the screen’s ability to capture relevant biology, provided some prior knowledge of the biology exists. Further information on ROC-AUC analysis can be found in the Methods section below. 
+To begin an ROC-AUC analysis, follow these steps:  
+
+
+1. On the ‘Add an analysis’ page, click the ROC-AUC button and then ‘Add analysis.’
+2. Name the analysis and specify a previously designed ‘Data configuration’.
+3. Upload a .chip or annotation file that maps construct barcodes to genes. If you received a PoolQ data delivery link, the .chip file can be accessed via the hyperlinked clone pool ID#. If using your own annotations file, ensure it is .txt format and contains ‘Barcode Sequence’ as the first column, followed by columns with your annotations.
+4. Specify the ‘Construct Barcode column’ (typically ‘Barcode Sequence’) and the ‘Target column’ (typically ‘Gene Symbol’).
+5. Specify the ‘True positive’ and ‘True negative’ construct sets that will be used in the analysis. You can either choose from pre-defined sets, upload .csv or .txt files containing barcode sequences or gene symbols (see FAQs), or enter a custom identifier (useful if your annotations file was generated by hand rather than a GPP-generated .chip file). Typically the pre-defined Human/Mouse Essentials and Human/Mouse Nonessentials are used for the true positive and true negative sets, respectively.
+
+
+Complete this section by clicking ‘Save settings and generate figures.’
+
+
+The resulting ROC-AUC figure displays the performance of each sample at the construct (sgRNA) and target (gene) level. In a perfect screen, in which all true positive and true negative constructs behave as intended, the AUC will be 1. In a screen in which control constructs behave in a random manner, the AUC will be ~0.5. In reality, an AUC >0.8 indicates a strong separation between positive and negative controls and a high quality screen.
+
+
+You can complete this section by clicking ‘Proceed to downloads’ (see Downloads section below) or by clicking ‘Add another analysis.’ 
+Target-level aggregation
+Having evaluated overall screen quality, the next step is to identify hit genes via target-level aggregation analysis. This flattens construct-level log-fold change (LFC) data into gene-level z-scores and reports statistical significance. First, to create a single gene-level z-score, the z-scores of the associated constructs are summed and divided by the square root of the number of constructs targeting that gene. Next, to assess significance, control constructs are randomly grouped into pseudogenes and used to create an empirical null distribution, from which p-values and FDRs for target z-scores are derived.
+
+
+To launch a target-level aggregation analysis, follow these steps: 
+
+
+1. On the ‘Add an analysis’ page, click the Target-level aggregation button and then ‘Add analysis.’
+2. Name the analysis and specify a ‘Data configuration’.
+3. Upload a .chip or annotation file (as described above for an ROC-AUC analysis).
+4. Specify the ‘Construct Barcode column’ (typically ‘Barcode Sequence’) and the ‘Target column’ (typically ‘Gene Symbol’).
+5. Specify a ‘Control set’ of constructs to use for z-scoring. You can either choose from a pre-defined set in the dropdown menu, upload a .csv or .txt file with a list of barcode sequences or gene symbols (see FAQs), or enter a custom identifier (most useful if your annotations file was generated by hand rather than a GPP-generated .chip file). Most often the ONE_INTERGENIC_SITEs are used as the control set. Apron will randomly group the chosen control set into ‘pseudogenes’ based on the average number of constructs per gene in the .chip or annotations file.
+
+
+Complete this section by clicking ‘Save settings and generate figures.’
+
+
+The resulting Target-level aggregation scatter plot can be customized according to preference (described in more detail in the Methods section). Different samples can be displayed via the ‘Conditions menu,’ and the ‘Axes menu’ can be used to toggle between the standard log-fold change and z-score formats (Figure 3). The aggregation plot can be customized to display genes based on the quantity of targeting constructs via the ‘Min constructs per target’ and ‘Max constructs per target’.
+  
+
+	Figure 3. Data from Sanson et al. 2018. Target-level aggregation plots comparing -log10(FDR) vs. target z-scored LFC for the Selumetinib-treated Meljuso Calabrese Set A screen. Top three enriched and depleted genes are highlighted in pink.
+	
+
+
+
+Complete this section by clicking ‘Proceed to downloads.’
+
+
+Downloads
+In this section, you will find data files and figures pertaining to the quality of the reference sample, low-abundance guides excluded from analysis, sample-to-sample similarity, and overall performance of control constructs. 
+
+
+Additionally, you will find data files for any ROC-AUC and the target-level aggregation analyses you’ve run, such as log-fold change values, z-scores, and FDR-adjusted p-values. These data files can be used for closer inspection, production of custom visuals, and porting into other analysis tools (e.g., GSEA). Analysis figures available in the downloads section include the ROC-AUC plot, gene aggregation plot using the most recently selected target-level aggregation settings, and a construct rug plot for the gene most recently highlighted in the gene aggregation plot.
+Hit Calling Follow-Up
+Deciding what represents a biologically-meaningful change and what does not can often be challenging. Effect size can be screen-specific, so it is recommended to never directly interpret perturbation effects or screen quality from LFC values alone. The gold standard is to use an FDR<0.05 to determine hits, which will isolate genes with a more extreme phenotype than 95% of the controls, and corrects for multiple testing.
+
+
+This is an excellent time to schedule a meeting with your GPP screening scientist to discuss your results and start fine-tuning your follow-up experiments.
+Methods
+Lognorms
+Lognorms are log-normalized read counts. Since the distribution of read counts typically has a long right tail and each condition has a different absolute number of read counts, we normalize the read counts within each condition (Figure 4).
+
+
+  
+
+	Figure 5. Lognorm calculation
+	
+
+
+
+Distribution of the reference condition
+To assess if all the constructs are uniformly represented in the reference condition, we calculate the cumulative read fraction of the constructs in the reference and determine the area under the curve (AUC). If all the constructs in the reference pool are uniformly distributed the AUC will be 0.5. For a well distributed library, the AUC should be closer to 0.5. For each construct, we then calculate a z-score according to Z = (x - μ) / σ, where Z is the Z-score, x is the lognorm for a given construct, and μ and σ are the mean and standard deviation lognorms of the entire reference sample, respectively.
+Filtering the reference condition
+Some constructs may be absent in the input pool. To avoid unexpected results, we filter constructs with a lognorm input amount significantly less than the mean lognorm of the pool. Typically we use a cutoff of -3 standard deviations from the mean lognorm. You can see which constructs have been filtered in the Downloads tab.
+Log-fold changes
+Log-fold changes are calculated by subtracting the lognorms of the reference condition from the lognorms of the other conditions. 
+Calculating construct z-scores from log-fold changes
+Construct z-scores are calculated from log-fold change values according to z = (x - μ) / σ, where z is the z-score, x is the log-fold change for a given construct, μ is the mean log-fold change of a user-defined negative control set (such as nonessential genes, ‘ONE_INTERGENIC_SITE’ constructs, or 'NO_SITE' constructs), and σ is the standard deviation of the same control set.
+Target z-scores
+To obtain target (i.e., gene) level z-scores, construct z-scores are summed and divided by the square root of the number of constructs (Stouffer's method).
+Target p-values
+P-values are now derived from target-level z-scores using an empirically derived null distribution (created through bootstrapping of negative control guides) rather than a standard normal distribution.
+False discovery rate
+The false discovery rate is calculated from p-values using the Benjamini-Hochberg procedure within each condition.
+ROC-AUC
+ROC-AUC stands for receiver operating characteristic - area under the curve. A receiver operating characteristic curve measures the true positive and false positive rate at ranked thresholds. The area under this curve quantifies how well the ranking distinguishes between positive and negative control classes. An area under the curve greater than 0.5 indicates a non-random ranking. We typically rank sequences or targets by log-fold changes and use known true positive and true negative sets, such as essential and nonessential genes, to calculate the receiver operating characteristic. The pre-loaded human essential gene set is from Hart et al. 2015, while the human non-essential gene set is from Hart et al. 2014. The pre-loaded essential and non-essential gene sets for other species are orthologs derived from the human gene sets.
+FAQs
+Q: Can Apron support any type of analysis for combinatorial screens?
+
+
+Yes, to an extent. For example, you can still visualize replicate correlations. You can also determine hit genes, using the ability of Apron to merge information from multiple constructs targeting a gene, or set of genes, to a single gene-level answer. Apron is not set up to determine synergy between genes, i.e. determine if there is a synthetic lethal relationship between Gene A and Gene B, where knockout of either does not cause a viability effect but knockout of the pair does.
+
+
+
+
+Q: What types of files can I upload?
+
+
+You can upload the following file formats for the different steps of Apron:
+
+
+* Counts file – .txt file containing a header row with at least ‘Construct Barcode’ and ‘Construct IDs’ as the first columns, followed by integer count column(s)
+* Annotations file – .chip or .txt file containing a header row with ‘Barcode Sequence’ as the first column, followed by column(s) with your annotations
+* Control set file – .csv or .txt file containing a header row and listing barcode sequences or gene symbols in the first column
+
+
+* Note: If uploading a control set file, be sure to update the ‘Target column’ dropdown on the Analysis page to match your control inputs, either barcode sequences or gene symbols.
+
+
+Q: What should I do if my samples were split across multiple plates or I screened with sub-pools?
+
+
+Apron currently supports analysis of screening data in a ‘one plate at a time’ manner. If identical samples were submitted across multiple plates, you may wish to aggregate the read counts instead of analyzing each plate in isolation. Similarly, if cells were transduced with library sub-pools (e.g., Humagne Set C/D or Dolcetto Set A/B), combining reads can add convenience and statistical power. To avoid copy-paste errors during data merging, we recommend using Python, R or the command line instead of Excel. The final counts file must be in .csv or .txt format, and contain ‘Construct Barcode’ and ‘Construct IDs’ in the first two columns, and integer count columns thereafter. If library sub-pools were used and the associated datasets are combined, the corresponding annotation files should also be merged and supplied to Apron.
+
+
+Q: What is the reference sample for my screen?
+
+
+The reference sample is the baseline abundance for each construct in the library and is defined during the screen planning phase. For most CRISPR screens, the plasmid DNA (pDNA) serves as an appropriate reference since individual guides package into lentivirus in an even distribution. If the screen incorporated small molecule treatment arm(s), the reference sample is likely to be the untreated condition. Finally, if construct abundance is known to vary between the pDNA and the lentiviral stock due to construct size and packaging limitations, such as an ORF library, an early time point will serve as the best reference sample. Additionally, screens with multiple reference samples of interest to choose from, based on the question being asked, will require running Apron multiple times.
+
+
+Q: What do the column names from the target-level aggregation output files mean?
+
+
+Construct z-scores:
+
+
+1. 'Construct Barcode': Construct sequences after filtering 
+2. 'condition': Condition label as assigned to replicate group in the Data Configuration tab
+3. 'avg_replicate_lfc': Log-fold changes averaged across replicates, with replicates grouped based on replicate information in the Data Configuration tab
+4. 'n_obs': Number of times each construct is observed across conditions 
+5. 'Barcode Sequence': Construct sequences after filtering
+6. ‘Gene Symbol’: Associated construct target name 
+7. 'z_scored_avg_replicate_lfc': Z-scored log-fold changes averaged across replicates 
+8. 'control': Control flag column where True if construct targets a negative control
+9. 'Category': Category column that labels constructs targeting true positives, true negatives, and negative controls
+
+
+Target log-fold changes and z-scores (standard):
+
+
+1. 'condition': Condition label as assigned to replicate group in the Data Configuration tab
+2. 'Gene Symbol': Target name
+3. ‘n_guides’: Number of constructs for the target 
+4. 'avg_lfc': Target-level Log-fold changes averaged across replicates and constructs
+5. 'z_scored_avg_lfc': Z-scored target-level log-fold changes 
+6. 'z_scored_avg_lfc_p_value': P-value calculated based on standard distribution of z-scores
+7. 'z_scored_avg_lfc_fdr': False discovery rate (FDR), see Methods section for more details
+8. 'nlog10_p_value': -log10(p-value)
+9. 'nlog10_fdr': -log10(FDR) 
+10. 'control': Control flag column where True if target is a negative control 
+11. 'Category': Category column that labels targets as true positives, true negatives, and negative controls
+
+
+Q: What features are you planning for the future?
+
+
+Apron is under continuous development to enable analysis of additional types of screening data. We plan to support combinatorial screens (i.e. gene x gene screens to find synthetic lethality), the use of iBAR UMIs, and base editing screens through Apron in the future.
+
+
+Q: Can you share Apron’s source code?
+
+
+At this time Apron’s source code is not available.
+
+
+Q: Where is the previous version of Apron?
+
+
+Apron Beta can still be accessed via the Apron homepage.

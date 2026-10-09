@@ -169,9 +169,10 @@ export function normaliseSymbol(gene: string): string {
 export async function getGeneDisagreement(
   screenId: string,
   gene: string,
+  comparisonId?: string,
 ): Promise<DisagreementResult> {
   const symbol = normaliseSymbol(gene);
-  if (!isUuid(screenId) || symbol.length === 0) return { status: "not_found" };
+  if (!isUuid(screenId) || (comparisonId !== undefined && !isUuid(comparisonId)) || symbol.length === 0) return { status: "not_found" };
   const context = await getCurrentContext();
   if (!context.user || !context.org) return { status: "not_found" };
   try {
@@ -184,13 +185,14 @@ export async function getGeneDisagreement(
     if (!owned.data) return { status: "not_found" };
     if (!owned.data.current_run_id) return { status: "not_analysed" };
 
-    const found = await client.from("gene_disagreement")
+    let query = client.from("gene_disagreement")
       .select("report, created_at")
       .eq("screen_id", screenId)
       .eq("run_id", owned.data.current_run_id)
       .eq("gene_symbol", symbol)
-      .eq("schema_version", "1")
-      .order("created_at", { ascending: false })
+      .eq("schema_version", "1");
+    if (comparisonId) query = query.eq("comparison_id", comparisonId);
+    const found = await query.order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
     if (found.error) throw found.error;

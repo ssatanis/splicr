@@ -16,6 +16,7 @@ Start with [the results](10_FINAL_RESULTS.md) and [the plain-language guide](11_
 | [10 Final results](10_FINAL_RESULTS.md) | Changes, verified results, tests and unresolved blockers |
 | [11 Reading the evidence](11_HOW_TO_READ_THE_EVIDENCE.md) | What the numbers mean and what they cannot prove |
 | [12 Website consistency](12_WEBSITE_CONSISTENCY.md) | Current website, export, API and documentation corrections |
+| [13 Laboratory workspace and statistical roadmap](13_LAB_WORKSPACE_AND_STATISTICAL_ROADMAP.md) | Corrected scientific blueprint, linked lab evidence, export contract and independent benchmark gates |
 | [Post-screen implementation](POSTSCREEN_IMPLEMENTATION.md) | Confirmed scientific/software defects and real-count sensitivity runs |
 
 ## Reproduce new experiments

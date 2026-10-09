@@ -1,0 +1,9 @@
+{"schema":"openai.presentation.layout/v5","unit":"px","slide":{"id":"sl/3tn83y","index":8,"layout":{"id":"ly/n69w3654","name":"Title Slide"},"backgroundColor":"rgba(250,249,246,1)","position":{"left":0,"top":0,"width":1280,"height":720}},
+"elements":[
+{"id":"im/0j2lw7yd","kind":"image","position":{"left":64,"top":32,"width":92,"height":31},"fit":"contain","alt":"SplicR logo"},
+{"id":"sh/a9sr25wn","kind":"textbox","name":"text-1","position":{"left":64,"top":100,"width":1152,"height":70},"text":"Live progress follows recorded stages","style":{"fontSize":44,"typeface":"Inter","color":"#174F62","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/va18bad8","kind":"textbox","name":"text-2","position":{"left":1176,"top":670,"width":64,"height":28},"text":"09","style":{"fontSize":15,"typeface":"Inter","color":"#626B78","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/kzu98zep","kind":"textbox","name":"text-3","position":{"left":64,"top":235,"width":1152,"height":65},"text":"All six full RRA + MLE analyses are complete.","style":{"fontSize":32,"typeface":"Inter","color":"#174F62","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"im/cfilsny1","kind":"image","position":{"left":64,"top":326,"width":1152,"height":250},"fit":"contain","alt":"Actual existing MLE run progress"},
+{"id":"sh/ixcr6pwz","kind":"textbox","name":"text-5","position":{"left":64,"top":622,"width":1110,"height":42},"text":"Captured during MLE fitting. All six full RRA + MLE analyses are now complete.","style":{"fontSize":17,"typeface":"Inter","color":"#626B78","alignment":"left"},"geometry":"rect","lineWidth":0}
+]}

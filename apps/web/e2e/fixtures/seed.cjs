@@ -7,7 +7,7 @@
  * by design. Running it against the canonical review workspace would leave a
  * trail of test decisions in a record whose whole purpose is to be the
  * truthful history of what a researcher chose. So the tests own their data:
- * one organization, one member, one screen, torn down afterwards.
+ * one organization, two fixture members, one screen, torn down afterwards.
  *
  * EVERY ROW IS MARKED AS A FIXTURE
  *
@@ -37,6 +37,7 @@ const fixtureNamespace = process.env.SPLICR_E2E_NAMESPACE || "";
 if (fixtureNamespace && !/^[a-z0-9-]{1,40}$/.test(fixtureNamespace)) throw new Error("Invalid E2E fixture namespace");
 const FIXTURE = {
   email: fixtureNamespace ? `splicr-e2e-${fixtureNamespace}@splicr.invalid` : "splicr-e2e@splicr.invalid",
+  colleagueEmail: fixtureNamespace ? `splicr-e2e-${fixtureNamespace}-colleague@splicr.invalid` : "splicr-e2e-colleague@splicr.invalid",
   orgSlug: fixtureNamespace ? `splicr-e2e-fixture-${fixtureNamespace}` : "splicr-e2e-fixture",
   orgName: fixtureNamespace ? `SplicR E2E Fixture Lab (${fixtureNamespace})` : "SplicR E2E Fixture Lab",
   screenName: "E2E fixture screen (synthetic, not a real experiment)",
@@ -114,6 +115,33 @@ async function ensureUser(config, db) {
   return { id: created.data.user.id, admin };
 }
 
+/** A second fixture member exercises researcher attribution without emailing anyone. */
+async function ensureColleague(admin, db, orgId) {
+  const existing = await db.query("select id from public.profiles where email = $1", [FIXTURE.colleagueEmail]);
+  let colleagueId = existing.rows[0]?.id;
+  if (!colleagueId) {
+    await db.query(
+      `insert into public.splicr_access_allowlist (email, org_id, create_workspace, role, status, expires_at)
+       values ($1, $2, false, 'member', 'pending', now() + interval '1 day')
+       on conflict ((lower(email))) do update set org_id = excluded.org_id,
+         create_workspace = false, workspace_name = null, role = 'member',
+         status = 'pending', consumed_at = null, expires_at = excluded.expires_at`,
+      [FIXTURE.colleagueEmail, orgId],
+    );
+    const created = await admin.auth.admin.createUser({
+      email: FIXTURE.colleagueEmail, email_confirm: true,
+      user_metadata: { full_name: "E2E Colleague", fixture: true },
+    });
+    if (created.error) throw created.error;
+    colleagueId = created.data.user.id;
+  }
+  await db.query(
+    `insert into public.org_members (org_id, user_id, role) values ($1, $2, 'member')
+     on conflict (org_id, user_id) do nothing`, [orgId, colleagueId],
+  );
+  await db.query("update public.profiles set full_name = 'E2E Colleague', default_org_id = $2 where id = $1", [colleagueId, orgId]);
+}
+
 /**
  * The workspace and its screen. Idempotent: running it twice leaves one of
  * everything, so a failed run does not need manual cleaning before the next.
@@ -128,13 +156,16 @@ async function seed() {
     // The bootstrap trigger created the workspace when the user was created.
     // Read it back rather than making a second one.
     const owned = await db.query(
-      `select o.id, o.slug from public.organizations o
+      `select o.id, o.slug, o.settings from public.organizations o
          join public.org_members m on m.org_id = o.id
         where m.user_id = $1 order by o.created_at limit 1`,
       [userId],
     );
     if (owned.rowCount === 0) {
       throw new Error("the access bootstrap created no workspace for the fixture researcher");
+    }
+    if (owned.rows[0].settings?.retain_demo === true) {
+      throw new Error("This workspace is a retained research demo. Use a fresh E2E namespace; fixture seeding must not modify it.");
     }
     const orgId = owned.rows[0].id;
     FIXTURE.orgSlug = owned.rows[0].slug;
@@ -269,6 +300,7 @@ async function seed() {
     }
 
     await db.query("commit");
+    await ensureColleague(admin, db, orgId);
     return { userId, orgId, screenId, runId, comparisonId, admin, config };
   } catch (error) {
     await db.query("rollback");
@@ -288,6 +320,10 @@ async function teardown() {
   try {
     const user = await db.query(`select id from public.profiles where email = $1`, [FIXTURE.email]);
     if (user.rowCount > 0) {
+      const retained = await db.query(
+        `select o.id from public.organizations o join public.org_members m on m.org_id=o.id
+          where m.user_id=$1 and o.settings->>'retain_demo'='true'`, [user.rows[0].id]);
+      if (retained.rowCount > 0) throw new Error("Retained research demo: fixture cleanup is blocked to preserve its real analyses.");
       // Stored objects are not rows and nothing cascades to them, so a logo a
       // spec uploaded has to go before the organization that named it does.
       const objects = await db.query(
@@ -307,13 +343,15 @@ async function teardown() {
         [user.rows[0].id],
       );
     }
-    await db.query(`delete from public.splicr_access_allowlist where lower(email) = lower($1)`, [FIXTURE.email]);
+    await db.query(`delete from public.splicr_access_allowlist where lower(email) in (lower($1), lower($2))`, [FIXTURE.email, FIXTURE.colleagueEmail]);
   } finally {
     await db.end();
   }
   const users = await admin.auth.admin.listUsers({ perPage: 200 });
-  const found = users.data?.users.find((user) => user.email === FIXTURE.email);
-  if (found) await admin.auth.admin.deleteUser(found.id);
+  for (const email of [FIXTURE.email, FIXTURE.colleagueEmail]) {
+    const found = users.data?.users.find((user) => user.email === email);
+    if (found) await admin.auth.admin.deleteUser(found.id);
+  }
 }
 
 

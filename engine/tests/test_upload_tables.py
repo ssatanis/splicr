@@ -59,8 +59,31 @@ def test_retry_count_write_replaces_its_run_and_preserves_observed_zeros():
     conn=Connection();ctx=RunContext('org','screen','run','comparison')
     matrix=CountMatrix('custom',['A','B'],['AAK1','BRAF'],['T0','Treated'],[[0,0],[20,3]])
     assert write_guide_counts(conn,ctx,matrix,{'T0':'t0','Treated':'treated'})==4
-    assert conn.calls[0][1]==('screen','run')
+    assert conn.calls[0]==("set local statement_timeout = '10min'", ())
+    assert conn.calls[1][1]==('screen','run')
     assert [row[-1] for row in conn.rows]==[0,0,20,3]
+
+def test_genome_scale_count_copy_uses_bounded_chunks_without_losing_rows():
+    from contextlib import contextmanager
+    from splicr.db import RunContext, write_guide_counts
+    from splicr.count import CountMatrix
+    class Connection:
+        def __init__(self): self.batches=[]
+        def execute(self, *_): pass
+        def cursor(self): return self
+        @contextmanager
+        def copy(self, sql):
+            self.batches.append([])
+            yield self
+        def write_row(self, row): self.batches[-1].append(row)
+    conn=Connection(); n=25_001
+    matrix=CountMatrix('custom',[f'g{i}' for i in range(n)],['A']*n,['T0','Treated'],[[i,0] for i in range(n)])
+    assert write_guide_counts(conn,RunContext('org','screen','run','comparison'),matrix,{'T0':'t0','Treated':'treated'}) == n*2
+    assert [len(batch) for batch in conn.batches] == [25_000,25_000,2]
+    flattened=[row for batch in conn.batches for row in batch]
+    assert flattened[0][-1] == 0
+    assert flattened[-2][-2:] == ('A',25_000)
+    assert flattened[-1][-1] == 0
 
 @pytest.mark.parametrize('layout',['wide','long','transposed'])
 def test_reviewed_layout_is_identical_to_worker_counts(tmp_path,library,layout):
