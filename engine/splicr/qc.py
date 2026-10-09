@@ -34,7 +34,7 @@ Verdict = str  # "pass" | "warn" | "fail"
 
 def worst(*verdicts: Verdict) -> Verdict:
     if "fail" in verdicts:
-        return "warn"
+        return "fail"
     if "warn" in verdicts:
         return "warn"
     return "pass"
@@ -559,6 +559,7 @@ def screen_qc(
     library: Library,
     thresholds: QcThresholds = SETTINGS.qc,
     assess_essentiality: bool = True,
+    sample_factors: dict[str, tuple[str, float]] | None = None,
 ) -> ScreenQc:
     samples = [sample_qc(matrix, s, roles.get(s, "treatment"), thresholds) for s in matrix.samples]
 
@@ -614,7 +615,11 @@ def screen_qc(
     pairs: list[ReplicatePair] = []
     by_role: dict[str, list[str]] = {}
     for s in matrix.samples:
-        by_role.setdefault(roles.get(s, "treatment"), []).append(s)
+        role = roles.get(s, "treatment")
+        if sample_factors and s in sample_factors:
+            condition, day = sample_factors[s]
+            role = f"{role} / {condition} / day {day:g}"
+        by_role.setdefault(role, []).append(s)
     for role, group in by_role.items():
         for i in range(len(group)):
             for j in range(i + 1, len(group)):

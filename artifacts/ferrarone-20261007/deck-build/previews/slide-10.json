@@ -1,0 +1,10 @@
+{"schema":"openai.presentation.layout/v5","unit":"px","slide":{"id":"sl/crxudy","index":9,"layout":{"id":"ly/n69w3654","name":"Title Slide"},"backgroundColor":"rgba(250,249,246,1)","position":{"left":0,"top":0,"width":1280,"height":720}},
+"elements":[
+{"id":"im/4ret8nat","kind":"image","position":{"left":64,"top":32,"width":92,"height":31},"fit":"contain","alt":"SplicR logo"},
+{"id":"sh/6hwr6t03","kind":"textbox","name":"text-1","position":{"left":64,"top":100,"width":1152,"height":70},"text":"A completed report exposes uncertainty","style":{"fontSize":44,"typeface":"Inter","color":"#174F62","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/ri5sfyho","kind":"textbox","name":"text-2","position":{"left":64,"top":177,"width":1152,"height":42},"text":"Spheroid WT versus plasmid, completed RRA + MLE run","style":{"fontSize":21,"typeface":"Inter","color":"#4F6470","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/4fe94jix","kind":"textbox","name":"text-3","position":{"left":1176,"top":670,"width":64,"height":28},"text":"10","style":{"fontSize":15,"typeface":"Inter","color":"#626B78","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"im/wnet43ax","kind":"image","position":{"left":64,"top":230,"width":1152,"height":295},"fit":"contain","alt":"Actual completed report, summary and quality warnings"},
+{"id":"sh/idcr2t0r","kind":"textbox","name":"text-5","position":{"left":64,"top":545,"width":1152,"height":40},"text":"178 candidates. 172 flagged for review, not automatic rejection.","style":{"fontSize":24,"typeface":"Inter","color":"#174F62","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/jelsbyhc","kind":"textbox","name":"text-6","position":{"left":64,"top":622,"width":1110,"height":42},"text":"176 depleted. 154 annotated pan-essential in DepMap, consistent with common survival dependencies.","style":{"fontSize":17,"typeface":"Inter","color":"#626B78","alignment":"left"},"geometry":"rect","lineWidth":0}
+]}

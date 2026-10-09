@@ -1,0 +1,12 @@
+Dear Dr. Millman,
+
+Thank you! Yes, SplicR uses MAGeCK RRA, and we have verified exact agreement with standalone MAGeCK.
+
+Please see the attached document, in which we analyzed your published 106,400-guide transplant screen with SplicR. We recovered all 20 genes in your published top 20, and the MAGeCK gene statistics matched an independent run exactly. The main analysis took 22 seconds; total computation, including input preparation, verification, a normalization check and exports, took about one minute.
+
+The added analysis makes the guide support behind each rank clear. FCAMR had four of five guides moving upward, while HSF2 ranked second but had 89% of its absolute guide effect concentrated in one guide. SplicR flagged 41 of the 190 top-ranked candidates for guide-support review.
+
+For your next transplant screen, this gives you the MAGeCK results you already use, plus evidence to help prioritize overexpression and transplant follow-up. The attachment shows the results, checks and how we produced them.
+
+Best regards,
+Ishaan

@@ -1,0 +1,35 @@
+{
+  "standalone_runtime_seconds": 15.25807158392854,
+  "command": [
+    "mageck",
+    "test",
+    "-k",
+    "/Users/sahaj/Documents/Projects/SplicR/artifacts/millman-20261008/output/splicr/hits/counts.txt",
+    "-t",
+    "kidney",
+    "-c",
+    "D0",
+    "-n",
+    "independent",
+    "--norm-method",
+    "median"
+  ],
+  "genes_compared_including_CONTROL": 18914,
+  "max_absolute_difference_per_numeric_column": {
+    "num": 0.0,
+    "neg|score": 0.0,
+    "neg|p-value": 0.0,
+    "neg|fdr": 0.0,
+    "neg|rank": 0.0,
+    "neg|goodsgrna": 0.0,
+    "neg|lfc": 0.0,
+    "pos|score": 0.0,
+    "pos|p-value": 0.0,
+    "pos|fdr": 0.0,
+    "pos|rank": 0.0,
+    "pos|goodsgrna": 0.0,
+    "pos|lfc": 0.0
+  },
+  "exact_numeric_agreement": true,
+  "scope": "Same MAGeCK version, counts, contrast, and median normalization. Reproducibility check, not biological accuracy or a competing algorithm benchmark."
+}

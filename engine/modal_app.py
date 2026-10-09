@@ -15,6 +15,8 @@ Schedules once deployed (UTC):
     sweep           every 2 h  plans unplanned screens, processes planned ones
                            (bounded per sweep), retries FASTQ that ENA had not
                            yet generated
+    private_queue_scheduled every minute starts due private screens and retries
+                           even if the web dispatch was missed
 
 Each unit of work is one of splicr.ingest.runner.{discover, plan, process}; the
 functions here only give them compute. State lives in Supabase (ingest.*),
@@ -29,6 +31,7 @@ The image pins the same analysis stack as engine/environment.yml: MAGeCK
 from __future__ import annotations
 
 import subprocess
+import hashlib
 from pathlib import Path
 
 import modal
@@ -40,9 +43,11 @@ def _git_version() -> str:
     try:
         sha = subprocess.run(["git", "-C", str(ENGINE), "rev-parse", "--short=12", "HEAD"],
                              capture_output=True, text=True, check=True).stdout.strip()
-        dirty = subprocess.run(["git", "-C", str(ENGINE), "status", "--porcelain", "--", "splicr"],
-                               capture_output=True, text=True).stdout.strip()
-        return f"{sha}{'+dirty' if dirty else ''}"
+        digest = hashlib.sha256()
+        for path in [Path(__file__), *sorted((ENGINE / "splicr").rglob("*.py"))]:
+            digest.update(str(path.relative_to(ENGINE)).encode())
+            digest.update(path.read_bytes())
+        return f"{sha}+{digest.hexdigest()[:12]}"
     except Exception:  # noqa: BLE001 - only informational
         return "unknown"
 
@@ -131,10 +136,58 @@ def process_study(accession: str) -> dict:
 
 
 @app.function(**COMMON, cpu=8.0, memory=16384, ephemeral_disk=512 * 1024, timeout=6 * 3600,
-              max_containers=8)
+              max_containers=8,
+              env={"SPLICR_MLE_PROCESSES": "8", "OPENBLAS_NUM_THREADS": "1",
+                   "OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1"})
 def process_private_screen() -> dict:
     from splicr.private_screen import process_one
-    return process_one()
+    return process_one(call_id=modal.current_function_call_id())
+
+
+@app.function(**COMMON, cpu=0.25, memory=512, timeout=60,
+              max_containers=1, schedule=modal.Period(minutes=1))
+def private_queue_scheduled() -> dict:
+    """Recover missed web dispatches and retries independently of the browser."""
+    from splicr import db
+
+    cancel_private_runs.local()
+    with db.connect() as conn:
+        due = conn.execute("""
+            select count(*) from public.jobs
+             where kind = 'pipeline' and status = 'queued'
+               and scheduled_at <= now() and attempts < max_attempts
+        """).fetchone()[0]
+    if not due:
+        return {"dispatched": 0}
+    stats = process_private_screen.get_current_stats()
+    count = max(0, min(due, 8 - stats.num_running_inputs - stats.backlog))
+    calls = [process_private_screen.spawn().object_id for _ in range(count)]
+    return {"dispatched": count, "call_ids": calls}
+
+
+@app.function(**COMMON, cpu=0.25, memory=512, timeout=60, max_containers=3)
+def cancel_private_runs(run_id: str | None = None) -> dict:
+    """Retry durable cancellations even after a browser closes or HTTP fails."""
+    from splicr import db
+    with db.connect() as conn:
+        rows = conn.execute("""
+            select id, modal_call_id from public.jobs
+             where kind='pipeline' and status='canceled' and modal_cancelled_at is null
+               and (%s::uuid is null or run_id=%s::uuid)
+             order by updated_at limit 64
+        """, (run_id, run_id)).fetchall()
+    canceled = 0
+    for job_id, call_id in rows:
+        try:
+            if call_id:
+                modal.FunctionCall.from_id(call_id).cancel(terminate_containers=True)
+            with db.connect() as conn:
+                conn.execute("update public.jobs set modal_cancelled_at=now() where id=%s and status='canceled'", (job_id,))
+                conn.commit()
+            canceled += 1
+        except Exception as exc:
+            print(f"Modal cancellation will retry: {type(exc).__name__}", flush=True)
+    return {"accepted": True, "canceled": canceled, "pending": len(rows)-canceled}
 
 
 @app.function(**COMMON, cpu=0.25, memory=512, timeout=60, max_containers=3)
@@ -146,6 +199,15 @@ def queue_gateway(payload: dict):
     from fastapi.responses import JSONResponse
     from splicr.compute_gateway import dispatch, validate_dispatch
 
+    if isinstance(payload, dict) and payload.get("kind") == "cancel":
+        from uuid import UUID
+        try:
+            if set(payload) != {"kind", "run_id"}:
+                raise ValueError("Invalid cancellation request")
+            run_id = str(UUID(payload["run_id"]))
+        except (ValueError, TypeError, AttributeError):
+            return JSONResponse({"error": "Invalid cancellation request."}, status_code=422)
+        return JSONResponse(cancel_private_runs.local(run_id), status_code=202)
     try:
         kind, _ = validate_dispatch(payload)
     except (ValueError, TypeError):
@@ -196,7 +258,7 @@ def sweep(max_process: int = MAX_PROCESS_PER_SWEEP) -> dict:
         plan_study.spawn(acc)
     for acc in to_process:
         process_study.spawn(acc)
-    private = process_private_screen.spawn().object_id
+    private = private_queue_scheduled.local()
     return {"planning": to_plan, "processing": to_process, "private": private,
             "requests": drained["handled"], "refreshed": refreshed["refreshed"]}
 

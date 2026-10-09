@@ -1,0 +1,104 @@
+{
+  "doi": "10.7910/DVN/8DEPIT",
+  "version": 1,
+  "library_sha256": "61b50b8253b716dbbe606909021ddfd3cba2b284b965a828929b673a9dd986c3",
+  "identical_shared_plasmid": true,
+  "files": [
+    {
+      "filename": "2d_crispr_screen_read_counts.txt",
+      "id": 7440985,
+      "bytes": 4102157,
+      "md5": "47a694a20d470868daf9c3695e932a73",
+      "url": "https://dataverse.harvard.edu/api/access/datafile/7440985",
+      "sha256": "b5e01844036815b4636b7e958e5678fd814a7b5c7e11130e93b423c37ed58601",
+      "verified": true,
+      "rows": 70116,
+      "sample_columns": [
+        "tkov3_plasmid",
+        "ev_2d_d21_a",
+        "ev_2d_d21_b",
+        "wt_2d_d21_a",
+        "wt_2d_d21_b"
+      ],
+      "deposited_gene_labels": 18047,
+      "canonical_gene_labels": 18049,
+      "reference_guides_absent": 974
+    },
+    {
+      "filename": "a549_ev_2d_d21_a_R1.fastq.gz",
+      "id": 7440986,
+      "bytes": 1417797504,
+      "md5": "1827e0294cfae1b1103bfdcbb60aa69c",
+      "url": "https://dataverse.harvard.edu/api/access/datafile/7440986"
+    },
+    {
+      "filename": "a549_ev_2d_d21_b_R1.fastq.gz",
+      "id": 7441096,
+      "bytes": 1774577068,
+      "md5": "7f16049fe5cdeabe031a78547b7075eb",
+      "url": "https://dataverse.harvard.edu/api/access/datafile/7441096"
+    },
+    {
+      "filename": "a549_ev_3d_d21_a_R1.fastq.gz",
+      "id": 7440988,
+      "bytes": 1703374629,
+      "md5": "7f6767ddaba5295f52baf20831083ed2",
+      "url": "https://dataverse.harvard.edu/api/access/datafile/7440988"
+    },
+    {
+      "filename": "a549_ev_3d_d21_b_R1.fastq.gz",
+      "id": 7441095,
+      "bytes": 1678091881,
+      "md5": "b73fbd0240cb6cc443cbf927d35a3084",
+      "url": "https://dataverse.harvard.edu/api/access/datafile/7441095"
+    },
+    {
+      "filename": "a549_wt_2d_d21_a_R1.fastq.gz",
+      "id": 7440984,
+      "bytes": 1566042835,
+      "md5": "b53c364abd6d70e7707267e9b90683eb",
+      "url": "https://dataverse.harvard.edu/api/access/datafile/7440984"
+    },
+    {
+      "filename": "a549_wt_2d_d21_b_R1.fastq.gz",
+      "id": 7441094,
+      "bytes": 1807333836,
+      "md5": "1eb476c7f6ef3fb1bcd636c4fcebeef1",
+      "url": "https://dataverse.harvard.edu/api/access/datafile/7441094"
+    },
+    {
+      "filename": "a549_wt_3d_d21_a_R1.fastq.gz",
+      "id": 7440987,
+      "bytes": 1489762576,
+      "md5": "388a90d4811d0dc2e6ceb6203221fe69",
+      "url": "https://dataverse.harvard.edu/api/access/datafile/7440987"
+    },
+    {
+      "filename": "a549_wt_3d_d21_b_R1.fastq.gz",
+      "id": 7441093,
+      "bytes": 2214953340,
+      "md5": "3c6ceaccaa4a7a6b02014e01a13d7a32",
+      "url": "https://dataverse.harvard.edu/api/access/datafile/7441093"
+    },
+    {
+      "filename": "spheroid_crispr_screen_read_counts.txt",
+      "id": 7440983,
+      "bytes": 4100833,
+      "md5": "079c7294fb7c663956637efb7d360efb",
+      "url": "https://dataverse.harvard.edu/api/access/datafile/7440983",
+      "sha256": "efa79d1cb179db64240e1be0f732de35d145038b473dc49ba33c3697c05f2dec",
+      "verified": true,
+      "rows": 70116,
+      "sample_columns": [
+        "tkov3_plasmid",
+        "ev_3d_d21_a",
+        "ev_3d_d21_b",
+        "wt_3d_d21_a",
+        "wt_3d_d21_b"
+      ],
+      "deposited_gene_labels": 18047,
+      "canonical_gene_labels": 18049,
+      "reference_guides_absent": 974
+    }
+  ]
+}

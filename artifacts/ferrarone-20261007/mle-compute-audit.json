@@ -1,0 +1,2030 @@
+{
+  "initial_threadpools": [
+    {
+      "user_api": "blas",
+      "internal_api": "openblas",
+      "num_threads": 8,
+      "prefix": "libopenblas",
+      "filepath": "/opt/conda/lib/libopenblasp-r0.3.34.so",
+      "version": "0.3.34",
+      "threading_layer": "pthreads",
+      "architecture": "Zen"
+    }
+  ],
+  "variants": [
+    {
+      "blas_threads": null,
+      "mageck_processes": 1,
+      "seconds": 36.53859537,
+      "rows": [
+        {
+          "Gene": "PALMD",
+          "sgRNA": "4",
+          "treatment|beta": "0.47135",
+          "treatment|z": "0.86798",
+          "treatment|p-value": "0.96",
+          "treatment|fdr": "0.98367",
+          "treatment|wald-p-value": "0.38541",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "FRRS1",
+          "sgRNA": "4",
+          "treatment|beta": "-0.10253",
+          "treatment|z": "-0.42385",
+          "treatment|p-value": "0.322",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.67168",
+          "treatment|wald-fdr": "0.77204"
+        },
+        {
+          "Gene": "NMNAT1",
+          "sgRNA": "4",
+          "treatment|beta": "0.37084",
+          "treatment|z": "1.0703",
+          "treatment|p-value": "0.84",
+          "treatment|fdr": "0.96774",
+          "treatment|wald-p-value": "0.28449",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "AGL",
+          "sgRNA": "4",
+          "treatment|beta": "1.1196",
+          "treatment|z": "0.60388",
+          "treatment|p-value": "0.398",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.54592",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "SLC35A3",
+          "sgRNA": "4",
+          "treatment|beta": "-0.024513",
+          "treatment|z": "-0.072329",
+          "treatment|p-value": "0.386",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.94234",
+          "treatment|wald-fdr": "0.96157"
+        },
+        {
+          "Gene": "HIAT1",
+          "sgRNA": "4",
+          "treatment|beta": "0.67738",
+          "treatment|z": "1.0333",
+          "treatment|p-value": "0.792",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.30147",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "SASS6",
+          "sgRNA": "4",
+          "treatment|beta": "-0.78315",
+          "treatment|z": "-2.1308",
+          "treatment|p-value": "0.018",
+          "treatment|fdr": "0.2",
+          "treatment|wald-p-value": "0.033108",
+          "treatment|wald-fdr": "0.51551"
+        },
+        {
+          "Gene": "RBP7",
+          "sgRNA": "4",
+          "treatment|beta": "0.19975",
+          "treatment|z": "0.66081",
+          "treatment|p-value": "0.66",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.50873",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "TRMT13",
+          "sgRNA": "4",
+          "treatment|beta": "1.3244",
+          "treatment|z": "0.61222",
+          "treatment|p-value": "0.268",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.54039",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "LRRC39",
+          "sgRNA": "4",
+          "treatment|beta": "0.10089",
+          "treatment|z": "0.30252",
+          "treatment|p-value": "0.518",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.76226",
+          "treatment|wald-fdr": "0.81963"
+        },
+        {
+          "Gene": "DBT",
+          "sgRNA": "4",
+          "treatment|beta": "1.2522",
+          "treatment|z": "0.64557",
+          "treatment|p-value": "0.306",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.51856",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "RTCA",
+          "sgRNA": "4",
+          "treatment|beta": "1.2875",
+          "treatment|z": "0.59967",
+          "treatment|p-value": "0.284",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.54872",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "RNF223",
+          "sgRNA": "4",
+          "treatment|beta": "0.90192",
+          "treatment|z": "0.74792",
+          "treatment|p-value": "0.538",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.45451",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "CDC14A",
+          "sgRNA": "4",
+          "treatment|beta": "0.42159",
+          "treatment|z": "0.71812",
+          "treatment|p-value": "0.896",
+          "treatment|fdr": "0.96774",
+          "treatment|wald-p-value": "0.47268",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "GPR88",
+          "sgRNA": "4",
+          "treatment|beta": "1.7503",
+          "treatment|z": "0.51495",
+          "treatment|p-value": "0.12",
+          "treatment|fdr": "0.81053",
+          "treatment|wald-p-value": "0.60659",
+          "treatment|wald-fdr": "0.72213"
+        },
+        {
+          "Gene": "VCAM1",
+          "sgRNA": "4",
+          "treatment|beta": "1.241",
+          "treatment|z": "0.5871",
+          "treatment|p-value": "0.31",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.55713",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "UBE4B",
+          "sgRNA": "4",
+          "treatment|beta": "-0.69742",
+          "treatment|z": "-2.0256",
+          "treatment|p-value": "0.028",
+          "treatment|fdr": "0.25455",
+          "treatment|wald-p-value": "0.042811",
+          "treatment|wald-fdr": "0.53513"
+        },
+        {
+          "Gene": "EXTL2",
+          "sgRNA": "4",
+          "treatment|beta": "0.27643",
+          "treatment|z": "0.58348",
+          "treatment|p-value": "0.752",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.55957",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "SLC30A7",
+          "sgRNA": "4",
+          "treatment|beta": "0.5372",
+          "treatment|z": "0.61076",
+          "treatment|p-value": "0.952",
+          "treatment|fdr": "0.98367",
+          "treatment|wald-p-value": "0.54136",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "DPH5",
+          "sgRNA": "4",
+          "treatment|beta": "0.060556",
+          "treatment|z": "0.093711",
+          "treatment|p-value": "0.484",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.92534",
+          "treatment|wald-fdr": "0.95396"
+        },
+        {
+          "Gene": "S1PR1",
+          "sgRNA": "4",
+          "treatment|beta": "0.51015",
+          "treatment|z": "0.58476",
+          "treatment|p-value": "0.978",
+          "treatment|fdr": "0.986",
+          "treatment|wald-p-value": "0.55871",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "OLFM3",
+          "sgRNA": "4",
+          "treatment|beta": "1.6574",
+          "treatment|z": "0.59632",
+          "treatment|p-value": "0.152",
+          "treatment|fdr": "0.81053",
+          "treatment|wald-p-value": "0.55096",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "C1orf159",
+          "sgRNA": "4",
+          "treatment|beta": "0.69258",
+          "treatment|z": "0.78708",
+          "treatment|p-value": "0.774",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.43123",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "KIF1B",
+          "sgRNA": "4",
+          "treatment|beta": "0.087555",
+          "treatment|z": "0.33426",
+          "treatment|p-value": "0.508",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.73819",
+          "treatment|wald-fdr": "0.81119"
+        },
+        {
+          "Gene": "COL11A1",
+          "sgRNA": "4",
+          "treatment|beta": "0.36579",
+          "treatment|z": "0.76657",
+          "treatment|p-value": "0.836",
+          "treatment|fdr": "0.96774",
+          "treatment|wald-p-value": "0.44334",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "PGD",
+          "sgRNA": "4",
+          "treatment|beta": "0.89736",
+          "treatment|z": "0.59654",
+          "treatment|p-value": "0.542",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.55082",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "DFFA",
+          "sgRNA": "4",
+          "treatment|beta": "0.35337",
+          "treatment|z": "1.036",
+          "treatment|p-value": "0.826",
+          "treatment|fdr": "0.96774",
+          "treatment|wald-p-value": "0.30021",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "PEX14",
+          "sgRNA": "4",
+          "treatment|beta": "0.95387",
+          "treatment|z": "0.81501",
+          "treatment|p-value": "0.492",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.41507",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "CASZ1",
+          "sgRNA": "4",
+          "treatment|beta": "1.311",
+          "treatment|z": "0.70816",
+          "treatment|p-value": "0.272",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.47884",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "PRMT6",
+          "sgRNA": "4",
+          "treatment|beta": "0.88623",
+          "treatment|z": "0.78816",
+          "treatment|p-value": "0.552",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.4306",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "VAV3",
+          "sgRNA": "4",
+          "treatment|beta": "0.92552",
+          "treatment|z": "0.65252",
+          "treatment|p-value": "0.52",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.51407",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "SLC25A24",
+          "sgRNA": "4",
+          "treatment|beta": "1.7205",
+          "treatment|z": "0.52012",
+          "treatment|p-value": "0.134",
+          "treatment|fdr": "0.81053",
+          "treatment|wald-p-value": "0.60298",
+          "treatment|wald-fdr": "0.72213"
+        },
+        {
+          "Gene": "FAM102B",
+          "sgRNA": "4",
+          "treatment|beta": "0.89468",
+          "treatment|z": "0.77218",
+          "treatment|p-value": "0.544",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.44001",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "HENMT1",
+          "sgRNA": "4",
+          "treatment|beta": "0.89886",
+          "treatment|z": "0.71526",
+          "treatment|p-value": "0.54",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.47445",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "PRPF38B",
+          "sgRNA": "4",
+          "treatment|beta": "-1.1501",
+          "treatment|z": "-2.5136",
+          "treatment|p-value": "0",
+          "treatment|fdr": "0",
+          "treatment|wald-p-value": "0.011952",
+          "treatment|wald-fdr": "0.23903"
+        },
+        {
+          "Gene": "FNDC7",
+          "sgRNA": "4",
+          "treatment|beta": "1.0967",
+          "treatment|z": "0.75683",
+          "treatment|p-value": "0.408",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.44915",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "STXBP3",
+          "sgRNA": "4",
+          "treatment|beta": "0.58018",
+          "treatment|z": "0.68287",
+          "treatment|p-value": "0.9",
+          "treatment|fdr": "0.96774",
+          "treatment|wald-p-value": "0.49469",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "AKNAD1",
+          "sgRNA": "4",
+          "treatment|beta": "0.43898",
+          "treatment|z": "0.6393",
+          "treatment|p-value": "0.922",
+          "treatment|fdr": "0.98085",
+          "treatment|wald-p-value": "0.52263",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "GPSM2",
+          "sgRNA": "4",
+          "treatment|beta": "0.80741",
+          "treatment|z": "0.69128",
+          "treatment|p-value": "0.658",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.48939",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "CLCC1",
+          "sgRNA": "4",
+          "treatment|beta": "0.32961",
+          "treatment|z": "0.48748",
+          "treatment|p-value": "0.8",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.62592",
+          "treatment|wald-fdr": "0.73638"
+        },
+        {
+          "Gene": "TAF13",
+          "sgRNA": "4",
+          "treatment|beta": "-0.84429",
+          "treatment|z": "-1.6616",
+          "treatment|p-value": "0.012",
+          "treatment|fdr": "0.15",
+          "treatment|wald-p-value": "0.096599",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "TMEM167B",
+          "sgRNA": "4",
+          "treatment|beta": "0.89658",
+          "treatment|z": "0.79346",
+          "treatment|p-value": "0.544",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.42751",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "C1orf194",
+          "sgRNA": "4",
+          "treatment|beta": "0.73023",
+          "treatment|z": "0.76975",
+          "treatment|p-value": "0.732",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.44145",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "KIAA1324",
+          "sgRNA": "4",
+          "treatment|beta": "0.58089",
+          "treatment|z": "1.086",
+          "treatment|p-value": "0.898",
+          "treatment|fdr": "0.96774",
+          "treatment|wald-p-value": "0.27746",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "SARS",
+          "sgRNA": "4",
+          "treatment|beta": "-1.7975",
+          "treatment|z": "-3.96",
+          "treatment|p-value": "0",
+          "treatment|fdr": "0",
+          "treatment|wald-p-value": "7.4936e-05",
+          "treatment|wald-fdr": "0.0074936"
+        },
+        {
+          "Gene": "CELSR2",
+          "sgRNA": "4",
+          "treatment|beta": "0.79039",
+          "treatment|z": "0.62823",
+          "treatment|p-value": "0.67",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.52985",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "PSRC1",
+          "sgRNA": "4",
+          "treatment|beta": "0.24758",
+          "treatment|z": "0.82476",
+          "treatment|p-value": "0.728",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.40951",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "MYBPHL",
+          "sgRNA": "4",
+          "treatment|beta": "0.52847",
+          "treatment|z": "0.61245",
+          "treatment|p-value": "0.964",
+          "treatment|fdr": "0.98367",
+          "treatment|wald-p-value": "0.54024",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "SORT1",
+          "sgRNA": "4",
+          "treatment|beta": "0.75035",
+          "treatment|z": "0.75291",
+          "treatment|p-value": "0.706",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.45151",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "PSMA5",
+          "sgRNA": "4",
+          "treatment|beta": "-1.4791",
+          "treatment|z": "-2.096",
+          "treatment|p-value": "0",
+          "treatment|fdr": "0",
+          "treatment|wald-p-value": "0.036086",
+          "treatment|wald-fdr": "0.51551"
+        },
+        {
+          "Gene": "SYPL2",
+          "sgRNA": "4",
+          "treatment|beta": "0.17394",
+          "treatment|z": "0.34634",
+          "treatment|p-value": "0.618",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.72909",
+          "treatment|wald-fdr": "0.8101"
+        },
+        {
+          "Gene": "ATXN7L2",
+          "sgRNA": "4",
+          "treatment|beta": "1.4433",
+          "treatment|z": "0.57922",
+          "treatment|p-value": "0.21",
+          "treatment|fdr": "0.92174",
+          "treatment|wald-p-value": "0.56244",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "CYB561D1",
+          "sgRNA": "4",
+          "treatment|beta": "1.9594",
+          "treatment|z": "0.45312",
+          "treatment|p-value": "0.064",
+          "treatment|fdr": "0.49231",
+          "treatment|wald-p-value": "0.65046",
+          "treatment|wald-fdr": "0.75635"
+        },
+        {
+          "Gene": "AMIGO1",
+          "sgRNA": "4",
+          "treatment|beta": "0.81559",
+          "treatment|z": "0.74909",
+          "treatment|p-value": "0.65",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.4538",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "GPR61",
+          "sgRNA": "4",
+          "treatment|beta": "0.29379",
+          "treatment|z": "0.23523",
+          "treatment|p-value": "0.77",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.81403",
+          "treatment|wald-fdr": "0.86599"
+        },
+        {
+          "Gene": "GNAI3",
+          "sgRNA": "4",
+          "treatment|beta": "0.85737",
+          "treatment|z": "0.65387",
+          "treatment|p-value": "0.59",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.5132",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "GNAT2",
+          "sgRNA": "4",
+          "treatment|beta": "1.0427",
+          "treatment|z": "0.86058",
+          "treatment|p-value": "0.444",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.38947",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "AMPD2",
+          "sgRNA": "4",
+          "treatment|beta": "3.2213",
+          "treatment|z": "0.19985",
+          "treatment|p-value": "0",
+          "treatment|fdr": "0",
+          "treatment|wald-p-value": "0.84159",
+          "treatment|wald-fdr": "0.88589"
+        },
+        {
+          "Gene": "GSTM4",
+          "sgRNA": "4",
+          "treatment|beta": "1.2617",
+          "treatment|z": "0.73094",
+          "treatment|p-value": "0.298",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.46482",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "GSTM2",
+          "sgRNA": "4",
+          "treatment|beta": "2.3194",
+          "treatment|z": "0.36644",
+          "treatment|p-value": "0.022",
+          "treatment|fdr": "0.22",
+          "treatment|wald-p-value": "0.71404",
+          "treatment|wald-fdr": "0.80229"
+        },
+        {
+          "Gene": "GSTM3",
+          "sgRNA": "4",
+          "treatment|beta": "0.39592",
+          "treatment|z": "0.97386",
+          "treatment|p-value": "0.866",
+          "treatment|fdr": "0.96774",
+          "treatment|wald-p-value": "0.33012",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "EPS8L3",
+          "sgRNA": "4",
+          "treatment|beta": "1.432",
+          "treatment|z": "0.59855",
+          "treatment|p-value": "0.212",
+          "treatment|fdr": "0.92174",
+          "treatment|wald-p-value": "0.54947",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "CSF1",
+          "sgRNA": "4",
+          "treatment|beta": "0.78326",
+          "treatment|z": "0.6823",
+          "treatment|p-value": "0.676",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.49505",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "AHCYL1",
+          "sgRNA": "4",
+          "treatment|beta": "-0.57935",
+          "treatment|z": "-1.5815",
+          "treatment|p-value": "0.052",
+          "treatment|fdr": "0.43333",
+          "treatment|wald-p-value": "0.11377",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "STRIP1",
+          "sgRNA": "4",
+          "treatment|beta": "-0.025843",
+          "treatment|z": "-0.045796",
+          "treatment|p-value": "0.386",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.96347",
+          "treatment|wald-fdr": "0.96444"
+        },
+        {
+          "Gene": "ALX3",
+          "sgRNA": "4",
+          "treatment|beta": "0.70469",
+          "treatment|z": "0.71626",
+          "treatment|p-value": "0.756",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.47383",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "UBL4B",
+          "sgRNA": "4",
+          "treatment|beta": "1.1874",
+          "treatment|z": "0.72301",
+          "treatment|p-value": "0.362",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.46967",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "SLC6A17",
+          "sgRNA": "4",
+          "treatment|beta": "1.2098",
+          "treatment|z": "0.71993",
+          "treatment|p-value": "0.338",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.47157",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "TARDBP",
+          "sgRNA": "4",
+          "treatment|beta": "-0.29458",
+          "treatment|z": "-0.5596",
+          "treatment|p-value": "0.172",
+          "treatment|fdr": "0.86",
+          "treatment|wald-p-value": "0.57575",
+          "treatment|wald-fdr": "0.71969"
+        },
+        {
+          "Gene": "KCNC4",
+          "sgRNA": "4",
+          "treatment|beta": "0.54419",
+          "treatment|z": "0.83951",
+          "treatment|p-value": "0.94",
+          "treatment|fdr": "0.98367",
+          "treatment|wald-p-value": "0.40118",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "RBM15",
+          "sgRNA": "4",
+          "treatment|beta": "0.73485",
+          "treatment|z": "0.78482",
+          "treatment|p-value": "0.73",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.43256",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "SLC16A4",
+          "sgRNA": "4",
+          "treatment|beta": "1.0807",
+          "treatment|z": "0.83664",
+          "treatment|p-value": "0.426",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.4028",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "LAMTOR5",
+          "sgRNA": "4",
+          "treatment|beta": "-0.37314",
+          "treatment|z": "-1.2021",
+          "treatment|p-value": "0.124",
+          "treatment|fdr": "0.81053",
+          "treatment|wald-p-value": "0.22932",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "PROK1",
+          "sgRNA": "4",
+          "treatment|beta": "0.4213",
+          "treatment|z": "0.64779",
+          "treatment|p-value": "0.896",
+          "treatment|fdr": "0.96774",
+          "treatment|wald-p-value": "0.51712",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "MASP2",
+          "sgRNA": "4",
+          "treatment|beta": "0.31062",
+          "treatment|z": "0.83774",
+          "treatment|p-value": "0.79",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.40218",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "KCNA10",
+          "sgRNA": "4",
+          "treatment|beta": "0.79282",
+          "treatment|z": "0.87267",
+          "treatment|p-value": "0.668",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.38284",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "KCNA2",
+          "sgRNA": "4",
+          "treatment|beta": "-0.25524",
+          "treatment|z": "-0.79109",
+          "treatment|p-value": "0.198",
+          "treatment|fdr": "0.92174",
+          "treatment|wald-p-value": "0.42889",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "SRM",
+          "sgRNA": "4",
+          "treatment|beta": "0.10057",
+          "treatment|z": "0.30531",
+          "treatment|p-value": "0.516",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.76013",
+          "treatment|wald-fdr": "0.81963"
+        },
+        {
+          "Gene": "KCNA3",
+          "sgRNA": "4",
+          "treatment|beta": "1.1415",
+          "treatment|z": "0.74321",
+          "treatment|p-value": "0.392",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.45736",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "CD53",
+          "sgRNA": "4",
+          "treatment|beta": "0.26728",
+          "treatment|z": "0.63589",
+          "treatment|p-value": "0.744",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.52485",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "TTLL10",
+          "sgRNA": "4",
+          "treatment|beta": "0.97587",
+          "treatment|z": "0.87419",
+          "treatment|p-value": "0.484",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.38201",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "LRIF1",
+          "sgRNA": "4",
+          "treatment|beta": "1.2798",
+          "treatment|z": "0.61055",
+          "treatment|p-value": "0.286",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.5415",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "EXOSC10",
+          "sgRNA": "4",
+          "treatment|beta": "-1.2156",
+          "treatment|z": "-2.8025",
+          "treatment|p-value": "0",
+          "treatment|fdr": "0",
+          "treatment|wald-p-value": "0.00507",
+          "treatment|wald-fdr": "0.12675"
+        },
+        {
+          "Gene": "DRAM2",
+          "sgRNA": "4",
+          "treatment|beta": "-0.013974",
+          "treatment|z": "-0.044579",
+          "treatment|p-value": "0.402",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.96444",
+          "treatment|wald-fdr": "0.96444"
+        },
+        {
+          "Gene": "CEPT1",
+          "sgRNA": "4",
+          "treatment|beta": "1.6498",
+          "treatment|z": "0.53202",
+          "treatment|p-value": "0.154",
+          "treatment|fdr": "0.81053",
+          "treatment|wald-p-value": "0.59471",
+          "treatment|wald-fdr": "0.72213"
+        },
+        {
+          "Gene": "DENND2D",
+          "sgRNA": "4",
+          "treatment|beta": "0.24178",
+          "treatment|z": "0.38854",
+          "treatment|p-value": "0.724",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.69762",
+          "treatment|wald-fdr": "0.79275"
+        },
+        {
+          "Gene": "CHI3L2",
+          "sgRNA": "4",
+          "treatment|beta": "0.68291",
+          "treatment|z": "0.72422",
+          "treatment|p-value": "0.782",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.46893",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "CHIA",
+          "sgRNA": "4",
+          "treatment|beta": "1.1339",
+          "treatment|z": "0.74802",
+          "treatment|p-value": "0.394",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.45445",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "OVGP1",
+          "sgRNA": "4",
+          "treatment|beta": "0.88603",
+          "treatment|z": "0.71685",
+          "treatment|p-value": "0.552",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.47347",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "WDR77",
+          "sgRNA": "4",
+          "treatment|beta": "-1.7055",
+          "treatment|z": "-3.0426",
+          "treatment|p-value": "0",
+          "treatment|fdr": "0",
+          "treatment|wald-p-value": "0.0023453",
+          "treatment|wald-fdr": "0.078178"
+        },
+        {
+          "Gene": "ATP5F1",
+          "sgRNA": "4",
+          "treatment|beta": "-0.038922",
+          "treatment|z": "-0.10547",
+          "treatment|p-value": "0.372",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.916",
+          "treatment|wald-fdr": "0.95396"
+        },
+        {
+          "Gene": "C1orf162",
+          "sgRNA": "4",
+          "treatment|beta": "1.01",
+          "treatment|z": "0.67077",
+          "treatment|p-value": "0.46",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.50237",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "ADORA3",
+          "sgRNA": "4",
+          "treatment|beta": "0.31271",
+          "treatment|z": "0.66563",
+          "treatment|p-value": "0.79",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.50564",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "RAP1A",
+          "sgRNA": "4",
+          "treatment|beta": "0.48568",
+          "treatment|z": "0.63937",
+          "treatment|p-value": "0.986",
+          "treatment|fdr": "0.986",
+          "treatment|wald-p-value": "0.52258",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "FAM212B",
+          "sgRNA": "4",
+          "treatment|beta": "0.6096",
+          "treatment|z": "0.63048",
+          "treatment|p-value": "0.87",
+          "treatment|fdr": "0.96774",
+          "treatment|wald-p-value": "0.52838",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "KCND3",
+          "sgRNA": "4",
+          "treatment|beta": "1.2143",
+          "treatment|z": "0.70743",
+          "treatment|p-value": "0.334",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.4793",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "ANGPTL7",
+          "sgRNA": "4",
+          "treatment|beta": "1.6563",
+          "treatment|z": "0.51905",
+          "treatment|p-value": "0.152",
+          "treatment|fdr": "0.81053",
+          "treatment|wald-p-value": "0.60372",
+          "treatment|wald-fdr": "0.72213"
+        },
+        {
+          "Gene": "CTTNBP2NL",
+          "sgRNA": "4",
+          "treatment|beta": "0.29257",
+          "treatment|z": "0.72235",
+          "treatment|p-value": "0.766",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.47008",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "WNT2B",
+          "sgRNA": "4",
+          "treatment|beta": "0.62471",
+          "treatment|z": "0.76965",
+          "treatment|p-value": "0.858",
+          "treatment|fdr": "0.96774",
+          "treatment|wald-p-value": "0.44151",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "MTOR",
+          "sgRNA": "4",
+          "treatment|beta": "-2.3775",
+          "treatment|z": "-3.1066",
+          "treatment|p-value": "0",
+          "treatment|fdr": "0",
+          "treatment|wald-p-value": "0.0018927",
+          "treatment|wald-fdr": "0.078178"
+        }
+      ]
+    },
+    {
+      "blas_threads": "1",
+      "mageck_processes": 8,
+      "seconds": 20.028913859,
+      "rows": [
+        {
+          "Gene": "PALMD",
+          "sgRNA": "4",
+          "treatment|beta": "0.47135",
+          "treatment|z": "0.86798",
+          "treatment|p-value": "0.96",
+          "treatment|fdr": "0.98367",
+          "treatment|wald-p-value": "0.38541",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "FRRS1",
+          "sgRNA": "4",
+          "treatment|beta": "-0.10253",
+          "treatment|z": "-0.42385",
+          "treatment|p-value": "0.322",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.67168",
+          "treatment|wald-fdr": "0.77204"
+        },
+        {
+          "Gene": "NMNAT1",
+          "sgRNA": "4",
+          "treatment|beta": "0.37084",
+          "treatment|z": "1.0703",
+          "treatment|p-value": "0.84",
+          "treatment|fdr": "0.96774",
+          "treatment|wald-p-value": "0.28449",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "AGL",
+          "sgRNA": "4",
+          "treatment|beta": "1.1196",
+          "treatment|z": "0.60388",
+          "treatment|p-value": "0.398",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.54592",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "SLC35A3",
+          "sgRNA": "4",
+          "treatment|beta": "-0.024513",
+          "treatment|z": "-0.072329",
+          "treatment|p-value": "0.386",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.94234",
+          "treatment|wald-fdr": "0.96157"
+        },
+        {
+          "Gene": "HIAT1",
+          "sgRNA": "4",
+          "treatment|beta": "0.67738",
+          "treatment|z": "1.0333",
+          "treatment|p-value": "0.792",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.30147",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "SASS6",
+          "sgRNA": "4",
+          "treatment|beta": "-0.78315",
+          "treatment|z": "-2.1308",
+          "treatment|p-value": "0.018",
+          "treatment|fdr": "0.2",
+          "treatment|wald-p-value": "0.033108",
+          "treatment|wald-fdr": "0.51551"
+        },
+        {
+          "Gene": "RBP7",
+          "sgRNA": "4",
+          "treatment|beta": "0.19975",
+          "treatment|z": "0.66081",
+          "treatment|p-value": "0.66",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.50873",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "TRMT13",
+          "sgRNA": "4",
+          "treatment|beta": "1.3244",
+          "treatment|z": "0.61222",
+          "treatment|p-value": "0.268",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.54039",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "LRRC39",
+          "sgRNA": "4",
+          "treatment|beta": "0.10089",
+          "treatment|z": "0.30252",
+          "treatment|p-value": "0.518",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.76226",
+          "treatment|wald-fdr": "0.81963"
+        },
+        {
+          "Gene": "DBT",
+          "sgRNA": "4",
+          "treatment|beta": "1.2522",
+          "treatment|z": "0.64557",
+          "treatment|p-value": "0.306",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.51856",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "RTCA",
+          "sgRNA": "4",
+          "treatment|beta": "1.2875",
+          "treatment|z": "0.59967",
+          "treatment|p-value": "0.284",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.54872",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "RNF223",
+          "sgRNA": "4",
+          "treatment|beta": "0.90192",
+          "treatment|z": "0.74792",
+          "treatment|p-value": "0.538",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.45451",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "CDC14A",
+          "sgRNA": "4",
+          "treatment|beta": "0.42159",
+          "treatment|z": "0.71812",
+          "treatment|p-value": "0.896",
+          "treatment|fdr": "0.96774",
+          "treatment|wald-p-value": "0.47268",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "GPR88",
+          "sgRNA": "4",
+          "treatment|beta": "1.7503",
+          "treatment|z": "0.51495",
+          "treatment|p-value": "0.12",
+          "treatment|fdr": "0.81053",
+          "treatment|wald-p-value": "0.60659",
+          "treatment|wald-fdr": "0.72213"
+        },
+        {
+          "Gene": "VCAM1",
+          "sgRNA": "4",
+          "treatment|beta": "1.241",
+          "treatment|z": "0.5871",
+          "treatment|p-value": "0.31",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.55713",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "UBE4B",
+          "sgRNA": "4",
+          "treatment|beta": "-0.69742",
+          "treatment|z": "-2.0256",
+          "treatment|p-value": "0.028",
+          "treatment|fdr": "0.25455",
+          "treatment|wald-p-value": "0.042811",
+          "treatment|wald-fdr": "0.53513"
+        },
+        {
+          "Gene": "EXTL2",
+          "sgRNA": "4",
+          "treatment|beta": "0.27643",
+          "treatment|z": "0.58348",
+          "treatment|p-value": "0.752",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.55957",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "SLC30A7",
+          "sgRNA": "4",
+          "treatment|beta": "0.5372",
+          "treatment|z": "0.61076",
+          "treatment|p-value": "0.952",
+          "treatment|fdr": "0.98367",
+          "treatment|wald-p-value": "0.54136",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "DPH5",
+          "sgRNA": "4",
+          "treatment|beta": "0.060556",
+          "treatment|z": "0.093711",
+          "treatment|p-value": "0.484",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.92534",
+          "treatment|wald-fdr": "0.95396"
+        },
+        {
+          "Gene": "S1PR1",
+          "sgRNA": "4",
+          "treatment|beta": "0.51015",
+          "treatment|z": "0.58476",
+          "treatment|p-value": "0.978",
+          "treatment|fdr": "0.986",
+          "treatment|wald-p-value": "0.55871",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "OLFM3",
+          "sgRNA": "4",
+          "treatment|beta": "1.6574",
+          "treatment|z": "0.59632",
+          "treatment|p-value": "0.152",
+          "treatment|fdr": "0.81053",
+          "treatment|wald-p-value": "0.55096",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "C1orf159",
+          "sgRNA": "4",
+          "treatment|beta": "0.69258",
+          "treatment|z": "0.78708",
+          "treatment|p-value": "0.774",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.43123",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "KIF1B",
+          "sgRNA": "4",
+          "treatment|beta": "0.087555",
+          "treatment|z": "0.33426",
+          "treatment|p-value": "0.508",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.73819",
+          "treatment|wald-fdr": "0.81119"
+        },
+        {
+          "Gene": "COL11A1",
+          "sgRNA": "4",
+          "treatment|beta": "0.36579",
+          "treatment|z": "0.76657",
+          "treatment|p-value": "0.836",
+          "treatment|fdr": "0.96774",
+          "treatment|wald-p-value": "0.44334",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "PGD",
+          "sgRNA": "4",
+          "treatment|beta": "0.89736",
+          "treatment|z": "0.59654",
+          "treatment|p-value": "0.542",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.55082",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "DFFA",
+          "sgRNA": "4",
+          "treatment|beta": "0.35337",
+          "treatment|z": "1.036",
+          "treatment|p-value": "0.826",
+          "treatment|fdr": "0.96774",
+          "treatment|wald-p-value": "0.30021",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "PEX14",
+          "sgRNA": "4",
+          "treatment|beta": "0.95387",
+          "treatment|z": "0.81501",
+          "treatment|p-value": "0.492",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.41507",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "CASZ1",
+          "sgRNA": "4",
+          "treatment|beta": "1.311",
+          "treatment|z": "0.70816",
+          "treatment|p-value": "0.272",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.47884",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "PRMT6",
+          "sgRNA": "4",
+          "treatment|beta": "0.88623",
+          "treatment|z": "0.78816",
+          "treatment|p-value": "0.552",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.4306",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "VAV3",
+          "sgRNA": "4",
+          "treatment|beta": "0.92552",
+          "treatment|z": "0.65252",
+          "treatment|p-value": "0.52",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.51407",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "SLC25A24",
+          "sgRNA": "4",
+          "treatment|beta": "1.7205",
+          "treatment|z": "0.52012",
+          "treatment|p-value": "0.134",
+          "treatment|fdr": "0.81053",
+          "treatment|wald-p-value": "0.60298",
+          "treatment|wald-fdr": "0.72213"
+        },
+        {
+          "Gene": "FAM102B",
+          "sgRNA": "4",
+          "treatment|beta": "0.89468",
+          "treatment|z": "0.77218",
+          "treatment|p-value": "0.544",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.44001",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "HENMT1",
+          "sgRNA": "4",
+          "treatment|beta": "0.89886",
+          "treatment|z": "0.71526",
+          "treatment|p-value": "0.54",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.47445",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "PRPF38B",
+          "sgRNA": "4",
+          "treatment|beta": "-1.1501",
+          "treatment|z": "-2.5136",
+          "treatment|p-value": "0",
+          "treatment|fdr": "0",
+          "treatment|wald-p-value": "0.011952",
+          "treatment|wald-fdr": "0.23903"
+        },
+        {
+          "Gene": "FNDC7",
+          "sgRNA": "4",
+          "treatment|beta": "1.0967",
+          "treatment|z": "0.75683",
+          "treatment|p-value": "0.408",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.44915",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "STXBP3",
+          "sgRNA": "4",
+          "treatment|beta": "0.58018",
+          "treatment|z": "0.68287",
+          "treatment|p-value": "0.9",
+          "treatment|fdr": "0.96774",
+          "treatment|wald-p-value": "0.49469",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "AKNAD1",
+          "sgRNA": "4",
+          "treatment|beta": "0.43898",
+          "treatment|z": "0.6393",
+          "treatment|p-value": "0.922",
+          "treatment|fdr": "0.98085",
+          "treatment|wald-p-value": "0.52263",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "GPSM2",
+          "sgRNA": "4",
+          "treatment|beta": "0.80741",
+          "treatment|z": "0.69128",
+          "treatment|p-value": "0.658",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.48939",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "CLCC1",
+          "sgRNA": "4",
+          "treatment|beta": "0.32961",
+          "treatment|z": "0.48748",
+          "treatment|p-value": "0.8",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.62592",
+          "treatment|wald-fdr": "0.73638"
+        },
+        {
+          "Gene": "TAF13",
+          "sgRNA": "4",
+          "treatment|beta": "-0.84429",
+          "treatment|z": "-1.6616",
+          "treatment|p-value": "0.012",
+          "treatment|fdr": "0.15",
+          "treatment|wald-p-value": "0.096599",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "TMEM167B",
+          "sgRNA": "4",
+          "treatment|beta": "0.89658",
+          "treatment|z": "0.79346",
+          "treatment|p-value": "0.544",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.42751",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "C1orf194",
+          "sgRNA": "4",
+          "treatment|beta": "0.73023",
+          "treatment|z": "0.76975",
+          "treatment|p-value": "0.732",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.44145",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "KIAA1324",
+          "sgRNA": "4",
+          "treatment|beta": "0.58089",
+          "treatment|z": "1.086",
+          "treatment|p-value": "0.898",
+          "treatment|fdr": "0.96774",
+          "treatment|wald-p-value": "0.27746",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "SARS",
+          "sgRNA": "4",
+          "treatment|beta": "-1.7975",
+          "treatment|z": "-3.96",
+          "treatment|p-value": "0",
+          "treatment|fdr": "0",
+          "treatment|wald-p-value": "7.4936e-05",
+          "treatment|wald-fdr": "0.0074936"
+        },
+        {
+          "Gene": "CELSR2",
+          "sgRNA": "4",
+          "treatment|beta": "0.79039",
+          "treatment|z": "0.62823",
+          "treatment|p-value": "0.67",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.52985",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "PSRC1",
+          "sgRNA": "4",
+          "treatment|beta": "0.24758",
+          "treatment|z": "0.82476",
+          "treatment|p-value": "0.728",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.40951",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "MYBPHL",
+          "sgRNA": "4",
+          "treatment|beta": "0.52847",
+          "treatment|z": "0.61245",
+          "treatment|p-value": "0.964",
+          "treatment|fdr": "0.98367",
+          "treatment|wald-p-value": "0.54024",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "SORT1",
+          "sgRNA": "4",
+          "treatment|beta": "0.75035",
+          "treatment|z": "0.75291",
+          "treatment|p-value": "0.706",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.45151",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "PSMA5",
+          "sgRNA": "4",
+          "treatment|beta": "-1.4791",
+          "treatment|z": "-2.096",
+          "treatment|p-value": "0",
+          "treatment|fdr": "0",
+          "treatment|wald-p-value": "0.036086",
+          "treatment|wald-fdr": "0.51551"
+        },
+        {
+          "Gene": "SYPL2",
+          "sgRNA": "4",
+          "treatment|beta": "0.17394",
+          "treatment|z": "0.34634",
+          "treatment|p-value": "0.618",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.72909",
+          "treatment|wald-fdr": "0.8101"
+        },
+        {
+          "Gene": "ATXN7L2",
+          "sgRNA": "4",
+          "treatment|beta": "1.4433",
+          "treatment|z": "0.57922",
+          "treatment|p-value": "0.21",
+          "treatment|fdr": "0.92174",
+          "treatment|wald-p-value": "0.56244",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "CYB561D1",
+          "sgRNA": "4",
+          "treatment|beta": "1.9594",
+          "treatment|z": "0.45312",
+          "treatment|p-value": "0.064",
+          "treatment|fdr": "0.49231",
+          "treatment|wald-p-value": "0.65046",
+          "treatment|wald-fdr": "0.75635"
+        },
+        {
+          "Gene": "AMIGO1",
+          "sgRNA": "4",
+          "treatment|beta": "0.81559",
+          "treatment|z": "0.74909",
+          "treatment|p-value": "0.65",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.4538",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "GPR61",
+          "sgRNA": "4",
+          "treatment|beta": "0.29379",
+          "treatment|z": "0.23523",
+          "treatment|p-value": "0.77",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.81403",
+          "treatment|wald-fdr": "0.86599"
+        },
+        {
+          "Gene": "GNAI3",
+          "sgRNA": "4",
+          "treatment|beta": "0.85737",
+          "treatment|z": "0.65387",
+          "treatment|p-value": "0.59",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.5132",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "GNAT2",
+          "sgRNA": "4",
+          "treatment|beta": "1.0427",
+          "treatment|z": "0.86058",
+          "treatment|p-value": "0.444",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.38947",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "AMPD2",
+          "sgRNA": "4",
+          "treatment|beta": "3.2213",
+          "treatment|z": "0.19985",
+          "treatment|p-value": "0",
+          "treatment|fdr": "0",
+          "treatment|wald-p-value": "0.84159",
+          "treatment|wald-fdr": "0.88589"
+        },
+        {
+          "Gene": "GSTM4",
+          "sgRNA": "4",
+          "treatment|beta": "1.2617",
+          "treatment|z": "0.73094",
+          "treatment|p-value": "0.298",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.46482",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "GSTM2",
+          "sgRNA": "4",
+          "treatment|beta": "2.3194",
+          "treatment|z": "0.36644",
+          "treatment|p-value": "0.022",
+          "treatment|fdr": "0.22",
+          "treatment|wald-p-value": "0.71404",
+          "treatment|wald-fdr": "0.80229"
+        },
+        {
+          "Gene": "GSTM3",
+          "sgRNA": "4",
+          "treatment|beta": "0.39592",
+          "treatment|z": "0.97386",
+          "treatment|p-value": "0.866",
+          "treatment|fdr": "0.96774",
+          "treatment|wald-p-value": "0.33012",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "EPS8L3",
+          "sgRNA": "4",
+          "treatment|beta": "1.432",
+          "treatment|z": "0.59855",
+          "treatment|p-value": "0.212",
+          "treatment|fdr": "0.92174",
+          "treatment|wald-p-value": "0.54947",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "CSF1",
+          "sgRNA": "4",
+          "treatment|beta": "0.78326",
+          "treatment|z": "0.6823",
+          "treatment|p-value": "0.676",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.49505",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "AHCYL1",
+          "sgRNA": "4",
+          "treatment|beta": "-0.57935",
+          "treatment|z": "-1.5815",
+          "treatment|p-value": "0.052",
+          "treatment|fdr": "0.43333",
+          "treatment|wald-p-value": "0.11377",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "STRIP1",
+          "sgRNA": "4",
+          "treatment|beta": "-0.025843",
+          "treatment|z": "-0.045796",
+          "treatment|p-value": "0.386",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.96347",
+          "treatment|wald-fdr": "0.96444"
+        },
+        {
+          "Gene": "ALX3",
+          "sgRNA": "4",
+          "treatment|beta": "0.70469",
+          "treatment|z": "0.71626",
+          "treatment|p-value": "0.756",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.47383",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "UBL4B",
+          "sgRNA": "4",
+          "treatment|beta": "1.1874",
+          "treatment|z": "0.72301",
+          "treatment|p-value": "0.362",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.46967",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "SLC6A17",
+          "sgRNA": "4",
+          "treatment|beta": "1.2098",
+          "treatment|z": "0.71993",
+          "treatment|p-value": "0.338",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.47157",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "TARDBP",
+          "sgRNA": "4",
+          "treatment|beta": "-0.29458",
+          "treatment|z": "-0.5596",
+          "treatment|p-value": "0.172",
+          "treatment|fdr": "0.86",
+          "treatment|wald-p-value": "0.57575",
+          "treatment|wald-fdr": "0.71969"
+        },
+        {
+          "Gene": "KCNC4",
+          "sgRNA": "4",
+          "treatment|beta": "0.54419",
+          "treatment|z": "0.83951",
+          "treatment|p-value": "0.94",
+          "treatment|fdr": "0.98367",
+          "treatment|wald-p-value": "0.40118",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "RBM15",
+          "sgRNA": "4",
+          "treatment|beta": "0.73485",
+          "treatment|z": "0.78482",
+          "treatment|p-value": "0.73",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.43256",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "SLC16A4",
+          "sgRNA": "4",
+          "treatment|beta": "1.0807",
+          "treatment|z": "0.83664",
+          "treatment|p-value": "0.426",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.4028",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "LAMTOR5",
+          "sgRNA": "4",
+          "treatment|beta": "-0.37314",
+          "treatment|z": "-1.2021",
+          "treatment|p-value": "0.124",
+          "treatment|fdr": "0.81053",
+          "treatment|wald-p-value": "0.22932",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "PROK1",
+          "sgRNA": "4",
+          "treatment|beta": "0.4213",
+          "treatment|z": "0.64779",
+          "treatment|p-value": "0.896",
+          "treatment|fdr": "0.96774",
+          "treatment|wald-p-value": "0.51712",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "MASP2",
+          "sgRNA": "4",
+          "treatment|beta": "0.31062",
+          "treatment|z": "0.83774",
+          "treatment|p-value": "0.79",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.40218",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "KCNA10",
+          "sgRNA": "4",
+          "treatment|beta": "0.79282",
+          "treatment|z": "0.87267",
+          "treatment|p-value": "0.668",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.38284",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "KCNA2",
+          "sgRNA": "4",
+          "treatment|beta": "-0.25524",
+          "treatment|z": "-0.79109",
+          "treatment|p-value": "0.198",
+          "treatment|fdr": "0.92174",
+          "treatment|wald-p-value": "0.42889",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "SRM",
+          "sgRNA": "4",
+          "treatment|beta": "0.10057",
+          "treatment|z": "0.30531",
+          "treatment|p-value": "0.516",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.76013",
+          "treatment|wald-fdr": "0.81963"
+        },
+        {
+          "Gene": "KCNA3",
+          "sgRNA": "4",
+          "treatment|beta": "1.1415",
+          "treatment|z": "0.74321",
+          "treatment|p-value": "0.392",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.45736",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "CD53",
+          "sgRNA": "4",
+          "treatment|beta": "0.26728",
+          "treatment|z": "0.63589",
+          "treatment|p-value": "0.744",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.52485",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "TTLL10",
+          "sgRNA": "4",
+          "treatment|beta": "0.97587",
+          "treatment|z": "0.87419",
+          "treatment|p-value": "0.484",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.38201",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "LRIF1",
+          "sgRNA": "4",
+          "treatment|beta": "1.2798",
+          "treatment|z": "0.61055",
+          "treatment|p-value": "0.286",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.5415",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "EXOSC10",
+          "sgRNA": "4",
+          "treatment|beta": "-1.2156",
+          "treatment|z": "-2.8025",
+          "treatment|p-value": "0",
+          "treatment|fdr": "0",
+          "treatment|wald-p-value": "0.00507",
+          "treatment|wald-fdr": "0.12675"
+        },
+        {
+          "Gene": "DRAM2",
+          "sgRNA": "4",
+          "treatment|beta": "-0.013974",
+          "treatment|z": "-0.044579",
+          "treatment|p-value": "0.402",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.96444",
+          "treatment|wald-fdr": "0.96444"
+        },
+        {
+          "Gene": "CEPT1",
+          "sgRNA": "4",
+          "treatment|beta": "1.6498",
+          "treatment|z": "0.53202",
+          "treatment|p-value": "0.154",
+          "treatment|fdr": "0.81053",
+          "treatment|wald-p-value": "0.59471",
+          "treatment|wald-fdr": "0.72213"
+        },
+        {
+          "Gene": "DENND2D",
+          "sgRNA": "4",
+          "treatment|beta": "0.24178",
+          "treatment|z": "0.38854",
+          "treatment|p-value": "0.724",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.69762",
+          "treatment|wald-fdr": "0.79275"
+        },
+        {
+          "Gene": "CHI3L2",
+          "sgRNA": "4",
+          "treatment|beta": "0.68291",
+          "treatment|z": "0.72422",
+          "treatment|p-value": "0.782",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.46893",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "CHIA",
+          "sgRNA": "4",
+          "treatment|beta": "1.1339",
+          "treatment|z": "0.74802",
+          "treatment|p-value": "0.394",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.45445",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "OVGP1",
+          "sgRNA": "4",
+          "treatment|beta": "0.88603",
+          "treatment|z": "0.71685",
+          "treatment|p-value": "0.552",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.47347",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "WDR77",
+          "sgRNA": "4",
+          "treatment|beta": "-1.7055",
+          "treatment|z": "-3.0426",
+          "treatment|p-value": "0",
+          "treatment|fdr": "0",
+          "treatment|wald-p-value": "0.0023453",
+          "treatment|wald-fdr": "0.078178"
+        },
+        {
+          "Gene": "ATP5F1",
+          "sgRNA": "4",
+          "treatment|beta": "-0.038922",
+          "treatment|z": "-0.10547",
+          "treatment|p-value": "0.372",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.916",
+          "treatment|wald-fdr": "0.95396"
+        },
+        {
+          "Gene": "C1orf162",
+          "sgRNA": "4",
+          "treatment|beta": "1.01",
+          "treatment|z": "0.67077",
+          "treatment|p-value": "0.46",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.50237",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "ADORA3",
+          "sgRNA": "4",
+          "treatment|beta": "0.31271",
+          "treatment|z": "0.66563",
+          "treatment|p-value": "0.79",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.50564",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "RAP1A",
+          "sgRNA": "4",
+          "treatment|beta": "0.48568",
+          "treatment|z": "0.63937",
+          "treatment|p-value": "0.986",
+          "treatment|fdr": "0.986",
+          "treatment|wald-p-value": "0.52258",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "FAM212B",
+          "sgRNA": "4",
+          "treatment|beta": "0.6096",
+          "treatment|z": "0.63048",
+          "treatment|p-value": "0.87",
+          "treatment|fdr": "0.96774",
+          "treatment|wald-p-value": "0.52838",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "KCND3",
+          "sgRNA": "4",
+          "treatment|beta": "1.2143",
+          "treatment|z": "0.70743",
+          "treatment|p-value": "0.334",
+          "treatment|fdr": "0.93559",
+          "treatment|wald-p-value": "0.4793",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "ANGPTL7",
+          "sgRNA": "4",
+          "treatment|beta": "1.6563",
+          "treatment|z": "0.51905",
+          "treatment|p-value": "0.152",
+          "treatment|fdr": "0.81053",
+          "treatment|wald-p-value": "0.60372",
+          "treatment|wald-fdr": "0.72213"
+        },
+        {
+          "Gene": "CTTNBP2NL",
+          "sgRNA": "4",
+          "treatment|beta": "0.29257",
+          "treatment|z": "0.72235",
+          "treatment|p-value": "0.766",
+          "treatment|fdr": "0.96386",
+          "treatment|wald-p-value": "0.47008",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "WNT2B",
+          "sgRNA": "4",
+          "treatment|beta": "0.62471",
+          "treatment|z": "0.76965",
+          "treatment|p-value": "0.858",
+          "treatment|fdr": "0.96774",
+          "treatment|wald-p-value": "0.44151",
+          "treatment|wald-fdr": "0.71195"
+        },
+        {
+          "Gene": "MTOR",
+          "sgRNA": "4",
+          "treatment|beta": "-2.3775",
+          "treatment|z": "-3.1066",
+          "treatment|p-value": "0",
+          "treatment|fdr": "0",
+          "treatment|wald-p-value": "0.0018927",
+          "treatment|wald-fdr": "0.078178"
+        }
+      ]
+    }
+  ]
+}

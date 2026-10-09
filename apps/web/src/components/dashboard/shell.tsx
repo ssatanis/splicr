@@ -44,6 +44,7 @@ const NAV: { group: string | null; items: NavItem[] }[] = [
     items: [
       { href: "/dashboard/screens", label: "Screens", icon: FlaskConical },
       { href: "/dashboard/atlas", label: "Atlas", icon: Compass },
+      { href: "/dashboard/memory", label: "Lab memory", icon: Compass },
     ],
   },
   {

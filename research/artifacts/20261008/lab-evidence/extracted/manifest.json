@@ -1,0 +1,145 @@
+{
+  "schema": "splicr.lab-evidence-bundle.v1",
+  "scope": "Local software verification. Real Millman count diagnostics, real reference-only PIKFYVE maps/DepMap, explicitly synthetic kinetics. No database screen or biological validation created.",
+  "files": [
+    {
+      "path": "001-drift-__SCREEN__-eb92e205da9e/figure-1.pdf",
+      "byte_length": 27072,
+      "sha256": "1977a95d06987d86eaec99e0bed0aa995e4ad3b4eb34c75fe7760a8369ae4308"
+    },
+    {
+      "path": "001-drift-__SCREEN__-eb92e205da9e/figure-1.spec.json",
+      "byte_length": 86622,
+      "sha256": "8041e9e06ced70d627078d3fd15725792af7322d806091785300a4d298b0b60a"
+    },
+    {
+      "path": "001-drift-__SCREEN__-eb92e205da9e/figure-1.svg",
+      "byte_length": 54191,
+      "sha256": "a87954716fa641326ae7e36315bd4946000b55336f1ba973dd70a40da998fbf4"
+    },
+    {
+      "path": "001-drift-__SCREEN__-eb92e205da9e/receipt.canonical.json",
+      "byte_length": 7452,
+      "sha256": "eb92e205da9e1450d111308a14a7f220269d345484704d5e204afae93c74120a"
+    },
+    {
+      "path": "001-drift-__SCREEN__-eb92e205da9e/receipt.json",
+      "byte_length": 25401,
+      "sha256": "5fcb1851967d7a41e9ea605cf2b8e00260b94d0cffe2a32cdd666ec1f655bd7b"
+    },
+    {
+      "path": "002-isoforms-PIKFYVE-1ac2fdddc5c2/figure-1.pdf",
+      "byte_length": 1123,
+      "sha256": "1d4728cbedb23e6d027a90fb5d0f9da44cc66e7ebeb0bd5eed95cc3112896ad3"
+    },
+    {
+      "path": "002-isoforms-PIKFYVE-1ac2fdddc5c2/figure-1.spec.json",
+      "byte_length": 1101,
+      "sha256": "23f99f64bf0655f2aa422f9af4e2f16ad3b1551aa92f456ebe8f4978ac3da891"
+    },
+    {
+      "path": "002-isoforms-PIKFYVE-1ac2fdddc5c2/figure-1.svg",
+      "byte_length": 838,
+      "sha256": "1bd441df99190c140892f5e3d5a1e39443b33f1cf4f62de8f40e0f6b14ad43c1"
+    },
+    {
+      "path": "002-isoforms-PIKFYVE-1ac2fdddc5c2/figure-2.pdf",
+      "byte_length": 83660,
+      "sha256": "a031458a94d463bf3c4ad6655a55fd6f2b6073942cf76036fe4e757e5caace9d"
+    },
+    {
+      "path": "002-isoforms-PIKFYVE-1ac2fdddc5c2/figure-2.spec.json",
+      "byte_length": 320815,
+      "sha256": "5ba7807f5d384b77b700c9c88ccfb917f76e4499790d9731c5a584378c69c638"
+    },
+    {
+      "path": "002-isoforms-PIKFYVE-1ac2fdddc5c2/figure-2.svg",
+      "byte_length": 214564,
+      "sha256": "38a4018fc5173ca6ca7d731851b1f56ef1914343e89772234433e714f7a0a98b"
+    },
+    {
+      "path": "002-isoforms-PIKFYVE-1ac2fdddc5c2/receipt.canonical.json",
+      "byte_length": 61460,
+      "sha256": "1ac2fdddc5c2c78922407308ff484a29bd76202632bfdb2d8ca1b481c022e9fe"
+    },
+    {
+      "path": "002-isoforms-PIKFYVE-1ac2fdddc5c2/receipt.json",
+      "byte_length": 208003,
+      "sha256": "ae86b2f52b3a7608074f8eee0008bb58e909d74cfe4a68646f73708c9af7cb13"
+    },
+    {
+      "path": "003-context-PIKFYVE-29dd0ac32e70/figure-1.pdf",
+      "byte_length": 1531,
+      "sha256": "fc196e06e4c9ed89e9c78092848e072c2fbae07856c94f53dd7f980b2b02a2b2"
+    },
+    {
+      "path": "003-context-PIKFYVE-29dd0ac32e70/figure-1.spec.json",
+      "byte_length": 1872,
+      "sha256": "ebcba23596241730336395297482778fedc58372b01e13dd7b501099a746029e"
+    },
+    {
+      "path": "003-context-PIKFYVE-29dd0ac32e70/figure-1.svg",
+      "byte_length": 1373,
+      "sha256": "fc2dbe9092dc9b5c56df06695b5edf7ed30ceb3e03ea01ad462ad41ff033c368"
+    },
+    {
+      "path": "003-context-PIKFYVE-29dd0ac32e70/receipt.canonical.json",
+      "byte_length": 1838,
+      "sha256": "29dd0ac32e70718fb9adac83cac26ecf14f5b1132e4fc6bd3b9c6c48ecb08b68"
+    },
+    {
+      "path": "003-context-PIKFYVE-29dd0ac32e70/receipt.json",
+      "byte_length": 4204,
+      "sha256": "c5a751e8e57e39adde7314f02c34c0abacdadf04778a0cf4087ff1ca29c44c8c"
+    },
+    {
+      "path": "004-kinetics-SYNTHETIC_FIXTURE-df72166ea0e6/figure-1.pdf",
+      "byte_length": 3992,
+      "sha256": "d1eacc92bf36545be0808f5d5298dbd19b06cdf0e71f0c440ae3c5ae87b47ac1"
+    },
+    {
+      "path": "004-kinetics-SYNTHETIC_FIXTURE-df72166ea0e6/figure-1.spec.json",
+      "byte_length": 8532,
+      "sha256": "eb1fb681ec311c6e27c04dcb746e006903beeaba27878db5d32c92fe0d481381"
+    },
+    {
+      "path": "004-kinetics-SYNTHETIC_FIXTURE-df72166ea0e6/figure-1.svg",
+      "byte_length": 5490,
+      "sha256": "44792e05811151cc8f6ee05cb81774875ab8c709f6e52118dfaf3743bcd3bbee"
+    },
+    {
+      "path": "004-kinetics-SYNTHETIC_FIXTURE-df72166ea0e6/receipt.canonical.json",
+      "byte_length": 1644,
+      "sha256": "df72166ea0e656eb96f50fd8aa60a872d5fa95d121c04c39c9efaeab0eb12e6b"
+    },
+    {
+      "path": "004-kinetics-SYNTHETIC_FIXTURE-df72166ea0e6/receipt.json",
+      "byte_length": 4575,
+      "sha256": "7554dcba3880d645572a34ce7ce11884ad7c8917d2873bacc533250d8a3d7625"
+    },
+    {
+      "path": "index.html",
+      "byte_length": 466080,
+      "sha256": "edec26b0f059a77ba0c2731063e2edbfd5973502581adba0f38c54b5480ef086"
+    },
+    {
+      "path": "README.md",
+      "byte_length": 878,
+      "sha256": "09a8b6f54c6a83e3cc0fdab18ff29a62a59cf7e993b39cf83771992f0fcd5948"
+    },
+    {
+      "path": "settings-and-scope.json",
+      "byte_length": 203,
+      "sha256": "2cb3066cfd043b4565e6cbe5a84e86a0961e05ee806f44f6e73bd38b8f4dc38c"
+    },
+    {
+      "path": "verify-bundle.py",
+      "byte_length": 1491,
+      "sha256": "328ff635754a1fccef73a94080016879629084c3f7a8656ef14740079ac65572"
+    }
+  ],
+  "integrity": {
+    "algorithm": "sha256",
+    "scope": "All listed files except manifest.json; byte integrity only"
+  }
+}

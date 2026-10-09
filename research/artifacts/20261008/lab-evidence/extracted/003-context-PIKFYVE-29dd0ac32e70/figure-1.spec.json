@@ -1,0 +1,94 @@
+{
+  "schema": "splicr.vector-scene.v1",
+  "receipt_sha256": "29dd0ac32e70718fb9adac83cac26ecf14f5b1132e4fc6bd3b9c6c48ecb08b68",
+  "scene": {
+    "title": "PIKFYVE · DepMap context",
+    "width": 820,
+    "height": 230,
+    "marks": [
+      {
+        "type": "text",
+        "x": 20,
+        "y": 25,
+        "text": "PIKFYVE · DepMap context",
+        "size": 15
+      },
+      {
+        "type": "text",
+        "x": 15,
+        "y": 70,
+        "text": "Model ACH-000681",
+        "size": 11
+      },
+      {
+        "type": "line",
+        "x": 650,
+        "y": 65,
+        "x2": 602.8268420696259,
+        "y2": 65,
+        "color": "#087f8c",
+        "width": 7
+      },
+      {
+        "type": "text",
+        "x": 238,
+        "y": 70,
+        "text": "-0.197",
+        "size": 11
+      },
+      {
+        "type": "text",
+        "x": 15,
+        "y": 112,
+        "text": "Lineage median · n=125",
+        "size": 11
+      },
+      {
+        "type": "line",
+        "x": 650,
+        "y": 107,
+        "x2": 595.9622967243195,
+        "y2": 107,
+        "color": "#c35b24",
+        "width": 7
+      },
+      {
+        "type": "text",
+        "x": 238,
+        "y": 112,
+        "text": "-0.225",
+        "size": 11
+      },
+      {
+        "type": "text",
+        "x": 15,
+        "y": 154,
+        "text": "Global median · n=1178",
+        "size": 11
+      },
+      {
+        "type": "line",
+        "x": 650,
+        "y": 149,
+        "x2": 595.5913472175598,
+        "y2": 149,
+        "color": "#7255a0",
+        "width": 7
+      },
+      {
+        "type": "text",
+        "x": 238,
+        "y": 154,
+        "text": "-0.227",
+        "size": 11
+      },
+      {
+        "type": "text",
+        "x": 290,
+        "y": 205,
+        "text": "-1.50                       Chronos gene effect                       0.500",
+        "size": 11
+      }
+    ]
+  }
+}

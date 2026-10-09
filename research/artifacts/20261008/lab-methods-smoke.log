@@ -1,0 +1,10 @@
+  [ingest] done (0.0s) 1 file(s), 0.00 GB, kidney vs D0
+  [detect] done (0.2s) Cellecta KAHGW-106-P (published study guide map) (confirmed workspace guide map)
+  [count] done (0.2s) count table with 2 samples
+  [qc] done (0.2s) pass, NNMD n/a
+  [hits] done (16.1s) 18913 genes, 0 at FDR 0.1, methods ['mageck_rra']
+  [artifacts] done (0.8s) 0 called hits: no flags
+  [atlas] done (0.7s) 1,167 background screens of 1,952; no comparable screen; context for 18,851 genes; 1,912 frequent hitters; 378 held out (leakage policy publication); 569 resolved via an alias; 62 absent from the Atlas; 15 measured in under 10 unrelated screens
+  [score] skipped (0.0s) no hit reached the calling threshold, so nothing was scored. no cohort file at /Users/sahaj/Documents/Projects/SplicR/data/validation/outcomes.json; the network is unfitted and every estimate is refused with a reason
+  [report] done (0.6s) /Users/sahaj/Documents/Projects/SplicR/data/research/lab-workspace-20261008/tools/control-normalization/postscreen_report.json
+{"verified": true, "n_guides": 106400, "n_genes": 18913, "runtime_seconds": 18.288089415989816}

@@ -1,0 +1,35 @@
+{
+  "source_sha256": "d9cc6caf6de498f7b48b49b86114781d2ee7fc6b409295a025aa6e99c8970aed",
+  "guides": 106400,
+  "target_gene_labels": 18913,
+  "non_targeting_guides": 3755,
+  "guides_per_gene": {
+    "10": 1545,
+    "5": 17337,
+    "15": 25,
+    "20": 3,
+    "25": 3
+  },
+  "samples": {
+    "D0": {
+      "total_counts": 66916017,
+      "zero_guides": 42,
+      "detected_guides": 106358,
+      "median_counts": 576.0,
+      "mean_counts": 628.9099342105263,
+      "guides_below_30_counts": 232
+    },
+    "kidney": {
+      "total_counts": 61558710,
+      "zero_guides": 42,
+      "detected_guides": 106358,
+      "median_counts": 527.0,
+      "mean_counts": 578.5593045112782,
+      "guides_below_30_counts": 240
+    }
+  },
+  "both_samples_zero": 37,
+  "duplicate_sequences": 3310,
+  "source_sheet": "Whole-genome screen",
+  "sample_limitation": "Only D0 and kidney aggregate columns are released. No mouse-level replicates or FASTQ files in this workbook."
+}

@@ -1,0 +1,415 @@
+{
+  "schema": "splicr.vector-scene.v1",
+  "receipt_sha256": "df72166ea0e656eb96f50fd8aa60a872d5fa95d121c04c39c9efaeab0eb12e6b",
+  "scene": {
+    "title": "SYNTHETIC_FIXTURE · temporal guide abundance",
+    "width": 820,
+    "height": 441,
+    "marks": [
+      {
+        "type": "text",
+        "x": 20,
+        "y": 25,
+        "text": "SYNTHETIC_FIXTURE · temporal guide abundance",
+        "size": 15
+      },
+      {
+        "type": "line",
+        "x": 88,
+        "y": 70,
+        "x2": 88,
+        "y2": 330,
+        "color": "#c2c7cc",
+        "width": 1
+      },
+      {
+        "type": "line",
+        "x": 88,
+        "y": 330,
+        "x2": 778,
+        "y2": 330,
+        "color": "#c2c7cc",
+        "width": 1
+      },
+      {
+        "type": "text",
+        "x": 76,
+        "y": 350,
+        "text": "0.00",
+        "size": 11
+      },
+      {
+        "type": "text",
+        "x": 20,
+        "y": 334,
+        "text": "-1.96",
+        "size": 11
+      },
+      {
+        "type": "line",
+        "x": 88,
+        "y": 330,
+        "x2": 778,
+        "y2": 330,
+        "color": "#e5e7eb",
+        "width": 1
+      },
+      {
+        "type": "text",
+        "x": 248.5,
+        "y": 350,
+        "text": "5.25",
+        "size": 11
+      },
+      {
+        "type": "text",
+        "x": 20,
+        "y": 269,
+        "text": "-1.47",
+        "size": 11
+      },
+      {
+        "type": "line",
+        "x": 88,
+        "y": 265,
+        "x2": 778,
+        "y2": 265,
+        "color": "#e5e7eb",
+        "width": 1
+      },
+      {
+        "type": "text",
+        "x": 421,
+        "y": 350,
+        "text": "10.5",
+        "size": 11
+      },
+      {
+        "type": "text",
+        "x": 20,
+        "y": 204,
+        "text": "-0.979",
+        "size": 11
+      },
+      {
+        "type": "line",
+        "x": 88,
+        "y": 200,
+        "x2": 778,
+        "y2": 200,
+        "color": "#e5e7eb",
+        "width": 1
+      },
+      {
+        "type": "text",
+        "x": 593.5,
+        "y": 350,
+        "text": "15.8",
+        "size": 11
+      },
+      {
+        "type": "text",
+        "x": 20,
+        "y": 139,
+        "text": "-0.489",
+        "size": 11
+      },
+      {
+        "type": "line",
+        "x": 88,
+        "y": 135,
+        "x2": 778,
+        "y2": 135,
+        "color": "#e5e7eb",
+        "width": 1
+      },
+      {
+        "type": "text",
+        "x": 766,
+        "y": 350,
+        "text": "21.0",
+        "size": 11
+      },
+      {
+        "type": "text",
+        "x": 20,
+        "y": 74,
+        "text": "0.00",
+        "size": 11
+      },
+      {
+        "type": "line",
+        "x": 88,
+        "y": 70,
+        "x2": 778,
+        "y2": 70,
+        "color": "#e5e7eb",
+        "width": 1
+      },
+      {
+        "type": "text",
+        "x": 330,
+        "y": 375,
+        "text": "Days from declared origin",
+        "size": 12
+      },
+      {
+        "type": "text",
+        "x": 88,
+        "y": 52,
+        "text": "Log2 relative abundance from trajectory baseline",
+        "size": 12
+      },
+      {
+        "type": "box",
+        "x": 86,
+        "y": 68,
+        "w": 4,
+        "h": 4,
+        "color": "#c5cdd0",
+        "title": "SYNTHETIC / 0 / SYNTHETIC-G1: 0 / 0"
+      },
+      {
+        "type": "line",
+        "x": 88,
+        "y": 70,
+        "x2": 318,
+        "y2": 124.48736872622445,
+        "color": "#c5cdd0",
+        "width": 0.7
+      },
+      {
+        "type": "box",
+        "x": 316,
+        "y": 122.48736872622445,
+        "w": 4,
+        "h": 4,
+        "color": "#c5cdd0",
+        "title": "SYNTHETIC / 0 / SYNTHETIC-G1: 7 / -0.41028396930820943"
+      },
+      {
+        "type": "line",
+        "x": 318,
+        "y": 124.48736872622445,
+        "x2": 778,
+        "y2": 330,
+        "color": "#c5cdd0",
+        "width": 0.7
+      },
+      {
+        "type": "box",
+        "x": 776,
+        "y": 328,
+        "w": 4,
+        "h": 4,
+        "color": "#c5cdd0",
+        "title": "SYNTHETIC / 0 / SYNTHETIC-G1: 21 / -1.957771764610703"
+      },
+      {
+        "type": "line",
+        "x": 22,
+        "y": 398,
+        "x2": 34,
+        "y2": 398,
+        "color": "#c5cdd0",
+        "width": 2
+      },
+      {
+        "type": "text",
+        "x": 39,
+        "y": 402,
+        "text": "SYNTHETIC / 0 / SYNTHETIC-G1",
+        "size": 10,
+        "title": "SYNTHETIC / 0 / SYNTHETIC-G1"
+      },
+      {
+        "type": "box",
+        "x": 86,
+        "y": 68,
+        "w": 4,
+        "h": 4,
+        "color": "#c35b24",
+        "title": "SYNTHETIC / 0 · guide mean: 0 / 0"
+      },
+      {
+        "type": "line",
+        "x": 88,
+        "y": 70,
+        "x2": 318,
+        "y2": 124.48736872622445,
+        "color": "#c35b24",
+        "width": 2
+      },
+      {
+        "type": "box",
+        "x": 316,
+        "y": 122.48736872622445,
+        "w": 4,
+        "h": 4,
+        "color": "#c35b24",
+        "title": "SYNTHETIC / 0 · guide mean: 7 / -0.41028396930820943"
+      },
+      {
+        "type": "line",
+        "x": 318,
+        "y": 124.48736872622445,
+        "x2": 778,
+        "y2": 330,
+        "color": "#c35b24",
+        "width": 2
+      },
+      {
+        "type": "box",
+        "x": 776,
+        "y": 328,
+        "w": 4,
+        "h": 4,
+        "color": "#c35b24",
+        "title": "SYNTHETIC / 0 · guide mean: 21 / -1.957771764610703"
+      },
+      {
+        "type": "line",
+        "x": 287,
+        "y": 398,
+        "x2": 299,
+        "y2": 398,
+        "color": "#c35b24",
+        "width": 2
+      },
+      {
+        "type": "text",
+        "x": 304,
+        "y": 402,
+        "text": "SYNTHETIC / 0 · guide mean",
+        "size": 10,
+        "title": "SYNTHETIC / 0 · guide mean"
+      },
+      {
+        "type": "box",
+        "x": 86,
+        "y": 68,
+        "w": 4,
+        "h": 4,
+        "color": "#c5cdd0",
+        "title": "SYNTHETIC / 1 / SYNTHETIC-G1: 0 / 0"
+      },
+      {
+        "type": "line",
+        "x": 88,
+        "y": 70,
+        "x2": 318,
+        "y2": 112.27969074930635,
+        "color": "#c5cdd0",
+        "width": 0.7
+      },
+      {
+        "type": "box",
+        "x": 316,
+        "y": 110.27969074930635,
+        "w": 4,
+        "h": 4,
+        "color": "#c5cdd0",
+        "title": "SYNTHETIC / 1 / SYNTHETIC-G1: 7 / -0.31836147986717034"
+      },
+      {
+        "type": "line",
+        "x": 318,
+        "y": 112.27969074930635,
+        "x2": 778,
+        "y2": 267.6504575942795,
+        "color": "#c5cdd0",
+        "width": 0.7
+      },
+      {
+        "type": "box",
+        "x": 776,
+        "y": 265.6504575942795,
+        "w": 4,
+        "h": 4,
+        "color": "#c5cdd0",
+        "title": "SYNTHETIC / 1 / SYNTHETIC-G1: 21 / -1.4882864813094825"
+      },
+      {
+        "type": "line",
+        "x": 552,
+        "y": 398,
+        "x2": 564,
+        "y2": 398,
+        "color": "#c5cdd0",
+        "width": 2
+      },
+      {
+        "type": "text",
+        "x": 569,
+        "y": 402,
+        "text": "SYNTHETIC / 1 / SYNTHETIC-G1",
+        "size": 10,
+        "title": "SYNTHETIC / 1 / SYNTHETIC-G1"
+      },
+      {
+        "type": "box",
+        "x": 86,
+        "y": 68,
+        "w": 4,
+        "h": 4,
+        "color": "#3672af",
+        "title": "SYNTHETIC / 1 · guide mean: 0 / 0"
+      },
+      {
+        "type": "line",
+        "x": 88,
+        "y": 70,
+        "x2": 318,
+        "y2": 112.27969074930635,
+        "color": "#3672af",
+        "width": 2
+      },
+      {
+        "type": "box",
+        "x": 316,
+        "y": 110.27969074930635,
+        "w": 4,
+        "h": 4,
+        "color": "#3672af",
+        "title": "SYNTHETIC / 1 · guide mean: 7 / -0.31836147986717034"
+      },
+      {
+        "type": "line",
+        "x": 318,
+        "y": 112.27969074930635,
+        "x2": 778,
+        "y2": 267.6504575942795,
+        "color": "#3672af",
+        "width": 2
+      },
+      {
+        "type": "box",
+        "x": 776,
+        "y": 265.6504575942795,
+        "w": 4,
+        "h": 4,
+        "color": "#3672af",
+        "title": "SYNTHETIC / 1 · guide mean: 21 / -1.4882864813094825"
+      },
+      {
+        "type": "line",
+        "x": 22,
+        "y": 416,
+        "x2": 34,
+        "y2": 416,
+        "color": "#3672af",
+        "width": 2
+      },
+      {
+        "type": "text",
+        "x": 39,
+        "y": 420,
+        "text": "SYNTHETIC / 1 · guide mean",
+        "size": 10,
+        "title": "SYNTHETIC / 1 · guide mean"
+      }
+    ],
+    "xLabel": "Days from declared origin",
+    "yLabel": "Log2 relative abundance from trajectory baseline"
+  }
+}

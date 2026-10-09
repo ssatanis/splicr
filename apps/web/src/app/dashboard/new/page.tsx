@@ -25,9 +25,9 @@ import Link from "next/link";
 import { IntakeWorkspace } from "@/components/dashboard/intake/intake-workspace";
 import { UploadFlow } from "@/components/dashboard/intake/upload-flow";
 import { RequestForm } from "@/components/dashboard/request-form";
-import { Card, PageHeader, Panel } from "@/components/dashboard/ui";
+import { PageHeader, Panel } from "@/components/dashboard/ui";
 import { listLibraries } from "@/lib/data/libraries";
-import { getCurrentContext, getOrgSettings } from "@/lib/data/org";
+import { getCurrentContext, getOrgSettings, listMembers } from "@/lib/data/org";
 import { listScreenRequests } from "@/lib/data/screen-requests";
 import { DEFAULT_WORKSPACE_SETTINGS, ROLE_RANK } from "@/lib/data/types";
 import { isUuid } from "@/lib/data/types";
@@ -37,28 +37,74 @@ import type { UploadItem } from "@/components/dashboard/intake/file-list";
 export const metadata = { title: "New analysis" };
 export const dynamic = "force-dynamic";
 
-export default async function NewAnalysisPage({ searchParams }: { searchParams: Promise<{ draft?: string }> }) {
+export default async function NewAnalysisPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ draft?: string }>;
+}) {
   const context = await getCurrentContext();
-  const [requests, catalog, settings] = await Promise.all([
+  const [requests, catalog, settings, members] = await Promise.all([
     listScreenRequests(),
     listLibraries(),
-    context.org ? getOrgSettings(context.org.id) : Promise.resolve(DEFAULT_WORKSPACE_SETTINGS),
+    context.org
+      ? getOrgSettings(context.org.id)
+      : Promise.resolve(DEFAULT_WORKSPACE_SETTINGS),
+    context.org ? listMembers(context.org.id) : Promise.resolve([]),
   ]);
 
   const role = context.role;
   const canRun = role !== null && ROLE_RANK[role] >= ROLE_RANK.member;
   const params = await searchParams;
-  let initialDraft: { screenId: string; orgId: string; name: string; files: UploadItem[] } | undefined;
-  let drafts: { id: string; name: string }[] = [];
+  let initialDraft:
+    | {
+        screenId: string;
+        orgId: string;
+        name: string;
+        files: UploadItem[];
+        config?: import("@/components/dashboard/intake/upload-flow").SavedIntake;
+        experimentDate?: string;
+        researcherId?: string;
+      }
+    | undefined;
   if (canRun && context.org && context.user) {
     const client = await createClient();
-    const recent = await client.from("screens").select("id,name").eq("org_id", context.org.id).eq("created_by", context.user.id).eq("status", "draft").is("archived_at", null).order("created_at", { ascending: false }).limit(8);
-    drafts = recent.data ?? [];
     if (params.draft && isUuid(params.draft)) {
-      const screen = await client.from("screens").select("id,name").eq("id", params.draft).eq("org_id", context.org.id).eq("created_by", context.user.id).eq("status", "draft").is("archived_at", null).maybeSingle();
+      const screen = await client
+        .from("screens")
+        .select("id,name,intake_config,experiment_date,researcher_id")
+        .eq("id", params.draft)
+        .eq("org_id", context.org.id)
+        .eq("created_by", context.user.id)
+        .eq("status", "draft")
+        .is("archived_at", null)
+        .maybeSingle();
       if (screen.data) {
-        const files = await client.from("screen_files").select("id,original_name,byte_size,kind,checksum_sha256,metadata").eq("screen_id", screen.data.id).eq("status", "complete").order("created_at");
-        if (!files.error) initialDraft = { screenId: screen.data.id, orgId: context.org.id, name: screen.data.name, files: (files.data ?? []).map((file) => ({ key: file.id, name: file.original_name, bytes: Number(file.byte_size), kind: file.kind === "other" ? "context" : file.kind, sent: Number(file.byte_size), checksum: file.checksum_sha256, status: "done", error: null, fileId: file.id })) };
+        const files = await client
+          .from("screen_files")
+          .select("id,original_name,byte_size,kind,checksum_sha256,metadata")
+          .eq("screen_id", screen.data.id)
+          .eq("status", "complete")
+          .order("created_at");
+        if (!files.error)
+          initialDraft = {
+            screenId: screen.data.id,
+            orgId: context.org.id,
+            name: screen.data.name,
+            config: screen.data.intake_config,
+            experimentDate: screen.data.experiment_date,
+            researcherId: screen.data.researcher_id,
+            files: (files.data ?? []).map((file) => ({
+              key: file.id,
+              name: file.original_name,
+              bytes: Number(file.byte_size),
+              kind: file.kind === "other" ? "context" : file.kind,
+              sent: Number(file.byte_size),
+              checksum: file.checksum_sha256,
+              status: "done",
+              error: null,
+              fileId: file.id,
+            })),
+          };
       }
     }
   }
@@ -67,6 +113,9 @@ export default async function NewAnalysisPage({ searchParams }: { searchParams: 
     id: library.id,
     name: library.name,
     n_guides: library.n_guides,
+    taxid: library.taxid,
+    modality: library.modality,
+    custom: library.custom,
   }));
   const librarySlugToId = Object.fromEntries(
     catalog.libraries.map((library) => [library.slug, library.id] as const),
@@ -87,6 +136,11 @@ export default async function NewAnalysisPage({ searchParams }: { searchParams: 
                 <UploadFlow
                   key={initialDraft?.screenId ?? "new"}
                   initialDraft={initialDraft}
+                  researchers={members.map((member) => ({
+                    id: member.id,
+                    name: member.name || member.email || "Workspace member",
+                  }))}
+                  currentResearcher={context.user?.id ?? ""}
                   libraries={libraries}
                   librarySlugToId={librarySlugToId}
                   defaults={{
@@ -102,8 +156,9 @@ export default async function NewAnalysisPage({ searchParams }: { searchParams: 
               published={
                 <div className="space-y-3">
                   <p className="max-w-prose text-[12.5px] leading-snug text-body">
-                    SplicR reads the deposit, works out which runs are the treated arm, counts the guides
-                    from the raw reads, and calls hits. The result is shared evidence and appears in the{" "}
+                    SplicR reads the deposit, works out which runs are the treated arm,
+                    counts the guides from the raw reads, and calls hits. The result is
+                    shared evidence and appears in the{" "}
                     <Link
                       href="/dashboard/atlas"
                       className="text-cyan-600 underline decoration-line-strong underline-offset-2"
@@ -112,14 +167,16 @@ export default async function NewAnalysisPage({ searchParams }: { searchParams: 
                     </Link>
                     .
                   </p>
-                  <RequestForm requests={requests.status === "found" ? requests.requests : []} />
+                  <RequestForm
+                    requests={requests.status === "found" ? requests.requests : []}
+                  />
                   {requests.status === "unavailable" && (
                     <p
                       role="alert"
                       className="rounded-md bg-orange-50 px-3 py-2 text-[12.5px] leading-snug text-orange-700"
                     >
-                      This workspace&rsquo;s earlier requests could not be read, so they are not listed.
-                      That says nothing about whether they are running.
+                      This workspace&rsquo;s earlier requests could not be read, so they
+                      are not listed. That says nothing about whether they are running.
                     </p>
                   )}
                 </div>
@@ -127,8 +184,8 @@ export default async function NewAnalysisPage({ searchParams }: { searchParams: 
             />
           ) : (
             <p className="rounded-md bg-mist-soft px-3 py-2 text-[12.5px] leading-snug text-body">
-              Your role in this workspace is read-only, so you cannot start an analysis. An administrator
-              can, from this page.
+              Your role in this workspace is read-only, so you cannot start an analysis.
+              An administrator can, from this page.
             </p>
           )}
         </Panel>

@@ -62,7 +62,7 @@ from pathlib import Path
 from ..config import ANNOTATION_DIR, REFERENCE_DIR
 
 GTF = ANNOTATION_DIR / "Homo_sapiens.GRCh38.116.chr.gtf.gz"
-EXON_CACHE = REFERENCE_DIR / "derived" / "ensembl116_pc_exons_9606.parquet"
+EXON_CACHE = REFERENCE_DIR / "derived" / "ensembl116_pc_exons_9606_v2.parquet"
 
 #: Only transcripts that encode a protein can carry a knockout, so a cut in a
 #: retained-intron or NMD-target isoform is not evidence the protein survived.
@@ -139,8 +139,10 @@ def build_exon_cache(gtf: Path = GTF, out: Path = EXON_CACHE) -> Path:
                 int(f[3]) - 1,          # GTF is 1-based inclusive; store 0-based
                 int(f[4]),              # half-open end
                 f[2] == "CDS",
+                f[6],
+                int(_attr(attrs, "exon_number") or 0),
             ))
-    df = pd.DataFrame(rows, columns=["gene", "transcript", "chrom", "start", "end", "is_cds"])
+    df = pd.DataFrame(rows, columns=["gene", "transcript", "chrom", "start", "end", "is_cds", "strand", "exon_number"])
     df = df[df.gene.ne("") & df.transcript.ne("")]
     # Sorted at build time so the reader can slice a gene's rows by offset and
     # never group: loading 5.7M rows through a pandas groupby took 89 seconds,
@@ -194,6 +196,8 @@ def _index():
         "end": df.end.to_numpy(),
         "is_cds": df.is_cds.to_numpy(),
         "tname": np.asarray(df.transcript.cat.categories),
+        "strand": df.strand.to_numpy() if "strand" in df else None,
+        "exon_number": df.exon_number.to_numpy() if "exon_number" in df else None,
     }
 
 
@@ -210,6 +214,9 @@ def inclusion(gene: str, chrom: str, cut_pos: int,
     """
     import numpy as np
 
+    if isinstance(cut_pos, bool) or not isinstance(cut_pos, int) or cut_pos < 0:
+        raise ValueError("cut position must be a nonnegative zero-based integer")
+    chrom = chrom if chrom.startswith("chr") else f"chr{chrom}"
     idx = _index()
     span = idx["spans"].get(gene)
     if span is None:
@@ -235,7 +242,12 @@ def inclusion(gene: str, chrom: str, cut_pos: int,
         w_coding = float(len(coding_t))
     else:
         names = idx["tname"]
-        weights = np.array([max(0.0, float(expression.get(names[c], 0.0))) for c in all_t])
+        missing = [str(names[c]) for c in all_t if names[c] not in expression]
+        if missing:
+            raise ValueError(f"transcript expression is incomplete for {gene}: {len(missing)} missing; missing is not zero")
+        weights = np.array([float(expression[names[c]]) for c in all_t])
+        if not np.isfinite(weights).all() or (weights < 0).any():
+            raise ValueError("transcript abundances must be finite and nonnegative")
         total = float(weights.sum())
         by_code = dict(zip(all_t.tolist(), weights.tolist()))
         w_exonic = sum(by_code.get(int(c), 0.0) for c in exonic_t)
@@ -263,3 +275,30 @@ def inclusion_many(guides, expression: dict[str, float] | None = None) -> list[I
     """`guides` is an iterable of (gene, chrom, cut_pos). Shares one index load."""
     _index()
     return [inclusion(g, c, p, expression) for g, c, p in guides]
+
+
+def transcript_tracks(gene: str) -> list[dict]:
+    """All annotated coding transcripts; coordinates remain zero-based half-open.
+
+    Older caches lack strand/exon numbers. They still give exact exon geometry,
+    with those fields explicitly null until the cache is rebuilt.
+    """
+    import numpy as np
+    idx = _index()
+    span = idx["spans"].get(gene)
+    if span is None:
+        return []
+    lo, hi = span
+    out = []
+    for code in np.unique(idx["tcode"][lo:hi]):
+        rows = np.flatnonzero(idx["tcode"][lo:hi] == code) + lo
+        out.append({
+            "id": str(idx["tname"][code]), "chromosome": str(idx["chrom"][rows[0]]),
+            "strand": str(idx["strand"][rows[0]]) if idx.get("strand") is not None else None,
+            "exons": [{"start": int(idx["start"][r]), "end": int(idx["end"][r]),
+                       "number": int(idx["exon_number"][r]) if idx.get("exon_number") is not None else None}
+                      for r in rows if not idx["is_cds"][r]],
+            "cds": [{"start": int(idx["start"][r]), "end": int(idx["end"][r])}
+                    for r in rows if idx["is_cds"][r]],
+        })
+    return out

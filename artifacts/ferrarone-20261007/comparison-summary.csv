@@ -1,0 +1,7 @@
+comparison,screen_id,run_id,qc,genes,guide_effects,gene_disagreement,splicr_significant,rra_depleted,rra_enriched,mle_significant
+2D: WT vs plasmid,01a11702-77ae-7e9c-b85d-3d65a33f81f6,01a11702-77b2-75e7-83f1-29dc398e0bb1,warn,18049,70116,17811,271,385,2,2
+2D: WT vs EV,01a11702-77b6-7ee0-b7c2-68dbef85873d,01a11702-77c0-7ef1-948d-aeed10c3f242,warn,18049,70116,17811,0,0,0,0
+2D: EV vs plasmid,01a11702-7768-7702-a4c2-2e0abe2bd450,01a11702-7784-7815-86e2-de06156fb6b1,warn,18049,70116,17811,205,322,0,0
+Spheroid: EV vs plasmid,01a11702-77c5-7ee8-838c-af193eeb7793,01a11702-77c8-70a5-b733-4253c4388ece,warn,18049,70116,17811,159,250,0,0
+Spheroid: WT vs plasmid,01a11702-77cc-72e2-9307-ab884d26facb,01a11702-77d1-76fb-88ac-039c02f5d0eb,warn,18049,70116,17811,178,308,2,0
+Spheroid: WT vs EV,01a11702-77d5-7337-a508-5e019fee91c0,01a11702-77d8-7a80-8dfd-868de0cb2b66,warn,18049,70116,17811,0,0,0,0

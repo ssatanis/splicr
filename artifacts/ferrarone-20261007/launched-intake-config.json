@@ -1,0 +1,414 @@
+{
+  "id": "01a11702-054f-7c9d-a3b5-0a4b51d33258",
+  "name": "Ferrarone 2024: A549 LKB1 growth screens",
+  "experiment_date": "2026-10-07T04:00:00.000Z",
+  "intake_config": {
+    "tables": [
+      {
+        "name": "2d_crispr_screen_read_counts.txt",
+        "rows": 70116,
+        "model": "A549",
+        "sheet": "Table",
+        "study": {
+          "id": "ferrarone-2024-lkb1",
+          "paper": "https://doi.org/10.1073/pnas.2403685121",
+          "culture": "2d",
+          "dataset": "https://doi.org/10.7910/DVN/8DEPIT",
+          "source_sha256": "b5e01844036815b4636b7e958e5678fd814a7b5c7e11130e93b423c37ed58601"
+        },
+        "fileId": "01a11702-0ceb-723d-a8b1-48a3c08dc292",
+        "preview": [
+          [
+            "sgRNA",
+            "Gene",
+            "tkov3_plasmid",
+            "ev_2d_d21_a",
+            "ev_2d_d21_b",
+            "wt_2d_d21_a",
+            "wt_2d_d21_b"
+          ],
+          [
+            "chr1:100133208-100133227_PALMD_-",
+            "PALMD",
+            "407",
+            "1323",
+            "61",
+            "1044",
+            "189"
+          ],
+          [
+            "chr1:100133210-100133229_PALMD_+",
+            "PALMD",
+            "148",
+            "389",
+            "4",
+            "263",
+            "10"
+          ],
+          [
+            "chr1:100152265-100152284_PALMD_+",
+            "PALMD",
+            "286",
+            "104",
+            "4",
+            "63",
+            "154"
+          ],
+          [
+            "chr1:100154492-100154511_PALMD_+",
+            "PALMD",
+            "224",
+            "715",
+            "35",
+            "773",
+            "73"
+          ],
+          [
+            "chr1:100203726-100203745_FRRS1_+",
+            "FRRS1",
+            "204",
+            "438",
+            "23",
+            "537",
+            "253"
+          ]
+        ],
+        "samples": [
+          {
+            "role": "plasmid",
+            "label": "tkov3_plasmid",
+            "factors": {
+              "model": "A549",
+              "culture": "2D monolayer",
+              "condition": "TKOv3 plasmid",
+              "timepoint": "plasmid",
+              "perturbation_type": "genetic restoration"
+            },
+            "file_id": null,
+            "replicate": 1
+          },
+          {
+            "role": "control",
+            "label": "ev_2d_d21_a",
+            "factors": {
+              "model": "A549",
+              "culture": "2D monolayer",
+              "condition": "LKB1-null (EV)",
+              "timepoint": "21",
+              "perturbation_type": "genetic restoration"
+            },
+            "file_id": null,
+            "replicate": 1
+          },
+          {
+            "role": "control",
+            "label": "ev_2d_d21_b",
+            "factors": {
+              "model": "A549",
+              "culture": "2D monolayer",
+              "condition": "LKB1-null (EV)",
+              "timepoint": "21",
+              "perturbation_type": "genetic restoration"
+            },
+            "file_id": null,
+            "replicate": 2
+          },
+          {
+            "role": "treatment",
+            "label": "wt_2d_d21_a",
+            "factors": {
+              "model": "A549",
+              "culture": "2D monolayer",
+              "condition": "LKB1 restored (WT)",
+              "timepoint": "21",
+              "perturbation_type": "genetic restoration"
+            },
+            "file_id": null,
+            "replicate": 1
+          },
+          {
+            "role": "treatment",
+            "label": "wt_2d_d21_b",
+            "factors": {
+              "model": "A549",
+              "culture": "2D monolayer",
+              "condition": "LKB1 restored (WT)",
+              "timepoint": "21",
+              "perturbation_type": "genetic restoration"
+            },
+            "file_id": null,
+            "replicate": 2
+          }
+        ],
+        "warnings": [
+          "Verified Ferrarone 2024 archive: EV is LKB1-null; WT restores LKB1. The plasmid is one shared reference, not a biological replicate. These are editable reanalysis comparisons; the paper used MAGeCK MLE and a low-read filter whose precise rule is not specified."
+        ]
+      },
+      {
+        "name": "spheroid_crispr_screen_read_counts.txt",
+        "rows": 70116,
+        "model": "A549",
+        "sheet": "Table",
+        "study": {
+          "id": "ferrarone-2024-lkb1",
+          "paper": "https://doi.org/10.1073/pnas.2403685121",
+          "culture": "3d",
+          "dataset": "https://doi.org/10.7910/DVN/8DEPIT",
+          "source_sha256": "efa79d1cb179db64240e1be0f732de35d145038b473dc49ba33c3697c05f2dec"
+        },
+        "fileId": "01a11702-0fc0-7cff-bfe7-2b53a2d6c459",
+        "preview": [
+          [
+            "sgRNA",
+            "Gene",
+            "tkov3_plasmid",
+            "ev_3d_d21_a",
+            "ev_3d_d21_b",
+            "wt_3d_d21_a",
+            "wt_3d_d21_b"
+          ],
+          [
+            "chr1:100133208-100133227_PALMD_-",
+            "PALMD",
+            "407",
+            "1074",
+            "283",
+            "1041",
+            "76"
+          ],
+          [
+            "chr1:100133210-100133229_PALMD_+",
+            "PALMD",
+            "148",
+            "578",
+            "21",
+            "61",
+            "23"
+          ],
+          [
+            "chr1:100152265-100152284_PALMD_+",
+            "PALMD",
+            "286",
+            "93",
+            "1",
+            "95",
+            "7"
+          ],
+          [
+            "chr1:100154492-100154511_PALMD_+",
+            "PALMD",
+            "224",
+            "2537",
+            "17",
+            "438",
+            "13731"
+          ],
+          [
+            "chr1:100203726-100203745_FRRS1_+",
+            "FRRS1",
+            "204",
+            "88",
+            "9",
+            "294",
+            "14"
+          ]
+        ],
+        "samples": [
+          {
+            "role": "plasmid",
+            "label": "tkov3_plasmid",
+            "factors": {
+              "model": "A549",
+              "culture": "spheroid",
+              "condition": "TKOv3 plasmid",
+              "timepoint": "plasmid",
+              "perturbation_type": "genetic restoration"
+            },
+            "file_id": null,
+            "replicate": 1
+          },
+          {
+            "role": "control",
+            "label": "ev_3d_d21_a",
+            "factors": {
+              "model": "A549",
+              "culture": "spheroid",
+              "condition": "LKB1-null (EV)",
+              "timepoint": "21",
+              "perturbation_type": "genetic restoration"
+            },
+            "file_id": null,
+            "replicate": 1
+          },
+          {
+            "role": "control",
+            "label": "ev_3d_d21_b",
+            "factors": {
+              "model": "A549",
+              "culture": "spheroid",
+              "condition": "LKB1-null (EV)",
+              "timepoint": "21",
+              "perturbation_type": "genetic restoration"
+            },
+            "file_id": null,
+            "replicate": 2
+          },
+          {
+            "role": "treatment",
+            "label": "wt_3d_d21_a",
+            "factors": {
+              "model": "A549",
+              "culture": "spheroid",
+              "condition": "LKB1 restored (WT)",
+              "timepoint": "21",
+              "perturbation_type": "genetic restoration"
+            },
+            "file_id": null,
+            "replicate": 1
+          },
+          {
+            "role": "treatment",
+            "label": "wt_3d_d21_b",
+            "factors": {
+              "model": "A549",
+              "culture": "spheroid",
+              "condition": "LKB1 restored (WT)",
+              "timepoint": "21",
+              "perturbation_type": "genetic restoration"
+            },
+            "file_id": null,
+            "replicate": 2
+          }
+        ],
+        "warnings": [
+          "Verified Ferrarone 2024 archive: EV is LKB1-null; WT restores LKB1. The plasmid is one shared reference, not a biological replicate. These are editable reanalysis comparisons; the paper used MAGeCK MLE and a low-read filter whose precise rule is not specified."
+        ]
+      }
+    ],
+    "imported": {},
+    "settings": {
+      "profile": "pooled_abundance",
+      "modality": "knockout",
+      "model_type": "cancer_cell_line",
+      "hit_callers": [
+        "mageck_rra",
+        "mageck_mle"
+      ],
+      "drugz_paired": false,
+      "cn_correction": false,
+      "fdr_threshold": 0.05,
+      "normalization": "median",
+      "organism_taxid": 9606
+    },
+    "libraryId": "01a116fe-842e-7992-a7d8-6340fcbac5db",
+    "comparisons": [
+      {
+        "id": "0:ferrarone-2024-lkb1:2d:EV vs plasmid",
+        "drug": false,
+        "name": "2D: EV vs plasmid",
+        "model": "A549",
+        "table": 0,
+        "control": [
+          "tkov3_plasmid"
+        ],
+        "enabled": true,
+        "fitness": true,
+        "phenotype": "Proliferation",
+        "treatment": [
+          "ev_2d_d21_a",
+          "ev_2d_d21_b"
+        ]
+      },
+      {
+        "id": "0:ferrarone-2024-lkb1:2d:WT vs plasmid",
+        "drug": false,
+        "name": "2D: WT vs plasmid",
+        "model": "A549",
+        "table": 0,
+        "control": [
+          "tkov3_plasmid"
+        ],
+        "enabled": true,
+        "fitness": true,
+        "phenotype": "Proliferation",
+        "treatment": [
+          "wt_2d_d21_a",
+          "wt_2d_d21_b"
+        ]
+      },
+      {
+        "id": "0:ferrarone-2024-lkb1:2d:WT vs EV",
+        "drug": false,
+        "name": "2D: WT vs EV",
+        "model": "A549",
+        "table": 0,
+        "control": [
+          "ev_2d_d21_a",
+          "ev_2d_d21_b"
+        ],
+        "enabled": true,
+        "fitness": false,
+        "phenotype": "LKB1-dependent growth suppression",
+        "treatment": [
+          "wt_2d_d21_a",
+          "wt_2d_d21_b"
+        ]
+      },
+      {
+        "id": "1:ferrarone-2024-lkb1:3d:EV vs plasmid",
+        "drug": false,
+        "name": "Spheroid: EV vs plasmid",
+        "model": "A549",
+        "table": 1,
+        "control": [
+          "tkov3_plasmid"
+        ],
+        "enabled": true,
+        "fitness": true,
+        "phenotype": "Proliferation",
+        "treatment": [
+          "ev_3d_d21_a",
+          "ev_3d_d21_b"
+        ]
+      },
+      {
+        "id": "1:ferrarone-2024-lkb1:3d:WT vs plasmid",
+        "drug": false,
+        "name": "Spheroid: WT vs plasmid",
+        "model": "A549",
+        "table": 1,
+        "control": [
+          "tkov3_plasmid"
+        ],
+        "enabled": true,
+        "fitness": true,
+        "phenotype": "Proliferation",
+        "treatment": [
+          "wt_3d_d21_a",
+          "wt_3d_d21_b"
+        ]
+      },
+      {
+        "id": "1:ferrarone-2024-lkb1:3d:WT vs EV",
+        "drug": false,
+        "name": "Spheroid: WT vs EV",
+        "model": "A549",
+        "table": 1,
+        "control": [
+          "ev_3d_d21_a",
+          "ev_3d_d21_b"
+        ],
+        "enabled": true,
+        "fitness": false,
+        "phenotype": "LKB1-dependent growth suppression",
+        "treatment": [
+          "wt_3d_d21_a",
+          "wt_3d_d21_b"
+        ]
+      }
+    ],
+    "libraryLabel": "",
+    "customLibraries": [],
+    "metadataApplied": []
+  }
+}

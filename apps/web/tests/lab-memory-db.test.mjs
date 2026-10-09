@@ -1,0 +1,73 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import { createHash } from 'node:crypto';
+import { PGlite } from '@electric-sql/pglite';
+import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto';
+const ids = n => `00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
+
+test('real Postgres migration: receipt integrity, history, missing data, threshold provenance and tenant isolation', async () => {
+  const db = new PGlite({ extensions: { pgcrypto } });
+  try {
+    await db.exec(`create schema extensions; create extension pgcrypto with schema extensions; create schema private;
+      create role authenticated; create role anon;
+      create table public.screens(id uuid primary key,org_id uuid,name text,cell_line text,phenotype text,modality text,library_id uuid,qc text,current_run_id uuid);
+      create table public.runs(id uuid primary key,screen_id uuid references screens(id),status text,settings jsonb,finished_at timestamptz);
+      create table public.comparisons(id uuid primary key,screen_id uuid references screens(id),name text,is_primary bool);
+      create table public.hits(id uuid primary key,screen_id uuid,run_id uuid,comparison_id uuid,gene_symbol text,n_guides int,lfc float,fdr float,depleted_fdr float,enriched_fdr float,mle_beta float,mle_fdr float,norm_z float,drugz_fdr float,bayes_factor float);
+      create table public.run_stages(run_id uuid,stage text,status text,metrics jsonb);
+      create table public.run_qc(run_id uuid primary key,verdict text);
+      create table public.validation_outcomes(screen_id uuid,gene_symbol text,assay text,result text,evidence jsonb,created_at timestamptz);
+      create function private.is_org_member(p uuid) returns bool language sql stable as $$select p = nullif(current_setting('splicr.test_org',true),'')::uuid$$;
+      create function private.can_read_screen(p uuid) returns bool language sql stable security definer set search_path='' as $$select exists(select 1 from public.screens s where s.id=p and private.is_org_member(s.org_id))$$;
+      grant usage on schema private,extensions to authenticated;
+      grant execute on all functions in schema private to authenticated;
+      grant select on all tables in schema public to authenticated;
+      alter table screens enable row level security;
+      create policy tenant_screens on screens to authenticated using (private.is_org_member(org_id));
+    `);
+    const migration = fs.readFileSync(new URL('../../../supabase/migrations/20261008161816_lab_evidence_memory.sql', import.meta.url),'utf8');
+    await db.exec(migration);
+    const org = ids(1), other = ids(2);
+    for (const [screen, owner, name, run] of [[10,org,'hit',20],[11,org,'negative',21],[12,org,'unmeasured',22],[13,org,'unfinished',23],[14,other,'private-other-lab',24],[15,org,'requested-only',25]]) {
+      await db.query('insert into screens values ($1,$2,$3,$4,$5,$6,$7,$8,$9)', [ids(screen),owner,name,'A549','fitness','knockout',null,'pass',ids(run)]);
+      await db.query('insert into runs values ($1,$2,$3,$4,$5)', [ids(run),ids(screen),screen ===13 ? 'running' : 'complete',{fdr_threshold:.1},'2026-10-08']);
+      await db.query('insert into comparisons values ($1,$2,$3,true)', [ids(screen+100),ids(screen),'primary']);
+      if (screen !== 15) await db.query('insert into run_stages values ($1,$2,$3,$4)',[ids(run),'hits','done',{fdr_threshold:.1,methods:['mageck_rra']}]);
+      if (screen !==12 && screen !==13) await db.query('insert into hits (id,screen_id,run_id,comparison_id,gene_symbol,n_guides,lfc,fdr) values ($1,$2,$3,$4,$5,$6,$7,$8)', [ids(screen+200),ids(screen),ids(run),ids(screen+100),'PIKFYVE',4,-1,screen===11?.3:0]);
+    }
+    await db.query('insert into runs values ($1,$2,$3,$4,$5)',[ids(30),ids(10),'complete',{fdr_threshold:.1},'2026-10-07']);
+    await db.query('insert into run_stages values ($1,$2,$3,$4)',[ids(30),'hits','done',{fdr_threshold:.1}]);
+    await db.query('insert into hits (id,screen_id,run_id,comparison_id,gene_symbol,n_guides,lfc,fdr) values ($1,$2,$3,$4,$5,$6,$7,$8)',[ids(230),ids(10),ids(30),ids(110),'PIKFYVE',4,-.1,.9]);
+    await db.query('insert into run_qc values ($1,$2)',[ids(30),'fail']);
+    const body = {schema:'splicr.lab-evidence.v1',kind:'context',gene:'PIKFYVE',inputs:{counts_sha256:'a'},payload:{status:'measured',exact:{effect:0}}};
+    const canonical = JSON.stringify(body); const hash = createHash('sha256').update(canonical).digest('hex');
+    const insert = 'insert into lab_evidence(screen_id,run_id,comparison_id,gene_symbol,kind,sha256,canonical) values($1,$2,$3,$4,$5,$6,$7)';
+    const args = [ids(10),ids(20),ids(110),'PIKFYVE','context',hash,canonical];
+    await db.query(insert,args);
+    await assert.rejects(db.query('update lab_evidence set canonical=canonical'), /cannot be overwritten/);
+    await assert.rejects(db.query(insert,[...args.slice(0,5),'a'.repeat(64),canonical]), /check constraint/);
+    await assert.rejects(db.query(insert,[ids(11),ids(20),ids(111),...args.slice(3)]), /must belong/);
+    await db.query('select set_config($1,$2,false)',['splicr.test_org',org]);
+    await db.exec('set role authenticated');
+    const current = (await db.query('select lab_gene_memory($1,$2) as value',[org,'pikfyve'])).rows[0].value;
+    assert.equal(current.total,5);
+    assert.deepEqual(Object.fromEntries(current.rows.map(r=>[r.screen_name,r.measurement_status])), {hit:'hit',negative:'measured_not_hit',unmeasured:'not_measured',unfinished:'not_analysed','requested-only':'measured_uncalled'});
+    assert.equal(current.rows.find(r=>r.screen_name==='hit').fdr,0);
+    const history = (await db.query('select lab_gene_memory($1,$2,true) as value',[org,'PIKFYVE'])).rows[0].value;
+    assert.equal(history.total,6);
+    assert.equal(history.rows.find(r=>r.run_id===ids(30)).qc_verdict,'fail');
+    assert.equal(history.rows.find(r=>r.run_id===ids(20)).qc_verdict,null);
+    assert.equal(history.rows.filter(r=>r.screen_name==='hit').length,2);
+    const forbidden = (await db.query('select lab_gene_memory($1,$2,true) as value',[other,'PIKFYVE'])).rows[0].value;
+    assert.deepEqual(forbidden.rows,[]);
+    assert.equal((await db.query('select count(*)::int as n from lab_evidence')).rows[0].n,1);
+    await assert.rejects(db.query(insert,args), /permission denied/);
+    const secondPage = (await db.query('select lab_gene_memory($1,$2,false,2,2) as value',[org,'PIKFYVE'])).rows[0].value;
+    assert.equal(secondPage.total,5); assert.equal(secondPage.rows.length,2);
+    await db.exec('reset role');
+    await db.query('select set_config($1,$2,false)',['splicr.test_org',other]);
+    await db.exec('set role authenticated');
+    assert.equal((await db.query('select count(*)::int as n from lab_evidence')).rows[0].n,0);
+  } finally { await db.close(); }
+});

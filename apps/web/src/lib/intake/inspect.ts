@@ -55,6 +55,7 @@ export interface CountTableShape {
   /** A handful of rows, so the researcher can confirm it read what they meant. */
   preview: string[][];
   libraries: LibraryCandidate[];
+  table?: Omit<ParsedTable, "guides">;
 }
 
 export interface FastqShape {
@@ -63,11 +64,13 @@ export interface FastqShape {
   read_length: number | null;
   /** The first read, so an unexpected adapter or barcode is visible. */
   first_read: string | null;
+  libraries?: LibraryCandidate[];
 }
 
 export interface TablesShape {
   kind: "tables";
   tables: Omit<ParsedTable, "guides">[];
+  libraries?: LibraryCandidate[];
 }
 export type ContextShape = ContextContent;
 export type FileShape = CountTableShape | FastqShape | TablesShape | ContextShape;
@@ -101,7 +104,10 @@ async function headOfObject(key: string, bytes: number): Promise<Uint8Array | nu
 
   const response = await fetch(
     `${supabaseUrl}/storage/v1/object/authenticated/uploads/${encodeURI(key)}`,
-    { headers: { authorization: `Bearer ${token}`, range: `bytes=0-${bytes - 1}` }, cache: "no-store" },
+    {
+      headers: { authorization: `Bearer ${token}`, range: `bytes=0-${bytes - 1}` },
+      cache: "no-store",
+    },
   );
   if (!response.ok && response.status !== 206) return null;
   return new Uint8Array(await response.arrayBuffer());
@@ -243,7 +249,10 @@ function parseCountTable(text: string): Omit<CountTableShape, "libraries"> | nul
   };
 }
 
-function guideSequences(text: string, shape: Omit<CountTableShape, "libraries">): string[] {
+function guideSequences(
+  text: string,
+  shape: Omit<CountTableShape, "libraries">,
+): string[] {
   if (!shape.sequence_column) return [];
   const delimiter = shape.delimiter === "tab" ? "\t" : ",";
   const index = shape.columns.indexOf(shape.sequence_column);
@@ -260,21 +269,41 @@ function guideSequences(text: string, shape: Omit<CountTableShape, "libraries">)
   return out;
 }
 
-async function detectLibrary(sequences: string[]): Promise<LibraryCandidate[]> {
-  if (sequences.length < 50) return [];
+async function detectLibrary(
+  sequences: string[],
+  ids: string[] = [],
+): Promise<LibraryCandidate[]> {
+  if (sequences.length < 50 && ids.length < 50) return [];
   try {
-    const supabase = await createClient();
-    const { data, error } = await supabase.rpc("detect_library", {
-      p_sequences: sequences,
-      p_limit: 4,
-    });
-    if (error) {
-      console.error(`[intake/inspect] detect_library: ${error.message}`);
-      return [];
+    const client = await createClient();
+    const results = await Promise.all([
+      sequences.length >= 50
+        ? client.rpc("detect_library", {
+            p_sequences: sequences.slice(0, FINGERPRINT_GUIDES),
+            p_limit: 4,
+          })
+        : Promise.resolve({ data: [], error: null }),
+      ids.length >= 50
+        ? client.rpc("detect_guide_libraries", {
+            p_ids: ids.slice(0, FINGERPRINT_GUIDES),
+          })
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+    const candidates = new Map<string, LibraryCandidate>();
+    for (const result of results) {
+      if (result.error)
+        console.error(`[intake/inspect] library fingerprint: ${result.error.message}`);
+      if (Array.isArray(result.data))
+        for (const candidate of result.data as LibraryCandidate[]) {
+          const current = candidates.get(candidate.library_id);
+          if (!current || candidate.match_rate > current.match_rate)
+            candidates.set(candidate.library_id, candidate);
+        }
     }
-    return Array.isArray(data) ? (data as LibraryCandidate[]) : [];
-  } catch (error) {
-    console.error(`[intake/inspect] detect_library: ${error instanceof Error ? error.message : error}`);
+    return [...candidates.values()]
+      .sort((a, b) => b.match_rate - a.match_rate)
+      .slice(0, 4);
+  } catch {
     return [];
   }
 }
@@ -292,7 +321,10 @@ function parseFastq(text: string): FastqShape | null {
   let length: number | null = null;
 
   for (let i = 0; i + 3 < rows.length; i += 4) {
-    if (!rows[i].startsWith("@")) return reads > 0 ? { kind: "fastq", reads_seen: reads, read_length: length, first_read: firstRead } : null;
+    if (!rows[i].startsWith("@"))
+      return reads > 0
+        ? { kind: "fastq", reads_seen: reads, read_length: length, first_read: firstRead }
+        : null;
     const read = rows[i + 1];
     if (!/^[ACGTNacgtn.]+$/.test(read)) return null;
     if (!rows[i + 2].startsWith("+")) return null;
@@ -307,6 +339,22 @@ function parseFastq(text: string): FastqShape | null {
   }
 
   return { kind: "fastq", reads_seen: reads, read_length: length, first_read: firstRead };
+}
+
+async function inspectFastq(text: string): Promise<FastqShape> {
+  const shape = parseFastq(text)!;
+  const reads = lines(text)
+    .filter((_, i) => i % 4 === 1)
+    .slice(0, 100);
+  try {
+    const client = await createClient();
+    const result = await client.rpc("detect_read_libraries", { p_reads: reads });
+    if (!result.error && Array.isArray(result.data))
+      shape.libraries = result.data as LibraryCandidate[];
+  } catch {
+    /* A catalogue failure leaves reads inspectable and library choice manual. */
+  }
+  return shape;
 }
 
 // ---------------------------------------------------------------------------
@@ -324,69 +372,180 @@ export async function inspectStoredFile(
   compressed: boolean,
   name = key,
   mappings: Record<string, TableMapping> = {},
+  supporting = false,
 ): Promise<InspectResult> {
-  if (kind === "context" && !/\.(csv|tsv|txt|xlsx?|xlsb|ods|json)(\.gz)?$/i.test(name) && !Object.keys(mappings).length) {
+  if (
+    supporting ||
+    (kind === "context" &&
+      !/\.(csv|tsv|txt|xlsx?|xlsb|ods|json)(\.gz)?$/i.test(name) &&
+      !Object.keys(mappings).length)
+  ) {
     const size = await objectExists(key);
-    if (size === null) return { ok: false, error: "The uploaded file could not be read back from storage." };
+    if (size === null)
+      return {
+        ok: false,
+        error: "The uploaded file could not be read back from storage.",
+      };
     const bytes = await headOfObject(key, Math.min(size, CONTEXT_BYTES));
-    if (!bytes) return { ok: false, error: "The supporting file could not be read back from storage." };
-    return { ok: true, ...await inspectContext(bytes, name, size <= CONTEXT_BYTES) };
+    if (!bytes)
+      return {
+        ok: false,
+        error: "The supporting file could not be read back from storage.",
+      };
+    return { ok: true, ...(await inspectContext(bytes, name, size <= CONTEXT_BYTES)) };
   }
   const workbook = /\.(xlsx?|xlsb|ods)$/i.test(name);
   const size = kind === "fastq" ? null : await objectExists(key);
-  if (workbook && (size === null || size > 64 * 1024 * 1024)) return { ok: false, error: "Workbook review supports up to 64 MB. Export large worksheets as CSV or TSV." };
+  if (workbook && (size === null || size > 64 * 1024 * 1024))
+    return {
+      ok: false,
+      error:
+        "Workbook review supports up to 64 MB. Export large worksheets as CSV or TSV.",
+    };
   const fullTable = size !== null && size <= 64 * 1024 * 1024 && kind !== "fastq";
-  const head = await headOfObject(key, fullTable ? size! : workbook ? size! : kind === "fastq" ? FASTQ_HEAD_BYTES : TABLE_HEAD_BYTES);
+  const head = await headOfObject(
+    key,
+    fullTable
+      ? size!
+      : workbook
+        ? size!
+        : kind === "fastq"
+          ? FASTQ_HEAD_BYTES
+          : TABLE_HEAD_BYTES,
+  );
   if (head === null || head.length === 0) {
     return { ok: false, error: "The uploaded file could not be read back from storage." };
   }
 
+  const gzipBytes = head.length > 1 && head[0] === 0x1f && head[1] === 0x8b;
+  if (compressed && !gzipBytes)
+    return {
+      ok: false,
+      error:
+        "The filename ends in .gz, but the contents are not gzip. Correct the filename and upload the file again.",
+    };
+  if (gzipBytes && !compressed)
+    return {
+      ok: false,
+      error:
+        "These contents are gzip compressed. Add .gz to the filename and upload the file again.",
+    };
   if (workbook || fullTable) {
     try {
-      const bytes = compressed ? gunzipSync(head, { maxOutputLength: 64 * 1024 * 1024 }) : head;
-      if (/\.txt(\.gz)?$/i.test(name) && !new TextDecoder().decode(bytes).match(/[,\t]/)) return { ok: true, ...await inspectContext(bytes, name.replace(/\.gz$/i, "")) };
+      const gzipped = head[0] === 0x1f && head[1] === 0x8b;
+      const bytes = gzipped
+        ? gunzipSync(head, { maxOutputLength: 64 * 1024 * 1024 })
+        : head;
+      const textHead = new TextDecoder().decode(bytes);
+      if (textHead.startsWith("@") && parseFastq(textHead))
+        return { ok: true, ...(await inspectFastq(textHead)) };
+      if (/\.txt(\.gz)?$/i.test(name) && !new TextDecoder().decode(bytes).match(/[,\t]/))
+        return { ok: true, ...(await inspectContext(bytes, name.replace(/\.gz$/i, ""))) };
       if (/\.json(\.gz)?$/i.test(name)) {
         const json: unknown = JSON.parse(new TextDecoder().decode(bytes));
-        if (!Array.isArray(json) && !(json && typeof json === "object" && "columns" in json && "data" in json)) return { ok: true, ...await inspectContext(bytes, name.replace(/\.gz$/i, "")) };
+        if (
+          !Array.isArray(json) &&
+          !(json && typeof json === "object" && "columns" in json && "data" in json)
+        )
+          return {
+            ok: true,
+            ...(await inspectContext(bytes, name.replace(/\.gz$/i, ""))),
+          };
       }
-      const tables = parseTables(bytes, name, mappings).map(({ guides, ...table }) => { void guides; return table; });
-      if (!workbook && tables.length === 1 && tables[0].kind === "counts" && !tables[0].mapping) {
+      const tables = parseTables(bytes, name, mappings).map(({ guides, ...table }) => {
+        void guides;
+        return table;
+      });
+      if (
+        !workbook &&
+        tables.length === 1 &&
+        tables[0].kind === "counts" &&
+        !tables[0].mapping
+      ) {
         const table = tables[0];
         const text = new TextDecoder().decode(bytes);
         const delimiter = text.includes("\t") ? "tab" : "comma";
-        const shape: CountTableShape = { kind: "counts", delimiter, columns: table.columns, guide_column: table.guide_column, gene_column: table.gene_column, sequence_column: table.sequence_column, sample_columns: table.sample_columns, rows_seen: table.rows_seen, guide_ids: table.guide_ids, preview: table.preview, libraries: [] };
-        shape.libraries = await detectLibrary(guideSequences(text, shape));
+        const shape: CountTableShape = {
+          kind: "counts",
+          delimiter,
+          columns: table.columns,
+          guide_column: table.guide_column,
+          gene_column: table.gene_column,
+          sequence_column: table.sequence_column,
+          sample_columns: table.sample_columns,
+          rows_seen: table.rows_seen,
+          guide_ids: table.guide_ids,
+          preview: table.preview,
+          libraries: [],
+          table,
+        };
+        shape.libraries = await detectLibrary(
+          guideSequences(text, shape),
+          shape.guide_ids ?? [],
+        );
         return { ok: true, ...shape };
       }
-      return { ok: true, kind: "tables", tables };
+      const sequences = tables
+        .filter((t) => t.kind === "counts")
+        .flatMap(
+          (t) =>
+            t.guide_sequences?.map((row) => row.sequence) ??
+            t.guide_ids.filter((id) => /^[ACGT]{17,30}$/i.test(id)),
+        )
+        .slice(0, FINGERPRINT_GUIDES);
+      return {
+        ok: true,
+        kind: "tables",
+        tables,
+        libraries: await detectLibrary(
+          sequences,
+          tables.filter((t) => t.kind === "counts").flatMap((t) => t.guide_ids),
+        ),
+      };
     } catch (error) {
-      return { ok: false, error: error instanceof Error ? error.message : "This workbook could not be read." };
+      return {
+        ok: false,
+        error:
+          error instanceof Error ? error.message : "This workbook could not be read.",
+      };
     }
   }
   // The extension says gzip; the first two bytes decide.
   const gzipped = head.length > 1 && head[0] === 0x1f && head[1] === 0x8b;
   if (compressed && !gzipped) {
-    return { ok: false, error: "This file name ends in .gz, but the uploaded bytes are not gzip." };
+    return {
+      ok: false,
+      error: "This file name ends in .gz, but the uploaded bytes are not gzip.",
+    };
   }
 
   const text = decode(head, gzipped);
   if (text === null) {
-    return { ok: false, error: "This file is marked as gzip but does not decompress. It may have been truncated." };
+    return {
+      ok: false,
+      error:
+        "This file is marked as gzip but does not decompress. It may have been truncated.",
+    };
   }
 
   if (kind === "fastq") {
     const shape = parseFastq(text);
     if (!shape) {
-      return { ok: false, error: "This does not read as FASTQ: the four-line record structure is not there." };
+      return {
+        ok: false,
+        error:
+          "This does not read as FASTQ: the four-line record structure is not there.",
+      };
     }
-    return { ok: true, ...shape };
+    return { ok: true, ...(await inspectFastq(text)) };
   }
 
   const shape = parseCountTable(text);
   if (!shape) {
     return {
       ok: false,
-      error: "This does not read as a table: no tab- or comma-separated header with at least two columns.",
+      error:
+        "This does not read as a table: no tab- or comma-separated header with at least two columns.",
     };
   }
   if (kind === "counts" && shape.sample_columns.length === 0) {
@@ -396,17 +555,31 @@ export async function inspectStoredFile(
     };
   }
 
-  const libraries = await detectLibrary(guideSequences(text, shape));
+  const libraries = await detectLibrary(
+    guideSequences(text, shape),
+    shape.guide_ids ?? [],
+  );
   return { ok: true, ...shape, libraries };
 }
 
-export async function readLibraryTable(key: string, name: string, sheet: string, mappings: Record<string, TableMapping> = {}): Promise<ParsedTable> {
+export async function readLibraryTable(
+  key: string,
+  name: string,
+  sheet: string,
+  mappings: Record<string, TableMapping> = {},
+): Promise<ParsedTable> {
   const size = await objectExists(key);
-  if (!size || size > 64 * 1024 * 1024) throw new Error("Custom library import supports up to 64 MB.");
+  if (!size || size > 64 * 1024 * 1024)
+    throw new Error("Custom library import supports up to 64 MB.");
   const bytes = await headOfObject(key, size);
   if (!bytes) throw new Error("The library could not be read back.");
-  const decoded = /\.gz$/i.test(name) ? gunzipSync(bytes, { maxOutputLength: 64 * 1024 * 1024 }) : bytes;
-  const table = parseTables(decoded, name, mappings).find((table) => table.sheet === sheet && table.kind === "library");
-  if (!table) throw new Error("Choose a table with guide IDs, gene symbols and sequences.");
+  const decoded = /\.gz$/i.test(name)
+    ? gunzipSync(bytes, { maxOutputLength: 64 * 1024 * 1024 })
+    : bytes;
+  const table = parseTables(decoded, name, mappings).find(
+    (table) => table.sheet === sheet && table.kind === "library",
+  );
+  if (!table)
+    throw new Error("Choose a table with guide IDs, gene symbols and sequences.");
   return table;
 }

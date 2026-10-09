@@ -62,12 +62,14 @@ export function EffectExplorer({
   screenId,
   screenName,
   comparisonName,
+  comparisonId,
   series,
   defaultMaxFdr,
 }: {
   screenId: string;
   screenName: string;
   comparisonName: string;
+  comparisonId?: string;
   series: EffectSeries;
   defaultMaxFdr: number;
 }) {
@@ -116,7 +118,7 @@ export function EffectExplorer({
     setDrawer({ kind: "loading", gene });
     try {
       const response = await fetch(
-        `/api/v1/screens/${screenId}/genes/${encodeURIComponent(gene)}/disagreement`,
+        `/api/v1/screens/${screenId}/genes/${encodeURIComponent(gene)}/disagreement${comparisonId ? `?comparison=${comparisonId}` : ""}`,
         { signal: controller.signal, headers: { accept: "application/json" } },
       );
       const body = (await response.json().catch(() => ({}))) as {
@@ -151,7 +153,7 @@ export function EffectExplorer({
     } finally {
       if (inflight.current === controller) inflight.current = null;
     }
-  }, [screenId, focus]);
+  }, [screenId, comparisonId, focus]);
 
   const close = useCallback(() => {
     inflight.current?.abort();
@@ -260,7 +262,7 @@ export function EffectExplorer({
       )}
 
       {drawer && (
-        <GeneDrawer key={drawer.gene} state={drawer} screenName={screenName} onClose={close} />
+        <GeneDrawer screenId={screenId} comparisonId={comparisonId} key={drawer.gene} state={drawer} screenName={screenName} onClose={close} />
       )}
     </div>
   );

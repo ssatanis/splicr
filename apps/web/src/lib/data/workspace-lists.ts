@@ -15,32 +15,56 @@ export interface ScreenListRow {
   status: string;
   qc: string;
   created_at: string;
-  current_run?: { id: string; stages: { status: string }[] } | null;
+  experiment_date?: string | null;
+  researcher_name?: string | null;
+  current_run?: { id: string; status: string; created_at: string; started_at: string | null; finished_at: string | null; stages: { status: string }[] } | null;
 }
 
 export type WorkspaceListResult<T> =
   | { status: "ready"; rows: T[]; total: number; page: number }
   | { status: "workspace_required" | "unavailable" | "invalid_page" };
 
-async function readList<T>(table: "screens", columns: string, date: string, page: number): Promise<WorkspaceListResult<T>> {
-  if (!Number.isSafeInteger(page) || page < 1 || page > 10000) return { status: "invalid_page" };
+async function readList<T>(
+  table: "screens",
+  columns: string,
+  date: string,
+  page: number,
+): Promise<WorkspaceListResult<T>> {
+  if (!Number.isSafeInteger(page) || page < 1 || page > 10000)
+    return { status: "invalid_page" };
   const context = await getCurrentContext();
   if (!context.user || !context.org) return { status: "workspace_required" };
   try {
     const client = await createClient();
-    const result = await client.from(table).select(columns, { count: "exact" })
-      .eq("org_id", context.org.id).order(date, { ascending: false }).order("id")
+    const result = await client
+      .from(table)
+      .select(columns, { count: "exact" })
+      .eq("org_id", context.org.id)
+      .is("archived_at", null)
+      .order(date, { ascending: false })
+      .order("id")
       .range((page - 1) * WORKSPACE_PAGE_SIZE, page * WORKSPACE_PAGE_SIZE - 1);
     if (result.error) throw result.error;
-    if (!Array.isArray(result.data) || result.count === null) return { status: "unavailable" };
+    if (!Array.isArray(result.data) || result.count === null)
+      return { status: "unavailable" };
     return { status: "ready", rows: result.data as T[], total: result.count, page };
   } catch (error) {
-    const code = typeof error === "object" && error !== null && "code" in error ? String(error.code) : "read_error";
+    const code =
+      typeof error === "object" && error !== null && "code" in error
+        ? String(error.code)
+        : "read_error";
     console.error(`[data/workspace-lists] ${code}`);
     return { status: "unavailable" };
   }
 }
 
-export function getWorkspaceScreens(page = 1): Promise<WorkspaceListResult<ScreenListRow>> {
-  return readList("screens", "id, name, cell_line, phenotype, modality, status, qc, created_at, current_run:runs!screens_current_run_fk(id, stages:run_stages(status))", "created_at", page);
+export function getWorkspaceScreens(
+  page = 1,
+): Promise<WorkspaceListResult<ScreenListRow>> {
+  return readList(
+    "screens",
+    "id, name, cell_line, phenotype, modality, status, qc, created_at, experiment_date, researcher_name, current_run:runs!screens_current_run_fk(id, status, created_at, started_at, finished_at, stages:run_stages(status))",
+    "created_at",
+    page,
+  );
 }

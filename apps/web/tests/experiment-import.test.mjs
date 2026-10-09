@@ -37,6 +37,13 @@ test('alias proposals are narrow and ambiguous candidates remain unassigned',()=
  assert.deepEqual(suggestGuideAliases(['PRL9_e4.1','ABCD_e1','ZZZZ_e1'],guides),[{source:'PRL9_e4.1',target:'RPL9_e4.1'},{source:'ZZZZ_e1',target:''}]);
 });
 
+test('a genome-scale library with sequence IDs completes alias review promptly',()=>{
+ const guides=Array.from({length:60550},(_,i)=>({guide_id:i.toString(4).padStart(20,'0').replaceAll('0','A').replaceAll('1','C').replaceAll('2','G').replaceAll('3','T'),sequence:'ACGTACGTACGTACGTACGT',gene:'X',is_control:false}));
+ const started=performance.now();
+ assert.deepEqual(suggestGuideAliases(guides.map(guide=>guide.guide_id),guides),[]);
+ assert.ok(performance.now()-started<3000,'Sequence-ID libraries must not take minutes to review.');
+});
+
 test('JSON tables support records and explicit rows without inventing columns',async()=>{
  const {parseTables}=await import('../src/lib/intake/tables.ts');
  const records=[{Guide:'A',Gene:'AAK1',T0:20,Treated:3},{Guide:'B',Gene:'BRAF',T0:10,Treated:4}];

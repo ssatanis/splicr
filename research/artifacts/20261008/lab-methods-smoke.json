@@ -1,0 +1,48 @@
+{
+  "schema": "splicr.lab-methods-smoke.v1",
+  "persisted": false,
+  "scope": "Real-count local pipeline/metadata verification; not independent biological validation or superiority evidence.",
+  "runtime_seconds": 18.288089415989816,
+  "input_sha256": {
+    "artifacts/millman-20261008/input/counts.tsv": "806a99389bafa9ba2dd93c227669a14f6c6f8bb5c61dacd6e998197335979be4",
+    "artifacts/millman-20261008/input/study_library.tsv": "a7dc053b6c775308d2edc35105a6a379b1348aec83a55f6c138470480b277afa"
+  },
+  "report_path": "data/research/lab-workspace-20261008/tools/control-normalization/postscreen_report.json",
+  "report_sha256": "53ee0870ec8c5585d8b0f8fa89220fef3e565985e95befbb34eae2885119b768",
+  "engine_version": "source-sha256:da064b66434f20ce2361d4fc4b5bc1ae7747a0559a03569866111107c44d9da1",
+  "analyzed_counts": {
+    "path": "/Users/sahaj/Documents/Projects/SplicR/data/research/lab-workspace-20261008/tools/control-normalization/hits/counts.txt",
+    "sha256": "e37d7eea76d52300d93ed4705763e012fe5a10481f95e5a0b49cd18003dba438",
+    "available": true,
+    "unavailable_reason": null
+  },
+  "n_guides": 106400,
+  "n_genes": 18913,
+  "qc_verdict": "pass",
+  "hit_stage": {
+    "stage": "hits",
+    "status": "done",
+    "detail": "18913 genes, 0 at FDR 0.1, methods ['mageck_rra']",
+    "tool": "mageck_rra",
+    "duration_sec": 16.140744924545288,
+    "metrics": {
+      "methods": [
+        "mageck_rra"
+      ],
+      "n_significant": 0,
+      "fdr_threshold": 0.1,
+      "normalization": "control",
+      "warnings": [
+        "BAGEL2 and the essential-direction inversion guard were not applied: this contrast is not a declared loss-of-function fitness endpoint against a library reference."
+      ],
+      "mle_design": null,
+      "drugz_options": null,
+      "normalization_controls": {
+        "sha256": "459e985abca6a407062f6839a09a12853f83850f316c37e94412ef7a200d7da9",
+        "n_guides": 3755
+      },
+      "fdr_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
+      "essentiality_contrast": false
+    }
+  }
+}

@@ -198,8 +198,8 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
             nothing about whether the experiment has hits.
           </p>
         </Card>
-      ) : screen.status !== "complete" && screen.status !== "failed" ? (
-        <LiveProgress runId={run.id} screenName={screen.name} initialStages={stages} />
+      ) : run.status === "queued" || run.status === "running" || run.status === "canceled" ? (
+        <LiveProgress key={run.id} runId={run.id} screenId={screen.id} screenName={screen.name} initialStatus={run.status} initialQc={screen.qc} initialStages={stages} createdAt={run.created_at} startedAt={run.started_at} finishedAt={run.finished_at} canCancel={canLog} />
       ) : (
         <>
           <Panel
@@ -265,10 +265,11 @@ export default async function ScreenPage(props: PageProps<"/dashboard/screens/[i
               className="min-h-[460px]"
             >
               {points.status === "found" ? (
-                <EffectExplorer
+                <EffectExplorer key={`${screen.current_run_id}:${plotComparison.id}`}
                   screenId={screen.id}
                   screenName={screen.name}
                   comparisonName={plotComparison.name}
+                  comparisonId={plotComparison.id}
                   series={points.series}
                   defaultMaxFdr={significantFdr}
                 />

@@ -17,6 +17,7 @@ import shutil
 import socket
 import tempfile
 import threading
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlparse
@@ -35,18 +36,20 @@ class Job:
 
 
 def _worker_name() -> str:
-    return f"modal:{socket.gethostname()}:{os.getpid()}"
+    # Modal containers can share the hostname and PID. A fresh invocation must
+    # never inherit an expired worker's authority over the same job.
+    return f"modal:{socket.gethostname()}:{os.getpid()}:{uuid.uuid4().hex}"
 
 
 def _claim(conn, owner: str) -> Job | None:
-    row = conn.execute("select * from public.claim_pipeline_job(%s)", (owner,)).fetchone()
+    row = conn.execute("select * from public.claim_pipeline_job(%s, interval '5 minutes')", (owner,)).fetchone()
     if not row:
         return None
     return Job(id=str(row[0]), run_id=str(row[1]), screen_id=str(row[2]), org_id=str(row[3]), attempts=int(row[5]))
 
 
 def _heartbeat(conn, job: Job, owner: str, progress: float | None = None) -> None:
-    conn.execute("select public.pipeline_job_heartbeat(%s::uuid, %s, %s::numeric)", (job.id, owner, progress))
+    conn.execute("select public.pipeline_job_heartbeat(%s::uuid, %s, %s::numeric, interval '5 minutes')", (job.id, owner, progress))
     conn.commit()
 
 
@@ -133,9 +136,29 @@ def _screen_spec(conn, job: Job, workdir: Path) -> tuple[ScreenInput, str | None
     fastqs: dict[str, Path] = {}
     fastq_files: dict[str, list[Path]] = {}
     count_table: Path | None = None
+    lab_options = dict(settings.get("lab_evidence") or {})
+    expression_id = lab_options.get("transcript_expression_file_id")
+    expression_found = False
     downloads = workdir / "inputs"
     for file_id, kind, storage_key, original_name, checksum, byte_size, metadata in files:
         original_id = str((metadata or {}).get("source_file_id", file_id))
+        if expression_id and (str(file_id) == expression_id or original_id == expression_id):
+            if byte_size is None or int(byte_size) > 100 * 1024 * 1024 or not checksum:
+                raise ValueError("expression file needs a complete SHA-256 manifest and must be at most 100 MB")
+            target = downloads / f"{file_id}_{_safe_name(original_name)}"
+            _download(storage_key, target)
+            if target.stat().st_size != int(byte_size):
+                raise ValueError("expression file size differs from its upload manifest")
+            with target.open("rb") as handle:
+                actual_hash = hashlib.file_digest(handle, "sha256").hexdigest()
+            if actual_hash != checksum:
+                raise ValueError("expression file SHA-256 differs from its upload manifest")
+            from .lab_evidence import read_expression_file
+            lab_options["transcript_expression"] = read_expression_file(target)
+            lab_options["expression_source"] = lab_options.get("expression_source") or original_name
+            lab_options["expression_source_sha256"] = actual_hash
+            expression_found = True
+            continue
         if source_id and original_id != source_id:
             continue
         if source_id:
@@ -163,6 +186,8 @@ def _screen_spec(conn, job: Job, workdir: Path) -> tuple[ScreenInput, str | None
                 raise ValueError(f"{original_name} is not assigned to a sample")
             fastq_files.setdefault(sample["label"], []).append(target)
 
+    if expression_id and not expression_found:
+        raise ValueError("the selected transcript expression file is not available in this screen's verified uploads")
     for label, paths in fastq_files.items():
         if len(paths) == 1:
             fastqs[label] = paths[0]
@@ -221,6 +246,8 @@ def _screen_spec(conn, job: Job, workdir: Path) -> tuple[ScreenInput, str | None
             drugz_options=settings.get("drugz_options") or {},
             sample_factors={row["label"]: row["metadata"].get("factors", {}) for row in by_id.values()},
             guide_aliases=settings.get("guide_aliases") or {},
+            lab_evidence=lab_options,
+            deterministic_only=bool(settings.get("deterministic_only", True)),
             normalization=settings.get("normalization", "median"),
             fdr_threshold=float(settings.get("fdr_threshold", 0.1)),
             hit_callers=hit_callers,
@@ -237,12 +264,13 @@ def _screen_spec(conn, job: Job, workdir: Path) -> tuple[ScreenInput, str | None
     )
 
 
-def process_one(owner: str | None = None) -> dict:
+def process_one(owner: str | None = None, call_id: str | None = None) -> dict:
     owner = owner or _worker_name()
     with db.connect() as conn:
         job = _claim(conn, owner)
         if job is None:
             return {"claimed": False}
+        conn.execute("update public.jobs set modal_call_id=%s, modal_cancelled_at=null where id=%s", (call_id, job.id))
         conn.commit()
 
     error: str | None = None
@@ -282,5 +310,9 @@ def process_one(owner: str | None = None) -> dict:
             heartbeat.join(timeout=5)
 
     with db.connect() as conn:
+        # A canceled or superseded lease is a normal stop, not a failed job.
+        state = conn.execute("select status, lease_owner from public.jobs where id=%s for update", (job.id,)).fetchone()
+        if not state or state[0] == "canceled" or state[1] != owner:
+            return {"claimed": True, "job_id": job.id, "run_id": job.run_id, "ok": False, "canceled": bool(state and state[0] == "canceled")}
         _finish(conn, job, owner, ok, error)
     return {"claimed": True, "job_id": job.id, "run_id": job.run_id, "ok": ok, "error": error}

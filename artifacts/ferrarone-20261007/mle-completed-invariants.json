@@ -1,0 +1,77 @@
+{
+  "checkedAt": "2026-10-07T23:37:07.019Z",
+  "analyses": [
+    {
+      "name": "Ferrarone 2024: A549 LKB1 growth screens, 2D: EV vs plasmid",
+      "id": "01a11702-7784-7815-86e2-de06156fb6b1",
+      "status": "complete",
+      "genes": 18049,
+      "distinct_genes": 18049,
+      "mle_betas": 18049,
+      "mle_fdrs": 18049,
+      "invalid_mle_fdr": 0,
+      "invalid_rra_fdr": 0,
+      "estimated_probabilities": 0
+    },
+    {
+      "name": "Ferrarone 2024: A549 LKB1 growth screens, 2D: WT vs EV",
+      "id": "01a11702-77c0-7ef1-948d-aeed10c3f242",
+      "status": "complete",
+      "genes": 18049,
+      "distinct_genes": 18049,
+      "mle_betas": 18049,
+      "mle_fdrs": 18049,
+      "invalid_mle_fdr": 0,
+      "invalid_rra_fdr": 0,
+      "estimated_probabilities": 0
+    },
+    {
+      "name": "Ferrarone 2024: A549 LKB1 growth screens, 2D: WT vs plasmid",
+      "id": "01a11702-77b2-75e7-83f1-29dc398e0bb1",
+      "status": "complete",
+      "genes": 18049,
+      "distinct_genes": 18049,
+      "mle_betas": 18049,
+      "mle_fdrs": 18049,
+      "invalid_mle_fdr": 0,
+      "invalid_rra_fdr": 0,
+      "estimated_probabilities": 0
+    },
+    {
+      "name": "Ferrarone 2024: A549 LKB1 growth screens, Spheroid: EV vs plasmid",
+      "id": "01a11702-77c8-70a5-b733-4253c4388ece",
+      "status": "complete",
+      "genes": 18049,
+      "distinct_genes": 18049,
+      "mle_betas": 18049,
+      "mle_fdrs": 18049,
+      "invalid_mle_fdr": 0,
+      "invalid_rra_fdr": 0,
+      "estimated_probabilities": 0
+    },
+    {
+      "name": "Ferrarone 2024: A549 LKB1 growth screens, Spheroid: WT vs EV",
+      "id": "01a11702-77d8-7a80-8dfd-868de0cb2b66",
+      "status": "complete",
+      "genes": 18049,
+      "distinct_genes": 18049,
+      "mle_betas": 18049,
+      "mle_fdrs": 18049,
+      "invalid_mle_fdr": 0,
+      "invalid_rra_fdr": 0,
+      "estimated_probabilities": 0
+    },
+    {
+      "name": "Ferrarone 2024: A549 LKB1 growth screens, Spheroid: WT vs plasmid",
+      "id": "01a11702-77d1-76fb-88ac-039c02f5d0eb",
+      "status": "complete",
+      "genes": 18049,
+      "distinct_genes": 18049,
+      "mle_betas": 18049,
+      "mle_fdrs": 18049,
+      "invalid_mle_fdr": 0,
+      "invalid_rra_fdr": 0,
+      "estimated_probabilities": 0
+    }
+  ]
+}

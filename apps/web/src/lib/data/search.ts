@@ -17,6 +17,7 @@
 import { atlasGeneHref, atlasScreenHref, publicationLabel } from "@/lib/atlas/links";
 import { describeScreen, queryScreens, suggestGenes } from "@/lib/atlas/query";
 import { getAtlasGenes, getAtlasScreens } from "@/lib/atlas/store";
+import { resolveGene } from "@/lib/lab/memory";
 import { createClient } from "@/lib/supabase/server";
 
 import { getCurrentContext } from "./org";
@@ -75,11 +76,15 @@ function searchAtlasScreens(query: string): SearchHit[] {
 }
 
 function searchAtlasGenes(query: string): SearchHit[] {
-  return suggestGenes(getAtlasGenes(), query, 6).map((gene) => ({
+  const index = getAtlasGenes();
+  const original = suggestGenes(index, query, 6);
+  const resolution = original.length ? null : resolveGene(query, index);
+  const suggested = original.length ? original : resolution?.symbol ? suggestGenes(index, resolution.symbol, 6) : [];
+  return suggested.map((gene) => ({
     kind: "gene" as const,
     id: gene.symbol,
     title: gene.symbol,
-    subtitle: `${gene.viaAlias ? `Alias ${gene.viaAlias}. ` : ""}Called in ${gene.called} of ${gene.tested} Atlas screens`,
+    subtitle: `${resolution?.kind === "suggested" ? `Spelling suggestion for ${query}. ` : ""}${gene.viaAlias ? `Alias ${gene.viaAlias}. ` : ""}Called in ${gene.called} of ${gene.tested} Atlas screens`,
     href: atlasGeneHref(gene.symbol),
   }));
 }
@@ -126,5 +131,8 @@ export async function searchWorkspace(rawQuery: string): Promise<SearchResponse>
     }
   }
 
+  if (canSeeScreens && genes.length) screens.push({ kind: "screen", id: `memory:${genes[0].id}`,
+    title: `${genes[0].title} · Lab memory`, subtitle: "Hits, measured non-hits, historical runs and bench outcomes",
+    href: `/dashboard/memory?q=${encodeURIComponent(query)}` });
   return { degraded, screens, atlas, genes };
 }

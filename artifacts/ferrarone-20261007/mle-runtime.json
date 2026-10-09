@@ -1,0 +1,8 @@
+{
+  "firstWorkerStart": "2026-10-07T15:37:19.766000+00:00",
+  "lastWorkerFinish": "2026-10-07T20:42:36.462000+00:00",
+  "elapsedSeconds": 18316.696,
+  "includesRetries": true,
+  "excludesUploadAndPrestartWaiting": true,
+  "runs": 6
+}

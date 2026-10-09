@@ -1,0 +1,242 @@
+{
+  "started_at_utc": "2026-10-08T15:14:28.504325+00:00",
+  "finished_at_utc": "2026-10-08T15:14:53.863131+00:00",
+  "input_conversion_and_audit_seconds": 3.42704337509349,
+  "splicr_pipeline_seconds": 21.931427291827276,
+  "input_to_report_seconds": 25.358549083117396,
+  "scope": "Workbook validation and conversion, then local SplicR count-table pipeline including QC, MAGeCK RRA, flags, atlas lookup and JSON report. Excludes download, dependency installation, standalone comparison, PDF creation and correspondence.",
+  "machine": "macOS-26.6.2-arm64-arm-64bit",
+  "architecture": "arm64",
+  "logical_cpus": 10,
+  "processor": "Apple M4",
+  "python": "3.11.16",
+  "stages": [
+    {
+      "stage": "ingest",
+      "status": "done",
+      "detail": "1 file(s), 0.00 GB, kidney vs D0",
+      "tool": "splicr.ingest",
+      "duration_sec": 0.00798177719116211,
+      "metrics": {
+        "roles": {
+          "D0": "reference",
+          "kidney": "treatment"
+        },
+        "treatment": [
+          "kidney"
+        ],
+        "control": [
+          "D0"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "stage": "detect",
+      "status": "done",
+      "detail": "Cellecta KAHGW-106-P (published study guide map) (confirmed workspace guide map)",
+      "tool": "splicr.detect",
+      "duration_sec": 0.16807007789611816,
+      "metrics": {
+        "library": "millman_cellecta_kahgw106p",
+        "n_guides": 106400
+      }
+    },
+    {
+      "stage": "count",
+      "status": "done",
+      "detail": "count table with 2 samples",
+      "tool": "splicr.count",
+      "duration_sec": 0.201981782913208,
+      "metrics": {
+        "n_samples": 2,
+        "n_guides": 106400,
+        "sample_locations": {}
+      }
+    },
+    {
+      "stage": "qc",
+      "status": "done",
+      "detail": "pass, NNMD n/a",
+      "tool": "splicr.qc",
+      "duration_sec": 0.16158628463745117,
+      "metrics": {
+        "verdict": "pass",
+        "nnmd": null,
+        "nnmd_contrast": "kidney vs T0",
+        "nnmd_reason": "essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay",
+        "nnmd_by_arm": {},
+        "auroc": null,
+        "n_essential_found": 0,
+        "n_nonessential_found": 0,
+        "bottlenecked": [],
+        "suspect_arms": [],
+        "replicate_correlations": [],
+        "samples": [
+          {
+            "label": "D0",
+            "role": "reference",
+            "total_reads": null,
+            "mapped_reads": 66916017,
+            "mapping_rate": null,
+            "mapping_rate_available": false,
+            "mapping_source": "count_table",
+            "count_sum": 66916017,
+            "zero_guides": 5,
+            "zero_fraction": 5e-05,
+            "represented_fraction": 0.9997,
+            "gini": 0.0402,
+            "skew_ratio": 2.98,
+            "mean_reads_per_guide": 629.1,
+            "verdict": "pass",
+            "notes": [
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+            ]
+          },
+          {
+            "label": "kidney",
+            "role": "treatment",
+            "total_reads": null,
+            "mapped_reads": 61558710,
+            "mapping_rate": null,
+            "mapping_rate_available": false,
+            "mapping_source": "count_table",
+            "count_sum": 61558710,
+            "zero_guides": 5,
+            "zero_fraction": 5e-05,
+            "represented_fraction": 0.9997,
+            "gini": 0.0431,
+            "skew_ratio": 3.17,
+            "mean_reads_per_guide": 578.8,
+            "verdict": "pass",
+            "notes": [
+              "Mapping rate is unavailable for count-only input: unmapped reads and total sequenced reads were not supplied. Count sums describe the uploaded table, not sequencing mapping efficiency."
+            ]
+          }
+        ],
+        "notes": [
+          "NNMD/AUROC not assessed: essential-gene dropout QC is not applicable without a declared loss-of-function fitness assay."
+        ]
+      }
+    },
+    {
+      "stage": "hits",
+      "status": "done",
+      "detail": "18913 genes, 0 at FDR 0.1, methods ['mageck_rra']",
+      "tool": "mageck_rra",
+      "duration_sec": 19.748185634613037,
+      "metrics": {
+        "methods": [
+          "mageck_rra"
+        ],
+        "n_significant": 0,
+        "fdr_threshold": 0.1,
+        "normalization": "median",
+        "warnings": [
+          "BAGEL2 and the essential-direction inversion guard were not applied: this contrast is not a declared loss-of-function fitness endpoint against a library reference."
+        ],
+        "fdr_method": "min(1, 2*min(MAGeCK directional FDRs)); two-family union bound",
+        "essentiality_contrast": false
+      }
+    },
+    {
+      "stage": "artifacts",
+      "status": "done",
+      "detail": "0 called hits: no flags",
+      "tool": "splicr.artifacts",
+      "duration_sec": 0.9433109760284424,
+      "metrics": {
+        "on_called_hits": {},
+        "all_genes": {
+          "frequent_hitter": 1976,
+          "single_guide": 1474
+        }
+      }
+    },
+    {
+      "stage": "atlas",
+      "status": "done",
+      "detail": "1,167 background screens of 1,952; no comparable screen; context for 18,851 genes; 1,912 frequent hitters; 378 held out (leakage policy publication); 569 resolved via an alias; 62 absent from the Atlas; 15 measured in under 10 unrelated screens",
+      "tool": "splicr.atlas",
+      "duration_sec": 0.7812340259552002,
+      "metrics": {
+        "available": true,
+        "reason": null,
+        "release": "2.0.18",
+        "leakage_policy": "publication",
+        "n_screens": 1952,
+        "n_background_screens": 1167,
+        "n_screens_excluded_for_leakage": 378,
+        "n_comparable": 0,
+        "comparable_screen_ids": [],
+        "n_genes_with_context": 18851,
+        "n_genes_resolved_by_alias": 569,
+        "n_genes_not_in_atlas": 62,
+        "n_genes_too_few_screens_to_judge": 15,
+        "n_frequent_hitters": 1912,
+        "min_screens_to_judge": 10
+      }
+    },
+    {
+      "stage": "score",
+      "status": "skipped",
+      "detail": "no hit reached the calling threshold, so nothing was scored. no cohort file at /Users/sahaj/Documents/Projects/SplicR/data/validation/outcomes.json; the network is unfitted and every estimate is refused with a reason",
+      "tool": "splicr.validation",
+      "duration_sec": 0.011111974716186523,
+      "metrics": {
+        "n_called": 0,
+        "n_estimated": 0,
+        "n_declined": 0,
+        "by_question": {
+          "reproduces": {
+            "estimated": 0,
+            "declined": 0,
+            "reasons": {}
+          },
+          "target_specific": {
+            "estimated": 0,
+            "declined": 0,
+            "reasons": {}
+          },
+          "cross_model": {
+            "estimated": 0,
+            "declined": 0,
+            "reasons": {}
+          },
+          "pharmacologic": {
+            "estimated": 0,
+            "declined": 0,
+            "reasons": {}
+          }
+        },
+        "cohort": {
+          "cohort_sha256": null,
+          "cohort_path": "/Users/sahaj/Documents/Projects/SplicR/data/validation/outcomes.json",
+          "n_outcomes": 0,
+          "source": "no cohort file at /Users/sahaj/Documents/Projects/SplicR/data/validation/outcomes.json; the network is unfitted and every estimate is refused with a reason",
+          "problem": null,
+          "fitted": false,
+          "n_heads": 0
+        },
+        "context": {
+          "assay_class": "drug_modifier",
+          "modality": "crispra",
+          "phenotype_family": "other",
+          "model_type": "in_vivo",
+          "treatment": "day 10 kidney capsule vs differentiated day 0"
+        }
+      }
+    },
+    {
+      "stage": "report",
+      "status": "done",
+      "detail": "/Users/sahaj/Documents/Projects/SplicR/artifacts/millman-20261008/output/splicr/postscreen_report.json",
+      "tool": "splicr.report",
+      "duration_sec": 0.6738741397857666,
+      "metrics": {}
+    }
+  ],
+  "ok": true,
+  "error": null,
+  "summary": "Screen: Millman 2026 whole-genome CRISPRa kidney graft screen\n  ingest     ok          0.0s  1 file(s), 0.00 GB, kidney vs D0\n  detect     ok          0.2s  Cellecta KAHGW-106-P (published study guide map) (confirmed workspace guide map)\n  count      ok          0.2s  count table with 2 samples\n  qc         ok          0.2s  pass, NNMD n/a\n  hits       ok         19.7s  18913 genes, 0 at FDR 0.1, methods ['mageck_rra']\n  artifacts  ok          0.9s  0 called hits: no flags\n  atlas      ok          0.8s  1,167 background screens of 1,952; no comparable screen; context for 18,851 genes; 1,912 frequent hitters; 378 held out (leakage policy publication); 569 resolved via an alias; 62 absent from the Atlas; 15 measured in under 10 unrelated screens\n  score      skipped     0.0s  no hit reached the calling threshold, so nothing was scored. no cohort file at /Users/sahaj/Documents/Projects/SplicR/data/validation/outcomes.json; the network is unfitted and every estimate is refused with a reason\n  report     ok          0.7s  /Users/sahaj/Documents/Projects/SplicR/artifacts/millman-20261008/output/splicr/postscreen_report.json\n  18913 genes scored, 0 significant at FDR 0.1\n  hits warning: BAGEL2 and the essential-direction inversion guard were not applied: this contrast is not a declared loss-of-function fitness endpoint against a library reference.\n  flags on called hits: none\n  flags over all genes: {'frequent_hitter': 1976, 'single_guide': 1474}"
+}

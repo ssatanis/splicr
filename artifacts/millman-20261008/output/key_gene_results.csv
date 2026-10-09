@@ -1,0 +1,5 @@
+gene,enrichment_rank,median_log2_fold_change,enrichment_RRA_score,enrichment_p_value,enrichment_FDR,depletion_FDR,SplicR_two_direction_FDR,guides,guides_with_positive_LFC,max_absolute_guide_effect_share,flags,flag_details,control_normalization_enrichment_rank,control_normalization_log2_fold_change,control_normalization_enrichment_FDR,published_RRA_score,published_plot_order
+SIX3,1,0.3767,1.9097e-05,0.00010025,0.908761,0.999981,1.0,5,5,0.2695212003377914,,,1,0.3809,0.720014,1.931e-05,1
+FCAMR,8,0.53896,0.00011415,0.00054363,0.908761,0.996589,1.0,5,4,0.35856593171685097,,,9,0.54317,0.720014,0.00012193,7
+GSTM3,10,0.45945,0.00013275,0.00063052,0.908761,0.997436,1.0,5,4,0.2795747784193073,,,11,0.46364,0.720014,0.00013884,9
+HSF2,2,-0.048554,2.3504e-05,0.00012171,0.908761,0.996589,1.0,5,2,0.892440062817815,single_guide,"One guide carries 89% of the gene-level signal, of 5 guides.",2,-0.044351,0.720014,2.5176e-05,2

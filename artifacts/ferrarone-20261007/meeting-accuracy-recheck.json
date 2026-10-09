@@ -1,0 +1,54 @@
+{
+  "recheckedAt": "2026-10-08T00:47:13.999279+00:00",
+  "scope": "Published methods/caption and saved demo evidence; not a new biological validation or rerun",
+  "inputs": {
+    "2d_crispr_screen_read_counts.txt": {
+      "bytes": 4102157,
+      "md5": "47a694a20d470868daf9c3695e932a73",
+      "sha256": "b5e01844036815b4636b7e958e5678fd814a7b5c7e11130e93b423c37ed58601",
+      "rows": 70116
+    },
+    "spheroid_crispr_screen_read_counts.txt": {
+      "bytes": 4100833,
+      "md5": "079c7294fb7c663956637efb7d360efb",
+      "sha256": "efa79d1cb179db64240e1be0f732de35d145038b473dc49ba33c3697c05f2dec",
+      "rows": 70116
+    }
+  },
+  "fullAnalyses": 6,
+  "genesEach": 18049,
+  "fullCohortElapsedSeconds": 18316.696,
+  "referenceGenes": [
+    {
+      "comparison": "Spheroid: WT vs plasmid",
+      "gene_symbol": "FIG4",
+      "lfc": "3.1413",
+      "mle_beta": "1.8331",
+      "mle_fdr": "0.57554"
+    },
+    {
+      "comparison": "Spheroid: WT vs plasmid",
+      "gene_symbol": "PIKFYVE",
+      "lfc": "0.40606",
+      "mle_beta": "0.43846",
+      "mle_fdr": "0.99966"
+    },
+    {
+      "comparison": "Spheroid: WT vs plasmid",
+      "gene_symbol": "VAC14",
+      "lfc": "4.9627",
+      "mle_beta": "3.211",
+      "mle_fdr": "0.19162"
+    }
+  ],
+  "paperSource": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11127050/fullTextXML",
+  "methodsCutoffs": {
+    "WT": ">0.5",
+    "EV": "<0.5"
+  },
+  "figure3DCutoffs": {
+    "WT": ">1",
+    "EV": "<1"
+  },
+  "actualPublishedImplementation": "Not determined from these conflicting descriptions"
+}

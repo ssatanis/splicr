@@ -192,7 +192,7 @@ export async function getScreenDetail(
     if (!screenResult.data) return { status: "not_found" };
     const screen = screenResult.data as WorkspaceScreen;
     let runQuery = client.from("runs")
-      .select("id, status, engine_version, image_digest, created_at, error, settings")
+      .select("id, status, engine_version, image_digest, created_at, started_at, finished_at, error, settings")
       .eq("screen_id", screenId).eq("org_id", context.org.id);
     if (screen.current_run_id) runQuery = runQuery.eq("id", screen.current_run_id);
     const runResult = await runQuery.order("created_at", { ascending: false }).limit(1).maybeSingle();

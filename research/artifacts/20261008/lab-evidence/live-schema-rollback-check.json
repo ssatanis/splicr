@@ -1,0 +1,9 @@
+{
+  "checked_at": "2026-10-08T17:38:44.687Z",
+  "migration": "20261008161816_lab_evidence_memory",
+  "actual_supabase_schema": true,
+  "rls_enabled": true,
+  "unaffiliated_gene_lookup_rows": 0,
+  "persisted": false,
+  "scope": "Migration and SQL function verified against actual schema inside a rolled-back transaction. No deployment or stored evidence."
+}

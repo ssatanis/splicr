@@ -1,0 +1,8 @@
+{"schema":"openai.presentation.layout/v5","unit":"px","slide":{"id":"sl/e6ymq5","index":0,"layout":{"id":"ly/n69w3654","name":"Title Slide"},"backgroundColor":"rgba(23,79,98,1)","position":{"left":0,"top":0,"width":1280,"height":720}},
+"elements":[
+{"id":"sh/ry103uho","kind":"textbox","name":"text-0","position":{"left":1176,"top":670,"width":64,"height":28},"text":"01","style":{"fontSize":15,"typeface":"Inter","color":"#BFD8DE","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"im/tg3qxk7q","kind":"image","position":{"left":64,"top":60,"width":180,"height":61},"fit":"contain","alt":"SplicR logo"},
+{"id":"sh/dk3i54zu","kind":"textbox","name":"text-2","position":{"left":64,"top":225,"width":1000,"height":220},"text":"SplicR for the\nVarmus lab","style":{"fontSize":82,"typeface":"Instrument Serif","color":"#FFFFFF","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/elcje9gf","kind":"textbox","name":"text-3","position":{"left":68,"top":455,"width":1000,"height":60},"text":"A549 LKB1 screens, revisited","style":{"fontSize":30,"typeface":"Inter","color":"#DBE9ED","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/fml07eh0","kind":"textbox","name":"text-4","position":{"left":68,"top":568,"width":1050,"height":72},"text":"Sahaj Satani, Pranav Mettu, Ishaan Samantray\nCornell students","style":{"fontSize":23,"typeface":"Inter","color":"#DBE9ED","alignment":"left"},"geometry":"rect","lineWidth":0}
+]}

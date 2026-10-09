@@ -1,0 +1,17 @@
+{
+  "source": "completed-mle-01a11702-77cc-72e2-9307-ab884d26facb.json",
+  "candidateRule": "recorded RRA two-direction FDR <= 0.05",
+  "candidates": 178,
+  "flagged": 172,
+  "directions": {
+    "depleted": 176,
+    "enriched": 2
+  },
+  "depmapPanEssential": 154,
+  "flagCountsOverlap": {
+    "frequent_hitter": 170,
+    "multi_gene_guide": 44,
+    "promiscuous_guide": 58
+  },
+  "interpretation": "Annotations support a common-dependency interpretation, not proof of the mechanism. Flags are review signals, not automatic errors."
+}
